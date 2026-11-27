@@ -1,9 +1,9 @@
 'use client'
 
-import { type ReactNode, use } from 'react'
+import { type ComponentProps, type ReactNode, use } from 'react'
 import { useFormStatus } from 'react-dom'
 import { PendingContext } from './action-form'
-import { Button } from './ui'
+import { Button } from './ui/button'
 
 export function SubmitButton({
   children,
@@ -11,7 +11,7 @@ export function SubmitButton({
   className,
 }: {
   children: ReactNode
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  variant?: ComponentProps<typeof Button>['variant']
   className?: string
 }) {
   const inActionForm = use(PendingContext)

@@ -11,7 +11,8 @@
     "newProduct": "Novo produto",
     "language": "Idioma",
     "organization": "Organização",
-    "comingSoon": "Em breve"
+    "comingSoon": "Em breve",
+    "account": "Conta"
   },
   "auth": {
     "setupTitle": "Boas-vindas ao Octadash",
@@ -58,7 +59,7 @@
     "settingsTitle": "Configurações do produto",
     "dangerTitle": "Excluir produto",
     "dangerBody": "Exclui o produto, as chaves e todos os dados dele. Não dá para desfazer.",
-    "confirmDelete": "Entendi, excluir {name}",
+    "deleteDialogTitle": "Excluir {name}?",
     "delete": "Excluir produto"
   },
   "modules": {
@@ -98,6 +99,7 @@
   "members": {
     "title": "Membros",
     "intro": "Pessoas que veem todos os produtos de {org}.",
+    "name": "Nome",
     "invite": "Convidar",
     "inviteTitle": "Convidar alguém",
     "inviteIntro": "O Octadash gera um link para você enviar. O envio por e-mail chega com o módulo de alertas.",

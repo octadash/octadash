@@ -1,6 +1,9 @@
 'use client'
 
+import { CheckIcon, CopyIcon } from 'lucide-react'
 import { useState } from 'react'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
 
 export function CopyField({
   value,
@@ -14,20 +17,26 @@ export function CopyField({
   const [copied, setCopied] = useState(false)
   return (
     <div className="flex items-center gap-2">
-      <code className="min-w-0 flex-1 truncate rounded-lg border border-line bg-ink px-3 py-2 font-mono text-xs">
-        {value}
-      </code>
-      <button
+      <Input
+        value={value}
+        readOnly
+        aria-label={copyLabel}
+        className="font-mono text-xs md:text-xs"
+        onFocus={(event) => event.currentTarget.select()}
+      />
+      <Button
         type="button"
-        className="shrink-0 text-xs text-muted hover:text-accent"
+        variant="outline"
+        className="w-24"
         onClick={async () => {
           await navigator.clipboard.writeText(value)
           setCopied(true)
           setTimeout(() => setCopied(false), 1500)
         }}
       >
+        {copied ? <CheckIcon data-icon="inline-start" /> : <CopyIcon data-icon="inline-start" />}
         {copied ? copiedLabel : copyLabel}
-      </button>
+      </Button>
     </div>
   )
 }
