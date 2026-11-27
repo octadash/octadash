@@ -10,7 +10,7 @@
 </p>
 
 > **Status: early development.** The foundation is in place; modules land one by
-> one (see the [roadmap](docs/roadmap.md)). Not ready for production yet.
+> one (see the [roadmap](docs/product.md#roadmap-to-10)). Not ready for production yet.
 
 ## Why
 
@@ -78,10 +78,10 @@ packages/
   db/             Kysely client, migrations, partition helpers
   diagnosis/      Reads a site from outside and grades its observability levels
   integrations/   Plugin contract for alert channels and data sources
-docs/             Architecture decisions, roadmap, self-hosting
+docs/             product.md (what and when), architecture.md (how), self-hosting.md
 ```
 
-Why this stack: [docs/adr/0001-stack.md](docs/adr/0001-stack.md).
+Why this stack: [docs/architecture.md](docs/architecture.md). What is planned: [docs/product.md](docs/product.md).
 
 ## Contributing
 

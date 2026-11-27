@@ -5,7 +5,7 @@ import type { ColumnType, Generated } from 'kysely'
  * Database schema, table by table. Every table that holds customer data carries
  * `org_id` (and `project_id` where it belongs to a product) so the same schema
  * serves a single self-hosted install and a multi-tenant cloud
- * (see docs/adr/0001-stack.md).
+ * (see docs/architecture.md).
  *
  * `auth_*` tables belong to Better Auth (camelCase columns); only the columns
  * Octadash reads directly are typed here.
