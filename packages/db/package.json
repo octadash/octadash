@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@octadash/core": "workspace:*",
+    "@octadash/diagnosis": "workspace:*",
     "kysely": "^0.29.9",
     "pg": "^8.23.1"
   },

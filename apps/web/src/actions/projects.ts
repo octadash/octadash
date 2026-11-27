@@ -1,7 +1,7 @@
 'use server'
 
 import { normalizeUrl } from '@octadash/core'
-import { createProject, deleteProject, updateProject } from '@octadash/db'
+import { createProject, deleteProject, requestDiagnosis, updateProject } from '@octadash/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -28,7 +28,9 @@ export async function createProjectAction(_: FormState, formData: FormData): Pro
   const { org } = await requireManager()
   const input = await parseProject(formData)
   if ('error' in input) return { error: input.error }
-  const project = await createProject(services().db, org.id, input.value)
+  const { db } = services()
+  const project = await createProject(db, org.id, input.value)
+  await requestDiagnosis(db, org.id, project.id, 'created')
   revalidatePath('/', 'layout')
   redirect(`/p/${project.slug}`)
 }
@@ -38,13 +40,19 @@ export async function updateProjectAction(_: FormState, formData: FormData): Pro
   const { org } = await requireManager()
   const input = await parseProject(formData)
   if ('error' in input) return { error: input.error }
-  const project = await updateProject(
-    services().db,
-    org.id,
-    String(formData.get('projectId') ?? ''),
-    input.value,
-  )
+  const { db } = services()
+  const projectId = String(formData.get('projectId') ?? '')
+  const before = await db
+    .selectFrom('project')
+    .select('url')
+    .where('org_id', '=', org.id)
+    .where('id', '=', projectId)
+    .executeTakeFirst()
+  const project = await updateProject(db, org.id, projectId, input.value)
   if (!project) return { error: t('notFound') }
+  if (project.url && project.url !== before?.url) {
+    await requestDiagnosis(db, org.id, project.id, 'url_changed')
+  }
   revalidatePath('/', 'layout')
   redirect(`/p/${project.slug}`)
 }

@@ -121,6 +121,108 @@
     "nameRequired": "Give the product a name.",
     "invalidUrl": "That address does not look right. Example: postato.com.br",
     "notFound": "Not found.",
-    "confirmDelete": "Tick the box to confirm."
+    "confirmDelete": "Confirm the deletion first."
+  },
+  "diagnosis": {
+    "title": "Diagnosis",
+    "intro": "What Octadash sees from outside the site, the way a first-time visitor would.",
+    "score": "{score} of {total} levels",
+    "checked": "Checked {time}",
+    "running": "Diagnosing the site. This takes up to a minute.",
+    "runAgain": "Run again",
+    "noUrl": "Add the site's address in the settings to diagnose it.",
+    "neverRan": "No diagnosis yet.",
+    "failed": "The last diagnosis could not finish: {error}",
+    "toolsTitle": "Tools found",
+    "noTools": "No known tool found in the page or its scripts.",
+    "status": {
+      "ok": "Answered",
+      "partial": "Partly",
+      "missing": "Missing",
+      "unknown": "Can't tell from outside"
+    },
+    "levels": {
+      "alive": {
+        "name": "Alive",
+        "question": "Is it up and safe to open?"
+      },
+      "used": {
+        "name": "Used",
+        "question": "Do you know how many people visit?"
+      },
+      "breaking": {
+        "name": "Breaking",
+        "question": "Do you find out when something breaks?"
+      },
+      "growing": {
+        "name": "Growing",
+        "question": "Do you know what people do inside?"
+      },
+      "earning": {
+        "name": "Earning",
+        "question": "Do you see the money coming in?"
+      },
+      "understood": {
+        "name": "Understood",
+        "question": "Is it all together in one place?"
+      }
+    },
+    "findings": {
+      "unreachable": "The site did not answer ({error}).",
+      "blocked_by_alive": "Waits for the site to answer.",
+      "reachable": "Answers with HTTP {status}.",
+      "https": {
+        "ok": "Uses HTTPS.",
+        "missing": "Opens without HTTPS."
+      },
+      "certificate": {
+        "ok": "Certificate valid for {days} more days.",
+        "unknown": "Could not read the certificate."
+      },
+      "certificate_expiring": "The certificate expires in {days} days.",
+      "certificate_invalid": "The certificate is invalid or expired.",
+      "https_redirect": {
+        "ok": "http:// takes visitors to https://.",
+        "missing": "http:// does not take visitors to https://."
+      },
+      "speed": {
+        "ok": "The home page loaded in {ms} ms.",
+        "other": "The home page took {ms} ms to load."
+      },
+      "health": {
+        "ok": "Health endpoint at {path}.",
+        "missing": "No health endpoint found."
+      },
+      "used_found": "Visits counted by {tools}.",
+      "used_missing": "No web analytics found.",
+      "breaking_found": "Errors tracked by {tools}.",
+      "breaking_missing": "No error tracking found in the site. If it runs only on the server, it can't be seen from here.",
+      "growing_found": "{tools} is installed. Its custom events can't be seen from outside.",
+      "growing_missing": "No product analytics found.",
+      "earning_found": "Sells through {tools}. Revenue shows up when the gateway is connected.",
+      "earning_unknown": "No checkout on the page. Payments usually happen after sign-in.",
+      "understood_later": "Octadash answers this when the other levels send data."
+    },
+    "healthPrompt": {
+      "title": "Next step: a health endpoint",
+      "body": "Uptime checks use it to know the app is up without loading pages or waking the database. Paste this into your AI coding agent:",
+      "text": "Add a GET /api/health endpoint to this app. It must answer HTTP 200 with the JSON '{\"status\":\"ok\"}' and Cache-Control: no-store, respond in under 100 ms, need no authentication, and must not query the database or call other services. Add a test for it."
+    },
+    "all": {
+      "title": "All products",
+      "diagnosed": "{count} of {total} products diagnosed",
+      "product": "Product",
+      "score": "Levels",
+      "pending": "Diagnosing",
+      "noUrl": "No address",
+      "noReport": "Not diagnosed yet",
+      "gaps": {
+        "alive": "{count, plural, one {# product} other {# products}} down",
+        "used": "{count, plural, one {# product} other {# products}} without web analytics",
+        "breaking": "{count, plural, one {# product} other {# products}} without error tracking",
+        "growing": "{count, plural, one {# product} other {# products}} without product analytics"
+      },
+      "allGood": "Every diagnosed product answers the levels visible from outside."
+    }
   }
 }

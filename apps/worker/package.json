@@ -16,10 +16,12 @@
     "@octadash/auth": "workspace:*",
     "@octadash/core": "workspace:*",
     "@octadash/db": "workspace:*",
+    "@octadash/diagnosis": "workspace:*",
     "@octadash/integrations": "workspace:*",
     "pg-boss": "^12.40.0"
   },
   "devDependencies": {
+    "@types/pg": "^8.15.0",
     "tsx": "^4.23.15",
     "vitest": "^5.1.2"
   }
