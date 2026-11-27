@@ -32,7 +32,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <span className="font-display text-lg font-semibold tracking-tight">Octadash</span>
           </Link>
           {orgs.length > 1 ? (
-            <form action={switchOrgAction}>
+            <form action={switchOrgAction} key={org.id}>
               <AutoSubmitSelect
                 name="organizationId"
                 defaultValue={org.id}
