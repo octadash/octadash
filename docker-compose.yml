@@ -1,0 +1,92 @@
+# Octadash: self-hosted install with Docker Compose.
+#   cp .env.example .env   # then fill POSTGRES_PASSWORD and OCTADASH_SECRET
+#   docker compose up -d
+# Panel on :3000, ingest on :4000. Put a reverse proxy with HTTPS in front of both.
+# Using Coolify? Deploy docker-compose.coolify.yml instead.
+name: octadash
+
+x-octadash: &octadash
+  image: ghcr.io/octadash/octadash:${OCTADASH_VERSION:-edge}
+  restart: unless-stopped
+  environment:
+    DATABASE_URL: postgres://octadash:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/octadash
+    OCTADASH_URL: ${OCTADASH_URL:-http://localhost:3000}
+    OCTADASH_INGEST_URL: ${OCTADASH_INGEST_URL:-http://localhost:4000}
+    OCTADASH_SECRET: ${OCTADASH_SECRET:?set OCTADASH_SECRET in .env}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: octadash
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: octadash
+    # lz4 compresses large JSON payloads (events, errors) faster than the default.
+    command: ["postgres", "-c", "default_toast_compression=lz4"]
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U octadash -d octadash"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    <<: *octadash
+    command: ["web"]
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  ingest:
+    <<: *octadash
+    command: ["ingest"]
+    ports:
+      - "${INGEST_PORT:-4000}:4000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    <<: *octadash
+    command: ["worker"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4100/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  postgres-data:

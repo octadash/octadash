@@ -1,0 +1,94 @@
+# Octadash on Coolify.
+# New resource > Git repository (Docker Compose build pack) > Docker Compose Location:
+#   /docker-compose.coolify.yml
+# Coolify generates the database user and password, the secret and one domain per
+# public service (panel and ingest). You can replace the domains in the Domains tab.
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      POSTGRES_DB: octadash
+    command: ["postgres", "-c", "default_toast_compression=lz4"]
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -d octadash -U "$$POSTGRES_USER"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: ghcr.io/octadash/octadash:${OCTADASH_VERSION:-edge}
+    command: ["web"]
+    environment:
+      OCTADASH_URL: ${SERVICE_URL_WEB_3000}
+      OCTADASH_INGEST_URL: ${SERVICE_URL_INGEST_4000}
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/octadash
+      OCTADASH_SECRET: ${SERVICE_PASSWORD_64_OCTADASH}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  ingest:
+    image: ghcr.io/octadash/octadash:${OCTADASH_VERSION:-edge}
+    command: ["ingest"]
+    environment:
+      SERVICE_URL_INGEST_4000: /
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/octadash
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    image: ghcr.io/octadash/octadash:${OCTADASH_VERSION:-edge}
+    command: ["worker"]
+    environment:
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/octadash
+      OCTADASH_SECRET: ${SERVICE_PASSWORD_64_OCTADASH}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4100/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  postgres-data:

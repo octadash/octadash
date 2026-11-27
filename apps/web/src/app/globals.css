@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* Brand tokens (see AGENTS.md). Dark is the default theme. */
+@theme {
+  --color-magenta-300: #f3a5cb;
+  --color-magenta-400: #e875af;
+  --color-magenta-500: #c04482;
+  --color-magenta-600: #a32c69;
+  --color-magenta-700: #7f1f50;
+  --color-ok: #3dd68c;
+  --color-warn: #f5b544;
+  --color-error: #ff6b3d;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-inter), ui-sans-serif, sans-serif;
+}
+
+:root {
+  --ink: #0b0d12;
+  --surface: #151922;
+  --line: #262c38;
+  --text: #e8ebf2;
+  --muted: #9aa3b5;
+  --accent: var(--color-magenta-400);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --ink: #f7f8fb;
+    --surface: #ffffff;
+    --line: #e2e6ee;
+    --text: #12151c;
+    --muted: #5b6475;
+    --accent: var(--color-magenta-600);
+    color-scheme: light;
+  }
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+}
+
+body {
+  background: var(--ink);
+  color: var(--text);
+}
