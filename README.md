@@ -74,6 +74,7 @@ apps/
   ingest/         Hono service that receives data (Sentry, PostHog, OTLP, Octadash)
   worker/         Jobs: uptime, diagnosis, alerts, syncs, rollups, retention
 packages/
+  auth/           Better Auth setup: accounts, organizations, sign-up policy
   core/           Env parsing, logger, ids
   db/             Kysely client, migrations, partition helpers
   diagnosis/      Reads a site from outside and grades its observability levels
