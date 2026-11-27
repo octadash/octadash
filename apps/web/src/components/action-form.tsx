@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, type ReactNode, startTransition, useActionState } from 'react'
-import { ErrorText } from './ui'
 
 export type FormState = { error?: string } | undefined
 
@@ -39,7 +38,11 @@ export function ActionForm({
     >
       <PendingContext value={pending}>
         {children}
-        <ErrorText>{state?.error}</ErrorText>
+        {state?.error && (
+          <p role="alert" className="text-sm text-destructive">
+            {state.error}
+          </p>
+        )}
       </PendingContext>
     </form>
   )

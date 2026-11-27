@@ -11,7 +11,8 @@
     "newProduct": "New product",
     "language": "Language",
     "organization": "Organization",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "account": "Account"
   },
   "auth": {
     "setupTitle": "Welcome to Octadash",
@@ -58,7 +59,7 @@
     "settingsTitle": "Product settings",
     "dangerTitle": "Delete product",
     "dangerBody": "Deletes the product, its keys and all its data. This cannot be undone.",
-    "confirmDelete": "I understand, delete {name}",
+    "deleteDialogTitle": "Delete {name}?",
     "delete": "Delete product"
   },
   "modules": {
@@ -98,6 +99,7 @@
   "members": {
     "title": "Members",
     "intro": "People who can see every product in {org}.",
+    "name": "Name",
     "invite": "Invite",
     "inviteTitle": "Invite someone",
     "inviteIntro": "Octadash creates a link for you to send. Email delivery arrives with the alerts module.",

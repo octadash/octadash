@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Logo } from '@/components/ui'
+import { Logo } from '@/components/logo'
 
 export const dynamic = 'force-dynamic'
 

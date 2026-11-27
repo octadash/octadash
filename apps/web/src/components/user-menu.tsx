@@ -1,0 +1,53 @@
+'use client'
+
+import { LogOutIcon, UserIcon, UsersIcon } from 'lucide-react'
+import Link from 'next/link'
+import { useTransition } from 'react'
+import { signOutAction } from '@/actions/auth'
+import { Button } from './ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
+
+export function UserMenu({
+  name,
+  email,
+  labels,
+}: {
+  name: string
+  email: string
+  labels: { account: string; members: string; signOut: string }
+}) {
+  const [pending, startTransition] = useTransition()
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" disabled={pending} aria-label={labels.account}>
+          <UserIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-56">
+        <DropdownMenuLabel className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">{name}</span>
+          <span className="truncate text-xs font-normal">{email}</span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings/members">
+            <UsersIcon />
+            {labels.members}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => startTransition(() => signOutAction())}>
+          <LogOutIcon />
+          {labels.signOut}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

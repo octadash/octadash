@@ -1,7 +1,9 @@
 'use client'
 
+import { PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
 
 export interface Tab {
   href: string
@@ -20,11 +22,12 @@ export function NavTabs({ tabs, newLabel }: { tabs: Tab[]; newLabel: string }) {
             key={tab.href}
             href={tab.href}
             aria-current={active ? 'page' : undefined}
-            className={`shrink-0 border-b-2 px-3 py-2.5 text-sm whitespace-nowrap transition-colors ${
+            className={cn(
+              'shrink-0 border-b-2 px-3 py-2.5 text-sm whitespace-nowrap transition-colors',
               active
-                ? 'border-accent font-medium text-text'
-                : 'border-transparent text-muted hover:text-text'
-            }`}
+                ? 'border-brand font-medium text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground',
+            )}
           >
             {tab.label}
           </Link>
@@ -34,9 +37,9 @@ export function NavTabs({ tabs, newLabel }: { tabs: Tab[]; newLabel: string }) {
         href="/products/new"
         title={newLabel}
         aria-label={newLabel}
-        className="shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm text-muted hover:text-accent"
+        className="flex shrink-0 items-center border-b-2 border-transparent px-3 py-2.5 text-muted-foreground hover:text-brand"
       >
-        +
+        <PlusIcon className="size-4" />
       </Link>
     </nav>
   )
