@@ -1,0 +1,16 @@
+import { fileURLToPath } from 'node:url'
+import type { NextConfig } from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
+
+const config: NextConfig = {
+  // Self-contained server for the Docker image.
+  output: 'standalone',
+  // Trace files from the monorepo root so workspace packages end up in the image.
+  outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
+  transpilePackages: ['@octadash/core'],
+  poweredByHeader: false,
+}
+
+export default withNextIntl(config)
