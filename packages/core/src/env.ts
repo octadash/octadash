@@ -16,6 +16,11 @@ export const webEnvSchema = baseEnvSchema.extend({
   OCTADASH_INGEST_URL: z.url(),
   /** Secret used to sign sessions and encrypt integration credentials. */
   OCTADASH_SECRET: z.string().min(32, 'OCTADASH_SECRET must have at least 32 characters'),
+  /** Anyone may create an account. Off on self-hosted installs: only the owner and invited people. */
+  OCTADASH_OPEN_SIGNUP: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 })
 
 export const ingestEnvSchema = baseEnvSchema.extend({

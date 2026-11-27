@@ -1,9 +1,124 @@
 {
-  "home": {
-    "tagline": "Um lugar só para acompanhar todos os seus produtos.",
-    "status": "O Octadash está instalado e funcionando.",
-    "next": "O assistente de instalação (conta, primeiro produto e diagnóstico da URL) chega na próxima versão.",
-    "docs": "Ler a documentação",
-    "source": "Código-fonte"
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "signOut": "Sair",
+    "members": "Membros",
+    "settings": "Configurações",
+    "allProducts": "Todos",
+    "newProduct": "Novo produto",
+    "language": "Idioma",
+    "organization": "Organização",
+    "comingSoon": "Em breve"
+  },
+  "auth": {
+    "setupTitle": "Boas-vindas ao Octadash",
+    "setupIntro": "Crie a conta de dono e a sua organização. Depois disso, só você convida outras pessoas.",
+    "name": "Seu nome",
+    "email": "E-mail",
+    "password": "Senha",
+    "passwordHint": "Pelo menos 10 caracteres.",
+    "orgName": "Organização",
+    "orgNameHint": "Sua empresa ou o seu nome. Os produtos ficam dentro dela.",
+    "createAccount": "Criar conta",
+    "signInTitle": "Entrar",
+    "signIn": "Entrar",
+    "inviteTitle": "Entrar em {org}",
+    "inviteIntro": "Você foi convidado como {role}. Crie sua conta para entrar.",
+    "join": "Criar conta e continuar",
+    "acceptTitle": "Entrar em {org}",
+    "acceptIntro": "Você está conectado como {email}.",
+    "accept": "Entrar na organização",
+    "wrongAccount": "Este convite é para {email}, mas você está conectado como {current}. Saia e abra o link de novo.",
+    "invitationInvalid": "Este convite não existe, já foi usado ou expirou. Peça um novo.",
+    "noOrgTitle": "Sem organização",
+    "noOrgBody": "Sua conta não faz parte de nenhuma organização. Peça um convite a um dono.",
+    "haveAccount": "Já tem conta? Entre primeiro."
+  },
+  "projects": {
+    "newTitle": "Novo produto",
+    "newIntro": "Cada produto ganha a sua aba, as suas chaves e os seus números.",
+    "name": "Nome",
+    "url": "Endereço",
+    "urlHint": "Opcional. O endereço do site, usado pelo diagnóstico e pelo uptime.",
+    "create": "Criar produto",
+    "emptyTitle": "Nenhum produto ainda",
+    "emptyBody": "Adicione o primeiro produto para começar a acompanhar.",
+    "noUrl": "Sem endereço",
+    "open": "Abrir",
+    "modulesTitle": "O que o Octadash acompanha",
+    "modulesIntro": "Cada módulo liga para este produto quando os dados dele começam a chegar.",
+    "keysTitle": "Chaves de coleta",
+    "keysIntro": "Use estas chaves ao conectar os SDKs. Elas identificam o produto e podem ficar no navegador.",
+    "publicKey": "Chave pública",
+    "sentryDsn": "DSN do Sentry (erros)",
+    "ingestUrl": "Endereço de coleta",
+    "settingsTitle": "Configurações do produto",
+    "dangerTitle": "Excluir produto",
+    "dangerBody": "Exclui o produto, as chaves e todos os dados dele. Não dá para desfazer.",
+    "confirmDelete": "Entendi, excluir {name}",
+    "delete": "Excluir produto"
+  },
+  "modules": {
+    "diagnosis": {
+      "name": "Diagnóstico",
+      "body": "O que o site tem e o que falta, com o próximo passo."
+    },
+    "uptime": {
+      "name": "Uptime",
+      "body": "Está no ar? Checa sem acordar o seu banco."
+    },
+    "web": {
+      "name": "Web",
+      "body": "Visitas, origens e páginas, sem cookie."
+    },
+    "errors": {
+      "name": "Erros",
+      "body": "O que quebrou e para quantas pessoas."
+    },
+    "product": {
+      "name": "Produto",
+      "body": "Cadastros, logins, ações chave, funil e retenção."
+    },
+    "revenue": {
+      "name": "Dinheiro",
+      "body": "MRR, novos clientes, cancelamentos e reembolsos."
+    },
+    "ai": {
+      "name": "Custo de IA",
+      "body": "Custo, tokens e erros por modelo e provedor."
+    },
+    "logs": {
+      "name": "Logs",
+      "body": "O que o servidor fez naquele momento."
+    }
+  },
+  "members": {
+    "title": "Membros",
+    "intro": "Pessoas que veem todos os produtos de {org}.",
+    "invite": "Convidar",
+    "inviteTitle": "Convidar alguém",
+    "inviteIntro": "O Octadash gera um link para você enviar. O envio por e-mail chega com o módulo de alertas.",
+    "role": "Papel",
+    "roleMember": "Membro",
+    "roleAdmin": "Admin",
+    "roleOwner": "Dono",
+    "pending": "Convites pendentes",
+    "inviteLink": "Link do convite",
+    "cancelInvite": "Cancelar",
+    "you": "você",
+    "expires": "Expira em {date}"
+  },
+  "errors": {
+    "generic": "Algo deu errado. Tente de novo.",
+    "checkFields": "Confira os campos e tente de novo.",
+    "invalidCredentials": "E-mail ou senha incorretos.",
+    "invitationInvalid": "Este convite não vale mais.",
+    "nameRequired": "Dê um nome ao produto.",
+    "invalidUrl": "Esse endereço não parece certo. Exemplo: postato.com.br",
+    "notFound": "Não encontrado.",
+    "confirmDelete": "Marque a caixa para confirmar."
   }
 }

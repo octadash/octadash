@@ -1,9 +1,124 @@
 {
-  "home": {
-    "tagline": "One place to watch every product you run.",
-    "status": "Octadash is installed and running.",
-    "next": "The setup wizard (account, first product and URL diagnosis) arrives in the next release.",
-    "docs": "Read the docs",
-    "source": "Source code"
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "copied": "Copied",
+    "signOut": "Sign out",
+    "members": "Members",
+    "settings": "Settings",
+    "allProducts": "All",
+    "newProduct": "New product",
+    "language": "Language",
+    "organization": "Organization",
+    "comingSoon": "Coming soon"
+  },
+  "auth": {
+    "setupTitle": "Welcome to Octadash",
+    "setupIntro": "Create the owner account and your organization. Only you can invite other people after this.",
+    "name": "Your name",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 10 characters.",
+    "orgName": "Organization",
+    "orgNameHint": "Your company or your own name. Products live inside it.",
+    "createAccount": "Create account",
+    "signInTitle": "Sign in",
+    "signIn": "Sign in",
+    "inviteTitle": "Join {org}",
+    "inviteIntro": "You were invited as {role}. Create your account to join.",
+    "join": "Create account and continue",
+    "acceptTitle": "Join {org}",
+    "acceptIntro": "You are signed in as {email}.",
+    "accept": "Join organization",
+    "wrongAccount": "This invitation is for {email}, but you are signed in as {current}. Sign out and open the link again.",
+    "invitationInvalid": "This invitation does not exist, was used or expired. Ask for a new one.",
+    "noOrgTitle": "No organization",
+    "noOrgBody": "Your account is not part of any organization. Ask an owner for an invitation.",
+    "haveAccount": "Already have an account? Sign in first."
+  },
+  "projects": {
+    "newTitle": "New product",
+    "newIntro": "Each product gets its own tab, its own keys and its own numbers.",
+    "name": "Name",
+    "url": "Address",
+    "urlHint": "Optional. The site's address, used by the diagnosis and the uptime checks.",
+    "create": "Create product",
+    "emptyTitle": "No products yet",
+    "emptyBody": "Add your first product to start watching it.",
+    "noUrl": "No address",
+    "open": "Open",
+    "modulesTitle": "What Octadash watches",
+    "modulesIntro": "Each module turns on for this product when its data starts arriving.",
+    "keysTitle": "Ingest keys",
+    "keysIntro": "Use these when connecting SDKs. They identify the product and are safe to put in a browser.",
+    "publicKey": "Public key",
+    "sentryDsn": "Sentry DSN (errors)",
+    "ingestUrl": "Ingest address",
+    "settingsTitle": "Product settings",
+    "dangerTitle": "Delete product",
+    "dangerBody": "Deletes the product, its keys and all its data. This cannot be undone.",
+    "confirmDelete": "I understand, delete {name}",
+    "delete": "Delete product"
+  },
+  "modules": {
+    "diagnosis": {
+      "name": "Diagnosis",
+      "body": "What the site has and what is missing, with the next step."
+    },
+    "uptime": {
+      "name": "Uptime",
+      "body": "Is it up? Checks without waking your database."
+    },
+    "web": {
+      "name": "Web analytics",
+      "body": "Visits, sources and pages, without cookies."
+    },
+    "errors": {
+      "name": "Errors",
+      "body": "What broke and for how many people."
+    },
+    "product": {
+      "name": "Product",
+      "body": "Sign-ups, logins, key actions, funnel and retention."
+    },
+    "revenue": {
+      "name": "Revenue",
+      "body": "MRR, new customers, churn and refunds."
+    },
+    "ai": {
+      "name": "AI cost",
+      "body": "Cost, tokens and errors per model and provider."
+    },
+    "logs": {
+      "name": "Logs",
+      "body": "What the server did at that moment."
+    }
+  },
+  "members": {
+    "title": "Members",
+    "intro": "People who can see every product in {org}.",
+    "invite": "Invite",
+    "inviteTitle": "Invite someone",
+    "inviteIntro": "Octadash creates a link for you to send. Email delivery arrives with the alerts module.",
+    "role": "Role",
+    "roleMember": "Member",
+    "roleAdmin": "Admin",
+    "roleOwner": "Owner",
+    "pending": "Pending invitations",
+    "inviteLink": "Invitation link",
+    "cancelInvite": "Cancel",
+    "you": "you",
+    "expires": "Expires {date}"
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "checkFields": "Check the fields and try again.",
+    "invalidCredentials": "Wrong email or password.",
+    "invitationInvalid": "This invitation is no longer valid.",
+    "nameRequired": "Give the product a name.",
+    "invalidUrl": "That address does not look right. Example: postato.com.br",
+    "notFound": "Not found.",
+    "confirmDelete": "Tick the box to confirm."
   }
 }

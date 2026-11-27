@@ -13,6 +13,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@octadash/auth": "workspace:*",
     "@octadash/core": "workspace:*",
     "@octadash/db": "workspace:*",
     "@octadash/integrations": "workspace:*",

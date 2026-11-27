@@ -52,8 +52,11 @@ pnpm install
 pnpm db:up                 # Postgres on localhost:5432
 export DATABASE_URL=postgres://octadash:octadash@localhost:5432/octadash
 pnpm db:migrate
+cp .env.example apps/web/.env.local   # set DATABASE_URL and OCTADASH_SECRET there
 pnpm dev                   # web :3000, ingest :4000, worker
 ```
+
+Open http://localhost:3000: the first visit creates the owner account.
 
 | Command          | Does                                      |
 | ---------------- | ----------------------------------------- |
