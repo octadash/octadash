@@ -1,0 +1,23 @@
+# Local development: only Postgres. Run the apps with `pnpm dev`.
+name: octadash-dev
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: octadash
+      POSTGRES_PASSWORD: octadash
+      POSTGRES_DB: octadash
+    command: ["postgres", "-c", "default_toast_compression=lz4"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U octadash -d octadash"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-dev:

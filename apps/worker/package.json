@@ -1,0 +1,25 @@
+{
+  "name": "@octadash/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "node ../../scripts/bundle.mjs src/index.ts src/migrate.ts",
+    "start": "node dist/index.js",
+    "migrate": "tsx src/migrate.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@octadash/core": "workspace:*",
+    "@octadash/db": "workspace:*",
+    "@octadash/integrations": "workspace:*",
+    "pg-boss": "^12.40.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "vitest": "^5.1.2"
+  }
+}
