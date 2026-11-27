@@ -1,20 +1,37 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { setLocaleAction } from '@/actions/locale'
-import { AutoSubmitSelect } from './auto-submit-select'
 
-const names: Record<string, string> = { en: 'English', 'pt-BR': 'Português' }
+const options = [
+  { value: 'pt-BR', label: 'PT', name: 'Português' },
+  { value: 'en', label: 'EN', name: 'English' },
+] as const
 
+/** Two small buttons instead of a select: one click, and the active one is always right. */
 export async function LocaleSwitcher() {
   const [locale, t] = await Promise.all([getLocale(), getTranslations('common')])
   return (
     <form action={setLocaleAction}>
-      <AutoSubmitSelect name="locale" defaultValue={locale} label={t('language')}>
-        {Object.entries(names).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </AutoSubmitSelect>
+      <fieldset className="flex rounded-lg border border-line p-0.5 text-xs">
+        <legend className="sr-only">{t('language')}</legend>
+        {options.map((option) => {
+          const active = option.value === locale
+          return (
+            <button
+              key={option.value}
+              type="submit"
+              name="locale"
+              value={option.value}
+              title={option.name}
+              aria-pressed={active}
+              className={`rounded-md px-2 py-1 font-medium transition-colors ${
+                active ? 'bg-magenta-500/15 text-accent' : 'text-muted hover:text-text'
+              }`}
+            >
+              {option.label}
+            </button>
+          )
+        })}
+      </fieldset>
     </form>
   )
 }
