@@ -6,7 +6,7 @@ Thanks for helping. A few rules keep the project easy to work on.
 
 - For anything larger than a small fix, open an issue first so we agree on the
   approach.
-- Read [docs/adr/0001-stack.md](docs/adr/0001-stack.md): it explains the
+- Read [docs/architecture.md](docs/architecture.md): it explains the
   architecture and the rules every module follows.
 
 ## Conventions

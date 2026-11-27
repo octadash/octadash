@@ -1,7 +1,10 @@
-# ADR 0001: Stack and architecture
+# Architecture
 
-- Status: accepted
-- Date: 2026-11-27
+How Octadash is built and why. What it does and in which order lives in
+[product.md](product.md); how to install it, in [self-hosting.md](self-hosting.md).
+
+Decided on 2026-11-27. Changing a decision here means editing this file in the
+same pull request as the code, with the reason in the commit message.
 
 ## Context
 
@@ -106,9 +109,23 @@ form through `z.toJSONSchema`), the keys that are secret (stored encrypted), and
 module needs. Users enable what they want per organization or per product, as in
 Coolify's notification settings. Nothing is chosen at install time.
 
-Planned: email (SMTP), Telegram, Slack, Discord, webhook, ntfy and, later,
-WhatsApp for alerts; Stripe, Asaas, Paddle, OpenAI, Anthropic and infra
-providers as sources.
+Built: Telegram and webhook. The full list of planned connectors is in
+[product.md](product.md#connectors).
+
+### Modules can be switched off (planned, with module 2)
+
+Each module (web analytics, errors, revenue and so on) declares a manifest: its
+id, the modules it depends on (funnels need product events), the source
+integrations it accepts and the metrics it provides. An instance, and each
+product inside it, turns modules on and off. A module that is off registers no
+ingest route, schedules no worker job, and is hidden from the panel and the MCP
+server; its data stays until retention removes it. The base (accounts,
+products, diagnosis, uptime, alerts) cannot be switched off.
+
+Because `ingest` and `worker` are bundled into single files, third-party
+modules and integrations arrive by pull request into this repository, the way
+Coolify's service catalog grows. Loading third-party code at runtime is a later
+decision: it would run with access to the instance's database.
 
 ### Web stack
 
@@ -128,6 +145,43 @@ streamable HTTP endpoint.
 
 Every role applies pending migrations on start (a lock makes parallel starts
 safe), so upgrades are "pull the new image and restart".
+
+### Diagnosis
+
+The diagnosis visits a product's address the way a first-time visitor would
+and grades its observability levels (the levels are described in
+[product.md](product.md#observability-levels)). It runs when a product is
+created, when its address changes, when someone clicks "Run again", and once a
+day.
+
+#### What it reads
+
+- The page HTML, following up to 6 redirects.
+- The URLs of every script, link, iframe and form target.
+- Up to 30 first-party scripts (1.5 MB each, 10 MB in total), where bundled
+  SDKs such as Sentry and PostHog live.
+- The TLS certificate and whether `http://` redirects to `https://`.
+
+It never follows a URL that resolves to a private address (localhost, 10.x,
+192.168.x, 169.254.x and so on), so a product address can't be used to read
+internal services. Set `OCTADASH_DIAGNOSIS_ALLOW_PRIVATE=true` on the worker to
+diagnose local sites during development.
+
+#### How it runs
+
+The `diagnosis` table is also the queue. The panel inserts a queued row and
+sends `NOTIFY octadash_diagnosis`; the worker listens, claims rows with
+`FOR UPDATE SKIP LOCKED` and runs two at a time. A 30 second poll catches
+missed notifications and returns diagnoses left running by a stopped worker.
+An hourly job queues products whose last diagnosis is older than 24 hours.
+Diagnoses older than 90 days are pruned, except the last one of each product.
+
+#### Adding a tool
+
+Tools are regular expressions in
+[`packages/diagnosis/src/tools.ts`](../packages/diagnosis/src/tools.ts). Keep
+patterns specific (a false "you have Sentry" is worse than a missed one) and add
+a test with a real snippet in `tools.test.ts`.
 
 ## Alternatives considered
 

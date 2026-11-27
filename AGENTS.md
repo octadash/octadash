@@ -1,7 +1,8 @@
 # Notes for AI coding agents
 
 Read [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
-[docs/adr/0001-stack.md](docs/adr/0001-stack.md) before changing code.
+[docs/architecture.md](docs/architecture.md) before changing code.
+[docs/product.md](docs/product.md) holds the roadmap and the backlog.
 
 - Monorepo: pnpm workspaces + Turborepo. Node 24, TypeScript 6 (strict).
 - Before finishing: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
