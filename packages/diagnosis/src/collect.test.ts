@@ -21,11 +21,13 @@ describe('extractUrls', () => {
       <a href="#top">Top</a>
       <a href="mailto:hi@example.com">Mail</a>
       <iframe src='https://www.youtube.com/embed/xyz'></iframe>
-      <form action=/subscribe method=post></form>`
+      <form action=/subscribe method=post></form>
+      <script>self.__next_f.push([1,"0:[\\"/_next/static/chunks/lazy-9.js\\"]"])</script>`
     expect(extractUrls(html, base)).toEqual({
       scripts: [
         'https://www.example.com/_next/static/chunks/main-abc.js',
         'https://www.example.com/assets/index-123.js',
+        'https://www.example.com/_next/static/chunks/lazy-9.js',
       ],
       links: [
         'https://buy.stripe.com/abc?x=1&y=2',

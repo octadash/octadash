@@ -93,6 +93,7 @@ async function follow(
 }
 
 const ATTRIBUTE = /\s(src|href|action)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi
+const NEXT_CHUNK = /["'](\/_next\/static\/chunks\/[\w./-]+\.js)/g
 const TAG = /<(script|a|link|iframe|form)\b([^>]*)>/gi
 
 /** Pulls script, link, iframe and form URLs out of the HTML, resolved against the page. */
@@ -117,6 +118,10 @@ export function extractUrls(html: string, base: URL): { scripts: string[]; links
       else if (name === 'script') scripts.add(resolved)
       else if (name !== 'link') links.add(resolved)
     }
+  }
+  // Next.js lists chunks in its inline payload too, not only in <script> tags.
+  for (const match of html.matchAll(NEXT_CHUNK)) {
+    scripts.add(new URL(match[1] ?? '', base).href)
   }
   return { scripts: [...scripts], links: [...links] }
 }

@@ -44,6 +44,12 @@ describe('detectTools', () => {
     expect(ids(snapshot({ html }))).toEqual(['plausible', 'umami'])
   })
 
+  it('finds Umami from its event attributes when the script loads later', () => {
+    const html =
+      '<a data-umami-event="contato-instagram" href="https://instagram.com/x">Instagram</a>'
+    expect(ids(snapshot({ html }))).toEqual(['umami'])
+  })
+
   it('finds PostHog bundled into a first-party chunk', () => {
     const bundle =
       'posthog.init("phc_abc",{api_host:"https://us.i.posthog.com",person_profiles:"identified_only"})'
@@ -51,6 +57,12 @@ describe('detectTools', () => {
     expect(tools).toEqual([
       { id: 'posthog', name: 'PostHog', categories: ['web', 'product'], evidence: ['bundle'] },
     ])
+  })
+
+  it('finds PostHog behind a reverse proxy, from its project key', () => {
+    const bundle =
+      'let t=e.i(85707).default.env.NEXT_PUBLIC_POSTHOG_KEY??"phc_qTiGiZsUX38CGCQXXwGKV7iddrvmNF6LFBWR4KgJEBbQ";e.init(t,{api_host:"/ingest",ui_host:"https://us.posthog.com"})'
+    expect(ids(snapshot({ bundles: [bundle] }))).toEqual(['posthog'])
   })
 
   it('finds Sentry from a DSN in a bundle', () => {

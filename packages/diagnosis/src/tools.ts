@@ -37,7 +37,8 @@ export const TOOL_RULES: ToolRule[] = [
     id: 'umami',
     name: 'Umami',
     categories: ['web'],
-    pattern: /cloud\.umami\.is|umami\.is\/script\.js|\/umami\.js|data-website-id=["'][0-9a-f-]{36}/,
+    pattern:
+      /cloud\.umami\.is|umami\.is\/script\.js|\/umami\.js|data-website-id=["'][0-9a-f-]{36}|data-umami-event=/,
   },
   {
     id: 'vercel-analytics',
@@ -77,7 +78,9 @@ export const TOOL_RULES: ToolRule[] = [
     id: 'posthog',
     name: 'PostHog',
     categories: ['web', 'product'],
-    pattern: /[a-z0-9-]+\.i\.posthog\.com|app\.posthog\.com|posthog\.init\(|__POSTHOG/,
+    // Project keys start with phc_; apps behind a reverse proxy still ship the key and ui_host.
+    pattern:
+      /phc_[A-Za-z0-9]{30,}|[a-z0-9-]+\.i\.posthog\.com|(?:app|us|eu)\.posthog\.com|posthog\.init\(|__POSTHOG/,
   },
   {
     id: 'mixpanel',
