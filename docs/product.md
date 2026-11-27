@@ -3,16 +3,21 @@
 What Octadash does, what it will do and in which order. How it is built lives
 in [architecture.md](architecture.md).
 
-Octadash gathers in one panel what is usually spread across six or more tools,
-without trying to match the depth of each one. Every day it answers one
+Octadash delivers in one panel what is usually spread across six or more tools,
+for all your products at once. Every day it answers one
 question: **of my products, which ones need my attention, why, since when, and
 what do I do about it?**
 
 ## Principles
 
-- **Gather, do not replace.** Sentry stays better at errors and PostHog at
-  product analytics. Octadash wins by showing everything together, per product
-  and in the "All products" tab, and by crossing one area with another.
+- **Deliver what they do, without being them.** PostHog and Sentry are good
+  tools, and anyone who likes them can keep them: Octadash accepts the same
+  SDKs. The difference is seeing every product together. In PostHog each
+  product is a separate project (one on the free plan, six on the paid one), so
+  checking the errors of all of them means opening each one. Octadash's "All
+  products" tab shows what is wrong across every product and crosses one area
+  with another, and a full-screen mode keeps it on a TV in the office, showing
+  only what you choose.
 - **Turn on what you need.** Someone who only wants analytics installs Octadash
   and turns on web analytics, as they would with Umami. Nothing is heavy for
   people who do not use it.
@@ -123,22 +128,23 @@ spare.
 
 ### Base: availability and alerts
 
-| Item                                        | Seen in                       | Priority |
-| ------------------------------------------- | ----------------------------- | -------- |
-| Heartbeats for cron jobs, workers, backups  | Healthchecks.io, Better Stack | high     |
-| Content check (200 but broken page)         | UptimeRobot                   | high     |
-| Domain expiry                               | UptimeRobot                   | high     |
-| Public status page                          | Better Stack, Uptime Kuma     | high     |
-| Maintenance windows                         | Better Stack                  | high     |
-| Octadash watching its own health            | all                           | high     |
-| DNS resolution and DNS changes              | UptimeRobot                   | medium   |
-| TCP ports and ping                          | UptimeRobot, Uptime Kuma      | medium   |
-| SLA and SLO reports                         | Better Stack                  | medium   |
-| Vendor status (Stripe, Vercel, OpenAI down) | Better Stack                  | medium   |
-| Synthetic tests with Playwright             | Checkly                       | medium   |
-| Alert escalation and acknowledgement        | Better Stack, PagerDuty       | medium   |
-| Checks from several regions                 | UptimeRobot, Checkly          | low      |
-| Visual diff between versions                | Checkly                       | low      |
+| Item                                           | Seen in                       | Priority |
+| ---------------------------------------------- | ----------------------------- | -------- |
+| Heartbeats for cron jobs, workers, backups     | Healthchecks.io, Better Stack | high     |
+| Content check (200 but broken page)            | UptimeRobot                   | high     |
+| Domain expiry                                  | UptimeRobot                   | high     |
+| Public status page                             | Better Stack, Uptime Kuma     | high     |
+| Maintenance windows                            | Better Stack                  | high     |
+| Octadash watching its own health               | all                           | high     |
+| Full-screen TV mode for the "All products" tab | Grafana, Geckoboard           | high     |
+| DNS resolution and DNS changes                 | UptimeRobot                   | medium   |
+| TCP ports and ping                             | UptimeRobot, Uptime Kuma      | medium   |
+| SLA and SLO reports                            | Better Stack                  | medium   |
+| Vendor status (Stripe, Vercel, OpenAI down)    | Better Stack                  | medium   |
+| Synthetic tests with Playwright                | Checkly                       | medium   |
+| Alert escalation and acknowledgement           | Better Stack, PagerDuty       | medium   |
+| Checks from several regions                    | UptimeRobot, Checkly          | low      |
+| Visual diff between versions                   | Checkly                       | low      |
 
 ### Web analytics (beyond module 3)
 
