@@ -76,6 +76,7 @@ apps/
 packages/
   core/           Env parsing, logger, ids
   db/             Kysely client, migrations, partition helpers
+  diagnosis/      Reads a site from outside and grades its observability levels
   integrations/   Plugin contract for alert channels and data sources
 docs/             Architecture decisions, roadmap, self-hosting
 ```

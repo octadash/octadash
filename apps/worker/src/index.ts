@@ -1,6 +1,8 @@
 import { createServer } from 'node:http'
 import { createLogger, OCTADASH_VERSION, parseEnv, workerEnvSchema } from '@octadash/core'
+import { createDb } from '@octadash/db'
 import { PgBoss } from 'pg-boss'
+import { startDiagnosisRunner } from './diagnosis'
 import { registerJobs } from './jobs'
 
 /**
@@ -14,8 +16,13 @@ const log = createLogger('worker', env.LOG_LEVEL)
 const boss = new PgBoss({ connectionString: env.DATABASE_URL, application_name: 'octadash-worker' })
 boss.on('error', (err) => log.error({ err }, 'pg-boss error'))
 
+const { db, pool } = createDb(env.DATABASE_URL, { max: 5, applicationName: 'octadash-worker' })
+
 await boss.start()
-await registerJobs(boss, log)
+await registerJobs(boss, db, log)
+const diagnosis = startDiagnosisRunner(db, pool, log, {
+  allowPrivate: env.OCTADASH_DIAGNOSIS_ALLOW_PRIVATE,
+})
 log.info('worker started')
 
 // Health endpoint for Docker/Coolify. It reports the process state and never queries the database.
@@ -37,7 +44,8 @@ async function shutdown(signal: string) {
   log.info({ signal }, 'shutting down')
   healthy = false
   health.close()
-  await boss.stop({ graceful: true, timeout: 20_000 })
+  await Promise.all([diagnosis.stop(), boss.stop({ graceful: true, timeout: 20_000 })])
+  await pool.end()
   process.exit(0)
 }
 

@@ -1,3 +1,4 @@
+import type { DiagnosisReport } from '@octadash/diagnosis'
 import type { ColumnType, Generated } from 'kysely'
 
 /**
@@ -13,6 +14,7 @@ export interface Database {
   octadash_instance: OctadashInstanceTable
   project: ProjectTable
   project_key: ProjectKeyTable
+  diagnosis: DiagnosisTable
   auth_user: AuthUserTable
   auth_organization: AuthOrganizationTable
   auth_member: AuthMemberTable
@@ -45,6 +47,25 @@ export interface ProjectKeyTable {
   label: Generated<string>
   created_at: CreatedAt
   revoked_at: Date | null
+}
+
+export type DiagnosisStatus = 'queued' | 'running' | 'done' | 'failed'
+/** Why a diagnosis ran: the product was created, its address changed, someone asked, or the daily run. */
+export type DiagnosisTrigger = 'created' | 'url_changed' | 'manual' | 'schedule'
+
+export interface DiagnosisTable {
+  id: string
+  org_id: string
+  project_id: string
+  url: string
+  trigger: DiagnosisTrigger
+  status: Generated<DiagnosisStatus>
+  attempts: Generated<number>
+  report: DiagnosisReport | null
+  error: string | null
+  created_at: CreatedAt
+  started_at: Date | null
+  finished_at: Date | null
 }
 
 export interface AuthUserTable {

@@ -9,10 +9,12 @@ export function SubmitButton({
   children,
   variant,
   className,
+  disabled,
 }: {
   children: ReactNode
   variant?: ComponentProps<typeof Button>['variant']
   className?: string
+  disabled?: boolean
 }) {
   const inActionForm = use(PendingContext)
   const { pending } = useFormStatus()
@@ -21,7 +23,7 @@ export function SubmitButton({
       type="submit"
       variant={variant}
       className={className}
-      disabled={inActionForm || pending}
+      disabled={disabled || inActionForm || pending}
     >
       {children}
     </Button>

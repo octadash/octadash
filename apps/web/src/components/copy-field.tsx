@@ -9,21 +9,30 @@ export function CopyField({
   value,
   copyLabel,
   copiedLabel,
+  multiline = false,
 }: {
   value: string
   copyLabel: string
   copiedLabel: string
+  /** Shows the whole text (a prompt, a snippet) instead of a one-line field. */
+  multiline?: boolean
 }) {
   const [copied, setCopied] = useState(false)
   return (
-    <div className="flex items-center gap-2">
-      <Input
-        value={value}
-        readOnly
-        aria-label={copyLabel}
-        className="font-mono text-xs md:text-xs"
-        onFocus={(event) => event.currentTarget.select()}
-      />
+    <div className={multiline ? 'flex flex-col items-start gap-2' : 'flex items-center gap-2'}>
+      {multiline ? (
+        <p className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap select-all">
+          {value}
+        </p>
+      ) : (
+        <Input
+          value={value}
+          readOnly
+          aria-label={copyLabel}
+          className="font-mono text-xs md:text-xs"
+          onFocus={(event) => event.currentTarget.select()}
+        />
+      )}
       <Button
         type="button"
         variant="outline"

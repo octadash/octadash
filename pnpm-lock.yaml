@@ -54,6 +54,9 @@ importers:
       '@octadash/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@octadash/diagnosis':
+        specifier: workspace:*
+        version: link:../../packages/diagnosis
       better-auth:
         specifier: ^1.7.28
         version: 1.7.28(@opentelemetry/api@1.10.0)(next@16.4.6(@opentelemetry/api@1.10.0)(@types/node@24.19.4)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(pg@8.23.1)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vitest@5.1.2(@opentelemetry/api@1.10.0)(@types/node@24.19.4)(vite@8.4.0(@types/node@24.19.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))
@@ -118,6 +121,9 @@ importers:
       '@octadash/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@octadash/diagnosis':
+        specifier: workspace:*
+        version: link:../../packages/diagnosis
       '@octadash/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
@@ -125,6 +131,9 @@ importers:
         specifier: ^12.40.0
         version: 12.40.0(@opentelemetry/api@1.10.0)
     devDependencies:
+      '@types/pg':
+        specifier: ^8.15.0
+        version: 8.23.1
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -172,6 +181,9 @@ importers:
       '@octadash/core':
         specifier: workspace:*
         version: link:../core
+      '@octadash/diagnosis':
+        specifier: workspace:*
+        version: link:../diagnosis
       kysely:
         specifier: ^0.29.9
         version: 0.29.9
@@ -182,6 +194,12 @@ importers:
       '@types/pg':
         specifier: ^8.15.0
         version: 8.23.1
+      vitest:
+        specifier: ^5.1.2
+        version: 5.1.2(@opentelemetry/api@1.10.0)(@types/node@24.19.4)(vite@8.4.0(@types/node@24.19.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/diagnosis:
+    devDependencies:
       vitest:
         specifier: ^5.1.2
         version: 5.1.2(@opentelemetry/api@1.10.0)(@types/node@24.19.4)(vite@8.4.0(@types/node@24.19.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
