@@ -419,8 +419,13 @@ Next.js (App Router, standalone output), Tailwind CSS 4, shadcn/ui, next-intl
 OAuth, organizations, 2FA). The MCP server is `POST /api/mcp`: Streamable
 HTTP answered with JSON (no stream, no session), small enough to need no SDK
 (`apps/web/src/lib/mcp.ts`). It authenticates with an organization's API token
-(`oct_...`, stored as a hash, revocable) and every tool only reads; each area
-adds its tools to `apps/web/src/server/mcp-tools.ts`.
+(`oct_...`, stored as a hash, revocable) whose scopes give each item (products,
+sources, keys, monitors, alerts, each area, settings) no access, read or write,
+with delete apart (`packages/db/src/token-scopes.ts`). Each tool in
+`apps/web/src/server/mcp-tools.ts` declares the scopes it needs, and a token
+sees only the tools it can use. Coding assistants get the `octadash-setup`
+Agent Skill from the `octadash/skills` repository (MIT), also a Claude Code
+plugin marketplace.
 
 ### Public docs
 

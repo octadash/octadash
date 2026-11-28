@@ -1,20 +1,33 @@
 ---
 title: AI assistants (MCP)
-description: Ask Claude, Cursor or any assistant that speaks MCP about your products, with a read-only token.
+description: Let Claude, Cursor or any assistant that speaks MCP work with your products, with a token that allows only what you choose.
 ---
 
 Octadash serves a [Model Context Protocol](https://modelcontextprotocol.io)
-server at `/api/mcp` on the panel's address. An assistant connected to it reads
-uptime, emergencies, traffic and logs of one organization, and changes nothing.
+server at `/api/mcp` on the panel's address. An assistant connected to it works
+with the products of one organization: it sees only the tools its token
+allows, and you answer for what it does with them.
 
 ## Create a token
 
 1. In **Octadash settings** (account menu) > **API tokens**, give the token a
-   name that says where it is used ("Claude on my laptop") and create it. Owners
-   and admins can do this.
-2. Copy the token now: it is shown once. Octadash keeps only a hash of it.
-3. Revoke it on the same page when that assistant should stop reading. A token
-   reads every product of the organization.
+   name that says where it is used ("Claude on my laptop"). Owners and admins
+   can do this.
+2. Choose what it may touch. Start from a preset and change any item:
+
+   | Preset        | What it allows                                                        |
+   | ------------- | --------------------------------------------------------------------- |
+   | Read only     | Reads every item. Changes nothing.                                    |
+   | Setup with AI | Reads every item, and writes products and sources, so the [setup skill](/use/install-with-ai) can put Octadash in a project. |
+
+   Each item (products, sources, keys, monitors, alerts, traffic, product usage,
+   key events, errors, logs, money, costs, settings) is **No access**, **Read**
+   or **Write**; write includes read. **Delete** is a separate permission, off
+   by default and only where the token can write. An item with no tool yet keeps
+   its choice for when its tools arrive.
+3. Copy the token now: it is shown once. Octadash keeps only a hash of it.
+4. Revoke it on the same page when that assistant should stop. A token reaches
+   every product of the organization, within its items.
 
 ## Connect an assistant
 
@@ -42,18 +55,24 @@ and takes the token as `Authorization: Bearer <token>`.
 
 ## Tools
 
-Every tool only reads. Each one takes an optional product (its slug or name);
-without one, it answers for every product.
+The reading tools take an optional product (its slug or name); without one,
+they answer for every product. The token's items decide which tools the
+assistant sees.
 
-| Tool               | Answers                                                                                               |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| `list_products`    | The products (slug and name) and the saved groups.                                                    |
-| `uptime_status`    | Every monitor: state now, uptime and median response time over 24 hours and 30 days, certificate days left. |
-| `open_emergencies` | What is open now: emergencies and signals, since when, and whether someone is on it.                  |
-| `traffic`          | Visitors and page views over the last days (7 by default, up to 90) against the days before, with the top pages, sources, channels and countries. |
-| `search_logs`      | Log lines, newest first, with the same search the Logs page takes (`level:error timeout`), up to 7 days back. |
+| Tool               | Needs | Answers                                                                                       |
+| ------------------ | ----- | --------------------------------------------------------------------------------------------- |
+| `list_products`    | Products: read | The products (slug and name) and the saved groups.                                                    |
+| `uptime_status`    | Monitors: read | Every monitor: state now, uptime and median response time over 24 hours and 30 days, certificate days left. |
+| `open_emergencies` | Alerts: read | What is open now: emergencies and signals, since when, and whether someone is on it.                  |
+| `traffic`          | Traffic: read | Visitors and page views over the last days (7 by default, up to 90) against the days before, with the top pages, sources, channels and countries. |
+| `search_logs`      | Logs: read | Log lines, newest first, with the same search the Logs page takes (`level:error timeout`), up to 7 days back. |
+| `list_sources`     | Sources: read | A product's sources, the areas each feeds and when each last sent a page view, an event, an error or a log line. |
+| `source_setup`     | Sources and keys: read | A source's public key, DSN and the exact install code per area, the same code the panel shows. |
+| `create_product`   | Products: write | Creates a product by name, or returns the one with that name. |
+| `create_source`    | Sources: write | Adds a source to a product, or returns the one with that name. |
 
-Each area adds its own tools as it is finished. Questions that work well:
+The tools that write only add; renaming, rotating a key and deleting stay in
+the panel. Each area adds its own tools as it is finished. Questions that work well:
 "is everything up?", "what is open right now?", "how did traffic do this week
 against last week?", "show the errors in the API logs from the last hour".
 

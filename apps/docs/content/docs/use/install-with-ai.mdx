@@ -1,0 +1,61 @@
+---
+title: Install with AI
+description: A skill for Claude Code, Codex, Cursor and other coding assistants that puts Octadash in your codebase, app by app.
+---
+
+`octadash-setup` is an [Agent Skill](https://agentskills.io): instructions a
+coding assistant follows to put Octadash in a repository. It reads the code,
+finds each app and its stack, proposes the sources, creates them through the
+[MCP server](/use/mcp), installs the code per app and checks that the first
+data arrived. It also moves you from PostHog, Sentry or Plausible, running both
+side by side first.
+
+## 1. Install the skill
+
+Any assistant that reads Agent Skills (Claude Code, Codex, Cursor, GitHub
+Copilot, Gemini CLI and others):
+
+```sh
+npx skills add octadash/skills
+```
+
+Or, in Claude Code, as a plugin:
+
+```sh
+/plugin marketplace add octadash/skills
+/plugin install octadash@octadash
+```
+
+The skill is MIT licensed and lives in
+[github.com/octadash/skills](https://github.com/octadash/skills).
+
+## 2. Connect the MCP server
+
+In **Octadash settings** > **API tokens**, create a token with the **Setup
+with AI** preset: it reads everything and writes only products and sources.
+Then add the server with the command the page shows:
+
+```sh
+claude mcp add --transport http octadash https://octadash.example.com/api/mcp \
+  --header "Authorization: Bearer oct_..."
+```
+
+Without the MCP server the skill still works: it asks you to create the product
+and sources in the panel and paste their code.
+
+## 3. Ask
+
+In the repository, ask the assistant to set Octadash up, for example "add
+Octadash to this project". It then:
+
+1. Lists each app with where it runs (browser or server), its stack and what
+   it already sends, and waits for you to confirm the plan.
+2. Creates the product and one source per app.
+3. Installs per app, one pull request each: the page script with `identify`
+   and `reset`, the error SDK, key events with `track`, and OpenTelemetry logs.
+4. Asks you to run or deploy, then checks with `list_sources` that each source
+   sent its first data.
+
+The skill never sends personal data in events, never removes another tool's
+code unless you ask, and its MCP tools only add: renaming, rotating keys and
+deleting stay in the panel.

@@ -3,7 +3,8 @@ import { z } from 'zod'
 /**
  * The Model Context Protocol over HTTP, as the panel serves it at /api/mcp:
  * JSON-RPC 2.0 in a POST, answered with JSON (no stream, no session). Enough
- * for an assistant to list the tools and call them; every tool only reads.
+ * for an assistant to list the tools and call them. Which tools a caller sees
+ * is decided by its token's scopes, before this file.
  */
 
 export const MCP_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26'] as const
@@ -14,6 +15,10 @@ export interface McpTool<Ctx> {
   title: string
   description: string
   input: z.ZodObject
+  /** Adds or changes something (a product, a source). */
+  writes?: boolean
+  /** Deletes something. */
+  deletes?: boolean
   run(input: Record<string, unknown>, ctx: Ctx): Promise<unknown>
 }
 
@@ -60,7 +65,15 @@ export function describeTools<Ctx>(tools: McpTool<Ctx>[]) {
     title: tool.title,
     description: tool.description,
     inputSchema: z.toJSONSchema(tool.input, { io: 'input' }),
-    annotations: { readOnlyHint: true, openWorldHint: false },
+    annotations:
+      tool.writes || tool.deletes
+        ? {
+            readOnlyHint: false,
+            destructiveHint: Boolean(tool.deletes),
+            idempotentHint: !tool.deletes,
+            openWorldHint: false,
+          }
+        : { readOnlyHint: true, openWorldHint: false },
   }))
 }
 
@@ -72,7 +85,7 @@ export async function handleMcp<Ctx>(
   message: unknown,
   tools: McpTool<Ctx>[],
   ctx: Ctx,
-  server: { name: string; version: string },
+  server: { name: string; version: string; instructions: string },
 ): Promise<Response | null> {
   if (!isRequest(message)) return fail(null, RPC.invalidRequest, 'Not a JSON-RPC 2.0 request')
   const { id, method, params = {} } = message
@@ -88,8 +101,7 @@ export async function handleMcp<Ctx>(
           protocolVersion: version,
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: server.name, title: 'Octadash', version: server.version },
-          instructions:
-            'Read-only questions about the products of one Octadash organization: uptime, emergencies, traffic and logs. Start with list_products; every other tool takes a product slug, or none for every product.',
+          instructions: server.instructions,
         },
       }
     }

@@ -27,6 +27,7 @@ import * as m0025 from './0025_cost_split_history'
 import * as m0026 from './0026_monitor_source'
 import * as m0027 from './0027_source_script_areas'
 import * as m0028 from './0028_api_token'
+import * as m0029 from './0029_api_token_scopes'
 
 /**
  * Migrations are imported statically (not read from disk) so they survive
@@ -61,4 +62,5 @@ export const migrations: Record<string, Migration> = {
   '0026_monitor_source': m0026,
   '0027_source_script_areas': m0027,
   '0028_api_token': m0028,
+  '0029_api_token_scopes': m0029,
 }

@@ -2,11 +2,9 @@ import { OCTADASH_VERSION } from '@octadash/core'
 import { findApiToken } from '@octadash/db'
 import { handleMcp, RPC } from '@/lib/mcp'
 import { services } from '@/server/context'
-import { MCP_TOOLS } from '@/server/mcp-tools'
+import { instructionsFor, toolsFor } from '@/server/mcp-tools'
 
 export const dynamic = 'force-dynamic'
-
-const SERVER = { name: 'octadash', version: OCTADASH_VERSION }
 
 function unauthorized() {
   return Response.json(
@@ -20,7 +18,7 @@ function unauthorized() {
 /**
  * Octadash's MCP server (Streamable HTTP, JSON answers, no session): an AI
  * assistant reads uptime, emergencies, traffic and logs with an organization's
- * read-only token.
+ * token; it sees only the tools the token's scopes allow.
  */
 export async function POST(request: Request) {
   const header = request.headers.get('authorization') ?? ''
@@ -38,9 +36,19 @@ export async function POST(request: Request) {
     )
   }
   const messages = Array.isArray(body) ? body : [body]
-  const answers = (
-    await Promise.all(messages.map((m) => handleMcp(m, MCP_TOOLS, found, SERVER)))
-  ).filter((a) => a !== null)
+  const tools = toolsFor(found.scopes)
+  const server = {
+    name: 'octadash',
+    version: OCTADASH_VERSION,
+    instructions: instructionsFor(found.scopes),
+  }
+  const ctx = { orgId: found.orgId }
+  // One at a time: a batch that creates a product, then its source, keeps its order.
+  const answers = []
+  for (const m of messages) {
+    const answer = await handleMcp(m, tools, ctx, server)
+    if (answer !== null) answers.push(answer)
+  }
   // Only notifications: accepted, nothing to say.
   if (answers.length === 0) return new Response(null, { status: 202 })
   return Response.json(Array.isArray(body) ? answers : answers[0])

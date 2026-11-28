@@ -3345,7 +3345,7 @@
   },
   "apiTokens": {
     "title": "Tokens de API",
-    "intro": "Tokens só de leitura desta organização. Com um, um assistente de IA como o Claude ou o Cursor lê disponibilidade, emergências, tráfego e logs pelo servidor MCP do Octadash. Um token lê todos os produtos e não muda nada.",
+    "intro": "Tokens desta organização para o servidor MCP do Octadash. Com um, um assistente de IA como o Claude ou o Cursor trabalha com seus produtos. Você escolhe o que cada token pode tocar; o assistente só vê as ferramentas que o token permite, e você responde pelo que ele faz com elas.",
     "newTitle": "Novo token",
     "newIntro": "O servidor MCP responde em {url}.",
     "name": "Nome",
@@ -3363,6 +3363,41 @@
     "neverUsed": "nunca usado",
     "revoke": "Revogar",
     "revokeTitle": "Revogar {name}?",
-    "revokeBody": "O que usa este token para de ler o Octadash na hora. Não dá para desfazer; crie um token novo se precisar."
+    "revokeBody": "O que usa este token para de ler o Octadash na hora. Não dá para desfazer; crie um token novo se precisar.",
+    "access": "O que ele pode tocar",
+    "accessHint": "Comece de um preset e mude qualquer item. Escrita inclui leitura. Itens ainda sem ferramenta guardam a escolha para quando elas chegarem.",
+    "presets": {
+      "read": "Só leitura",
+      "setup": "Setup com IA"
+    },
+    "custom": "Ajustado item por item.",
+    "customBadge": "Personalizado",
+    "resource": "Item",
+    "level": "Acesso",
+    "levels": {
+      "none": "Sem acesso",
+      "read": "Leitura",
+      "write": "Escrita"
+    },
+    "delete": "Apagar",
+    "deleteHint": "Deixa o assistente apagar naquele item. Desligado por padrão e só onde ele pode escrever. Apagar não tem volta.",
+    "resources": {
+      "products": "Produtos e grupos",
+      "sources": "Origens",
+      "keys": "Chaves e código de instalação",
+      "monitors": "Monitores (Disponibilidade)",
+      "alerts": "Emergências e regras de alerta",
+      "traffic": "Tráfego",
+      "usage": "Uso do produto",
+      "key_events": "Eventos-chave e funis",
+      "errors": "Erros",
+      "logs": "Logs",
+      "money": "Dinheiro",
+      "costs": "Custos",
+      "settings": "Configurações (membros, canais)"
+    },
+    "nothing": "Escolha pelo menos um item que ele possa ler.",
+    "writes": "Escreve: {items}",
+    "withDelete": "{item} (e apaga)"
   }
 }

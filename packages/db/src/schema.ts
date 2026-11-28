@@ -258,6 +258,8 @@ export interface ApiTokenTable {
   created_at: CreatedAt
   last_used_at: Date | null
   revoked_at: Date | null
+  /** What it may touch, resource by resource (see token-scopes.ts). */
+  scopes: Json
 }
 
 export interface TvLinkTable {

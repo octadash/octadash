@@ -13,6 +13,16 @@ const tools: McpTool<{ orgId: string }>[] = [
     },
   },
   {
+    name: 'add',
+    title: 'Add',
+    description: 'Adds a thing',
+    input: z.object({}),
+    writes: true,
+    async run() {
+      return { added: true }
+    },
+  },
+  {
     name: 'broken',
     title: 'Broken',
     description: 'Fails',
@@ -22,7 +32,7 @@ const tools: McpTool<{ orgId: string }>[] = [
     },
   },
 ]
-const server = { name: 'octadash', version: 'test' }
+const server = { name: 'octadash', version: 'test', instructions: 'Ask.' }
 const call = (message: unknown) => handleMcp(message, tools, { orgId: 'o1' }, server)
 
 describe('handleMcp', () => {
@@ -52,6 +62,10 @@ describe('handleMcp', () => {
       name: 'echo',
       inputSchema: { type: 'object', required: ['text'] },
       annotations: { readOnlyHint: true },
+    })
+    expect(listed[1]).toMatchObject({
+      name: 'add',
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
     })
   })
 

@@ -365,7 +365,12 @@ products at once like every other area.
 Version 1.0 includes every step below. They ship one at a time, in this order.
 Each step ships with its MCP tools (read-only queries for AI assistants) and its
 docs. The MCP server answers at `/api/mcp` with an organization's API token
-(Octadash settings > API tokens); docs at `/use/mcp`.
+(Octadash settings > API tokens), whose scopes say, item by item, what it may
+read, write or delete; it lists only the tools they allow (docs at `/use/mcp`).
+The `octadash-setup` skill (repository `octadash/skills`, `npx skills add
+octadash/skills`) uses the setup tools to put Octadash in a codebase, app by
+app, and migrates from PostHog, Sentry and Plausible (docs at
+`/use/install-with-ai`). Each step's write tools join it as the step ships.
 
 | #   | Step                  | Delivers                                                                                                                                                                                         | State       |
 | --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
