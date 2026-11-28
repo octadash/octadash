@@ -230,7 +230,8 @@
   "settings": {
     "members": "Members",
     "channels": "Channels",
-    "alerts": "Alerts"
+    "alerts": "Alerts",
+    "watcher": "Outside watcher"
   },
   "channels": {
     "title": "Alert channels",
@@ -372,6 +373,36 @@
     "errors": {
       "name": "Give the group a name.",
       "notFound": "Group not found."
+    }
+  },
+  "watcher": {
+    "title": "Outside watcher",
+    "intro": "If the Octadash server goes down, no alert goes out and nobody is told. The outside watcher fixes that: Octadash sends a signal every minute to an outside service, and that service tells you when the signals stop.",
+    "howTitle": "How to set it up",
+    "howIntro": "About two minutes, on the free plan of Healthchecks.io.",
+    "step1": "Create a free account on <link>Healthchecks.io</link>.",
+    "step2": "Create a check with a 1 minute period and a 5 minute grace time.",
+    "step3": "Copy the check's ping URL (it starts with https://hc-ping.com/) and paste it below.",
+    "step4": "On Healthchecks.io, choose where it tells you: email, Telegram or another channel. Use one that does not depend on this server.",
+    "url": "Ping URL",
+    "urlSaved": "A URL is already saved. Paste another to replace it.",
+    "save": "Save and test",
+    "replace": "Replace and test",
+    "remove": "Remove watcher",
+    "ok": "Last signal sent {when}.",
+    "waiting": "Waiting for the first signal (up to 1 minute).",
+    "failing": "The last signal failed: {error}. Healthchecks.io will tell you if it goes on.",
+    "errors": {
+      "url": "Paste the full ping URL, like https://hc-ping.com/....",
+      "ping": "Could not call this address ({reason}). Check the URL."
+    },
+    "warning": {
+      "missingTitle": "Nobody is told if Octadash goes down.",
+      "sharedTitle": "{count, plural, one {One monitor runs} other {# monitors run}} on Octadash's own server, and nobody is told if it goes down.",
+      "missingBody": "Set up the outside watcher: an outside service that tells you when Octadash stops signalling.",
+      "failingTitle": "The signal to the outside watcher is failing.",
+      "failingBody": "Octadash cannot call the watcher's URL. If this goes on, the watcher will report Octadash as down.",
+      "action": "Set up the outside watcher"
     }
   }
 }

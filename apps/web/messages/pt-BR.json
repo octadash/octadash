@@ -230,7 +230,8 @@
   "settings": {
     "members": "Membros",
     "channels": "Canais",
-    "alerts": "Alertas"
+    "alerts": "Alertas",
+    "watcher": "Vigia externo"
   },
   "channels": {
     "title": "Canais de alerta",
@@ -372,6 +373,36 @@
     "errors": {
       "name": "Dê um nome ao grupo.",
       "notFound": "Grupo não encontrado."
+    }
+  },
+  "watcher": {
+    "title": "Vigia externo",
+    "intro": "Se o servidor do Octadash cair, nenhum alerta sai, e você não fica sabendo. O vigia externo resolve isso: o Octadash manda um sinal por minuto para um serviço de fora, e esse serviço avisa você quando os sinais param.",
+    "howTitle": "Como configurar",
+    "howIntro": "Leva cerca de dois minutos, com o plano grátis do Healthchecks.io.",
+    "step1": "Crie uma conta grátis no <link>Healthchecks.io</link>.",
+    "step2": "Crie um check com período de 1 minuto e tolerância de 5 minutos.",
+    "step3": "Copie a URL de ping do check (começa com https://hc-ping.com/) e cole abaixo.",
+    "step4": "No Healthchecks.io, escolha para onde ele avisa: e-mail, Telegram ou outro canal. Use um canal que não dependa deste servidor.",
+    "url": "URL de ping",
+    "urlSaved": "Já existe uma URL guardada. Cole outra para trocar.",
+    "save": "Salvar e testar",
+    "replace": "Trocar e testar",
+    "remove": "Remover vigia",
+    "ok": "Último sinal enviado {when}.",
+    "waiting": "Aguardando o primeiro sinal (até 1 minuto).",
+    "failing": "O último sinal falhou: {error}. O Healthchecks.io vai avisar se continuar assim.",
+    "errors": {
+      "url": "Cole a URL completa de ping, como https://hc-ping.com/....",
+      "ping": "Não consegui chamar este endereço ({reason}). Confira a URL."
+    },
+    "warning": {
+      "missingTitle": "Ninguém avisa se o Octadash cair.",
+      "sharedTitle": "{count, plural, one {Um monitor roda} other {# monitores rodam}} no mesmo servidor do Octadash, e ninguém avisa se ele cair.",
+      "missingBody": "Configure o vigia externo: um serviço de fora que avisa quando o Octadash para de dar sinal.",
+      "failingTitle": "O sinal para o vigia externo está falhando.",
+      "failingBody": "O Octadash não consegue chamar a URL do vigia. Se continuar, o vigia vai avisar que o Octadash caiu.",
+      "action": "Configurar vigia externo"
     }
   }
 }

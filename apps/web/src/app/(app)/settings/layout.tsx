@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { SettingsNav } from '@/components/settings-nav'
+import { WatcherBanner } from '@/components/watcher-banner'
 
 export default async function SettingsLayout({ children }: { children: ReactNode }) {
   const t = await getTranslations('settings')
@@ -11,8 +12,10 @@ export default async function SettingsLayout({ children }: { children: ReactNode
           { href: '/settings/members', label: t('members') },
           { href: '/settings/channels', label: t('channels') },
           { href: '/settings/alerts', label: t('alerts') },
+          { href: '/settings/watcher', label: t('watcher') },
         ]}
       />
+      <WatcherBanner />
       {children}
     </div>
   )

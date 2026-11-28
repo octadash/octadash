@@ -1,10 +1,18 @@
 import { createServer } from 'node:http'
-import { createLogger, OCTADASH_VERSION, parseEnv, workerEnvSchema } from '@octadash/core'
+import {
+  createLogger,
+  decryptSecret,
+  OCTADASH_VERSION,
+  parseEnv,
+  workerEnvSchema,
+} from '@octadash/core'
 import {
   createClickHouse,
   createDb,
+  getWatcher,
   insertUptimeChecks,
   listActiveMonitors,
+  recordWatcherPing,
   setMonitorStatus,
 } from '@octadash/db'
 import { createValkey, ValkeyHeartbeats } from '@octadash/queue'
@@ -13,6 +21,7 @@ import { PgBoss } from 'pg-boss'
 import { createAlerts, registerAlertJobs } from './alerts'
 import { registerJobs } from './jobs'
 import { startUptime, UptimeScheduler } from './uptime'
+import { pingUrl, startWatcher, Watcher } from './watcher'
 import { startWriters } from './writers'
 
 /**
@@ -60,6 +69,19 @@ const uptime = startUptime(
   }),
   log,
 )
+const watcher = startWatcher(
+  new Watcher({
+    loadUrl: async () => {
+      const row = await getWatcher(db)
+      return row?.watcher_url ? decryptSecret(row.watcher_url, env.OCTADASH_SECRET) : null
+    },
+    ping: pingUrl,
+    record: (status, error, at) => recordWatcherPing(db, status, error, at),
+    now: Date.now,
+    log,
+  }),
+  log,
+)
 log.info('worker started')
 
 // Health endpoint for Docker/Coolify. It reports the process state and never queries the database.
@@ -81,6 +103,7 @@ async function shutdown(signal: string) {
   log.info({ signal }, 'shutting down')
   healthy = false
   health.close()
+  watcher.stop()
   await Promise.all([writers.stop(), uptime.stop(), boss.stop({ graceful: true, timeout: 20_000 })])
   valkey.disconnect()
   await Promise.all([clickhouse.close(), pool.end()])

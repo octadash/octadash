@@ -215,7 +215,8 @@ and email, the daily summary only by email.
   sends a heartbeat every minute to a service such as Healthchecks.io (free
   plan), which alerts the owner when the heartbeats stop. The install guide has
   this step, and the settings show a warning until it is set up, stronger when
-  a monitor shares the server's IP. The hosted version can sell an outside
+  a monitor shares the server's IP. The ping URL belongs to the install (not to
+  an organization), is stored encrypted, and is tested once when saved. The hosted version can sell an outside
   check later.
 - The checks that are certain (status code, HTTPS, certificate expiry, the
   http to https redirect, response time) belong to uptime. Octadash no longer
