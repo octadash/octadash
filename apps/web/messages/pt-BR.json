@@ -230,6 +230,12 @@
     "numbers": {
       "before": "{value} no período anterior",
       "noRevenue": "Sem receita em Dinheiro neste período"
+    },
+    "logs": {
+      "lines": "Linhas",
+      "errors": "Erros",
+      "warnings": "Avisos",
+      "bars": "Linhas em {period}; erros em vermelho, avisos em amarelo"
     }
   },
   "areaPage": {

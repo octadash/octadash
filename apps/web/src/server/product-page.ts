@@ -1,12 +1,16 @@
 import {
   type AreaId,
+  compileLogQuery,
   errorSeries,
   issueStats,
+  type LogBucket,
   listIssues,
   listMonitors,
   listProjectAreas,
   listSources,
+  logHistogram,
   type ProjectAreaState,
+  parseLogQuery,
   responseSeries,
   type TrafficRow,
   trafficBreakdown,
@@ -57,6 +61,8 @@ export interface ProductPage {
     }[]
     days: { at: Date; events: number }[]
   } | null
+  /** The Logs card: lines per slice of the period by level. */
+  logs: LogBucket[] | null
   /** Top values for the Traffic card, by visitors. */
   traffic: Record<'source' | 'page' | 'country' | 'device', TrafficRow[]> | null
 }
@@ -133,6 +139,19 @@ export async function loadProductPage(
     .sort((a, b) => b.events - a.events)
     .slice(0, 3)
 
+  const usesLogs = areaStates.get('logs') === 'set_up'
+  const logs = usesLogs
+    ? await quiet(
+        logHistogram(
+          clickhouse,
+          { orgId, projectIds: [product.id], from: period.from, to: period.to },
+          compileLogQuery(parseLogQuery(''), new Map()),
+          Math.max(60, Math.round((period.to.getTime() - period.from.getTime()) / 24_000)),
+        ),
+        null,
+      )
+    : null
+
   // Uptime is set up when it has monitors, whatever was stored before.
   const states = new Map(areaStates)
   if (monitors.length > 0) states.set('uptime', 'set_up')
@@ -163,6 +182,7 @@ export async function loadProductPage(
     response: monitors.length > 0 ? { current, previous } : null,
     sources: sources.map((s) => ({ name: s.name, platform: s.platform, areas: s.areas })),
     traffic: usesTraffic ? { source, page, country, device } : null,
+    logs,
     errors: usesErrors
       ? { issues: topIssues, days: errorDays.map((d) => ({ at: d.at, events: d.events })) }
       : null,

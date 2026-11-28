@@ -79,6 +79,7 @@ export default async function ProductPage({
       (area.id === 'traffic' && traffic) ||
       (area.id === 'errors' && errors && errors.series.some((p) => p.events > 0)) ||
       (area.id === 'usage' && row?.signups) ||
+      (area.id === 'logs' && data.logs?.some((b) => b.error + b.warn + b.info > 0)) ||
       (area.id === 'money' && row?.money) ||
       (area.id === 'costs' && row?.costs),
   ).length
@@ -282,6 +283,18 @@ export default async function ProductPage({
                 base={base}
                 rows={data.traffic}
                 sources={data.sources.filter((s) => s.areas.includes('traffic'))}
+                number={format.number}
+                t={t}
+              />
+            ) : area.id === 'logs' &&
+              data.logs &&
+              data.logs.some((b) => b.error + b.warn + b.info > 0) ? (
+              <LogsCard
+                key={area.id}
+                area={area}
+                base={base}
+                buckets={data.logs}
+                period={periodName}
                 number={format.number}
                 t={t}
               />
@@ -632,6 +645,82 @@ function ErrorsCard({
       </div>
       <Link href={`${base}/errors`} className="self-start text-sm text-brand hover:underline">
         {t('productPage.open', { area: t('areas.errors.name') })}
+        <ArrowRightIcon aria-hidden className="ml-1 inline size-3.5" />
+      </Link>
+    </section>
+  )
+}
+
+/** Lines per slice of the period, errors and warnings apart. */
+function LogsCard({
+  area,
+  base,
+  buckets,
+  period,
+  number,
+  t,
+}: {
+  area: AreaItem
+  base: string
+  buckets: NonNullable<ProductPageData['logs']>
+  period: string
+  number: Intl.NumberFormat
+  t: Translate
+}) {
+  const total = (b: (typeof buckets)[number]) => b.error + b.warn + b.info
+  const max = Math.max(1, ...buckets.map(total))
+  const sum = (key: 'error' | 'warn' | 'info') => buckets.reduce((n, b) => n + b[key], 0)
+  const errors = sum('error')
+  const warnings = sum('warn')
+  const lines = errors + warnings + sum('info')
+  return (
+    <section
+      aria-labelledby="card-logs"
+      className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5"
+    >
+      <header className="flex items-center gap-2.5">
+        <area.icon aria-hidden className="size-4 text-muted-foreground" />
+        <h3 id="card-logs" className="font-display text-lg font-semibold">
+          {t('areas.logs.name')}
+        </h3>
+      </header>
+      <dl className="grid grid-cols-3 gap-4">
+        {(
+          [
+            ['lines', lines, ''],
+            ['errors', errors, errors > 0 ? 'text-error' : ''],
+            ['warnings', warnings, ''],
+          ] as const
+        ).map(([key, value, tone]) => (
+          <div key={key} className="flex flex-col gap-0.5">
+            <dt className="text-sm text-muted-foreground">{t(`productPage.logs.${key}`)}</dt>
+            <dd className={cn('font-display text-2xl font-semibold tabular-nums', tone)}>
+              {number.format(value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-auto flex flex-col gap-1">
+        <div aria-hidden className="flex h-10 items-end gap-1">
+          {buckets.map((b) => (
+            <span
+              key={b.at.toISOString()}
+              className="flex flex-1 flex-col-reverse overflow-hidden rounded-sm"
+              style={{ height: `${Math.max(4, (total(b) / max) * 100)}%` }}
+            >
+              <span
+                className="bg-muted-foreground/40"
+                style={{ flexGrow: b.info || (total(b) ? 0 : 1) }}
+              />
+              <span className="bg-warn/70" style={{ flexGrow: b.warn }} />
+              <span className="bg-error/70" style={{ flexGrow: b.error }} />
+            </span>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">{t('productPage.logs.bars', { period })}</p>
+      </div>
+      <Link href={`${base}/logs`} className="self-start text-sm text-brand hover:underline">
+        {t('productPage.open', { area: t('areas.logs.name') })}
         <ArrowRightIcon aria-hidden className="ml-1 inline size-3.5" />
       </Link>
     </section>

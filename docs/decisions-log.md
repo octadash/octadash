@@ -388,9 +388,9 @@ and why; anything here can be reversed.
   does not fit the hourly chart.
 - **Margin per product is the Costs page's margin**: revenue from Money less
   costs, over the same days.
-- **The product page shows real numbers for Usage, Money and Costs** once
-  they receive data, instead of the "Example" card: sign-ups against the
-  period before; revenue and MRR; cost and margin. Logs keeps the example
-  card until it has a summary of its own.
+- **The product page shows real numbers for Usage, Money, Costs and Logs**
+  once they receive data, instead of the "Example" card: sign-ups against the
+  period before; revenue and MRR; cost and margin; lines, errors and warnings
+  with bars over the period (the numbers say it, the bars only draw it).
 - **Money's "Margin is in Costs" is now a link** to the Costs page of the
   same scope.
