@@ -1,0 +1,114 @@
+---
+title: Disponibilidade e alertas
+description: Monitores, heartbeats e certificados, as regras que abrem emergências e os canais que avisam você.
+---
+
+A Disponibilidade não precisa de nada instalado. O Octadash checa cada endereço
+de fora, no intervalo dele, e avisa quando ele para de responder.
+
+## Monitores
+
+Um produto pode ter vários monitores. Em **Disponibilidade**, **Adicionar
+monitor** pede um nome, um tipo e um endereço:
+
+| Tipo        | O que o Octadash faz                                                                    |
+| ----------- | --------------------------------------------------------------------------------------- |
+| Site        | Faz GET na página e espera resposta 2xx.                                                |
+| API ou `/health` | Faz GET no endpoint e espera resposta 2xx que não seja uma página HTML.            |
+| Heartbeat   | Espera seu job (cron, backup, worker) chamar o Octadash. Silêncio é queda.              |
+
+As checagens vão de cada 30 segundos até uma vez por dia. Depois de uma falha, a
+próxima checagem vem cerca de 20 segundos depois, e um monitor de site ou health
+cai depois de 3 falhas seguidas. Antes de dar algo como fora do ar, o Octadash
+confere se o próprio servidor alcança a internet, para que um problema de rede
+do lado dele não pareça todos os produtos fora.
+
+Cerca de uma vez por hora cada monitor também lê o certificado (dias restantes)
+e o redirecionamento de http para https. O monitor mostra o tempo de resposta, o
+último erro em palavras simples ("Não respondeu a tempo", "Respondeu HTTP 503") e
+a disponibilidade em 24 horas e 30 dias.
+
+<Callout title="Não acorde seu banco">
+  Aponte o monitor para um endpoint `/health` que responde sem consultar o banco.
+  Uma página que consulta o banco a cada checagem deixa um banco serverless (o
+  Neon, por exemplo) acordado e cobrando. Na página inicial, use um intervalo
+  maior.
+</Callout>
+
+Um monitor pode indicar a origem que checa ("Docs"), para a Disponibilidade
+diferenciar o site, os docs e o app de um mesmo produto.
+
+## Heartbeats
+
+Um heartbeat espera uma chamada a cada intervalo ou em uma agenda cron
+(`0 3 * * *`, lida no fuso da organização), mais uma tolerância para jobs que
+demoram (de nenhuma até 1 hora). O formulário mostra o endereço a chamar:
+
+```sh
+# no fim do job, quando deu certo
+curl -fsS https://ingest.example.com/o/v1/hb/<token>
+
+# quando falhou: emergência na hora, sem esperar a tolerância
+curl -fsS https://ingest.example.com/o/v1/hb/<token>/fail
+```
+
+GET e POST funcionam. O corpo de um POST fica guardado como a saída do job (os
+últimos 100.000 caracteres, com dados pessoais mascarados), então
+`curl --data-binary @backup.log` mostra por que um backup falhou.
+
+## Mesmo servidor
+
+Quando o endereço de um monitor aponta para o servidor onde o Octadash roda, a
+Disponibilidade avisa: se esse servidor cair, o Octadash cai junto e ninguém é
+avisado. Configure o [vigia externo](/pt/self-hosting/outside-watcher) ou
+monitore esse produto de outro servidor.
+
+## Emergências e sinais
+
+Cada regra abre uma de duas coisas:
+
+- **Emergência**: uma mensagem sai na hora para os canais da regra, e uma faixa
+  vermelha fica no topo de todas as telas até ela acabar. **Estou cuidando** mostra
+  ao time quem assumiu.
+- **Sinal**: nenhuma mensagem. Aparece na área e na faixa de sinais.
+
+Uma regra também pode ficar desligada. As regras já vêm com estes valores, e um
+dono ou admin muda em **Configurações do Octadash** (menu da conta) > **Regras
+de alerta**, para a organização inteira ou, em **Configurações do produto**, para
+um produto:
+
+| Regra                 | Abre quando                                                                         | Valor inicial          |
+| --------------------- | ----------------------------------------------------------------------------------- | ---------------------- |
+| Monitor fora do ar    | um monitor de site ou health fica fora por alguns minutos                           | 2 minutos              |
+| Heartbeat perdido     | um job não chamou a tempo, ou chamou `/fail`                                        | sem espera extra       |
+| Certificado vencendo  | o certificado vence em alguns dias ou menos                                         | 7 dias                 |
+| Pico de erros         | os erros em 15 minutos chegam a algumas vezes o normal daquela hora, com um mínimo | 5 vezes, 20 erros      |
+| Evento-chave parou    | um evento-chave não chegou no tempo que costuma levar, com um mínimo               | 5 eventos, 30 minutos  |
+| Alerta de log         | uma busca salva em Logs com Alerta ligado encontrou uma linha                       | acaba após 15 minutos sem nada |
+| Pagamentos falhando   | uma parte das cobranças em 15 minutos falhou, com um mínimo                        | 20%, 10 cobranças      |
+| Custo disparado       | uma hora custou algumas vezes a hora normal, com um mínimo                         | 3 vezes, US$ 5         |
+| Erro novo             | um erro aparece pela primeira vez (um aviso, desligado por padrão)                 | desligado              |
+
+Cada emergência acaba sozinha quando a causa some: o site responde, o job chama
+de novo, os erros voltam para baixo do limite.
+
+## Canais
+
+Cada canal usa as suas credenciais; o Octadash não tem conta própria que envia
+algo. Adicione em **Configurações do Octadash** > **Canais**, cada um com o botão
+**Enviar teste**:
+
+| Canal    | Configuração                                                                  |
+| -------- | ----------------------------------------------------------------------------- |
+| E-mail   | SMTP (qualquer servidor) ou a API do Resend. Também envia convites e trocas de senha. |
+| Telegram | Um token de bot e um chat id.                                                 |
+| Webhook  | Uma URL e um segredo opcional. Cobre Slack, Discord, n8n e outros.            |
+
+Uma regra envia para os canais que ela escolhe, ou para todos quando não escolhe
+nenhum.
+
+## Pergunte a um assistente
+
+As ferramentas `uptime_status` e `open_emergencies` do
+[servidor MCP](/pt/use/mcp) respondem "está tudo no ar?" e "o que está aberto
+agora?" no Claude ou em qualquer assistente que fale MCP.

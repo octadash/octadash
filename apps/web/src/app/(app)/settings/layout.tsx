@@ -20,6 +20,11 @@ export default async function SettingsLayout({ children }: { children: ReactNode
               { href: '/settings/general', label: t('general'), keywords: t('generalKeywords') },
               { href: '/settings/members', label: t('members'), keywords: t('membersKeywords') },
               { href: '/settings/groups', label: t('productGroups') },
+              {
+                href: '/settings/api-tokens',
+                label: t('apiTokens'),
+                keywords: t('apiTokensKeywords'),
+              },
             ],
           },
           {

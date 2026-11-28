@@ -550,3 +550,12 @@ The maintainer reviewed the night's decisions that change the product or its ris
   Published from a `node-v*` tag by `.github/workflows/publish-node.yml`, which
   needs the `NPM_TOKEN` secret. Set up keeps showing the Sentry SDK and the HTTP
   call until the package is on npm.
+- **No "Octadash wrapper" for AI cost** (approved by the owner). AI cost reads
+  OpenTelemetry `gen_ai` spans and PostHog `$ai_generation` events, which the
+  usual AI SDKs already send. A wrapper of our own would be one more package to
+  keep in step with every provider's SDK.
+- **MCP server without the SDK.** The panel answers MCP itself at
+  `/api/mcp` (JSON over HTTP, no session): four methods, read-only tools, so
+  the official SDK and its session and stream handling would add more than it
+  saves. Tokens are per organization, read every product and are revoked in
+  Octadash settings > API tokens.

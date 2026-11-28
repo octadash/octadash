@@ -226,7 +226,7 @@ for this product" says the area is receiving data that is turned off.
 | Traffic       | Octadash browser script               | (any site can add the script)                        |
 | Errors        | Octadash SDK for the browser and Node | Sentry SDKs (every language Sentry supports)         |
 | Product usage | Octadash SDK for the browser and Node | OpenTelemetry; PostHog SDKs as a compatibility extra |
-| Costs (AI)    | Octadash wrapper for Node             | OpenTelemetry `gen_ai`                               |
+| Costs (AI)    | OpenTelemetry `gen_ai`                | PostHog `$ai_generation`                             |
 | Logs          | OpenTelemetry (OTLP over HTTP)        | any OpenTelemetry SDK                                |
 | Uptime, Money | nothing to install                    |                                                      |
 
@@ -364,20 +364,21 @@ products at once like every other area.
 
 Version 1.0 includes every step below. They ship one at a time, in this order.
 Each step ships with its MCP tools (read-only queries for AI assistants) and its
-docs.
+docs. The MCP server answers at `/api/mcp` with an organization's API token
+(Octadash settings > API tokens); docs at `/use/mcp`.
 
 | #   | Step                  | Delivers                                                                                                                                                                                         | State       |
 | --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
 | 0   | Foundation            | accounts, organizations, products, API keys, setup wizard                                                                                                                                        | done        |
 | 1   | New base              | ClickHouse and Valkey in the install, ingest that answers at once and queues in Valkey, area menu and product picker, product created by name, product page in setup mode, URL diagnosis removed | done        |
-| 2   | Uptime and alerts     | monitors, heartbeats, certificate, seeded rules, emergency strip, channels (email with SMTP and Resend, Telegram, webhook), outside watcher                                                      | in progress |
-| 3   | Traffic               | Octadash browser script; first data in ClickHouse; overview starts                                                                                                                               | in progress |
+| 2   | Uptime and alerts     | monitors, heartbeats, certificate, seeded rules, emergency strip, channels (email with SMTP and Resend, Telegram, webhook), outside watcher                                                      | done        |
+| 3   | Traffic               | Octadash browser script; first data in ClickHouse; overview starts                                                                                                                               | done        |
 | 4   | Errors                | Octadash SDK (browser and Node), Sentry SDK compatibility                                                                                                                                        | in progress |
 | 5   | Product usage         | events, sign-ups, logins; signals start here                                                                                                                                                     | in progress |
 | 6   | Money                 | Stripe, Asaas, Paddle                                                                                                                                                                            | in progress |
-| 7   | AI cost               | Octadash wrapper, OpenTelemetry `gen_ai`                                                                                                                                                         | in progress |
+| 7   | AI cost               | OpenTelemetry `gen_ai`                                                                                                                                                                           | in progress |
 | 8   | Infra cost and margin | provider APIs or manual entries                                                                                                                                                                  | in progress |
-| 9   | Logs                  | OTLP over HTTP                                                                                                                                                                                   | in progress |
+| 9   | Logs                  | OTLP over HTTP                                                                                                                                                                                   | done        |
 | 10  | Daily summary         | what changed since yesterday, by email and the alert channels                                                                                                                                    | next        |
 
 Rules that apply to every step:
@@ -707,7 +708,7 @@ whenever the service allows it. Built today: Telegram and webhook.
 | ---------------------- | --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Alert channels         | alerts, daily summary | email (SMTP and Resend, built), Telegram (built), webhook (built), Slack, Discord, ntfy | WhatsApp, Microsoft Teams, Google Chat, mobile push, PagerDuty, Pushover, SMS, phone call               |
 | Payments               | revenue               | Stripe, Asaas, Paddle                                                                   | Mercado Pago, Pagar.me, Iugu, Hotmart, Kiwify, Eduzz, Lemon Squeezy, RevenueCat, App Store, Google Play |
-| AI providers           | AI cost               | OpenAI, Anthropic, OpenRouter, own wrapper, OTel `gen_ai`, PostHog `$ai_generation`     | Google Gemini, Groq, Mistral, ElevenLabs, Replicate, fal, Vercel AI Gateway                             |
+| AI providers           | AI cost               | OpenAI, Anthropic, OpenRouter, OTel `gen_ai`, PostHog `$ai_generation`                  | Google Gemini, Groq, Mistral, ElevenLabs, Replicate, fal, Vercel AI Gateway                             |
 | Hosting and databases  | infra cost            | infra providers (generic)                                                               | Vercel, Neon, Supabase, Coolify, Railway, Fly.io, Hetzner, DigitalOcean, Cloudflare, AWS                |
 | Code and deploys       | deploys, releases     | none                                                                                    | GitHub (deploys, releases, issues, Dependabot), GitLab, Vercel and Coolify deploys, Linear, Jira        |
 | Compatible ingest      | errors, events, logs  | Sentry SDK, PostHog capture, OTLP                                                       | Vercel Analytics drain, Plausible and Umami APIs (history import), Segment                              |
