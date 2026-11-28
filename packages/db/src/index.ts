@@ -1,4 +1,6 @@
+export * from './alerts'
 export * from './areas'
+export * from './channels'
 export * from './clickhouse'
 export * from './client'
 export * from './lock'

@@ -37,6 +37,8 @@ describe('parseEnv', () => {
       DATABASE_URL: 'postgres://u:p@localhost:5432/octadash',
       VALKEY_URL: 'redis://:p@localhost:6379',
       CLICKHOUSE_URL: 'http://u:p@localhost:8123/octadash',
+      OCTADASH_SECRET: 's'.repeat(32),
+      OCTADASH_URL: 'https://octadash.example.com',
     }
     const env = parseEnv(workerEnvSchema, base)
     expect(env.OCTADASH_UPTIME_REFERENCE_URLS).toHaveLength(2)

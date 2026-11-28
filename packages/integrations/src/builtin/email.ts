@@ -1,0 +1,147 @@
+import { createTransport } from 'nodemailer'
+import { z } from 'zod'
+import { defineNotification } from '../define'
+import type { AlertMessage } from '../types'
+
+/** One or more addresses separated by commas. */
+const recipients = z
+  .string()
+  .min(3)
+  .refine(
+    (value) => splitAddresses(value).every((address) => z.email().safeParse(address).success),
+    'One or more e-mail addresses, separated by commas',
+  )
+
+export function splitAddresses(value: string): string[] {
+  return value
+    .split(',')
+    .map((address) => address.trim())
+    .filter(Boolean)
+}
+
+export function emailSubject(message: AlertMessage): string {
+  const product = message.project ? `${message.project.name}: ` : ''
+  return `[Octadash] ${product}${message.title}`
+}
+
+export function emailText(message: AlertMessage): string {
+  return [message.body, message.url ? `\n${message.url}` : ''].join('').trim()
+}
+
+const smtpConfig = z.object({
+  host: z.string().min(1),
+  port: z.coerce.number().int().min(1).max(65_535).default(587),
+  /** Implicit TLS from the first byte (usually port 465). Port 587 upgrades with STARTTLS. */
+  secure: z.boolean().default(false),
+  username: z.string().optional(),
+  password: z.string().optional(),
+  from: z.string().min(3),
+  to: recipients,
+})
+
+function smtpTransport(cfg: z.infer<typeof smtpConfig>) {
+  return createTransport({
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure,
+    auth: cfg.username ? { user: cfg.username, pass: cfg.password ?? '' } : undefined,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
+  })
+}
+
+export const smtp = defineNotification({
+  id: 'smtp',
+  kind: 'notification',
+  name: 'E-mail (SMTP)',
+  description: {
+    en: 'Sends alerts by e-mail through any SMTP server: Gmail, Zoho, Amazon SES, your own.',
+    'pt-BR': 'Envia alertas por e-mail por qualquer servidor SMTP: Gmail, Zoho, Amazon SES, o seu.',
+  },
+  config: smtpConfig,
+  secretKeys: ['password'],
+  async test(cfg) {
+    try {
+      const transport = smtpTransport(cfg)
+      await transport.sendMail({
+        from: cfg.from,
+        to: splitAddresses(cfg.to),
+        subject: '[Octadash] Test message',
+        text: 'Octadash can send alerts to this address.',
+      })
+      transport.close()
+      return { ok: true }
+    } catch (error) {
+      return { ok: false, message: (error as Error).message }
+    }
+  },
+  async send(message, cfg) {
+    const transport = smtpTransport(cfg)
+    try {
+      await transport.sendMail({
+        from: cfg.from,
+        to: splitAddresses(cfg.to),
+        subject: emailSubject(message),
+        text: emailText(message),
+      })
+    } finally {
+      transport.close()
+    }
+  },
+})
+
+const resendConfig = z.object({
+  apiKey: z.string().startsWith('re_', 'Resend API keys start with re_'),
+  from: z.string().min(3),
+  to: recipients,
+})
+
+async function callResend(
+  cfg: z.infer<typeof resendConfig>,
+  subject: string,
+  text: string,
+  fetchFn: typeof fetch,
+  signal?: AbortSignal,
+) {
+  const response = await fetchFn('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${cfg.apiKey}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ from: cfg.from, to: splitAddresses(cfg.to), subject, text }),
+    signal,
+  })
+  if (!response.ok) {
+    const detail = (await response.json().catch(() => null)) as { message?: string } | null
+    throw new Error(detail?.message ?? `Resend answered ${response.status}`)
+  }
+}
+
+export const resend = defineNotification({
+  id: 'resend',
+  kind: 'notification',
+  name: 'E-mail (Resend)',
+  description: {
+    en: 'Sends alerts by e-mail through the Resend API, with a domain you verified there.',
+    'pt-BR': 'Envia alertas por e-mail pela API do Resend, com um domínio verificado lá.',
+  },
+  docsUrl: 'https://resend.com/docs/api-reference/emails/send-email',
+  config: resendConfig,
+  secretKeys: ['apiKey'],
+  async test(cfg, ctx) {
+    try {
+      await callResend(
+        cfg,
+        '[Octadash] Test message',
+        'Octadash can send alerts to this address.',
+        ctx.fetch,
+        ctx.signal,
+      )
+      return { ok: true }
+    } catch (error) {
+      return { ok: false, message: (error as Error).message }
+    }
+  },
+  async send(message, cfg, ctx) {
+    await callResend(cfg, emailSubject(message), emailText(message), ctx.fetch, ctx.signal)
+  },
+})

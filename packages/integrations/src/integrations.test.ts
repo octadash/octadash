@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { builtinIntegrations, telegram, webhook } from './builtin'
+import { builtinIntegrations, resend, smtp, telegram, webhook } from './builtin'
+import { emailSubject, splitAddresses } from './builtin/email'
 import { signBody } from './builtin/webhook'
+import { formFields, splitSecrets } from './form'
 import { IntegrationRegistry } from './registry'
 import type { AlertMessage } from './types'
 
@@ -24,7 +26,12 @@ describe('registry', () => {
   it('registers the built-in integrations', () => {
     const registry = new IntegrationRegistry(builtinIntegrations)
     expect(registry.get('webhook')).toBe(webhook)
-    expect(registry.list('notification').map((i) => i.id)).toEqual(['webhook', 'telegram'])
+    expect(registry.list('notification').map((i) => i.id)).toEqual([
+      'smtp',
+      'resend',
+      'telegram',
+      'webhook',
+    ])
     expect(registry.list('source')).toEqual([])
   })
 
@@ -78,5 +85,57 @@ describe('telegram', () => {
     expect(body.chat_id).toBe('42')
     expect(body.text).toContain('&lt;timeout&gt;')
     expect(body.text).toContain('<b>postato.com.br is down</b>')
+  })
+})
+
+describe('email', () => {
+  it('validates the recipients and builds the subject', () => {
+    expect(splitAddresses(' a@x.com, b@y.com ,')).toEqual(['a@x.com', 'b@y.com'])
+    expect(
+      smtp.config.safeParse({ host: 'smtp.x.com', from: 'o@x.com', to: 'a@x.com, nope' }).success,
+    ).toBe(false)
+    expect(smtp.config.parse({ host: 'smtp.x.com', from: 'o@x.com', to: 'a@x.com' })).toMatchObject(
+      {
+        port: 587,
+        secure: false,
+      },
+    )
+    expect(emailSubject(message)).toBe('[Octadash] Postato: postato.com.br is down')
+  })
+
+  it('sends through the Resend API', async () => {
+    const fetchFn = okFetch()
+    const cfg = resend.config.parse({ apiKey: 're_123', from: 'Octadash <o@x.com>', to: 'a@x.com' })
+    await resend.send(message, cfg, { fetch: fetchFn })
+    const [url, init] = fetchFn.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('https://api.resend.com/emails')
+    expect((init.headers as Record<string, string>).authorization).toBe('Bearer re_123')
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      to: ['a@x.com'],
+      subject: emailSubject(message),
+    })
+  })
+})
+
+describe('settings forms', () => {
+  it('reads the fields from the schema', () => {
+    const fields = formFields(smtp)
+    expect(fields.map((f) => [f.key, f.type, f.required, f.secret])).toEqual([
+      ['host', 'text', true, false],
+      ['port', 'number', false, false],
+      ['secure', 'boolean', false, false],
+      ['username', 'text', false, false],
+      ['password', 'text', false, true],
+      ['from', 'text', true, false],
+      ['to', 'text', true, false],
+    ])
+    expect(fields.find((f) => f.key === 'port')?.default).toBe(587)
+  })
+
+  it('keeps secrets apart from the plain settings', () => {
+    expect(splitSecrets(telegram, { botToken: '1:a', chatId: '42', threadId: '' })).toEqual({
+      plain: { chatId: '42' },
+      secrets: { botToken: '1:a' },
+    })
   })
 })

@@ -68,7 +68,8 @@ docker run -d --name octadash-web -p 3000:3000 \
 ```
 
 Run the same image with `ingest` (port 4000) and `worker` as the command. Both
-also need `VALKEY_URL`.
+also need `VALKEY_URL`; the worker also needs `OCTADASH_URL` (links in alerts)
+and the same `OCTADASH_SECRET` as the panel (it decrypts the alert channels).
 
 ## From source
 
@@ -89,7 +90,7 @@ Then start `apps/web` (`pnpm --filter @octadash/web start`), `apps/ingest` and
 | Variable                         | Used by     | Description                                                                                                                                                                                                                                 |
 | -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`                   | all         | Postgres connection string                                                                                                                                                                                                                  |
-| `OCTADASH_URL`                   | web         | Public URL of the panel                                                                                                                                                                                                                     |
+| `OCTADASH_URL`                   | web, worker | Public URL of the panel                                                                                                                                                                                                                     |
 | `OCTADASH_INGEST_URL`            | web         | Public URL of the ingest service                                                                                                                                                                                                            |
 | `OCTADASH_SECRET`                | web, worker | At least 32 characters; signs sessions, encrypts secrets                                                                                                                                                                                    |
 | `OCTADASH_OPEN_SIGNUP`           | web         | `false` by default: only the owner and invited people                                                                                                                                                                                       |

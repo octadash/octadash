@@ -170,6 +170,7 @@ services:
       CLICKHOUSE_URL: http://octadash:${SERVICE_PASSWORD_CLICKHOUSE}@clickhouse:8123/octadash
       VALKEY_URL: redis://:${SERVICE_PASSWORD_VALKEY}@valkey:6379
       OCTADASH_SECRET: ${SERVICE_PASSWORD_64_OCTADASH}
+      OCTADASH_URL: ${SERVICE_URL_WEB_3000}
       LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       postgres:

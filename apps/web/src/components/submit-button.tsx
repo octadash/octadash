@@ -11,18 +11,25 @@ export function SubmitButton({
   size,
   className,
   disabled,
+  name,
+  value,
 }: {
   children: ReactNode
   variant?: ComponentProps<typeof Button>['variant']
   size?: ComponentProps<typeof Button>['size']
   className?: string
   disabled?: boolean
+  /** Tells the action which button sent the form. */
+  name?: string
+  value?: string
 }) {
   const inActionForm = use(PendingContext)
   const { pending } = useFormStatus()
   return (
     <Button
       type="submit"
+      name={name}
+      value={value}
       variant={variant}
       size={size}
       className={className}

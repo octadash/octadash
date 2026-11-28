@@ -1,5 +1,6 @@
 export * from './env'
 export * from './id'
 export * from './logger'
+export * from './secrets'
 export * from './text'
 export * from './version'

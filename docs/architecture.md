@@ -141,9 +141,23 @@ versions and passwords generated at install. Each has one job.
   on time, and writes results to ClickHouse in batches. Only state changes
   (down, recovered) become alert jobs. This keeps uptime from turning into
   thousands of queue rows per minute.
-- Alert rules are rows in Postgres, created by seeds when a product or area is
-  set up, and every threshold is editable. The worker evaluates them; see
-  [product.md](product.md#alerts) for the three kinds (emergency, signal, data).
+- Alert rules are rows in Postgres (`alert_rule`): the organization's defaults
+  are seeded on first use, and a product can have its own row for any kind.
+  Every threshold is editable. See [product.md](product.md#alerts) for the three
+  kinds (emergency, signal, data).
+- Incidents (`incident`) do not know their kinds: a kind, a level, a
+  `dedupe_key` (one open incident per key, by a partial unique index) and
+  free-form `data`. A new area adds kinds to `RULE_DEFAULTS` and opens
+  incidents; storage, delivery and the panel need no change.
+- Delivery: an incident waits `notify_after` (the rule's delay, "down for 2
+  minutes"), then the `alerts-notify` job claims what is due with
+  `FOR UPDATE SKIP LOCKED` and sends one message per channel and event. Ten
+  products down at once is one message listing them. An incident resolved
+  before anyone was told closes silently. The job is woken when an incident
+  opens or closes and also runs every minute.
+- Channel secrets (bot tokens, SMTP passwords, API keys) are encrypted with
+  AES-256-GCM under a key derived from `OCTADASH_SECRET`, so the worker needs
+  the same secret as the panel. Each channel has its own message language.
 
 ### Integrations are plugins
 
@@ -154,7 +168,7 @@ form through `z.toJSONSchema`), the keys that are secret (stored encrypted), and
 module needs. Users enable what they want per organization or per product, as in
 Coolify's notification settings. Nothing is chosen at install time.
 
-Built: Telegram and webhook. The full list of planned connectors is in
+Built: email (SMTP and Resend), Telegram and webhook. The full list of planned connectors is in
 [product.md](product.md#connectors).
 
 ### Areas can be switched off

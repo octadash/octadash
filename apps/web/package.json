@@ -15,6 +15,8 @@
     "@octadash/auth": "workspace:*",
     "@octadash/core": "workspace:*",
     "@octadash/db": "workspace:*",
+    "@octadash/integrations": "workspace:*",
+    "@octadash/uptime": "workspace:*",
     "better-auth": "^1.7.28",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",

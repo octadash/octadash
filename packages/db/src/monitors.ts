@@ -139,6 +139,7 @@ export function listActiveMonitors(db: Db) {
       'id',
       'org_id',
       'project_id',
+      'name',
       'kind',
       'url',
       'interval_seconds',
