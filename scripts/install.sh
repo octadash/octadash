@@ -72,7 +72,9 @@ main() {
   ok "Ingest: $ingest"
 
   step "5/5 Starting Octadash"
-  docker compose up -d --quiet-pull
+  # Always pull: on a second run the image tag (edge) is the same, and a plain
+  # up would keep the old image.
+  docker compose up -d --pull always --quiet-pull
   if command -v curl >/dev/null 2>&1; then
     port=$(sed -n 's/^WEB_PORT=//p' .env)
     i=0
