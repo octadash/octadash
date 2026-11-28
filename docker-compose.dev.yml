@@ -44,7 +44,8 @@ services:
     image: dxflrs/garage:v2.5.0
     command: ["/garage", "server", "--single-node", "--default-bucket"]
     environment:
-      GARAGE_RPC_SECRET: 0000000000000000000000000000000000000000000000000000000000000000
+      # Quoted: unquoted, YAML reads the zeros as the number 0.
+      GARAGE_RPC_SECRET: "0000000000000000000000000000000000000000000000000000000000000000"
       GARAGE_DEFAULT_ACCESS_KEY: GK000000000000000000000000
       GARAGE_DEFAULT_SECRET_KEY: octadash-development-secret-key
       GARAGE_DEFAULT_BUCKET: octadash
