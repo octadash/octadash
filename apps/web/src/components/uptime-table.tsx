@@ -46,7 +46,7 @@ interface Cells {
 export interface MonitorLine extends Cells {
   id: string
   name: string
-  /** "API", "Site", "Heartbeat". */
+  /** After the name: "Health · api.pagebird.com", or just the host. */
   kind: string
   paused: boolean
   editHref: string | null
@@ -281,7 +281,9 @@ export function UptimeTable({
                           ) : (
                             m.name
                           )}{' '}
-                          <span className="text-xs text-muted-foreground">· {m.kind}</span>
+                          {m.kind && (
+                            <span className="text-xs text-muted-foreground">· {m.kind}</span>
+                          )}
                         </TableCell>
                         <Row cells={m} />
                         <TableCell className="pr-3 text-right">
