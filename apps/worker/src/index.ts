@@ -134,7 +134,11 @@ const writers = startWriters(
     insert: (rows, token) => insertLogs(clickhouse, rows, token),
   },
   log,
-  env.OCTADASH_RECEIVED_RETENTION_DAYS,
+  {
+    receivedDays: env.OCTADASH_RECEIVED_RETENTION_DAYS,
+    traceDays: env.OCTADASH_TRACE_RETENTION_DAYS,
+    metricDays: env.OCTADASH_METRIC_RETENTION_DAYS,
+  },
 )
 const heartbeats = new ValkeyHeartbeats(valkey)
 const uptime = startUptime(
@@ -143,6 +147,7 @@ const uptime = startUptime(
     check: checkUrl,
     readPings: (ids) => heartbeats.read(ids),
     readFailures: (ids) => heartbeats.readFailures(ids),
+    readOutputs: (ids, failed) => heartbeats.readOutputs(ids, failed),
     writeRows: (rows) => insertUptimeChecks(clickhouse, rows),
     setStatus: (id, from, to, at) => setMonitorStatus(db, id, from, to, at),
     onTransition: (transition) => alerts.onTransition(transition),

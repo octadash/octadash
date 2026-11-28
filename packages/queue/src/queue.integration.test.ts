@@ -85,6 +85,26 @@ describe.skipIf(!url)('valkey streams (needs VALKEY_URL)', () => {
     await redis.del(`octadash:hb:${id}`)
   })
 
+  it('keeps the output a job sent with its ping or failure', async () => {
+    const store = new ValkeyHeartbeats(redis)
+    const id = crypto.randomUUID()
+    await store.record(id, 1_000, 'backup ok')
+    await store.recordFailure(id, 2_000, 'disk full')
+    await store.record(id, 3_000)
+    expect([...(await store.readOutputs([id], false))]).toEqual([
+      [id, { at: 1_000, output: 'backup ok' }],
+    ])
+    expect([...(await store.readOutputs([id], true))]).toEqual([
+      [id, { at: 2_000, output: 'disk full' }],
+    ])
+    await redis.del(
+      `octadash:hb:${id}`,
+      `octadash:hbf:${id}`,
+      `octadash:hbo:${id}`,
+      `octadash:hbfo:${id}`,
+    )
+  })
+
   it('forwards live events to the listeners of each organization', async () => {
     const subscriber = createValkey(url ?? '', { name: 'octadash-test-live' })
     const hub = new ValkeyLiveHub(subscriber)

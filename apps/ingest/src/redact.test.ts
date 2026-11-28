@@ -27,6 +27,12 @@ describe('masking log lines', () => {
     expect(redact('GET /reset?token=abc123&x=1').text).toBe('GET /reset?token=[secret]&x=1')
   })
 
+  it('reads a long line with no spaces in linear time', () => {
+    const started = performance.now()
+    expect(redact(`${'x'.repeat(200_000)} ana@shop.example`).text).toContain('[email]')
+    expect(performance.now() - started).toBeLessThan(500)
+  })
+
   it('masks attributes named like secrets whole', () => {
     const out = redactAttributes({
       'http.request.header.authorization': 'Basic abc',

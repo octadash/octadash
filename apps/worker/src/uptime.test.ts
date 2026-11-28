@@ -39,6 +39,7 @@ function result(up: boolean, overrides: Partial<CheckResult> = {}): CheckResult 
     redirects: [],
     httpsRedirect: null,
     tls: null,
+    answer: null,
     ...overrides,
   }
 }

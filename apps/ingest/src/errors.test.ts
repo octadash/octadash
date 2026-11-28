@@ -212,6 +212,30 @@ describe('error endpoints', () => {
     ])
   })
 
+  it('keeps the whole event, masked, next to the columns', async () => {
+    const { app, sink } = setup()
+    const event = {
+      ...sentryEvent(),
+      contexts: { device: { model: 'Pixel 9' }, app: { app_version: '3.1' } },
+      extra: { cart: 3 },
+      user: { id: 'u1', email: 'ana@shop.example', ip_address: '200.1.2.3' },
+      request: { url: 'https://shop.example/', cookies: 'sid=abc', headers: { Cookie: 'sid=abc' } },
+      debug_meta: { images: [{ type: 'sourcemap', code_file: 'app.js' }] },
+    }
+    await app.request(`/api/1/store/?sentry_key=${KEY}`, {
+      method: 'POST',
+      body: JSON.stringify(event),
+    })
+    const row = sink.batches[0]?.rows[0] as { event: string }
+    const kept = JSON.parse(row.event)
+    expect(kept.contexts.device.model).toBe('Pixel 9')
+    expect(kept.extra.cart).toBe(3)
+    expect(kept.debug_meta.images[0].code_file).toBe('app.js')
+    expect(row.event).not.toContain('ana@shop.example')
+    expect(row.event).not.toContain('200.1.2.3')
+    expect(row.event).not.toContain('sid=abc')
+  })
+
   it('takes the old store endpoint with the key in the auth header', async () => {
     const { app, sink } = setup()
     const res = await app.request('/api/1/store/', {

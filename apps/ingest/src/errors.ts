@@ -12,6 +12,7 @@ import { parseUserAgent } from './context'
 import type { Sender } from './events'
 import type { IngestScope } from './keys'
 import { personal, personId } from './privacy'
+import { maskDeep } from './received'
 
 /**
  * Error events in the format of the Sentry SDKs (the JSON inside an envelope
@@ -268,6 +269,8 @@ export async function toErrorRow(
   raw: unknown,
   sender: Sender,
   received: Date = new Date(),
+  /** What the SDK sent, when `raw` was built from another format (PostHog's `$exception`). */
+  original: unknown = raw,
 ): Promise<QueuedError | null> {
   const event = obj(raw)
   if (!event) return null
@@ -327,6 +330,8 @@ export async function toErrorRow(
     breadcrumbs: JSON.stringify(breadcrumbsOf(event)),
     tags: JSON.stringify(tagsOf(event)),
     trace_id: traceIdOf(contexts),
+    // Everything the SDK sent, masked, for what the columns above do not keep.
+    event: JSON.stringify(maskDeep(scope.project_id, original).value),
   }
 }
 

@@ -8,7 +8,7 @@
 
 /** Attribute names whose value is always a secret. */
 export const SECRET_NAME =
-  /(^|[_.\-\s])(password|passwd|pwd|senha|secret|token|access_token|refresh_token|api_key|apikey|api-key|authorization|cookie|set-cookie|private_key|client_secret|credential|credentials)([_.\-\s]|$)/i
+  /(^|[_.\-\s])(password|passwd|pwd|senha|secret|token|access_token|refresh_token|api_key|apikey|api-key|authorization|cookie|cookies|set-cookie|private_key|client_secret|credential|credentials)([_.\-\s]|$)/i
 
 /** Each pattern and what replaces it. Order matters: keys before e-mails, cards before documents. */
 const PATTERNS: [RegExp, string][] = [
@@ -30,7 +30,9 @@ const PATTERNS: [RegExp, string][] = [
   ],
   // user:password@ in URLs.
   [/(\/\/[^/\s:@]+):([^/\s@]+)@/g, '$1:[secret]@'],
-  [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]'],
+  // The lookbehind starts a match only where a run of address characters starts,
+  // so a long run with no @ (a token, a minified line) is scanned once, not once per character.
+  [/(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]'],
 ]
 
 /** 13 to 19 digits, optionally in groups split by spaces or dashes. */

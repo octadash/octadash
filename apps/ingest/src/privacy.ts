@@ -20,7 +20,8 @@ export function personId(projectId: string, id: string): string {
 /** Property names that hold who someone is: a word of the name (user_email, userEmail, phone). */
 export const PERSONAL_NAME =
   /(^|[_.\-\s])(e-?mail|cpf|cnpj|ssn|passport|passaporte|phone|telefone|celular|whatsapp|password|senha|card_number|credit_card|iban|ip|ip_address|address|endereco)([_.\-\s]|$)/i
-const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/
+/** Starts only where a run of non-space characters starts, so a long value is scanned once. */
+const EMAIL = /(?<![^\s@])[^\s@]+@[^\s@]+\.[^\s@]+/
 /** CPF, CNPJ and US SSN, with or without punctuation; bare 11 or 14 digits. */
 const DOCUMENT =
   /^\s*(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{3}-\d{2}-\d{4})\s*$/

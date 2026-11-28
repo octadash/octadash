@@ -7,6 +7,8 @@ const MAX_REDIRECTS = 6
 const DEFAULT_TIMEOUT_MS = 15_000
 /** Enough to tell a health answer from an HTML page; the rest of the body is skipped. */
 const BODY_LIMIT = 4096
+/** Kept from a failed check's body: enough to read the error page. */
+const ANSWER_BODY_CHARS = 1024
 
 /**
  * site: the address answers with a page (2xx or 3xx after redirects).
@@ -40,6 +42,11 @@ export interface CheckResult {
   /** Plain http on the final host sends people to https. Null when it could not be checked. */
   httpsRedirect: boolean | null
   tls: TlsInfo | null
+  /**
+   * What the server answered when the check failed: its headers (cookies
+   * left out) and the start of the body. Null when it was up or did not answer.
+   */
+  answer: { headers: Record<string, string>; body: string } | null
 }
 
 export interface CheckOptions {
@@ -178,6 +185,7 @@ export async function checkUrl(input: string, options: CheckOptions = {}): Promi
     redirects: [],
     httpsRedirect: null,
     tls: null,
+    answer: null,
   }
 
   let url: URL
@@ -224,5 +232,17 @@ export async function checkUrl(input: string, options: CheckOptions = {}): Promi
     redirects: page.redirects,
     httpsRedirect,
     tls,
+    answer: up ? null : answerOf(page.response.headers, body),
   }
+}
+
+/** The answer of a failed check, small: no cookies, the first KB of the body. */
+function answerOf(headers: Headers, body: string) {
+  const out: Record<string, string> = {}
+  let n = 0
+  headers.forEach((value, name) => {
+    if (n++ >= 40 || /^(set-)?cookie$/i.test(name)) return
+    out[name] = value.slice(0, 500)
+  })
+  return { headers: out, body: body.slice(0, ANSWER_BODY_CHARS) }
 }

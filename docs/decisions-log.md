@@ -471,6 +471,22 @@ Luciano reviewed the night's decisions that change the product or his risk.
   won't use this" (counted on the card), `/flags` and config requests (no
   data). Gateway and AI cost data is read from the provider, which keeps it,
   so fields Octadash does not read today can be read again later.
+- **Traces are kept before their screen**: OTLP spans, Sentry transactions and
+  Sentry spans go to `spans` (OpenTelemetry's shape), 14 days by default
+  (`OCTADASH_TRACE_RETENTION_DAYS`), shorter than received data because spans
+  are the largest stream. Sentry logs go to Logs.
+- **Metrics are kept before their screen**: every OTLP metric type goes to
+  one table, `metrics`, 30 days by default (`OCTADASH_METRIC_RETENTION_DAYS`).
+  Points are small, so they keep longer than spans; a product's own setting
+  comes with the Metrics area.
+- **The whole error event is kept**, masked, next to the columns the screens
+  read. Cookies are now masked by name everywhere (logs included).
+- **Uptime keeps what each check learned** (resolved address, redirects,
+  https redirect, certificate issuer and trust, the failed answer) and a
+  heartbeat keeps the output its job posts, the last 100,000 characters.
+- **Masking scans long lines once**: the e-mail patterns used to try every
+  position of a long line with no spaces (a token, a minified bundle), which
+  took seconds on 100 KB. Found while keeping heartbeat output.
 
 ## Uptime is "Disponibilidade" in Portuguese (2026-11-28, Luciano)
 
