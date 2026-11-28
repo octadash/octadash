@@ -424,3 +424,11 @@ Luciano reviewed the night's decisions that change the product or his risk.
   minute go out as one message per channel, never mixed with an emergency.
 - **A rule set to Off is no longer faded**: the faded text failed AA contrast,
   and the level toggle already says Off.
+
+## Money for one-off sales (2026-11-28, Luciano)
+
+- A product sold one purchase at a time (one-off sales, credit packs) showed MRR, new subscriptions and churn at zero.
+- Money now reads how each product is paid for from the last year of sales: subscriptions only, one-off only, or mixed. No setting.
+- One-off: Revenue, Customers who paid, Bought again (paid before the period too), Average sale and Failed payments. MRR and churn are hidden and come back by themselves when a subscription arrives.
+- Mixed: the subscription numbers stay, and Revenue says how much was recurring and how much one-off.
+- Credit packs count as revenue when bought. How much credit was used is not in the gateway; it would come from a Product usage event (backlog).

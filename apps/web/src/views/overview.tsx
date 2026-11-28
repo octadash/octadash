@@ -229,9 +229,12 @@ export async function OverviewView({
                             row.money
                               ? {
                                   value: moneyOf(row.money.revenue, money.currency),
-                                  note: t('table.mrr', {
-                                    mrr: moneyOf(row.money.mrr, money.currency),
-                                  }),
+                                  note:
+                                    row.money.mrr === null
+                                      ? undefined
+                                      : t('table.mrr', {
+                                          mrr: moneyOf(row.money.mrr, money.currency),
+                                        }),
                                 }
                               : null,
                           ]
@@ -353,7 +356,11 @@ export function AreaTiles({
           area={tRoot('areas.money.name')}
           value={moneyOf(money.revenue, money.currency)}
           delta={delta(money.revenue, money.previous)}
-          sub={t('tiles.mrr', { mrr: moneyOf(money.mrr, money.currency) })}
+          sub={
+            money.mrr === null
+              ? undefined
+              : t('tiles.mrr', { mrr: moneyOf(money.mrr, money.currency) })
+          }
           spark={money.series.map((p) => p.revenue)}
         />
       )}
@@ -455,7 +462,7 @@ function ProductRow({
   showTraffic: boolean
   showErrors: boolean
   /** Sign-ups, Revenue · MRR and Margin, in order, when shown; null for "—". */
-  extra: ({ value: string; note: string; bad?: boolean } | null)[]
+  extra: ({ value: string; note?: string; bad?: boolean } | null)[]
   errorsDelta: Delta | null
   issuesLabel: string
   labels: {

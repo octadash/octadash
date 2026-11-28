@@ -4,6 +4,7 @@ import { createClickHouse } from './clickhouse/client'
 import { toClickHouseTime } from './clickhouse/events'
 import { migrateClickHouse } from './clickhouse/migrate'
 import {
+  buyerCounts,
   insertPayments,
   insertSubscriptions,
   knownEnds,
@@ -11,6 +12,7 @@ import {
   mrrAt,
   type PaymentRow,
   paymentDays,
+  paymentKinds,
   paymentRates,
   type SubscriptionRow,
   subscriptionChanges,
@@ -244,6 +246,47 @@ describe.skipIf(!chUrl)('money queries (needs CLICKHOUSE_URL)', () => {
     expect(rates[0]).toMatchObject({ paid: 2, failed: 1 })
     const latest = await latestPayments(client, org, [project], 2)
     expect(latest.map((p) => p.id)).toEqual(['ch_3', 'ch_2'])
+  })
+
+  it('tells one-off sales from subscriptions and counts who bought again', async () => {
+    const credits = randomUUID()
+    const sale = (
+      id: string,
+      minutes: number,
+      customer: string,
+      subscription = '',
+    ): PaymentRow => ({
+      ...payment(id, minutes, 'paid', 900),
+      project_id: credits,
+      customer,
+      subscription_id: subscription,
+    })
+    await insertPayments(client, [
+      sale('cr_1', -3000, 'buyer_a'),
+      sale('cr_2', -60, 'buyer_a'),
+      sale('cr_3', -50, 'buyer_b'),
+      sale('cr_4', -40, ''),
+      { ...sale('cr_5', -30, 'buyer_c'), status: 'failed' },
+    ])
+    const since = new Date(T0.getTime() - 365 * 86_400_000)
+    const kinds = await paymentKinds(client, org, [project, credits], since)
+    // project: subscriptions and one-off charges; credits: one-off only.
+    expect(kinds.find((k) => k.projectId === project)).toMatchObject({
+      recurring: true,
+      oneOff: true,
+    })
+    expect(kinds.find((k) => k.projectId === credits)).toMatchObject({
+      recurring: false,
+      oneOff: true,
+    })
+
+    const days = await paymentDays(client, { ...scope, projectIds: [credits] }, 'UTC')
+    expect(days.reduce((n, d) => n + d.oneOffPaid, 0)).toBe(2700)
+    expect(days.reduce((n, d) => n + d.oneOffCount, 0)).toBe(3)
+
+    const buyers = await buyerCounts(client, { ...scope, projectIds: [credits] })
+    // buyer_a bought before the period too; the guest checkout is not a buyer.
+    expect(buyers).toEqual([{ projectId: credits, buyers: 2, returning: 1 }])
   })
 
   it('remembers when a subscription was first seen ended', async () => {

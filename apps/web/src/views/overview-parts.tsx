@@ -119,7 +119,8 @@ export function Tile({
   area: string
   value: string
   delta?: Delta | null
-  sub: string
+  /** Left empty to keep tiles aligned when there is nothing to add. */
+  sub?: string
   spark: number[]
   alert?: boolean
 }) {

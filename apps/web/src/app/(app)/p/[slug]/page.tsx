@@ -326,10 +326,14 @@ export default async function ProductPage({
                     value: formatMoney(row.money.revenue, overview.money.currency, locale, true),
                     note: periodName,
                   },
-                  {
-                    label: 'MRR',
-                    value: formatMoney(row.money.mrr, overview.money.currency, locale, true),
-                  },
+                  ...(row.money.mrr === null
+                    ? []
+                    : [
+                        {
+                          label: 'MRR',
+                          value: formatMoney(row.money.mrr, overview.money.currency, locale, true),
+                        },
+                      ]),
                 ]}
               />
             ) : area.id === 'costs' && row?.costs && overview.costs ? (

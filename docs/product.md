@@ -83,7 +83,7 @@ the service name OpenTelemetry already sends.
 | Traffic       | Tráfego       | Visitors and where they come from.                                                         |
 | Product usage | Uso           | Sign-ups, logins, key actions, funnel, retention.                                          |
 | Errors        | Erros         | Browser and server errors.                                                                 |
-| Money         | Dinheiro      | Revenue, MRR, churn, refunds.                                                              |
+| Money         | Dinheiro      | Revenue, MRR, churn, refunds; one-off sales and credit packs too.                          |
 | Costs         | Custos        | Two parts: AI costs and Infra costs, plus the margin. The site may show them as two steps. |
 | Logs          | Logs          | Logs and traces.                                                                           |
 | Settings      | Configurações | Organization, members, channels, alert rules, groups, outside watcher.                     |
@@ -562,6 +562,7 @@ it comes after them.
 | Dunning and recovered payments                               | Baremetrics, Churnkey     | medium   |
 | Cancellation reasons                                         | Baremetrics, Churnkey     | medium   |
 | Margin, break-even, burn and runway                          | spreadsheets, Baremetrics | medium   |
+| Credits used and left (credit packs), from a usage event     | none                      | medium   |
 | Revenue goals and forecast                                   | Baremetrics               | low      |
 
 ### AI (beyond step 7)
