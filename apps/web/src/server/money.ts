@@ -1,5 +1,7 @@
 import {
+  type BuyerCounts,
   bucketStarts,
+  buyerCounts,
   convertMinor,
   type FxRates,
   fxRates,
@@ -12,10 +14,11 @@ import {
   mrrAt,
   type PaymentDay,
   paymentDays,
+  paymentKinds,
   paymentRates,
   subscriptionChanges,
 } from '@octadash/db'
-import type { MoneyState } from '@/lib/money'
+import { type MoneyMetric, type MoneyModel, type MoneyState, modelOf } from '@/lib/money'
 import { type TrafficPeriod, trafficPeriod } from '@/lib/traffic'
 import { services } from './context'
 
@@ -40,6 +43,11 @@ export interface ProductMoney {
   churn: number | null
   /** No gateway serves this product. */
   connected: boolean
+  model: MoneyModel
+  /** Customers who bought outside a subscription in the period. */
+  buyers: number
+  /** Of those, the ones who had bought before. */
+  returning: number
 }
 
 export interface ShownPayment extends LatestPayment {
@@ -53,21 +61,11 @@ export interface MoneyData {
   projects: Project[]
   /** Products in scope a gateway serves. */
   connected: number
-  totals: {
-    revenue: number
-    refunded: number
-    mrr: number
-    started: number
-    churn: number | null
-    failed: number | null
-  }
-  previous: {
-    revenue: number
-    mrr: number
-    started: number
-    churn: number | null
-    failed: number | null
-  }
+  model: MoneyModel
+  /** The chart's metric: MRR is not offered when nothing is a subscription. */
+  metric: MoneyMetric
+  totals: MoneyTotals & { refunded: number }
+  previous: MoneyTotals
   /** The product failing most in the last hour, for "Acme Pay 38% now". */
   failingNow: { name: string; share: number } | null
   series: { at: Date; revenue: number; mrr: number }[]
@@ -77,6 +75,20 @@ export interface MoneyData {
   /** Currencies with payments but no exchange rate yet: left out of totals. */
   unconverted: string[]
   complete: boolean
+}
+
+export interface MoneyTotals {
+  revenue: number
+  /** The part of revenue not tied to a subscription. */
+  oneOffRevenue: number
+  mrr: number
+  started: number
+  churn: number | null
+  failed: number | null
+  buyers: number
+  returning: number
+  /** One-off revenue per one-off sale; null without sales. */
+  ticket: number | null
 }
 
 const dayOf = (date: Date, timeZone: string) =>
@@ -129,6 +141,9 @@ export async function loadMoney(
     todayDays,
     latest,
     mrrNow,
+    kinds,
+    buyersNow,
+    buyersBefore,
   ] = await Promise.all([
     fxRates(
       db,
@@ -185,7 +200,15 @@ export async function loadMoney(
       () => mrrAt(clickhouse, orgId, ids, [now, monthAgo, period.from, period.previous.from]),
       [],
     ),
+    safe(() => paymentKinds(clickhouse, orgId, ids, new Date(now.getTime() - 365 * DAY)), []),
+    safe(() => buyerCounts(clickhouse, scope(period.from, period.to)), [] as BuyerCounts[]),
+    safe(
+      () => buyerCounts(clickhouse, scope(period.previous.from, period.previous.to)),
+      [] as BuyerCounts[],
+    ),
   ])
+  const model = modelOf(kinds)
+  const metric: MoneyMetric = model === 'oneOff' ? 'revenue' : state.metric
 
   const unconverted = new Set<string>()
   const convert = (amount: number, from: string, day: string, table: FxRates = rates) => {
@@ -202,10 +225,10 @@ export async function loadMoney(
   const ends = (startsAt: Date[], to: Date) =>
     startsAt.map((_, i) => new Date(Math.min((startsAt[i + 1] ?? to).getTime(), to.getTime())))
   const [mrrSeries, mrrPrevious] = await Promise.all([
-    state.metric === 'mrr'
+    metric === 'mrr'
       ? safe(() => mrrAt(clickhouse, orgId, ids, ends(starts, period.to)), [])
       : Promise.resolve([]),
-    state.metric === 'mrr'
+    metric === 'mrr'
       ? safe(() => mrrAt(clickhouse, orgId, ids, ends(previousStarts, period.previous.to)), [])
       : Promise.resolve([]),
   ])
@@ -230,6 +253,14 @@ export async function loadMoney(
     const atStart = rows.reduce((n, r) => n + r.atStart, 0)
     return atStart > 0 ? (rows.reduce((n, r) => n + r.ended, 0) / atStart) * 100 : null
   }
+  const oneOffOf = (rows: PaymentDay[]) =>
+    rows.reduce((sum, r) => sum + convert(r.oneOffPaid, r.currency, r.day), 0)
+  const ticketOf = (rows: PaymentDay[]) => {
+    const count = rows.reduce((n, r) => n + r.oneOffCount, 0)
+    return count > 0 ? Math.round(oneOffOf(rows) / count) : null
+  }
+  const sumBuyers = (rows: BuyerCounts[], key: 'buyers' | 'returning') =>
+    rows.reduce((n, r) => n + r[key], 0)
   const failedOf = (rows: PaymentDay[]) => {
     const paid = rows.reduce((n, r) => n + r.paidCount, 0)
     const failed = rows.reduce((n, r) => n + r.failedCount, 0)
@@ -259,6 +290,9 @@ export async function loadMoney(
           : null,
       churn: churnOf(mine),
       connected: connectedIds.has(p.id),
+      model: modelOf(kinds.filter((k) => k.projectId === p.id)),
+      buyers: buyersNow.find((b) => b.projectId === p.id)?.buyers ?? 0,
+      returning: buyersNow.find((b) => b.projectId === p.id)?.returning ?? 0,
     }
   })
   const worst = byProduct
@@ -272,20 +306,30 @@ export async function loadMoney(
     currency,
     projects,
     connected: projects.filter((p) => connectedIds.has(p.id)).length,
+    model,
+    metric,
     totals: {
       revenue: revenueOf(current),
+      oneOffRevenue: oneOffOf(current),
       refunded: current.reduce((sum, r) => sum + convert(r.refunded, r.currency, r.day), 0),
       mrr: mrrSum(mrrNow, now),
       started: changes.reduce((n, c) => n + c.started, 0),
       churn: churnOf(changes),
       failed: failedOf(current),
+      buyers: sumBuyers(buyersNow, 'buyers'),
+      returning: sumBuyers(buyersNow, 'returning'),
+      ticket: ticketOf(current),
     },
     previous: {
       revenue: revenueOf(before),
+      oneOffRevenue: oneOffOf(before),
       mrr: mrrSum(mrrNow, period.from),
       started: previousChanges.reduce((n, c) => n + c.started, 0),
       churn: churnOf(previousChanges),
       failed: failedOf(before),
+      buyers: sumBuyers(buyersBefore, 'buyers'),
+      returning: sumBuyers(buyersBefore, 'returning'),
+      ticket: ticketOf(before),
     },
     failingNow: worst ? { name: worst.project.name, share: worst.failedNow ?? 0 } : null,
     series: series(starts, current, mrrSeries, period.to),

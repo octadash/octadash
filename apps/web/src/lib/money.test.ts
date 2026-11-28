@@ -3,6 +3,7 @@ import {
   digitsOf,
   formatMoney,
   isWebhookToken,
+  modelOf,
   moneyHref,
   parseMoneyState,
   pointsBetween,
@@ -54,5 +55,21 @@ describe('money numbers', () => {
     expect(isWebhookToken('581e159cf736959641db5577cfb123bb')).toBe(true)
     expect(isWebhookToken('581E159CF736959641DB5577CFB123BB')).toBe(false)
     expect(isWebhookToken('../etc')).toBe(false)
+  })
+})
+
+describe('modelOf', () => {
+  it('reads how a scope is paid for from its products', () => {
+    expect(modelOf([])).toBe('recurring')
+    expect(modelOf([{ recurring: true, oneOff: false }])).toBe('recurring')
+    expect(modelOf([{ recurring: false, oneOff: true }])).toBe('oneOff')
+    expect(modelOf([{ recurring: true, oneOff: true }])).toBe('mixed')
+    // A credits product next to a subscription product: the scope is mixed.
+    expect(
+      modelOf([
+        { recurring: false, oneOff: true },
+        { recurring: true, oneOff: false },
+      ]),
+    ).toBe('mixed')
   })
 })

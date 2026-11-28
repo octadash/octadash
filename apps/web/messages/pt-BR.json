@@ -2324,7 +2324,14 @@
       "mrrInfoLabel": "O que é MRR",
       "mrrInfo": "Receita recorrente mensal: quanto cada assinatura ativa soma por mês, no preço de hoje. Planos anuais contam um doze avos. Testes grátis ficam de fora até pagarem.",
       "churnInfoLabel": "Como o churn é contado",
-      "churnInfo": "Assinaturas que terminaram no período, entre as que estavam ativas no início dele. Subir é ruim."
+      "churnInfo": "Assinaturas que terminaram no período, entre as que estavam ativas no início dele. Subir é ruim.",
+      "buyers": "Clientes que pagaram",
+      "returning": "Voltaram a comprar",
+      "returningNote": "{returning} de {buyers}",
+      "returningInfoLabel": "Como \"voltaram a comprar\" é contado",
+      "returningInfo": "Clientes que pagaram no período e já tinham pago antes dele. Pagamento sem cliente (compra como convidado) conta só na receita.",
+      "ticket": "Ticket médio",
+      "split": "{recurring} recorrente · {oneOff} avulsa"
     },
     "pts": "p.p.",
     "change": "{change}% em relação ao período anterior",
@@ -2346,7 +2353,10 @@
       "paying": "Pagantes",
       "failedNow": "Falha agora",
       "churn": "Churn",
-      "connect": "Conectar um gateway"
+      "connect": "Conectar um gateway",
+      "revenue": "Receita",
+      "buyers": "Clientes",
+      "returning": "Voltaram"
     },
     "latest": {
       "title": "Últimos pagamentos",
@@ -2361,6 +2371,9 @@
       "pending": "Pendente",
       "overdue": "Vencido",
       "canceled": "Cancelado"
+    },
+    "model": {
+      "oneOff": "Vendido por compra avulsa (venda única ou pacote de créditos), por isso MRR e churn não aparecem. Eles aparecem sozinhos quando entrar uma assinatura."
     }
   },
   "moneySetup": {

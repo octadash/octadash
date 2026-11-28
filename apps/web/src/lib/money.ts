@@ -80,3 +80,18 @@ export function pointsBetween(now: number | null, before: number | null): number
 export function isWebhookToken(value: string): boolean {
   return /^[a-f0-9]{32}$/.test(value)
 }
+
+/**
+ * How a scope is paid for: subscriptions only, one purchase at a time (one-off
+ * sales, credit packs), or both. Read from what was sold in the last year, so
+ * it changes by itself when a product starts selling plans.
+ */
+export type MoneyModel = 'recurring' | 'oneOff' | 'mixed'
+
+export function modelOf(kinds: { recurring: boolean; oneOff: boolean }[]): MoneyModel {
+  const recurring = kinds.some((k) => k.recurring)
+  const oneOff = kinds.some((k) => k.oneOff)
+  if (oneOff && !recurring) return 'oneOff'
+  if (oneOff && recurring) return 'mixed'
+  return 'recurring'
+}
