@@ -48,15 +48,21 @@ interface StatsRow {
   cert_days: number | null
 }
 
-/** Uptime, response time and the last state of each monitor over the last `days`. */
+/**
+ * Uptime, response time and the last state of each monitor over the last
+ * `days`, or between two moments.
+ */
 export async function monitorStats(
   client: ClickHouseClient,
   orgId: string,
   monitorIds: string[],
-  days = 30,
+  period: number | { from: Date; to: Date } = 30,
 ): Promise<Map<string, MonitorStats>> {
   const stats = new Map<string, MonitorStats>()
   if (monitorIds.length === 0) return stats
+  const to = typeof period === 'number' ? new Date() : period.to
+  const from =
+    typeof period === 'number' ? new Date(to.getTime() - period * 86_400_000) : period.from
   const result = await client.query({
     query: `
       SELECT
@@ -71,9 +77,15 @@ export async function monitorStats(
       FROM uptime_checks
       WHERE org_id = {org:UUID}
         AND monitor_id IN {ids:Array(UUID)}
-        AND timestamp >= now64(3) - toIntervalDay({days:UInt32})
+        AND timestamp >= {from:DateTime64(3, 'UTC')}
+        AND timestamp < {to:DateTime64(3, 'UTC')}
       GROUP BY monitor_id`,
-    query_params: { org: orgId, ids: monitorIds, days },
+    query_params: {
+      org: orgId,
+      ids: monitorIds,
+      from: toClickHouseTime(from),
+      to: toClickHouseTime(to),
+    },
     format: 'JSONEachRow',
   })
   for (const row of await result.json<StatsRow>()) {
@@ -91,6 +103,47 @@ export async function monitorStats(
     })
   }
   return stats
+}
+
+export interface UptimeTotals {
+  checks: number
+  ups: number
+  /** Median response time of every check that answered, in milliseconds. */
+  medianMs: number | null
+}
+
+/** All checks of a scope at once: the "Uptime" and "Response" tiles of the Uptime board. */
+export async function uptimeTotals(
+  client: ClickHouseClient,
+  scope: TrafficScope,
+): Promise<UptimeTotals> {
+  if (scope.projectIds?.length === 0) return { checks: 0, ups: 0, medianMs: null }
+  const result = await client.query({
+    query: `
+      SELECT
+        count() AS checks,
+        countIf(up = 1) AS ups,
+        quantileIf(0.5)(duration_ms, up = 1 AND duration_ms IS NOT NULL) AS median_ms
+      FROM uptime_checks
+      WHERE org_id = {org:UUID}
+        ${scope.projectIds ? 'AND project_id IN {projects:Array(UUID)}' : ''}
+        AND timestamp >= {from:DateTime64(3, 'UTC')}
+        AND timestamp < {to:DateTime64(3, 'UTC')}`,
+    query_params: {
+      org: scope.orgId,
+      projects: scope.projectIds ?? [],
+      from: toClickHouseTime(scope.from),
+      to: toClickHouseTime(scope.to),
+    },
+    format: 'JSONEachRow',
+  })
+  const [row] = await result.json<{ checks: string; ups: string; median_ms: number | null }>()
+  const median = row?.median_ms
+  return {
+    checks: Number(row?.checks ?? 0),
+    ups: Number(row?.ups ?? 0),
+    medianMs: median == null || Number.isNaN(median) ? null : Math.round(median),
+  }
 }
 
 /** Days left on each monitor's certificate, from its latest deep check in the last two days. */
@@ -236,4 +289,59 @@ export async function responseSeries(
   )
   const starts = await bucketStarts(client, scope, bucket)
   return starts.map((at) => ({ at, medianMs: found.get(at.getTime()) ?? null }))
+}
+
+export interface CheckPoint {
+  at: Date
+  up: boolean
+  statusCode: number | null
+  durationMs: number | null
+  error: string
+}
+
+/**
+ * Every check of one monitor in a window, oldest first: the chart and the
+ * first failure on an emergency's page. A monitor checked every 30 seconds
+ * gives 120 rows an hour, so the window stays short.
+ */
+export async function monitorChecks(
+  client: ClickHouseClient,
+  orgId: string,
+  monitorId: string,
+  from: Date,
+  to: Date,
+): Promise<CheckPoint[]> {
+  const result = await client.query({
+    query: `
+      SELECT timestamp AS at, up, status_code, duration_ms, error
+      FROM uptime_checks
+      WHERE org_id = {org:UUID}
+        AND monitor_id = {monitor:UUID}
+        AND timestamp >= {from:DateTime64(3, 'UTC')}
+        AND timestamp < {to:DateTime64(3, 'UTC')}
+      ORDER BY timestamp
+      LIMIT 2000`,
+    query_params: {
+      org: orgId,
+      monitor: monitorId,
+      from: toClickHouseTime(from),
+      to: toClickHouseTime(to),
+    },
+    clickhouse_settings: ISO_TIMES,
+    format: 'JSONEachRow',
+  })
+  const rows = await result.json<{
+    at: string
+    up: number
+    status_code: number | null
+    duration_ms: number | null
+    error: string
+  }>()
+  return rows.map((row) => ({
+    at: new Date(row.at),
+    up: row.up === 1,
+    statusCode: row.status_code,
+    durationMs: row.duration_ms,
+    error: row.error,
+  }))
 }

@@ -100,14 +100,36 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
     expect(due.some((i) => i.id === first?.id)).toBe(true)
     await markNotified(db, [first?.id ?? ''], 'open', T0)
 
-    expect(await acknowledgeIncidents(db, other, [first?.id ?? ''], 'user-2', T0)).toEqual([])
-    expect(await acknowledgeIncidents(db, org, [first?.id ?? ''], 'user-1', T0)).toEqual([
-      first?.id,
-    ])
+    expect(
+      await acknowledgeIncidents(
+        db,
+        other,
+        [first?.id ?? ''],
+        '00000000-0000-4000-8000-0000000000a2',
+        T0,
+      ),
+    ).toEqual([])
+    expect(
+      await acknowledgeIncidents(
+        db,
+        org,
+        [first?.id ?? ''],
+        '00000000-0000-4000-8000-0000000000a1',
+        T0,
+      ),
+    ).toEqual([first?.id])
     // The first person keeps it.
-    expect(await acknowledgeIncidents(db, org, [first?.id ?? ''], 'user-2', T0)).toEqual([])
+    expect(
+      await acknowledgeIncidents(
+        db,
+        org,
+        [first?.id ?? ''],
+        '00000000-0000-4000-8000-0000000000a2',
+        T0,
+      ),
+    ).toEqual([])
     expect((await listOpenIncidents(db, org)).find((i) => i.id === first?.id)).toMatchObject({
-      acknowledged_by: 'user-1',
+      acknowledged_by: '00000000-0000-4000-8000-0000000000a1',
     })
 
     await resolveIncident(db, input.dedupeKey, new Date(T0.getTime() + 300_000))

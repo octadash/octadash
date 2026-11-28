@@ -1,8 +1,22 @@
-import { requireOrg } from '@/server/session'
-import { UptimeOverview } from '@/views/uptime-overview'
+import { parseUptimePeriod } from '@/lib/uptime-board'
+import { canManage, requireOrg } from '@/server/session'
+import { UptimeBoardView } from '@/views/uptime-board'
 
-/** Uptime of every product side by side, the ones down first. */
-export default async function AllUptimePage() {
+/** Uptime of every product: every monitor, problems first. */
+export default async function AllUptimePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>
+}) {
   const { org } = await requireOrg()
-  return <UptimeOverview orgId={org.id} projectIds={null} />
+  const { period } = await searchParams
+  return (
+    <UptimeBoardView
+      orgId={org.id}
+      projectIds={null}
+      base="/all"
+      periodId={parseUptimePeriod(period)}
+      manager={canManage(org.role)}
+    />
+  )
 }

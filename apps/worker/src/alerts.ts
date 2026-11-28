@@ -89,6 +89,11 @@ export interface AlertsDeps {
   live?: LivePublisher
   fetch?: typeof fetch
   now?: () => Date
+  /**
+   * Looks around when a site or API goes down (DNS, certificate, control
+   * addresses), so the emergency page can say what Octadash ruled out.
+   */
+  diagnose?: (transition: Transition) => Promise<Record<string, unknown> | null>
 }
 
 export function createAlerts(deps: AlertsDeps) {
@@ -113,16 +118,31 @@ export function createAlerts(deps: AlertsDeps) {
   }
 
   /** The uptime scheduler calls this on every state change it saved. */
-  async function onTransition({ monitor, to, at, reason }: Transition) {
+  async function onTransition(transition: Transition) {
+    const { monitor, to, at, reason, ip } = transition
     const dedupeKey = `monitor:${monitor.id}:down`
     if (to === 'down') {
+      const checked =
+        monitor.kind === 'heartbeat' || !deps.diagnose
+          ? null
+          : await deps.diagnose(transition).catch((err: unknown) => {
+              deps.log.warn({ err, monitor: monitor.id }, 'diagnosis failed')
+              return null
+            })
       const incident = await openIncident(deps.db, {
         orgId: monitor.org_id,
         projectId: monitor.project_id,
         monitorId: monitor.id,
         kind: monitor.kind === 'heartbeat' ? 'heartbeat_missed' : 'monitor_down',
         dedupeKey,
-        data: { name: monitor.name, url: monitor.url, reason },
+        data: {
+          name: monitor.name,
+          url: monitor.url,
+          reason,
+          ip: ip ?? null,
+          status: transition.status ?? null,
+          ...(checked ? { checked } : {}),
+        },
         at,
       })
       if (incident) {

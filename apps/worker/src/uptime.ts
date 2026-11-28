@@ -20,6 +20,10 @@ export interface Transition {
   at: Date
   /** What the last check saw: "HTTP 503", "timeout", "no ping for 65 min". */
   reason: string | null
+  /** The address the host resolved to on the last check; null for heartbeats. */
+  ip?: string | null
+  /** The status code of the last check, when the server answered. */
+  status?: number | null
 }
 
 export interface UptimeDeps {
@@ -197,7 +201,10 @@ export class UptimeScheduler {
           slot.status !== 'down' &&
           (await this.isOnline())
         ) {
-          await this.transition(slot, 'down', at, result.error ?? `HTTP ${result.status}`)
+          await this.transition(slot, 'down', at, result.error ?? `HTTP ${result.status}`, {
+            ip: result.ip,
+            status: result.status,
+          })
         }
       }
     } catch (err) {
@@ -296,7 +303,13 @@ export class UptimeScheduler {
     }
   }
 
-  private async transition(slot: Slot, to: MonitorStatus, at: Date, reason: string | null) {
+  private async transition(
+    slot: Slot,
+    to: MonitorStatus,
+    at: Date,
+    reason: string | null,
+    check: { ip: string | null; status: number | null } = { ip: null, status: null },
+  ) {
     const from = slot.status
     if (from === to) return
     slot.status = to
@@ -312,7 +325,7 @@ export class UptimeScheduler {
     if (!saved) return
     this.deps.log.info({ monitor: slot.monitor.id, from, to, reason }, 'monitor state changed')
     try {
-      await this.deps.onTransition({ monitor: slot.monitor, from, to, at, reason })
+      await this.deps.onTransition({ monitor: slot.monitor, from, to, at, reason, ...check })
     } catch (err) {
       this.deps.log.error({ err, monitor: slot.monitor.id }, 'monitor transition not handled')
     }

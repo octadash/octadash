@@ -33,6 +33,8 @@ export interface CheckResult {
   durationMs: number | null
   /** Why the check failed: a network code (ENOTFOUND, ECONNREFUSED), "timeout", "HTTP 503". */
   error: string | null
+  /** The address the monitored host resolved to, before any redirect. Null when it did not resolve. */
+  ip: string | null
   finalUrl: string | null
   redirects: string[]
   /** Plain http on the final host sends people to https. Null when it could not be checked. */
@@ -59,8 +61,10 @@ async function request(
   url: URL,
   allowPrivate: boolean,
   timeoutMs: number,
+  onAddress?: (ip: string | null) => void,
 ): Promise<Response> {
-  await assertPublicUrl(url, allowPrivate)
+  const ip = await assertPublicUrl(url, allowPrivate)
+  onAddress?.(ip)
   return doFetch(url, {
     redirect: 'manual',
     signal: AbortSignal.timeout(timeoutMs),
@@ -74,11 +78,18 @@ async function follow(
   start: URL,
   allowPrivate: boolean,
   timeoutMs: number,
+  onAddress: (ip: string | null) => void,
 ): Promise<{ response: Response; url: URL; redirects: string[] }> {
   let url = start
   const redirects: string[] = []
   for (let hop = 0; ; hop++) {
-    const response = await request(doFetch, url, allowPrivate, timeoutMs)
+    const response = await request(
+      doFetch,
+      url,
+      allowPrivate,
+      timeoutMs,
+      hop === 0 ? onAddress : undefined,
+    )
     const location = response.headers.get('location')
     if (response.status < 300 || response.status >= 400 || !location) {
       return { response, url, redirects }
@@ -162,6 +173,7 @@ export async function checkUrl(input: string, options: CheckOptions = {}): Promi
     status: null,
     durationMs: null,
     error: null,
+    ip: null,
     finalUrl: null,
     redirects: [],
     httpsRedirect: null,
@@ -176,11 +188,14 @@ export async function checkUrl(input: string, options: CheckOptions = {}): Promi
   }
 
   const started = now()
+  let ip: string | null = null
   let page: Awaited<ReturnType<typeof follow>>
   try {
-    page = await follow(doFetch, url, allowPrivate, timeoutMs)
+    page = await follow(doFetch, url, allowPrivate, timeoutMs, (address) => {
+      ip = address
+    })
   } catch (error) {
-    return { ...empty, durationMs: Math.round(now() - started), error: describeError(error) }
+    return { ...empty, ip, durationMs: Math.round(now() - started), error: describeError(error) }
   }
   const durationMs = Math.round(now() - started)
   const { status } = page.response
@@ -204,6 +219,7 @@ export async function checkUrl(input: string, options: CheckOptions = {}): Promi
     status,
     durationMs,
     error: up ? null : kind === 'health' && status < 300 ? 'not a health answer' : `HTTP ${status}`,
+    ip,
     finalUrl: page.url.href,
     redirects: page.redirects,
     httpsRedirect,

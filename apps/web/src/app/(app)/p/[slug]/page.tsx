@@ -148,7 +148,7 @@ export default async function ProductPage({
                   : statusText(t, row.status)
               }
               sub={tOverview('tiles.uptimeRatio', {
-                ratio: formatUptime(uptime.ratio),
+                ratio: formatUptime(uptime.ratio, locale),
                 period: periodName,
               })}
               spark={uptime.spark}
@@ -209,7 +209,14 @@ export default async function ProductPage({
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))]">
           {inUse.map((area) =>
             area.id === 'uptime' && monitors.length > 0 ? (
-              <UptimeCard key={area.id} area={area} base={base} monitors={monitors} t={t} />
+              <UptimeCard
+                key={area.id}
+                area={area}
+                base={base}
+                monitors={monitors}
+                t={t}
+                locale={locale}
+              />
             ) : area.id === 'traffic' && data.traffic ? (
               <TrafficCard
                 key={area.id}
@@ -283,11 +290,13 @@ function UptimeCard({
   base,
   monitors,
   t,
+  locale,
 }: {
   area: AreaItem
   base: string
   monitors: MonitorLine[]
   t: Translate
+  locale: string
 }) {
   const down = monitors.some((m) => !m.paused && m.status === 'down')
   const cert = monitors
@@ -320,7 +329,7 @@ function UptimeCard({
               <span className="ml-auto text-xs text-muted-foreground tabular-nums">
                 {[
                   m.paused ? t('uptime.statusPaused') : statusText(t, m.status),
-                  formatUptime(m.uptime),
+                  formatUptime(m.uptime, locale),
                   m.medianMs === null ? null : `${m.medianMs} ms`,
                 ]
                   .filter(Boolean)

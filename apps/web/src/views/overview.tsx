@@ -93,7 +93,10 @@ export async function OverviewView({
               label={t('tiles.uptime')}
               area={tRoot('areas.uptime.name')}
               value={t('tiles.upNow', { up: uptime.upNow, total: uptime.products })}
-              sub={t('tiles.uptimeSub', { ratio: formatUptime(uptime.ratio), period: periodName })}
+              sub={t('tiles.uptimeSub', {
+                ratio: formatUptime(uptime.ratio, locale),
+                period: periodName,
+              })}
               spark={uptime.spark}
               alert={uptime.upNow < uptime.products}
             />
@@ -288,7 +291,9 @@ function ProductRow({
                   row.status === 'down' ? 'text-error' : 'text-muted-foreground',
                 )}
               >
-                {row.uptime.ratio === null ? labels.noChecks : formatUptime(row.uptime.ratio)}
+                {row.uptime.ratio === null
+                  ? labels.noChecks
+                  : formatUptime(row.uptime.ratio, number.resolvedOptions().locale)}
               </span>
               <span className="sr-only">{labels.hours(row.uptime.hours)}</span>
             </span>

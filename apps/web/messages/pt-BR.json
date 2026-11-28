@@ -125,7 +125,11 @@
     "wrongPassword": "A senha atual não está certa.",
     "lastOwner": "A organização precisa de pelo menos um dono. Torne outra pessoa dona antes.",
     "notYourself": "Você não pode se tirar por aqui.",
-    "invalidCron": "Cinco campos: minuto, hora, dia do mês, mês, dia da semana. Por exemplo, 0 3 * * * é todo dia às 3:00."
+    "invalidCron": "Cinco campos: minuto, hora, dia do mês, mês, dia da semana. Por exemplo, 0 3 * * * é todo dia às 3:00.",
+    "pickOne": "Escolha pelo menos uma emergência.",
+    "writeNote": "Escreva a nota primeiro.",
+    "writeWhy": "Diga por que está encerrando.",
+    "noteTooLong": "Use menos de {max} caracteres."
   },
   "areas": {
     "overview": {
@@ -302,15 +306,8 @@
     "empty": "Nenhum monitor ainda. Comece pelo endereço do site; depois adicione um endpoint /health e um heartbeat para tarefas agendadas.",
     "name": "Nome",
     "kind": "Tipo",
-    "kindSite": "Site",
-    "kindHealth": "API ou /health",
-    "kindHeartbeat": "Heartbeat",
-    "kindSiteHint": "Abre o endereço como um visitante e espera uma página.",
-    "kindHealthHint": "Espera 2xx e uma resposta que não seja HTML, para que a página de erro do framework não conte como no ar.",
-    "kindHeartbeatHint": "Uma tarefa agendada ou um backup chama uma URL do Octadash quando roda. Silêncio maior que o intervalo é queda.",
     "url": "Endereço",
     "interval": "Verificar a cada",
-    "intervalHeartbeat": "Esperado a cada",
     "grace": "Tolerância",
     "graceHint": "Tempo a mais antes de o silêncio contar como queda, para tarefas que demoram.",
     "seconds": "{count} s",
@@ -319,30 +316,13 @@
     "none": "Nenhuma",
     "save": "Salvar",
     "create": "Adicionar monitor",
-    "wakeTitle": "Uma página que consulta o banco acorda o banco a cada verificação",
-    "wakeBody": "Bancos como o Neon suspendem depois de 5 minutos parados e cobram enquanto estão acordados. Uma verificação por minuto em uma página que lê o banco deixa o banco acordado o dia inteiro. Aponte o monitor para um endpoint /health que responde sem consulta, ou verifique esta página a cada 5 minutos ou mais.",
-    "healthTitle": "Um endpoint /health que nunca toca no banco",
-    "healthBody": "Ele responde enquanto o processo estiver rodando. Escolha a sua stack e cole:",
-    "statusUp": "No ar",
-    "statusDown": "Fora do ar",
-    "statusUnknown": "Esperando a primeira verificação",
-    "statusPaused": "Pausado",
-    "since": "desde {time}",
-    "uptime30": "Disponibilidade (30 dias)",
     "response": "Resposta",
     "certificate": "Certificado",
     "certDays": "{count, plural, one {# dia} other {# dias}}",
-    "lastCheck": "Última verificação",
     "never": "nunca",
-    "pingUrl": "URL de ping",
-    "pingHint": "Chame no fim da tarefa. Exemplo para cron:",
     "sameServerTitle": "Mesmo servidor do Octadash",
     "sameServerBody": "Este endereço aponta para o servidor onde o Octadash roda. Se o servidor cair, o Octadash cai junto e ninguém é avisado. Configure o vigia externo nas configurações, ou monitore este produto de outro servidor.",
-    "productsTitle": "No ar de todos os produtos",
-    "noMonitors": "nenhum monitor",
     "monitors": "{count, plural, one {# monitor} other {# monitores}}",
-    "openArea": "Abrir No ar",
-    "setUpHere": "Configurar",
     "failure": {
       "timeout": "Não respondeu a tempo",
       "refused": "Conexão recusada",
@@ -356,7 +336,11 @@
       "private": "Aponta para um endereço privado",
       "tooManyRedirects": "Redirecionamentos demais",
       "other": "{code}"
-    }
+    },
+    "statusUp": "No ar",
+    "statusDown": "Fora do ar",
+    "statusUnknown": "Esperando a primeira verificação",
+    "statusPaused": "Pausado"
   },
   "settings": {
     "members": "Membros",
@@ -828,6 +812,204 @@
       "title": "Por que heartbeats",
       "body": "Um backup que para de rodar falha em silêncio: nada cai, nada dá erro, e você descobre no dia em que precisa dele. O heartbeat transforma o silêncio em emergência.",
       "good": "Bom para backups, crons, workers de fila, renovação de certificado e importações noturnas."
+    },
+    "deleteTitle": "Excluir este monitor"
+  },
+  "uptimeBoard": {
+    "intro": "Todos os monitores, problemas primeiro. Checados deste servidor, cada um no seu intervalo.",
+    "incomplete": "Alguns números não carregaram. Os estados estão atualizados; disponibilidade, tempos de resposta e barras voltam quando o banco de dados de métricas responder.",
+    "totals": "Totais",
+    "periods": {
+      "24h": "24 horas",
+      "7d": "7 dias",
+      "45d": "45 dias",
+      "90d": "90 dias"
+    },
+    "periodShort": {
+      "24h": "24h",
+      "7d": "7d",
+      "45d": "45d",
+      "90d": "90d"
+    },
+    "periodsLabel": "Período",
+    "state": {
+      "paused": "Pausado",
+      "waiting": "Esperando a primeira checagem",
+      "waitingCall": "Esperando a primeira chamada",
+      "late": "Atrasado · previsto para {time}",
+      "slow": "Lento · {time}",
+      "called": "Chamou há {time}",
+      "up": "No ar",
+      "down": "Fora do ar há {time}",
+      "downWhy": "Fora do ar há {time} · {reason}"
+    },
+    "bars": {
+      "none": "Nenhuma checagem neste período",
+      "hours": "{bad, plural, =0 {Nenhuma falha nas últimas {count} horas} other {Falhas em # das últimas {count} horas}}",
+      "days": "{bad, plural, =0 {Nenhuma falha nos últimos {count} dias} other {Falhas em # dos últimos {count} dias}}"
+    },
+    "kind": {
+      "site": "Site",
+      "health": "API",
+      "heartbeat": "Heartbeat"
+    },
+    "tiles": {
+      "upNow": "No ar agora",
+      "upNowValue": "{up} de {total}",
+      "downOn": "{count} fora do ar em {products, plural, one {# produto} other {# produtos}}",
+      "allUp": "Todos no ar",
+      "uptime": "Disponibilidade, {period}",
+      "weighted": "Todos os monitores, pesados pelas checagens",
+      "response": "Resposta, mediana",
+      "noPrevious": "Ainda sem período anterior para comparar",
+      "vsPrevious": "{change}% em relação aos {period} anteriores",
+      "certificates": "Certificados",
+      "expiring": "{count} vencendo",
+      "noneExpiring": "Nenhum vencendo",
+      "firstExpiring": "{product} em {days}",
+      "noneWithin": "Nenhum nos próximos {days} dias"
+    },
+    "sameIp": {
+      "label": "Mesmo endereço",
+      "title": "{products} caíram {minutes, plural, =0 {ao mesmo tempo} one {com # minuto de diferença} other {com # minutos de diferença}}, no mesmo IP.",
+      "body": "{count, plural, =2 {Os dois apontam} other {Todos apontam}} para {ip}, então pode ser esse servidor. Os endereços de controle respondem normalmente, então a rede do próprio Octadash está bem. Cada uma continua sendo uma emergência separada.",
+      "see": "Ver {product}"
+    },
+    "sameServer": "{monitors} apontam para o servidor onde o Octadash roda.",
+    "filters": "Filtrar por estado",
+    "filter": {
+      "all": "Todos",
+      "down": "Fora do ar",
+      "lateOrSlow": "Atrasados ou lentos",
+      "paused": "Pausados"
+    },
+    "search": "Buscar monitores ou produtos",
+    "product": "Produto",
+    "now": "Agora",
+    "last": "Últimos {period}",
+    "actions": "Ações",
+    "expand": "Mostrar monitores",
+    "collapse": "Esconder monitores",
+    "open": "Abrir disponibilidade do produto",
+    "more": "Mais # produtos, todos no ar",
+    "show": "Mostrar",
+    "without": "{count, plural, one {# produto sem monitor} other {# produtos sem monitor}}",
+    "nothing": "Nenhum monitor encontrado.",
+    "uptimeColumn": "Disponibilidade"
+  },
+  "emergency": {
+    "trail": "Caminho",
+    "emergencies": "Emergências",
+    "side": "Sobre esta emergência",
+    "level": {
+      "emergency": "Emergência",
+      "signal": "Sinal"
+    },
+    "ongoing": "em andamento",
+    "over": "encerrada",
+    "area": {
+      "uptime": "No ar",
+      "other": "Octadash"
+    },
+    "started": "Começou às {time} · {duration}",
+    "titles": {
+      "monitor_down": "{product} · {name} fora do ar",
+      "heartbeat_missed": "{product} · {name} não rodou",
+      "cert_expiring": "{product} · certificado vence em {days} dias",
+      "other": "{product} · {name}"
+    },
+    "httpStatus": "HTTP {code}",
+    "summary": {
+      "down": "{reason} {count, plural, one {na última checagem} other {nas últimas # checagens}}. Fecha sozinha quando uma checagem passar de novo.",
+      "heartbeat": "{reason}. Fecha sozinha quando o job chamar de novo.",
+      "other": "Fecha sozinha quando a checagem passar de novo.",
+      "closed": "Encerrada às {time}, depois de {duration}."
+    },
+    "onIt": "{name} está cuidando · desde {time}",
+    "nobody": "Ninguém cuidando ainda",
+    "imOnIt": "Estou cuidando",
+    "takeOver": "Assumir",
+    "close": {
+      "trigger": "Encerrar mesmo assim",
+      "title": "Encerrar esta emergência?",
+      "body": "Para alarme falso, ou uma correção que as checagens ainda não veem. Todos veem quem encerrou e por quê. Se o monitor voltar e falhar de novo, abre uma nova emergência.",
+      "why": "Por quê"
+    },
+    "chart": {
+      "title": "Checagens em volta",
+      "response": "Tempo de resposta",
+      "codes": "Resultados",
+      "showTable": "Mostrar como tabela",
+      "hideTable": "Esconder a tabela",
+      "time": "Hora",
+      "result": "Resultado",
+      "ms": "ms",
+      "count": "Checagens",
+      "failure": "{reason} desde {time}",
+      "noChecks": "Nenhuma checagem registrada neste intervalo.",
+      "unavailable": "As checagens não carregaram. O resto da página está atualizado.",
+      "call": "Chamada"
+    },
+    "happened": "O que aconteceu",
+    "entry": {
+      "firstFailure": "Primeira checagem com falha: {reason}",
+      "firstFailureIn": "Primeira checagem com falha: {reason} em {ms} ms",
+      "openedAfter": "{count, plural, one {Checagem com falha} other {# falhas seguidas}}: emergência aberta",
+      "opened": "Emergência aberta",
+      "sameIp": "{product} · {name} caiu às {time} no mesmo IP.",
+      "told": "Canais avisados",
+      "toldOver": "Canais avisados do fim",
+      "sent": "enviado",
+      "failed": "falhou",
+      "took": "{name} apertou “Estou cuidando”",
+      "tookHint": "Repetições pararam. Todos veem ao vivo.",
+      "tookOver": "{name} assumiu",
+      "closed": "{name} encerrou:",
+      "resolved": "Uma checagem passou: emergência encerrada"
+    },
+    "notePlaceholder": "Escreva uma nota para o time…",
+    "addNote": "Adicionar nota",
+    "checked": {
+      "title": "O que o Octadash checou",
+      "infoLabel": "Sobre estas checagens",
+      "info": "Quando um monitor cai, o Octadash olha em volta uma vez: para onde o nome aponta, o certificado, o que o servidor respondeu e se endereços que sempre respondem respondem daqui. Se respondem, a rede do próprio Octadash está bem e o problema é do lado do produto.",
+      "dns": "DNS",
+      "noDns": "{host} não resolve",
+      "tls": "Certificado TLS",
+      "tlsValid": "válido, {days} dias",
+      "tlsUntrusted": "não confiável",
+      "response": "Resposta",
+      "control": "Controle {target}",
+      "answers": "responde em {ms} ms",
+      "noAnswer": "sem resposta",
+      "sameServer": "Mesmo servidor do Octadash",
+      "sameYes": "sim, mesmo endereço",
+      "sameNo": "não, IP diferente",
+      "ok": "passou",
+      "fail": "falhou",
+      "verdictServer": "O Octadash chega na internet e o endereço resolve, então o problema está atrás de {ip}.",
+      "verdictDns": "O Octadash chega na internet mas o nome não resolve: veja o DNS do domínio.",
+      "verdictNetwork": "Alguns endereços de controle também não responderam: parte do problema pode estar do lado do Octadash."
+    },
+    "sameTime": {
+      "title": "Fora do ar ao mesmo tempo",
+      "sameIp": "Mesmo IP ({ip}) que algumas delas. Podem ser o mesmo problema ou não; você decide. Cada emergência continua separada.",
+      "onIt": "{name} cuidando",
+      "nobody": "ninguém cuidando",
+      "submit": "Também estou cuidando destas"
+    },
+    "last": {
+      "title": "Última vez",
+      "body": "{date}, {minutes} min fora do ar.",
+      "see": "Ver",
+      "never": "Primeira vez que isso acontece."
+    },
+    "onItYou": "Você está cuidando · desde {time}",
+    "titlesOver": {
+      "monitor_down": "{product} · {name} ficou fora do ar",
+      "heartbeat_missed": "{product} · {name} não rodou",
+      "cert_expiring": "{product} · certificado estava perto de vencer",
+      "other": "{product} · {name}"
     }
   }
 }

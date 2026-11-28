@@ -193,5 +193,7 @@ export async function deleteMonitorAction(_: FormState, formData: FormData): Pro
   const { org } = await requireManager()
   await deleteMonitor(services().db, org.id, String(formData.get('monitorId') ?? ''))
   revalidatePath('/', 'layout')
+  const back = String(formData.get('back') ?? '')
+  if (back.startsWith('/') && !back.startsWith('//')) redirect(back)
   return { done: true }
 }

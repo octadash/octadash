@@ -34,6 +34,7 @@ function result(up: boolean, overrides: Partial<CheckResult> = {}): CheckResult 
     status: up ? 200 : 503,
     durationMs: 120,
     error: up ? null : 'HTTP 503',
+    ip: '203.0.113.7',
     finalUrl: 'https://example.com/',
     redirects: [],
     httpsRedirect: null,
@@ -122,7 +123,7 @@ describe('UptimeScheduler', () => {
     expect(t.transitions).toEqual([])
     await t.advance(41_000) // two retries 20 s apart
     expect(t.transitions.map((x) => `${x.from}>${x.to}`)).toEqual(['up>down'])
-    expect(t.transitions[0]?.reason).toBe('HTTP 503')
+    expect(t.transitions[0]).toMatchObject({ reason: 'HTTP 503', ip: '203.0.113.7' })
     await t.advance(21_000)
     expect(t.transitions.map((x) => `${x.from}>${x.to}`)).toEqual(['up>down', 'down>up'])
     expect(t.statuses.get('m1')).toBe('up')

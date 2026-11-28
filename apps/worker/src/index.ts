@@ -1,3 +1,4 @@
+import { lookup } from 'node:dns/promises'
 import { createServer } from 'node:http'
 import {
   createLogger,
@@ -19,7 +20,7 @@ import {
   setMonitorStatus,
 } from '@octadash/db'
 import { createValkey, ValkeyHeartbeats, ValkeyLivePublisher } from '@octadash/queue'
-import { checkUrl } from '@octadash/uptime'
+import { checkUrl, diagnose } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
 import { createAlerts, registerAlertJobs } from './alerts'
 import { registerJobs } from './jobs'
@@ -60,6 +61,14 @@ const alerts = createAlerts({
   panelUrl: env.OCTADASH_URL,
   live,
   log,
+  diagnose: async ({ monitor, reason, ip, status }) => {
+    const found = await diagnose(
+      monitor.url ?? '',
+      { ip: ip ?? null, status: status ?? null, error: reason },
+      { controls: env.OCTADASH_UPTIME_REFERENCE_URLS, ownAddresses },
+    )
+    return { ...found, at: new Date().toISOString() }
+  },
 })
 await registerAlertJobs(boss, alerts, log)
 const router = new EventRouter({
@@ -132,6 +141,20 @@ async function shutdown(signal: string) {
 }
 
 /** True when any of the addresses answers at all. */
+let own: { addresses: Set<string>; at: number } | null = null
+
+/** What the panel's address resolves to: the server Octadash runs on. Cached for an hour. */
+async function ownAddresses(): Promise<Set<string>> {
+  if (own && Date.now() - own.at < 3_600_000) return own.addresses
+  const host = new URL(env.OCTADASH_URL).hostname
+  const found = await lookup(host, { all: true }).catch(() => [])
+  const addresses = new Set(
+    found.map((entry) => entry.address).filter((a) => a !== '127.0.0.1' && a !== '::1'),
+  )
+  own = { addresses, at: Date.now() }
+  return addresses
+}
+
 async function reachesAny(urls: string[]): Promise<boolean> {
   if (urls.length === 0) return true
   const attempts = urls.map(async (url) => {

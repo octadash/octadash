@@ -16,9 +16,12 @@ import { Button } from './ui/button'
 
 export function DeleteMonitorDialog({
   monitorId,
+  back,
   labels,
 }: {
   monitorId: string
+  /** Where to go once it is deleted. */
+  back?: string
   labels: { trigger: string; title: string; body: string; cancel: string }
 }) {
   return (
@@ -35,6 +38,7 @@ export function DeleteMonitorDialog({
         </AlertDialogHeader>
         <ActionForm action={deleteMonitorAction} className="flex flex-col gap-3">
           <input type="hidden" name="monitorId" value={monitorId} />
+          {back && <input type="hidden" name="back" value={back} />}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <AlertDialogCancel>{labels.cancel}</AlertDialogCancel>
             <SubmitButton variant="destructive">{labels.trigger}</SubmitButton>
