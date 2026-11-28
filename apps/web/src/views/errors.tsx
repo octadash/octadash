@@ -28,6 +28,7 @@ import { percentChange } from '@/lib/period'
 import { cn } from '@/lib/utils'
 import { type IssueRow, loadErrors } from '@/server/errors'
 import { ignoreLabels } from './error-labels'
+import { ErrorsProducts, ErrorsQuiet, ErrorsStartView } from './errors-empty'
 
 /** Bars of the last 24 hours, one per hour; the numbers are in the row's Events cell. */
 function Bars({ values, label }: { values: number[]; label: string }) {
@@ -115,38 +116,26 @@ export async function ErrorsView({
   const several = data.projects.length > 1
   const anyIssue = Object.values(data.counts).some((n) => n > 0)
 
-  if (!anyIssue && data.totals.events === 0) {
+  const sendingSetup = data.setup.filter((s) => s.state === 'sending')
+  // Never sent an error: how to start. Sent before, nothing now and nothing
+  // open: a quiet period, said as such instead of zeros.
+  const quiet =
+    data.totals.events === 0 && data.counts.unresolved === 0 && state.tab === 'unresolved'
+
+  if (!anyIssue && data.totals.events === 0 && sendingSetup.length === 0) {
+    const [first] = data.setup
+    if (product && first) {
+      return <ErrorsStartView orgId={orgId} product={product} setup={first} />
+    }
     return (
-      <div className="flex max-w-2xl flex-col gap-4">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <Card>
-          <CardContent className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{t('none.title')}</h2>
-            <p className="text-sm text-muted-foreground">{t('none.body')}</p>
-            <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-muted-foreground">
-              <li>{t('none.script')}</li>
-              <li>{t('none.sentry')}</li>
-            </ul>
-            {product ? (
-              <Button asChild className="self-start">
-                <Link href={`/p/${product.slug}/errors/setup`}>{t('none.sources')}</Link>
-              </Button>
-            ) : (
-              <>
-                <p className="text-sm font-medium">{t('none.all')}</p>
-                <ul className="flex flex-wrap gap-2">
-                  {data.projects.map((p) => (
-                    <li key={p.id}>
-                      <Button asChild variant="outline">
-                        <Link href={`/p/${p.slug}/errors/setup`}>{p.name}</Link>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </CardContent>
-        </Card>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">
+            {group ? t('introGroup', { group }) : t('intro')}
+          </p>
+        </div>
+        <ErrorsProducts setup={data.setup} folded={false} />
       </div>
     )
   }
@@ -220,8 +209,8 @@ export async function ErrorsView({
       ? t('introGroup', { group })
       : t('intro')
 
-  return (
-    <div className="flex flex-col gap-6">
+  const header = (
+    <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
@@ -261,7 +250,30 @@ export async function ErrorsView({
           {t('incomplete')}
         </p>
       )}
+    </>
+  )
 
+  if (quiet) {
+    return (
+      <div className="flex flex-col gap-6">
+        {header}
+        <ErrorsQuiet
+          orgId={orgId}
+          from={data.period.from}
+          setup={sendingSetup}
+          path={path}
+          state={state}
+          several={several}
+          resolved={data.counts.resolved}
+        />
+        {several && <ErrorsProducts setup={data.setup} folded />}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {header}
       <section
         aria-label={t('tiles.label')}
         className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
@@ -521,6 +533,7 @@ export async function ErrorsView({
           <p>{t('foot')}</p>
         </div>
       </section>
+      {several && <ErrorsProducts setup={data.setup} folded />}
     </div>
   )
 }
