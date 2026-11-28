@@ -52,18 +52,20 @@ export function UseSource({
   area,
   source,
   label,
+  variant = 'default',
 }: {
   slug: string
   area: SourceArea
   source: string
   label: string
+  variant?: 'default' | 'outline'
 }) {
   return (
     <form action={adoptSourceAction}>
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="area" value={area} />
       <input type="hidden" name="source" value={source} />
-      <Button type="submit" size="sm">
+      <Button type="submit" size="sm" variant={variant}>
         {label}
       </Button>
     </form>
@@ -321,6 +323,7 @@ export async function sourceAreaStep({
     step = <p className="text-sm text-muted-foreground">{t('viewer', { area: ta('name') })}</p>
   } else if (setup.state === 'canUse' && setup.source) {
     const areas = await sendsWhat(setup.source.areas)
+    const others = (setup.candidates ?? []).filter((s) => s.id !== setup.source?.id)
     const script =
       setup.source.areas.includes('traffic') && (ta.raw('canUseScript') as string) !== ''
     step = (
@@ -333,12 +336,31 @@ export async function sourceAreaStep({
                 ? ta('canUse', { source: setup.source.name, areas })
                 : t('products.canUseKey', { source: setup.source.name, what })}
           </p>
-          <UseSource
-            slug={slug}
-            area={area}
-            source={setup.source.id}
-            label={t('use', { source: setup.source.name })}
-          />
+          <div>
+            <UseSource
+              slug={slug}
+              area={area}
+              source={setup.source.id}
+              label={t('use', { source: setup.source.name })}
+            />
+          </div>
+          {others.length > 0 && (
+            <div className="flex flex-col gap-2 border-t border-brand/20 pt-3">
+              <p className="text-sm text-muted-foreground">{t('orOther')}</p>
+              <div className="flex flex-wrap gap-2">
+                {others.map((other) => (
+                  <UseSource
+                    key={other.id}
+                    slug={slug}
+                    area={area}
+                    source={other.id}
+                    label={t('use', { source: other.name })}
+                    variant="outline"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <p className="text-sm font-medium">{t('orNew')}</p>
         {form}

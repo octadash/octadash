@@ -1335,8 +1335,9 @@
     "chartOf": "{metric}",
     "dimensions": {
       "product": "Produto",
+      "origin": "Origem",
       "channel": "Canal",
-      "source": "Origem",
+      "source": "Referência",
       "campaign": "Campanha",
       "page": "Página",
       "entry": "Página de entrada",
@@ -1365,6 +1366,8 @@
       "devices": "Dispositivos"
     },
     "products": "Produtos",
+    "origins": "Origens",
+    "originsFoot": "Cada site ou app deste produto que manda visitas. Clique em uma para ver só os números dela.",
     "productsFoot": "{shown} de {total} produtos",
     "productsWithout": "{count, plural, one {# não usa Tráfego} other {# não usam Tráfego}}",
     "visitors": "Visitantes",
@@ -1428,6 +1431,7 @@
       "open": "Abrir Uso do produto"
     },
     "setUpLink": "Origens e configuração",
+    "addSource": "Adicionar origem",
     "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu.",
     "chart": {
       "current": "Este período",
@@ -1505,7 +1509,12 @@
       "Um visitante é um hash que muda todo dia.",
       "Bots são reconhecidos e contados à parte."
     ],
-    "noSource": "Ainda não há origem para Tráfego. Adicione uma para ver o código."
+    "noSource": "Ainda não há origem para Tráfego. Adicione uma para ver o código.",
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha código e chave próprios.",
+    "addSourceHint": "Um site ou app deste produto, como Docs ou App. Ganha código e chave próprios.",
+    "codeHint": "O código desta origem, as opções e a conferência ao vivo de que as visitas chegam.",
+    "close": "Fechar"
   },
   "platforms": {
     "html": "HTML",
@@ -1897,6 +1906,7 @@
     },
     "spike": "Pico",
     "setUp": "Origens e código",
+    "addSource": "Adicionar origem",
     "quiet": {
       "title": "Nenhum erro {period}",
       "last": "O último erro foi {ago}:",
@@ -1997,7 +2007,12 @@
       "Um e-mail enviado como usuário fica só como hash; um id de usuário fica como veio.",
       "Os erros ficam guardados por 90 dias."
     ],
-    "noSource": "Nenhuma origem envia erros ainda. Um dono ou administrador adiciona aqui."
+    "noSource": "Nenhuma origem envia erros ainda. Um dono ou administrador adiciona aqui.",
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha um DSN próprio.",
+    "addSourceHint": "Um site, app ou servidor deste produto. Ganha um DSN próprio.",
+    "codeHint": "O DSN desta origem, o código de cada plataforma e um erro de teste.",
+    "close": "Fechar"
   },
   "usageArea": {
     "title": "Uso do produto",
@@ -2006,6 +2021,7 @@
     "introGroup": "O que as pessoas fazem dentro dos produtos de {group}: eventos, eventos importantes, funis e quem volta.",
     "sending": "{count, plural, one {# produto} other {# produtos}} · {sending} enviam eventos",
     "setUp": "Fontes e eventos importantes",
+    "addSource": "Adicionar origem",
     "periodLabel": "Período",
     "periods": {
       "today": "Hoje",
@@ -2173,7 +2189,12 @@
       "O endereço IP nunca é guardado."
     ],
     "funnelsTitle": "Funis e retenção",
-    "funnelsBody": "Quando os eventos chegarem, monte um funil com quaisquer eventos em ordem (visitou → carrinho → pagou) e veja quem volta pela semana em que se cadastrou. Os dois funcionam por produto ou para um grupo."
+    "funnelsBody": "Quando os eventos chegarem, monte um funil com quaisquer eventos em ordem (visitou → carrinho → pagou) e veja quem volta pela semana em que se cadastrou. Os dois funcionam por produto ou para um grupo.",
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha código e chave próprios.",
+    "addSourceHint": "Um site, app ou servidor deste produto. Ganha código e chave próprios.",
+    "codeHint": "O código para mandar eventos desta origem, e a conferência ao vivo de que chegam.",
+    "close": "Fechar"
   },
   "logsArea": {
     "title": "Logs",
@@ -2195,6 +2216,7 @@
     },
     "asTable": "Mostrar como tabela",
     "setUp": "Fontes e retenção",
+    "addSource": "Adicionar origem",
     "periodLabel": "Período",
     "periods": {
       "today": "Hoje",
@@ -2311,7 +2333,12 @@
     "notLogTitle": "O que não registrar",
     "notLogBody": "Senhas, tokens e documentos. O Octadash mascara valores que parecem números de cartão, e-mails e chaves antes de guardar, e diz quantos mascarou.",
     "maskedWeek": "{count, plural, one {# valor mascarado nos últimos 7 dias.} other {# valores mascarados nos últimos 7 dias.}}",
-    "maskedNone": "Nada mascarado nos últimos 7 dias."
+    "maskedNone": "Nada mascarado nos últimos 7 dias.",
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha chave própria.",
+    "addSourceHint": "Um servidor ou worker deste produto. Ganha chave própria.",
+    "codeHint": "O código para mandar linhas de log desta origem, e por quanto tempo ficam guardadas.",
+    "close": "Fechar"
   },
   "moneyArea": {
     "title": "Dinheiro",
@@ -2753,6 +2780,7 @@
     "showCode": "Mostrar o código",
     "orNew": "Ou crie uma origem nova:",
     "use": "Usar {source}",
+    "orOther": "Ou comece por outra origem deste produto, também sem chave nova:",
     "waiting": "{source} está configurada para enviar {what}.",
     "viewer": "Um dono ou admin configura {area} neste produto.",
     "wontUse": "Não vou usar {area} neste produto",
@@ -2852,7 +2880,7 @@
         "productsTitle": "Nenhum produto envia erros ainda",
         "productsBody": "Quando enviarem, esta página junta os erros de todos em uma lista só, com o produto em cada issue. Comece pelo produto que mais te preocupa.",
         "more": "{count, plural, one {Mais # produto pode enviar erros} other {Mais # produtos podem enviar erros}}",
-        "options": "Outras plataformas e opções"
+        "options": "Adicionar outra origem, outras plataformas e opções"
       },
       "traffic": {
         "name": "Tráfego",
@@ -2923,7 +2951,7 @@
         "productsTitle": "Nenhum produto envia visitas ainda",
         "productsBody": "Quando enviarem, esta página soma as visitas de todos, e você compara os produtos lado a lado. Comece pelo produto com mais visitas.",
         "more": "{count, plural, one {Mais # produto pode enviar visitas} other {Mais # produtos podem enviar visitas}}",
-        "options": "Outras plataformas e opções"
+        "options": "Adicionar outra origem, outras plataformas e opções"
       },
       "usage": {
         "name": "Uso do produto",
@@ -2991,7 +3019,7 @@
         "productsTitle": "Nenhum produto envia eventos ainda",
         "productsBody": "Quando enviarem, esta página mostra os eventos de todos, e os funis cruzam produtos. Comece pelo produto em que os cadastros mais importam.",
         "more": "{count, plural, one {Mais # produto pode enviar eventos} other {Mais # produtos podem enviar eventos}}",
-        "options": "Outras plataformas e opções"
+        "options": "Adicionar outra origem, outras plataformas e opções"
       },
       "logs": {
         "name": "Logs",
@@ -3058,7 +3086,7 @@
         "productsTitle": "Nenhum produto envia logs ainda",
         "productsBody": "Quando enviarem, esta página busca as linhas de todos de uma vez. Comece pelo produto que mais quebra.",
         "more": "{count, plural, one {Mais # produto pode enviar logs} other {Mais # produtos podem enviar logs}}",
-        "options": "Outras plataformas e opções"
+        "options": "Adicionar outra origem, outras plataformas e opções"
       },
       "money": {
         "name": "Dinheiro",
@@ -3265,5 +3293,10 @@
       }
     },
     "orNewAccount": "Ou conecte outra conta:"
+  },
+  "update": {
+    "label": "Atualização disponível",
+    "release": "A versão {version} saiu. Veja o que mudou.",
+    "edge": "{count, plural, one {1 mudança} other {# mudanças}} no main desde esta versão."
   }
 }

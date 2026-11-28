@@ -81,6 +81,14 @@ export const webEnvSchema = baseEnvSchema
       .transform((value) => value === 'true'),
     /** Live updates: the worker publishes changes here and the panel forwards them to open screens. */
     VALKEY_URL: valkeyUrl,
+    /**
+     * Once a day the panel asks GitHub whether a newer version exists and
+     * tells owners and admins. Off: Octadash never calls GitHub.
+     */
+    OCTADASH_UPDATE_CHECK: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
     /** "Check now" may reach private addresses, like the worker. Only for development. */
     OCTADASH_UPTIME_ALLOW_PRIVATE: z
       .enum(['true', 'false'])

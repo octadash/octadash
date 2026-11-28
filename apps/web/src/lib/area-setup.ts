@@ -18,6 +18,11 @@ export interface AreaSetup {
   state: AreaSetupState
   /** The source to wait on (waiting) or to start from (canUse). */
   source: AreaSetupSource | null
+  /**
+   * canUse: every source of the product the area can start from, quickest
+   * first (Site, Docs, App). A product often has several.
+   */
+  candidates?: AreaSetupSource[]
 }
 
 /** Order of the table of products: the quickest to finish first. */
@@ -53,7 +58,11 @@ export function areaSetup(
   if (input.dismissed) return { state: 'dismissed', source: null }
   // A source with the page script is the quickest start: it is already on the page.
   const excluded = CANNOT_START[area] ?? []
-  const candidates = input.sources.filter((s) => !excluded.includes(s.platform))
-  const start = candidates.find((s) => s.areas.includes('traffic')) ?? candidates[0] ?? null
-  return start ? { state: 'canUse', source: start } : { state: 'none', source: null }
+  const usable = input.sources.filter((s) => !excluded.includes(s.platform))
+  const candidates = [
+    ...usable.filter((s) => s.areas.includes('traffic')),
+    ...usable.filter((s) => !s.areas.includes('traffic')),
+  ]
+  const [start] = candidates
+  return start ? { state: 'canUse', source: start, candidates } : { state: 'none', source: null }
 }

@@ -1,11 +1,12 @@
 import { getProjectBySlug, lastPageview, listSources } from '@octadash/db'
-import { ArrowLeftIcon, CheckIcon, ShieldCheckIcon } from 'lucide-react'
+import { ArrowLeftIcon, CheckIcon, CodeIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFormatter, getTranslations } from 'next-intl/server'
 import { dismissAreaAction } from '@/actions/areas'
 import { addTrafficToSourceAction } from '@/actions/traffic'
 import { CopyField } from '@/components/copy-field'
+import { RouteDialog, RouteSheet } from '@/components/route-overlay'
 import { TrafficInstall } from '@/components/traffic-install'
 import { TrafficSourceForm } from '@/components/traffic-source-form'
 import { Badge } from '@/components/ui/badge'
@@ -26,10 +27,10 @@ export default async function TrafficSetupPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ source?: string }>
+  searchParams: Promise<{ source?: string; add?: string }>
 }) {
   const { slug } = await params
-  const { source: chosen } = await searchParams
+  const { source: chosen, add } = await searchParams
   const { org } = await requireOrg()
   const { db, clickhouse, env } = services()
   const project = await getProjectBySlug(db, org.id, slug)
@@ -50,7 +51,10 @@ export default async function TrafficSetupPage({
       ),
     ),
   )
-  const current = traffic.find((s) => s.id === chosen) ?? traffic[0]
+  // The code opens in a panel over the list, for the source in the address.
+  const current = chosen ? traffic.find((s) => s.id === chosen) : undefined
+  // Real numbers exist: the made-up example would only confuse.
+  const receiving = [...last.values()].some(Boolean)
   const base = `/p/${project.slug}/traffic/setup`
 
   const status = (s: (typeof sources)[number]) => {
@@ -73,9 +77,19 @@ export default async function TrafficSetupPage({
 
   return (
     <>
-      <div className="flex max-w-2xl flex-col gap-1">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('intro')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex max-w-2xl flex-col gap-1">
+          <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('intro')}</p>
+        </div>
+        {manager && (
+          <Button asChild>
+            <Link href={`/p/${project.slug}/traffic/setup?add=1`}>
+              <PlusIcon data-icon="inline-start" aria-hidden />
+              {t('addSource')}
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -93,7 +107,6 @@ export default async function TrafficSetupPage({
               <CardContent>
                 <ul className="flex flex-col divide-y divide-border">
                   {sources.map((s) => {
-                    const isCurrent = s.id === current?.id
                     return (
                       <li
                         key={s.id}
@@ -110,12 +123,9 @@ export default async function TrafficSetupPage({
                         </div>
                         <div className="ml-auto">
                           {s.areas.includes('traffic') ? (
-                            <Button asChild size="sm" variant={isCurrent ? 'secondary' : 'outline'}>
-                              <Link
-                                href={`${base}?source=${s.id}`}
-                                aria-current={isCurrent ? 'true' : undefined}
-                              >
-                                {isCurrent && <CheckIcon data-icon="inline-start" aria-hidden />}
+                            <Button asChild size="sm" variant="outline">
+                              <Link href={`${base}?source=${s.id}`} scroll={false}>
+                                <CodeIcon data-icon="inline-start" aria-hidden />
                                 {t('show')}
                               </Link>
                             </Button>
@@ -139,66 +149,65 @@ export default async function TrafficSetupPage({
             </Card>
           )}
 
-          {manager &&
-            (traffic.length === 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    <h2 className="font-display text-lg font-semibold">{t('addSource')}</h2>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <TrafficSourceForm slug={project.slug} />
-                </CardContent>
-              </Card>
-            ) : (
-              <details className="group rounded-xl border border-border px-5 py-3 open:pb-5">
-                <summary className="cursor-pointer text-sm font-medium">{t('addAnother')}</summary>
-                <div className="pt-4">
-                  <TrafficSourceForm slug={project.slug} />
-                </div>
-              </details>
-            ))}
-
-          {current ? (
+          {sources.length === 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle>
-                  <h2 className="font-display text-lg font-semibold">{current.name}</h2>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-6">
-                {current.public_key && (
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-sm font-medium">{t('key')}</span>
-                    <CopyField
-                      value={current.public_key}
-                      label={t('key')}
-                      copyLabel={t('copy')}
-                      copiedLabel={t('copied')}
-                    />
-                    <span className="text-xs text-muted-foreground">{t('keyHint')}</span>
-                  </div>
+              <CardContent className="flex flex-col items-start gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {manager ? t('empty') : t('noSource')}
+                </p>
+                {manager && (
+                  <Button asChild>
+                    <Link href={`${base}?add=1`} scroll={false}>
+                      <PlusIcon data-icon="inline-start" aria-hidden />
+                      {t('addSource')}
+                    </Link>
+                  </Button>
                 )}
-                <TrafficInstall
-                  key={current.id}
-                  slug={project.slug}
-                  sourceId={current.id}
-                  ingestUrl={env.OCTADASH_INGEST_URL}
-                  publicKey={current.public_key ?? ''}
-                  platform={
-                    current.platform && isTrafficPlatform(current.platform)
-                      ? current.platform
-                      : 'html'
-                  }
-                  persistent={current.visitor_mode === 'persistent'}
-                  manager={manager}
-                  trafficHref={`/p/${project.slug}/traffic`}
-                />
               </CardContent>
             </Card>
-          ) : (
-            !manager && <p className="text-sm text-muted-foreground">{t('noSource')}</p>
+          )}
+
+          {manager && add === '1' && (
+            <RouteDialog closeHref={base} title={t('addSource')} description={t('addSourceHint')}>
+              <TrafficSourceForm slug={project.slug} />
+            </RouteDialog>
+          )}
+
+          {current && (
+            <RouteSheet
+              closeHref={base}
+              title={current.name}
+              description={t('codeHint')}
+              closeLabel={t('close')}
+            >
+              {current.public_key && (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm font-medium">{t('key')}</span>
+                  <CopyField
+                    value={current.public_key}
+                    label={t('key')}
+                    copyLabel={t('copy')}
+                    copiedLabel={t('copied')}
+                  />
+                  <span className="text-xs text-muted-foreground">{t('keyHint')}</span>
+                </div>
+              )}
+              <TrafficInstall
+                key={current.id}
+                slug={project.slug}
+                sourceId={current.id}
+                ingestUrl={env.OCTADASH_INGEST_URL}
+                publicKey={current.public_key ?? ''}
+                platform={
+                  current.platform && isTrafficPlatform(current.platform)
+                    ? current.platform
+                    : 'html'
+                }
+                persistent={current.visitor_mode === 'persistent'}
+                manager={manager}
+                trafficHref={`/p/${project.slug}/traffic`}
+              />
+            </RouteSheet>
           )}
 
           <div className="flex flex-wrap gap-2">
@@ -221,30 +230,32 @@ export default async function TrafficSetupPage({
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-2">
-              <CardTitle>
-                <h2 className="text-sm font-semibold">{t('example')}</h2>
-              </CardTitle>
-              <Badge variant="outline">{t('exampleBadge')}</Badge>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <dl className="grid grid-cols-2 gap-3">
-                {[
-                  [t('exampleVisitors'), 1284],
-                  [t('examplePageviews'), 3902],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-0.5">
-                    <dt className="text-xs text-muted-foreground">{label}</dt>
-                    <dd className="font-display text-xl font-semibold tabular-nums">
-                      {format.number(Number(value))}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <ExampleBars />
-            </CardContent>
-          </Card>
+          {!receiving && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2">
+                <CardTitle>
+                  <h2 className="text-sm font-semibold">{t('example')}</h2>
+                </CardTitle>
+                <Badge variant="outline">{t('exampleBadge')}</Badge>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <dl className="grid grid-cols-2 gap-3">
+                  {[
+                    [t('exampleVisitors'), 1284],
+                    [t('examplePageviews'), 3902],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex flex-col gap-0.5">
+                      <dt className="text-xs text-muted-foreground">{label}</dt>
+                      <dd className="font-display text-xl font-semibold tabular-nums">
+                        {format.number(Number(value))}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <ExampleBars />
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <CardTitle>
