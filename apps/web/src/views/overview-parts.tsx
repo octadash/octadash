@@ -134,7 +134,7 @@ export function Tile({
     >
       <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
         {label}
-        <span className="text-xs">{area}</span>
+        {area !== label && <span className="text-xs">{area}</span>}
       </span>
       <span className="flex items-baseline gap-2">
         <span className="font-display text-2xl font-semibold tabular-nums">{value}</span>

@@ -487,6 +487,12 @@ Luciano reviewed the night's decisions that change the product or his risk.
   position of a long line with no spaces (a token, a minified bundle), which
   took seconds on 100 KB. Found while keeping heartbeat output.
 
+## Uptime is "Disponibilidade" in Portuguese (2026-11-28, Luciano)
+
+- "No ar" read as a status, not as an area beside Tráfego, Uso, Erros and Logs. The area is now Disponibilidade in Portuguese and stays Uptime in English, in the panel, the docs and octadash.com.
+- The status words stay: a monitor is "no ar" or "fora do ar", and the Overview tile says "9 de 10 no ar agora".
+- A tile whose label is the area's own name shows the name once.
+
 ## File storage, 2026-11-28
 
 - **Garage v2.5.0, started with `--single-node --default-bucket`.** Since v2.3

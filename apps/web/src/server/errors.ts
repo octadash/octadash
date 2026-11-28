@@ -22,8 +22,9 @@ import {
   listProjects,
   type Share,
 } from '@octadash/db'
+import { SETUP_ORDER } from '@/lib/area-setup'
 import { type ErrorsState, sortIssues } from '@/lib/errors'
-import { type ErrorsSetup, errorsSetup, SETUP_ORDER } from '@/lib/errors-setup'
+import { type ErrorsSetup, errorsSetup } from '@/lib/errors-setup'
 import { type TrafficPeriod, trafficPeriod } from '@/lib/traffic'
 import { services } from './context'
 

@@ -1,3 +1,5 @@
+import { type AreaSetup, type AreaSetupSource, areaSetup } from './area-setup'
+
 /**
  * Set up Errors, as closed in the Errors canvas: the code for each platform.
  * Octadash speaks the Sentry protocol, so every server and app platform is the
@@ -135,47 +137,13 @@ export function testError(publicKey: string, now = new Date()) {
   }
 }
 
-/**
- * Where a product stands on Errors, for the empty Errors page and the table
- * of products: sends errors (an issue was ever seen), waits for the first one
- * (a source is set to send them), can start from a source that already sends
- * something else, has nothing yet, or the owner said it won't use Errors.
- */
-export type ErrorsSetupState = 'sending' | 'waiting' | 'canUse' | 'none' | 'dismissed'
+export type { AreaSetup as ErrorsSetup, AreaSetupState as ErrorsSetupState } from './area-setup'
 
-export interface ErrorsSetupSource {
-  id: string
-  name: string
-  platform: string
-  areas: string[]
-}
-
-export interface ErrorsSetup {
-  state: ErrorsSetupState
-  /** The source to wait on (waiting) or to start from (canUse). */
-  source: ErrorsSetupSource | null
-}
-
-/** Order of the table of products: the quickest to finish first. */
-export const SETUP_ORDER: Record<ErrorsSetupState, number> = {
-  sending: 0,
-  waiting: 1,
-  canUse: 2,
-  none: 3,
-  dismissed: 4,
-}
-
+/** Where a product stands on Errors: it sends once an issue was ever seen. */
 export function errorsSetup(input: {
-  sources: ErrorsSetupSource[]
-  /** Whether the product ever had an issue. */
+  sources: AreaSetupSource[]
   hadIssue: boolean
   dismissed: boolean
-}): ErrorsSetup {
-  const forErrors = input.sources.find((s) => s.areas.includes('errors'))
-  if (input.hadIssue) return { state: 'sending', source: forErrors ?? null }
-  if (forErrors) return { state: 'waiting', source: forErrors }
-  if (input.dismissed) return { state: 'dismissed', source: null }
-  // The page script reports browser errors already: the quickest start.
-  const start = input.sources.find((s) => s.areas.includes('traffic')) ?? input.sources[0] ?? null
-  return start ? { state: 'canUse', source: start } : { state: 'none', source: null }
+}): AreaSetup {
+  return areaSetup('errors', { ...input, hadData: input.hadIssue })
 }

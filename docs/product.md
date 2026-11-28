@@ -76,17 +76,17 @@ the service name OpenTelemetry already sends.
 
 ### Menu
 
-| Name          | Portuguese    | Notes                                                                                      |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------ |
-| Overview      | Visão geral   | With All products or a group: every area side by side. With one product: the product page. |
-| Uptime        | No ar         | Monitors, certificates, heartbeats.                                                        |
-| Traffic       | Tráfego       | Visitors and where they come from.                                                         |
-| Product usage | Uso           | Sign-ups, logins, key actions, funnel, retention.                                          |
-| Errors        | Erros         | Browser and server errors.                                                                 |
-| Money         | Dinheiro      | Revenue, MRR, churn, refunds; one-off sales and credit packs too.                          |
-| Costs         | Custos        | Two parts: AI costs and Infra costs, plus the margin. The site may show them as two steps. |
-| Logs          | Logs          | Logs and traces.                                                                           |
-| Settings      | Configurações | Organization, members, channels, alert rules, groups, outside watcher.                     |
+| Name          | Portuguese      | Notes                                                                                      |
+| ------------- | --------------- | ------------------------------------------------------------------------------------------ |
+| Overview      | Visão geral     | With All products or a group: every area side by side. With one product: the product page. |
+| Uptime        | Disponibilidade | Monitors, certificates, heartbeats.                                                        |
+| Traffic       | Tráfego         | Visitors and where they come from.                                                         |
+| Product usage | Uso             | Sign-ups, logins, key actions, funnel, retention.                                          |
+| Errors        | Erros           | Browser and server errors.                                                                 |
+| Money         | Dinheiro        | Revenue, MRR, churn, refunds; one-off sales and credit packs too.                          |
+| Costs         | Custos          | Two parts: AI costs and Infra costs, plus the margin. The site may show them as two steps. |
+| Logs          | Logs            | Logs and traces.                                                                           |
+| Settings      | Configurações   | Organization, members, channels, alert rules, groups, outside watcher.                     |
 
 ### On screen
 

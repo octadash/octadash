@@ -106,7 +106,7 @@
     "copyLink": "Copiar link",
     "mail": {
       "subject": "{inviter} convidou você para {org} no Octadash",
-      "body": "{inviter} convidou você para {org} no Octadash, onde o time acompanha uptime, tráfego e emergências dos produtos.\n\nAbra este link para criar sua conta e entrar:\n{link}\n\nO link vale até {date}. Se você não esperava este convite, ignore este e-mail."
+      "body": "{inviter} convidou você para {org} no Octadash, onde o time acompanha disponibilidade, tráfego e emergências dos produtos.\n\nAbra este link para criar sua conta e entrar:\n{link}\n\nO link vale até {date}. Se você não esperava este convite, ignore este e-mail."
     },
     "countOne": "# membro",
     "countOther": "# membros"
@@ -138,7 +138,7 @@
       "name": "Visão geral"
     },
     "uptime": {
-      "name": "No ar",
+      "name": "Disponibilidade",
       "body": "Se o site e a API estão respondendo, quanto demoram e quando o certificado vence.",
       "how": "Nada para instalar: o Octadash verifica de fora."
     },
@@ -195,7 +195,7 @@
     "firstTitle": "Qual é o seu primeiro produto?",
     "firstIntro": "Um site, um app ou um SaaS que você mantém. Os outros você adiciona depois pelo seletor de produtos, um por um.",
     "nextTitle": "O que vem depois",
-    "nextBody": "A página do produto abre com um card por área: No ar, Tráfego, Uso, Erros, Dinheiro, Custos. Você configura o que quiser, quando quiser. No ar leva um minuto: só o endereço."
+    "nextBody": "A página do produto abre com um card por área: Disponibilidade, Tráfego, Uso, Erros, Dinheiro, Custos. Você configura o que quiser, quando quiser. Disponibilidade leva um minuto: só o endereço."
   },
   "productPage": {
     "setUp": "Configurar",
@@ -261,10 +261,10 @@
     "vsPrevious": "contra o período anterior",
     "online": "{count} online agora",
     "change": "{change}%",
-    "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu. O estado do uptime e as emergências estão em dia.",
+    "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu. O estado da disponibilidade e as emergências estão em dia.",
     "totals": "Totais",
     "tiles": {
-      "uptime": "No ar",
+      "uptime": "Disponibilidade",
       "upNow": "{up} de {total}",
       "uptimeSub": "no ar agora · {ratio} em {period}",
       "visitors": "Visitantes",
@@ -294,7 +294,7 @@
       "title": "Produtos",
       "order": "Emergências primeiro, depois por visitantes",
       "product": "Produto",
-      "uptime": "Uptime · {period}",
+      "uptime": "Disponibilidade · {period}",
       "visitors": "Visitantes",
       "down": "Fora do ar agora",
       "downFor": "Fora do ar há {duration}",
@@ -333,7 +333,7 @@
     }
   },
   "uptime": {
-    "title": "No ar",
+    "title": "Disponibilidade",
     "intro": "O Octadash verifica cada endereço de fora, no intervalo escolhido, e avisa quando ele para de responder.",
     "add": "Adicionar monitor",
     "addFirst": "Adicionar o primeiro monitor",
@@ -699,7 +699,7 @@
     "changedOn": "Mudada em {count, plural, one {# produto} other {# produtos}}:",
     "rulesCount": "{count, plural, one {# regra} other {# regras}}",
     "areas": {
-      "uptime": "No ar",
+      "uptime": "Disponibilidade",
       "errors": "Erros",
       "usage": "Uso do produto",
       "traffic": "Tráfego",
@@ -841,7 +841,7 @@
       },
       "area": {
         "title": "Configurar uma área",
-        "text": "No ar é a mais rápida: cole o endereço e ele começa a checar."
+        "text": "Disponibilidade é a mais rápida: cole o endereço e ele começa a checar."
       },
       "alerts": {
         "title": "Escolher para onde vão os alertas",
@@ -1048,7 +1048,7 @@
     "ongoing": "em andamento",
     "over": "encerrada",
     "area": {
-      "uptime": "No ar",
+      "uptime": "Disponibilidade",
       "other": "Octadash",
       "errors": "Erros",
       "usage": "Uso do produto",
@@ -1429,12 +1429,6 @@
       "body": "O script também envia eventos como cadastro ou compra com <code>octadash.track()</code>. Eles aparecem em Uso do produto, onde ficam funis e retenção.",
       "open": "Abrir Uso do produto"
     },
-    "none": {
-      "title": "Tráfego ainda não está configurado",
-      "body": "Coloque o script do Octadash no site de um produto e os visitantes aparecem aqui, com de onde vieram e as páginas que leram.",
-      "all": "Escolha um produto para configurar",
-      "setUp": "Configurar Tráfego"
-    },
     "setUpLink": "Origens e configuração",
     "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu.",
     "chart": {
@@ -1477,12 +1471,12 @@
     "key": "Chave da origem",
     "keyHint": "Já está no código abaixo. Pode aparecer em páginas públicas.",
     "step1": {
-      "html": "Cole no <head> de todas as páginas",
+      "html": "Cole no '<head>' de todas as páginas",
       "nextjs": "Adicione ao layout raiz",
-      "react": "Cole no <head> do index.html",
+      "react": "Cole no '<head>' do index.html",
       "wordpress": "Adicione ao functions.php do tema",
       "gtm": "Crie uma tag de HTML personalizado que dispara em Todas as páginas",
-      "other": "Cole no <head> de todas as páginas"
+      "other": "Cole no '<head>' de todas as páginas"
     },
     "step1Note": "Menos de 2,5 KB. Acompanha a navegação no navegador (apps de página única). Visitas de localhost são ignoradas.",
     "codeLabel": "Plataforma",
@@ -1536,7 +1530,7 @@
     "general": "Geral",
     "sources": "Origens",
     "rules": "Regras de alerta",
-    "footer": "Os monitores ficam em <uptime>No ar</uptime>. Canais, membros e as regras da organização ficam em <settings>Configurações</settings>.",
+    "footer": "Os monitores ficam em <uptime>Disponibilidade</uptime>. Canais, membros e as regras da organização ficam em <settings>Configurações</settings>.",
     "generalPage": {
       "title": "Geral",
       "intro": "Nome, áreas e o que acontece com {name}.",
@@ -1925,107 +1919,6 @@
       "silentBody": "{sources} não {count, plural, one {enviou} other {enviaram}} nada {period}. Zero erro {count, plural, one {dela} other {delas}} pode ser só silêncio: confira se o SDK ou o script continua ligado depois do último deploy.",
       "silentMore": "{count, plural, one {E mais #.} other {E mais #.}}",
       "openSource": "Ver {source}"
-    },
-    "products": {
-      "title": "Nenhum produto envia erros ainda",
-      "body": "Quando enviarem, esta página junta os erros de todos em uma lista só, com o produto em cada issue. Comece pelo produto que mais te preocupa.",
-      "caption": "Situação de Erros em cada produto",
-      "product": "Produto",
-      "status": "Situação",
-      "action": "Ação",
-      "more": "{count, plural, one {Mais # produto pode enviar erros} other {Mais # produtos podem enviar erros}}",
-      "state": {
-        "waiting": "Configurado · esperando o primeiro erro",
-        "canUse": "{source} envia {areas} · os erros do navegador já podem vir dela",
-        "none": "Não configurado",
-        "dismissed": "Você marcou que não usa Erros",
-        "canUseKey": "{source} tem uma chave · ela pode enviar erros também"
-      },
-      "actions": {
-        "waiting": "Enviar erro de teste",
-        "canUse": "Usar {source}",
-        "none": "Configurar",
-        "dismissed": "Mudar"
-      }
-    },
-    "start": {
-      "eyebrow": "Erros",
-      "title": "Saiba do erro antes do cliente reclamar",
-      "body": "Os erros do navegador e do servidor viram issues: o mesmo erro no mesmo lugar conta uma vez, com quantas pessoas ele atingiu e em qual versão começou. Leva uns 2 minutos.",
-      "where": "Onde o código roda?",
-      "whereScript": "O script do Octadash, o mesmo do Tráfego. Ele envia os erros não tratados do navegador.",
-      "whereSdk": "O SDK do Sentry desta plataforma: o Octadash lê o que ele envia. Já usa Sentry? Troque só o DSN.",
-      "whereOther": "Qualquer SDK do Sentry funciona, em qualquer linguagem, com o DSN da origem.",
-      "showCode": "Mostrar o código",
-      "canUse": "{source} já envia {areas}. A chave dela envia erros também, sem código novo no navegador.",
-      "canUseScript": "{source} já tem o script do Octadash na página. Ele envia os erros do navegador do jeito que está, sem nada a adicionar.",
-      "use": "Usar {source}",
-      "orNew": "Ou crie uma origem nova:",
-      "waiting": "{source} está configurada para enviar erros.",
-      "viewer": "Um dono ou admin configura Erros neste produto.",
-      "options": "Outras plataformas e opções",
-      "wontUse": "Não vou usar Erros neste produto",
-      "dismissed": "Você marcou que este produto não usa Erros.",
-      "restore": "Usar Erros de novo",
-      "example": "Como vai ficar",
-      "exampleLabel": "Exemplo de como esta tela vai ficar",
-      "exampleBadge": "Exemplo",
-      "exampleTiles": [
-        {
-          "label": "Erros · 24h",
-          "value": "214",
-          "note": "↑ 38% vs ontem"
-        },
-        {
-          "label": "Issues",
-          "value": "12",
-          "note": "2 novas"
-        },
-        {
-          "label": "Pessoas",
-          "value": "48",
-          "note": "de 3.120 hoje"
-        }
-      ],
-      "exampleIssues": [
-        {
-          "badge": "Nova",
-          "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
-          "meta": "CartTotal em app/checkout/page.tsx · 412 pessoas · desde a v2.14"
-        },
-        {
-          "badge": "Voltou",
-          "title": "TimeoutError: database did not answer in 5 s",
-          "meta": "OrdersController.Create · 61 pessoas · voltou na v3.2"
-        },
-        {
-          "badge": "",
-          "title": "ChunkLoadError: Loading chunk 512 failed",
-          "meta": "webpack runtime · 201 pessoas · há 12 dias"
-        }
-      ],
-      "exampleFile": "app/checkout/page.tsx:42",
-      "exampleCode": [
-        "41 │ const items = cart.items",
-        "42 │ const total = items.price * qty",
-        "43 │ return <Total value={total} />"
-      ],
-      "featuresLabel": "O que vem junto",
-      "features": [
-        {
-          "title": "Agrupado, não repetido",
-          "body": "Mil vezes o mesmo erro é uma issue só, ordenada por quantas pessoas ele atinge."
-        },
-        {
-          "title": "Aviso no seu canal",
-          "body": "Pico de erros vira emergência. Issue nova pode mandar mensagem também, se você ligar."
-        },
-        {
-          "title": "Privado por padrão",
-          "body": "O IP nunca é guardado. E-mail vira hash. Erros ficam 90 dias."
-        }
-      ],
-      "siteName": "Site"
     }
   },
   "errorsSetup": {
@@ -2218,15 +2111,6 @@
       "people": "Pessoas",
       "week": "Semana {n}",
       "weekOf": "Semana de {date}"
-    },
-    "none": {
-      "title": "Nenhum evento ainda",
-      "body": "Uso do produto mostra o que as pessoas fazem dentro dos seus produtos: cadastros, pagamentos, convites, qualquer coisa que você envie como evento. Três jeitos de enviar:",
-      "script": "O script do Octadash no seu site: window.octadash.track('signed_up'). Se o Tráfego estiver configurado, o script já está lá.",
-      "server": "Do seu servidor: um POST com o evento e a chave da fonte.",
-      "posthog": "Já usa PostHog: troque só o host e a chave.",
-      "setUp": "Configurar Uso do produto",
-      "all": "Configure um produto:"
     }
   },
   "usageSetup": {
@@ -2256,7 +2140,7 @@
       "posthog": "Já uso PostHog"
     },
     "where": {
-      "head": "O script no <head>, depois a chamada onde acontece",
+      "head": "O script no '<head>', depois a chamada onde acontece",
       "page": "Onde acontece, na página",
       "server": "Onde acontece, no código do servidor",
       "posthog": "Onde o PostHog é iniciado"
@@ -2295,13 +2179,6 @@
   },
   "logsArea": {
     "title": "Logs",
-    "none": {
-      "title": "Nenhuma linha de log ainda",
-      "body": "Envie seus logs com OpenTelemetry e eles aparecem aqui, pesquisáveis em todos os produtos, com cada linha ligada ao erro e ao trace dela.",
-      "seq": "Já usa o Seq ou outra ferramenta? Mantenha: adicione o sink do OpenTelemetry ao lado e os dois recebem as mesmas linhas.",
-      "setUp": "Configurar Logs",
-      "all": "Configure Logs em um produto:"
-    },
     "kept": "{days, plural, one {Guardados por # dia.} other {Guardados por # dias.}}",
     "keptRange": "Guardados de {min} a {max} dias, conforme o produto.",
     "intro": "Todas as linhas de log de todos os produtos, pesquisáveis em um só lugar.",
@@ -2884,6 +2761,317 @@
       "amount": "Digite o valor, como 49,90.",
       "startsOn": "Escolha o dia em que a conta começa.",
       "tagTaken": "Um destes já é de {product}. Um projeto ou workspace é de um produto só; o resto pode ser dividido."
+    }
+  },
+  "areaStart": {
+    "siteName": "Site",
+    "nextStep": "Próximo passo",
+    "showCode": "Mostrar o código",
+    "orNew": "Ou crie uma origem nova:",
+    "use": "Usar {source}",
+    "waiting": "{source} está configurada para enviar {what}.",
+    "viewer": "Um dono ou admin configura {area} neste produto.",
+    "options": "Outras plataformas e opções",
+    "wontUse": "Não vou usar {area} neste produto",
+    "dismissed": "Você marcou que este produto não usa {area}.",
+    "restore": "Usar {area} de novo",
+    "example": "Como vai ficar",
+    "exampleLabel": "Exemplo de como esta tela vai ficar",
+    "exampleBadge": "Exemplo",
+    "featuresLabel": "O que vem junto",
+    "products": {
+      "caption": "Situação de {area} em cada produto",
+      "product": "Produto",
+      "status": "Situação",
+      "action": "Ação",
+      "none": "Não configurado",
+      "dismissed": "Você marcou que não usa {area}",
+      "canUse": "{source} envia {areas} · {what} já podem vir dela",
+      "canUseKey": "{source} tem uma chave · ela pode enviar {what} também",
+      "actions": {
+        "canUse": "Usar {source}",
+        "none": "Configurar",
+        "dismissed": "Mudar"
+      }
+    },
+    "areas": {
+      "errors": {
+        "eyebrow": "Erros",
+        "title": "Saiba do erro antes do cliente reclamar",
+        "body": "Os erros do navegador e do servidor viram issues: o mesmo erro no mesmo lugar conta uma vez, com quantas pessoas ele atingiu e em qual versão começou. Leva uns 2 minutos.",
+        "where": "Onde o código roda?",
+        "exampleTiles": [
+          {
+            "label": "Erros · 24h",
+            "value": "214",
+            "note": "↑ 38% vs ontem"
+          },
+          {
+            "label": "Issues",
+            "value": "12",
+            "note": "2 novas"
+          },
+          {
+            "label": "Pessoas",
+            "value": "48",
+            "note": "de 3.120 hoje"
+          }
+        ],
+        "exampleIssues": [
+          {
+            "badge": "Nova",
+            "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
+            "meta": "CartTotal em app/checkout/page.tsx · 412 pessoas · desde a v2.14"
+          },
+          {
+            "badge": "Voltou",
+            "title": "TimeoutError: database did not answer in 5 s",
+            "meta": "OrdersController.Create · 61 pessoas · voltou na v3.2"
+          },
+          {
+            "badge": "",
+            "title": "ChunkLoadError: Loading chunk 512 failed",
+            "meta": "webpack runtime · 201 pessoas · há 12 dias"
+          }
+        ],
+        "exampleFile": "app/checkout/page.tsx:42",
+        "exampleCode": [
+          "41 │ const items = cart.items",
+          "42 │ const total = items.price * qty",
+          "43 │ return <Total value={total} />"
+        ],
+        "features": [
+          {
+            "title": "Agrupado, não repetido",
+            "body": "Mil vezes o mesmo erro é uma issue só, ordenada por quantas pessoas ele atinge."
+          },
+          {
+            "title": "Aviso no seu canal",
+            "body": "Pico de erros vira emergência. Issue nova pode mandar mensagem também, se você ligar."
+          },
+          {
+            "title": "Privado por padrão",
+            "body": "O IP nunca é guardado. E-mail vira hash. Erros ficam 90 dias."
+          }
+        ],
+        "name": "Erros",
+        "what": "erros",
+        "notes": {
+          "html": "O script do Octadash, o mesmo do Tráfego. Ele envia os erros não tratados do navegador.",
+          "default": "O SDK do Sentry desta plataforma: o Octadash lê o que ele envia. Já usa Sentry? Troque só o DSN.",
+          "other": "Qualquer SDK do Sentry funciona, em qualquer linguagem, com o DSN da origem."
+        },
+        "canUse": "{source} já envia {areas}. A chave dela envia erros também, sem código novo no navegador.",
+        "canUseScript": "{source} já tem o script do Octadash na página. Ele envia os erros do navegador do jeito que está, sem nada a adicionar.",
+        "waitingStatus": "Configurado · esperando o primeiro erro",
+        "waitingAction": "Enviar erro de teste",
+        "productsTitle": "Nenhum produto envia erros ainda",
+        "productsBody": "Quando enviarem, esta página junta os erros de todos em uma lista só, com o produto em cada issue. Comece pelo produto que mais te preocupa.",
+        "more": "{count, plural, one {Mais # produto pode enviar erros} other {Mais # produtos podem enviar erros}}"
+      },
+      "traffic": {
+        "name": "Tráfego",
+        "what": "visitas",
+        "eyebrow": "Tráfego",
+        "title": "Quem visita, de onde vem e o que lê",
+        "body": "Sem cookie e sem banner de consentimento por padrão. Uma linha na página, e as visitas aparecem aqui em segundos.",
+        "where": "Onde o site roda?",
+        "notes": {
+          "default": "O script do Octadash, uma linha em cada página. Menos de 2,5 KB, e acompanha a navegação de apps de página única."
+        },
+        "canUse": "{source} já envia {areas}. A chave dela envia visitas também: adicione o script com ela.",
+        "canUseScript": "",
+        "example": {
+          "tiles": [
+            {
+              "label": "Visitantes · 7d",
+              "value": "3.120",
+              "note": "↑ 12% vs semana passada"
+            },
+            {
+              "label": "Visualizações",
+              "value": "9.480",
+              "note": "3,0 por visitante"
+            },
+            {
+              "label": "Agora",
+              "value": "14",
+              "note": "nos últimos 5 minutos"
+            }
+          ],
+          "rowsTitle": "De onde vieram",
+          "rows": [
+            {
+              "label": "google",
+              "value": "1.204"
+            },
+            {
+              "label": "direto",
+              "value": "860"
+            },
+            {
+              "label": "instagram",
+              "value": "312"
+            },
+            {
+              "label": "newsletter (utm)",
+              "value": "145"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Privado por padrão",
+            "body": "Sem cookie e nada guardado no navegador. O IP dá o país e é descartado."
+          },
+          {
+            "title": "De onde veio cada visita",
+            "body": "Busca, redes sociais, campanhas com UTM e a página que trouxe, por produto ou todos juntos."
+          },
+          {
+            "title": "Robôs à parte",
+            "body": "Robôs são reconhecidos e contados à parte, então os números são de pessoas."
+          }
+        ],
+        "waitingStatus": "Configurado · esperando a primeira visita",
+        "waitingAction": "Abrir o código",
+        "productsTitle": "Nenhum produto envia visitas ainda",
+        "productsBody": "Quando enviarem, esta página soma as visitas de todos, e você compara os produtos lado a lado. Comece pelo produto com mais visitas.",
+        "more": "{count, plural, one {Mais # produto pode enviar visitas} other {Mais # produtos podem enviar visitas}}"
+      },
+      "usage": {
+        "name": "Uso do produto",
+        "what": "eventos",
+        "eyebrow": "Uso do produto",
+        "title": "O que as pessoas fazem dentro do produto",
+        "body": "Envie o que importa (cadastrou, pagou, convidou alguém) e veja o normal de cada evento, funis e quem volta.",
+        "where": "Onde o código roda?",
+        "notes": {
+          "default": "Uma chamada onde acontece: octadash.track('signed_up'). Já usa PostHog? Troque só o endereço.",
+          "html": "O script do Tráfego mais uma chamada onde acontece: octadash.track('signed_up')."
+        },
+        "canUse": "{source} já envia {areas}. A chave dela envia eventos também, com uma chamada onde acontece.",
+        "canUseScript": "{source} já tem o script do Octadash na página. Adicione uma chamada onde algo acontece, sem chave nova.",
+        "example": {
+          "tiles": [
+            {
+              "label": "Cadastros · 7d",
+              "value": "214",
+              "note": "normal para a semana"
+            },
+            {
+              "label": "Pagaram",
+              "value": "38",
+              "note": "18% dos cadastros"
+            },
+            {
+              "label": "Voltaram na semana 2",
+              "value": "41%",
+              "note": "dos cadastros do mês passado"
+            }
+          ],
+          "rowsTitle": "Funil",
+          "rows": [
+            {
+              "label": "Visitou",
+              "value": "3.120"
+            },
+            {
+              "label": "Cadastrou",
+              "value": "214"
+            },
+            {
+              "label": "Pagou",
+              "value": "38"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "O normal de cada hora",
+            "body": "Cada evento importante aprende o seu normal; se ele parar, vira emergência."
+          },
+          {
+            "title": "Funis e retenção",
+            "body": "Quaisquer eventos em ordem, e quem volta pela semana em que se cadastrou."
+          },
+          {
+            "title": "Sem dado pessoal",
+            "body": "Ids de pessoas ficam como hash. Propriedades que parecem e-mail são descartadas na entrada."
+          }
+        ],
+        "waitingStatus": "Configurado · esperando o primeiro evento",
+        "waitingAction": "Abrir o código",
+        "productsTitle": "Nenhum produto envia eventos ainda",
+        "productsBody": "Quando enviarem, esta página mostra os eventos de todos, e os funis cruzam produtos. Comece pelo produto em que os cadastros mais importam.",
+        "more": "{count, plural, one {Mais # produto pode enviar eventos} other {Mais # produtos podem enviar eventos}}"
+      },
+      "logs": {
+        "name": "Logs",
+        "what": "linhas de log",
+        "eyebrow": "Logs",
+        "title": "Todas as linhas de log em uma busca só",
+        "body": "OpenTelemetry, o padrão que quase toda linguagem tem. Cada linha leva ao seu erro e à sua requisição.",
+        "where": "Onde o código roda?",
+        "notes": {
+          "default": "Duas variáveis de ambiente apontam seus logs do OpenTelemetry para cá. Usa o Seq? Mantenha e mande para os dois."
+        },
+        "canUse": "{source} já envia {areas}. A chave dela envia linhas de log também.",
+        "canUseScript": "",
+        "example": {
+          "tiles": [
+            {
+              "label": "Linhas · 24h",
+              "value": "48.210",
+              "note": "uns 120 MB por dia"
+            },
+            {
+              "label": "Erros",
+              "value": "37",
+              "note": "12 ligados a uma issue"
+            },
+            {
+              "label": "Serviços",
+              "value": "3",
+              "note": "api, worker, site"
+            }
+          ],
+          "rowsTitle": "Últimas linhas",
+          "rows": [
+            {
+              "label": "ERRO api",
+              "value": "payment declined"
+            },
+            {
+              "label": "AVISO worker",
+              "value": "retry 2 of 5"
+            },
+            {
+              "label": "INFO api",
+              "value": "POST /orders 201"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Busca como no Seq",
+            "body": "Filtre por serviço, nível e qualquer campo, e salve as buscas que repete."
+          },
+          {
+            "title": "Ligado aos erros",
+            "body": "Uma linha com trace id abre o erro e a requisição a que pertence."
+          },
+          {
+            "title": "Mascarado antes de guardar",
+            "body": "Valores que parecem cartão, e-mail e chave são mascarados. Você escolhe quantos dias guardar."
+          }
+        ],
+        "waitingStatus": "Configurado · esperando a primeira linha",
+        "waitingAction": "Abrir o código",
+        "productsTitle": "Nenhum produto envia logs ainda",
+        "productsBody": "Quando enviarem, esta página busca as linhas de todos de uma vez. Comece pelo produto que mais quebra.",
+        "more": "{count, plural, one {Mais # produto pode enviar logs} other {Mais # produtos podem enviar logs}}"
+      }
     }
   }
 }

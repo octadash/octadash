@@ -1429,12 +1429,6 @@
       "body": "The script also sends events like sign-up or purchase with <code>octadash.track()</code>. They show in Product usage, where funnels and retention live.",
       "open": "Open Product usage"
     },
-    "none": {
-      "title": "Traffic is not set up yet",
-      "body": "Add the Octadash script to a product's site and its visitors show here, with where they came from and the pages they read.",
-      "all": "Choose a product to set it up",
-      "setUp": "Set up Traffic"
-    },
     "setUpLink": "Sources and setup",
     "incomplete": "Some numbers are missing because the events database did not answer.",
     "chart": {
@@ -1477,12 +1471,12 @@
     "key": "Source key",
     "keyHint": "Already in the code below. Safe to show in public pages.",
     "step1": {
-      "html": "Paste in the <head> of every page",
+      "html": "Paste in the '<head>' of every page",
       "nextjs": "Add to the root layout",
-      "react": "Paste in the <head> of index.html",
+      "react": "Paste in the '<head>' of index.html",
       "wordpress": "Add to your theme's functions.php",
       "gtm": "Add a Custom HTML tag that fires on All Pages",
-      "other": "Paste in the <head> of every page"
+      "other": "Paste in the '<head>' of every page"
     },
     "step1Note": "Under 2.5 KB. Follows client-side navigation (single-page apps). Visits from localhost are skipped.",
     "codeLabel": "Platform",
@@ -1925,107 +1919,6 @@
       "silentBody": "{sources} sent nothing {period}. {count, plural, one {Its zero errors may be only silence} other {Their zero errors may be only silence}}: check that the SDK or the script is still on after the last deploy.",
       "silentMore": "{count, plural, one {And # more.} other {And # more.}}",
       "openSource": "See {source}"
-    },
-    "products": {
-      "title": "No product sends errors yet",
-      "body": "When they do, this page puts the errors of all of them in one list, with the product on each issue. Start with the product that worries you most.",
-      "caption": "Where each product stands on Errors",
-      "product": "Product",
-      "status": "Status",
-      "action": "Action",
-      "more": "{count, plural, one {# more product can send errors} other {# more products can send errors}}",
-      "state": {
-        "waiting": "Set up · waiting for the first error",
-        "canUse": "{source} sends {areas} · browser errors can come from it",
-        "none": "Not set up",
-        "dismissed": "You marked that it won’t use Errors",
-        "canUseKey": "{source} has a key · it can send errors too"
-      },
-      "actions": {
-        "waiting": "Send a test error",
-        "canUse": "Use {source}",
-        "none": "Set up",
-        "dismissed": "Change"
-      }
-    },
-    "start": {
-      "eyebrow": "Errors",
-      "title": "Know about an error before a customer complains",
-      "body": "Browser and server errors become issues: the same error in the same place counts once, with how many people it hit and the release it started in. It takes about 2 minutes.",
-      "where": "Where does the code run?",
-      "whereScript": "The Octadash script, the same one Traffic uses. It reports uncaught errors from the browser.",
-      "whereSdk": "The Sentry SDK for this platform: Octadash reads what it sends. Already use Sentry? Change only the DSN.",
-      "whereOther": "Any Sentry SDK works, in any language, with the DSN of the source.",
-      "showCode": "Show the code",
-      "canUse": "{source} already sends {areas}. Its key sends errors too, with no new code for the browser.",
-      "canUseScript": "{source} already has the Octadash script on the page. It reports browser errors as they are, with nothing to add.",
-      "use": "Use {source}",
-      "orNew": "Or start a new source:",
-      "waiting": "{source} is set to send errors.",
-      "viewer": "An owner or admin sets up Errors for this product.",
-      "options": "Other platforms and options",
-      "wontUse": "I won’t use Errors in this product",
-      "dismissed": "You marked that this product won’t use Errors.",
-      "restore": "Use Errors again",
-      "example": "What it will look like",
-      "exampleLabel": "Example of how this page will look",
-      "exampleBadge": "Example",
-      "exampleTiles": [
-        {
-          "label": "Errors · 24h",
-          "value": "214",
-          "note": "↑ 38% vs yesterday"
-        },
-        {
-          "label": "Issues",
-          "value": "12",
-          "note": "2 new"
-        },
-        {
-          "label": "People",
-          "value": "48",
-          "note": "of 3,120 today"
-        }
-      ],
-      "exampleIssues": [
-        {
-          "badge": "New",
-          "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
-          "meta": "CartTotal in app/checkout/page.tsx · 412 people · since v2.14"
-        },
-        {
-          "badge": "Regressed",
-          "title": "TimeoutError: database did not answer in 5 s",
-          "meta": "OrdersController.Create · 61 people · came back in v3.2"
-        },
-        {
-          "badge": "",
-          "title": "ChunkLoadError: Loading chunk 512 failed",
-          "meta": "webpack runtime · 201 people · 12 days ago"
-        }
-      ],
-      "exampleFile": "app/checkout/page.tsx:42",
-      "exampleCode": [
-        "41 │ const items = cart.items",
-        "42 │ const total = items.price * qty",
-        "43 │ return <Total value={total} />"
-      ],
-      "featuresLabel": "What comes with it",
-      "features": [
-        {
-          "title": "Grouped, not repeated",
-          "body": "The same error a thousand times is one issue, ordered by how many people it hits."
-        },
-        {
-          "title": "Alert in your channel",
-          "body": "An error spike becomes an emergency. A new issue can send a message too, if you turn it on."
-        },
-        {
-          "title": "Private by default",
-          "body": "The IP address is never stored. An e-mail becomes a hash. Errors are kept 90 days."
-        }
-      ],
-      "siteName": "Site"
     }
   },
   "errorsSetup": {
@@ -2218,15 +2111,6 @@
       "people": "People",
       "week": "Week {n}",
       "weekOf": "Week of {date}"
-    },
-    "none": {
-      "title": "No events yet",
-      "body": "Product usage shows what people do inside your products: sign-ups, payments, invites, anything you send as an event. Three ways to send them:",
-      "script": "The Octadash script on your site: window.octadash.track('signed_up'). If Traffic is set up, the script is already there.",
-      "server": "From your server: POST the event with the source key.",
-      "posthog": "Already on PostHog: change only the host and the key.",
-      "setUp": "Set up Product usage",
-      "all": "Set up a product:"
     }
   },
   "usageSetup": {
@@ -2256,7 +2140,7 @@
       "posthog": "Already on PostHog"
     },
     "where": {
-      "head": "The script in <head>, then the call where it happens",
+      "head": "The script in '<head>', then the call where it happens",
       "page": "Where it happens, in the page",
       "server": "Where it happens, in your server code",
       "posthog": "Where PostHog starts"
@@ -2295,13 +2179,6 @@
   },
   "logsArea": {
     "title": "Logs",
-    "none": {
-      "title": "No log lines yet",
-      "body": "Send your logs with OpenTelemetry and they show here, searchable across every product, with each line tied to its error and trace.",
-      "seq": "Already on Seq or another tool? Keep it: add the OpenTelemetry sink next to it and both get the same lines.",
-      "setUp": "Set up Logs",
-      "all": "Set up Logs in a product:"
-    },
     "kept": "{days, plural, one {Kept # day.} other {Kept # days.}}",
     "keptRange": "Kept {min} to {max} days, depending on the product.",
     "intro": "Every log line from every product, searchable in one place.",
@@ -2884,6 +2761,317 @@
       "amount": "Type the amount, like 49.90.",
       "startsOn": "Pick the day the bill starts.",
       "tagTaken": "One of these is already {product}’s. A project or workspace belongs to one product; the rest can be shared."
+    }
+  },
+  "areaStart": {
+    "siteName": "Site",
+    "nextStep": "Next step",
+    "showCode": "Show the code",
+    "orNew": "Or start a new source:",
+    "use": "Use {source}",
+    "waiting": "{source} is set to send {what}.",
+    "viewer": "An owner or admin sets up {area} for this product.",
+    "options": "Other platforms and options",
+    "wontUse": "I won’t use {area} in this product",
+    "dismissed": "You marked that this product won’t use {area}.",
+    "restore": "Use {area} again",
+    "example": "What it will look like",
+    "exampleLabel": "Example of how this page will look",
+    "exampleBadge": "Example",
+    "featuresLabel": "What comes with it",
+    "products": {
+      "caption": "Where each product stands on {area}",
+      "product": "Product",
+      "status": "Status",
+      "action": "Action",
+      "none": "Not set up",
+      "dismissed": "You marked that it won’t use {area}",
+      "canUse": "{source} sends {areas} · {what} can come from it",
+      "canUseKey": "{source} has a key · it can send {what} too",
+      "actions": {
+        "canUse": "Use {source}",
+        "none": "Set up",
+        "dismissed": "Change"
+      }
+    },
+    "areas": {
+      "errors": {
+        "eyebrow": "Errors",
+        "title": "Know about an error before a customer complains",
+        "body": "Browser and server errors become issues: the same error in the same place counts once, with how many people it hit and the release it started in. It takes about 2 minutes.",
+        "where": "Where does the code run?",
+        "exampleTiles": [
+          {
+            "label": "Errors · 24h",
+            "value": "214",
+            "note": "↑ 38% vs yesterday"
+          },
+          {
+            "label": "Issues",
+            "value": "12",
+            "note": "2 new"
+          },
+          {
+            "label": "People",
+            "value": "48",
+            "note": "of 3,120 today"
+          }
+        ],
+        "exampleIssues": [
+          {
+            "badge": "New",
+            "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
+            "meta": "CartTotal in app/checkout/page.tsx · 412 people · since v2.14"
+          },
+          {
+            "badge": "Regressed",
+            "title": "TimeoutError: database did not answer in 5 s",
+            "meta": "OrdersController.Create · 61 people · came back in v3.2"
+          },
+          {
+            "badge": "",
+            "title": "ChunkLoadError: Loading chunk 512 failed",
+            "meta": "webpack runtime · 201 people · 12 days ago"
+          }
+        ],
+        "exampleFile": "app/checkout/page.tsx:42",
+        "exampleCode": [
+          "41 │ const items = cart.items",
+          "42 │ const total = items.price * qty",
+          "43 │ return <Total value={total} />"
+        ],
+        "features": [
+          {
+            "title": "Grouped, not repeated",
+            "body": "The same error a thousand times is one issue, ordered by how many people it hits."
+          },
+          {
+            "title": "Alert in your channel",
+            "body": "An error spike becomes an emergency. A new issue can send a message too, if you turn it on."
+          },
+          {
+            "title": "Private by default",
+            "body": "The IP address is never stored. An e-mail becomes a hash. Errors are kept 90 days."
+          }
+        ],
+        "name": "Errors",
+        "what": "errors",
+        "notes": {
+          "html": "The Octadash script, the same one Traffic uses. It reports uncaught errors from the browser.",
+          "default": "The Sentry SDK for this platform: Octadash reads what it sends. Already use Sentry? Change only the DSN.",
+          "other": "Any Sentry SDK works, in any language, with the DSN of the source."
+        },
+        "canUse": "{source} already sends {areas}. Its key sends errors too, with no new code for the browser.",
+        "canUseScript": "{source} already has the Octadash script on the page. It reports browser errors as they are, with nothing to add.",
+        "waitingStatus": "Set up · waiting for the first error",
+        "waitingAction": "Send a test error",
+        "productsTitle": "No product sends errors yet",
+        "productsBody": "When they do, this page puts the errors of all of them in one list, with the product on each issue. Start with the product that worries you most.",
+        "more": "{count, plural, one {# more product can send errors} other {# more products can send errors}}"
+      },
+      "traffic": {
+        "name": "Traffic",
+        "what": "page views",
+        "eyebrow": "Traffic",
+        "title": "Who visits, where they come from and what they read",
+        "body": "No cookie and no consent banner by default. One line in the page, and visits show up here in seconds.",
+        "where": "Where does the site run?",
+        "notes": {
+          "default": "The Octadash script, one line in every page. Under 2.5 KB, and it follows single-page navigation."
+        },
+        "canUse": "{source} already sends {areas}. Its key sends page views too: add the script with it.",
+        "canUseScript": "",
+        "example": {
+          "tiles": [
+            {
+              "label": "Visitors · 7d",
+              "value": "3,120",
+              "note": "↑ 12% vs last week"
+            },
+            {
+              "label": "Page views",
+              "value": "9,480",
+              "note": "3.0 per visitor"
+            },
+            {
+              "label": "Online now",
+              "value": "14",
+              "note": "in the last 5 minutes"
+            }
+          ],
+          "rowsTitle": "Where they came from",
+          "rows": [
+            {
+              "label": "google",
+              "value": "1,204"
+            },
+            {
+              "label": "direct",
+              "value": "860"
+            },
+            {
+              "label": "instagram",
+              "value": "312"
+            },
+            {
+              "label": "newsletter (utm)",
+              "value": "145"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Private by default",
+            "body": "No cookie and nothing stored in the browser. The IP gives the country and is thrown away."
+          },
+          {
+            "title": "Where each visit came from",
+            "body": "Search, social, campaigns with UTM and the page that brought them, per product or all together."
+          },
+          {
+            "title": "Bots apart",
+            "body": "Bots are recognized and counted apart, so the numbers are people."
+          }
+        ],
+        "waitingStatus": "Set up · waiting for the first page view",
+        "waitingAction": "Open the code",
+        "productsTitle": "No product sends page views yet",
+        "productsBody": "When they do, this page adds the visits of all of them, and you can compare products side by side. Start with the product with most visits.",
+        "more": "{count, plural, one {# more product can send page views} other {# more products can send page views}}"
+      },
+      "usage": {
+        "name": "Product usage",
+        "what": "events",
+        "eyebrow": "Product usage",
+        "title": "What people do inside the product",
+        "body": "Send what matters (signed up, paid, invited someone) and see what is normal for each event, funnels and who comes back.",
+        "where": "Where does the code run?",
+        "notes": {
+          "default": "One call where it happens: octadash.track('signed_up'). Already on PostHog? Change only the host.",
+          "html": "The Traffic script plus one call where it happens: octadash.track('signed_up')."
+        },
+        "canUse": "{source} already sends {areas}. Its key sends events too, with one call where it happens.",
+        "canUseScript": "{source} already has the Octadash script on the page. Add one call where something happens, with no new key.",
+        "example": {
+          "tiles": [
+            {
+              "label": "Sign-ups · 7d",
+              "value": "214",
+              "note": "normal for the week"
+            },
+            {
+              "label": "Paid",
+              "value": "38",
+              "note": "18% of sign-ups"
+            },
+            {
+              "label": "Back in week 2",
+              "value": "41%",
+              "note": "of last month’s sign-ups"
+            }
+          ],
+          "rowsTitle": "Funnel",
+          "rows": [
+            {
+              "label": "Visited",
+              "value": "3,120"
+            },
+            {
+              "label": "Signed up",
+              "value": "214"
+            },
+            {
+              "label": "Paid",
+              "value": "38"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "What is normal, per hour",
+            "body": "Each key event learns its normal; if it stops, that is an emergency."
+          },
+          {
+            "title": "Funnels and retention",
+            "body": "Any events in order, and who comes back by the week they signed up."
+          },
+          {
+            "title": "No personal data",
+            "body": "Person ids are kept as hashes. Properties that look like e-mails are dropped at the door."
+          }
+        ],
+        "waitingStatus": "Set up · waiting for the first event",
+        "waitingAction": "Open the code",
+        "productsTitle": "No product sends events yet",
+        "productsBody": "When they do, this page shows the events of all of them, and funnels can cross products. Start with the product whose sign-ups matter most.",
+        "more": "{count, plural, one {# more product can send events} other {# more products can send events}}"
+      },
+      "logs": {
+        "name": "Logs",
+        "what": "log lines",
+        "eyebrow": "Logs",
+        "title": "Every log line in one search",
+        "body": "OpenTelemetry, the standard almost every language has. Each line links to its error and its request.",
+        "where": "Where does the code run?",
+        "notes": {
+          "default": "Two environment variables point your OpenTelemetry logs here. Already on Seq? Keep it and send to both."
+        },
+        "canUse": "{source} already sends {areas}. Its key sends log lines too.",
+        "canUseScript": "",
+        "example": {
+          "tiles": [
+            {
+              "label": "Lines · 24h",
+              "value": "48,210",
+              "note": "about 120 MB a day"
+            },
+            {
+              "label": "Errors",
+              "value": "37",
+              "note": "12 linked to an issue"
+            },
+            {
+              "label": "Services",
+              "value": "3",
+              "note": "api, worker, site"
+            }
+          ],
+          "rowsTitle": "Latest lines",
+          "rows": [
+            {
+              "label": "ERROR api",
+              "value": "payment declined"
+            },
+            {
+              "label": "WARN worker",
+              "value": "retry 2 of 5"
+            },
+            {
+              "label": "INFO api",
+              "value": "POST /orders 201"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Search like Seq",
+            "body": "Filter by service, level and any field, and save the searches you repeat."
+          },
+          {
+            "title": "Tied to errors",
+            "body": "A line with a trace id opens the error and the request it belongs to."
+          },
+          {
+            "title": "Masked before storing",
+            "body": "Values that look like card numbers, e-mails and keys are masked. You choose how many days to keep."
+          }
+        ],
+        "waitingStatus": "Set up · waiting for the first line",
+        "waitingAction": "Open the code",
+        "productsTitle": "No product sends logs yet",
+        "productsBody": "When they do, this page searches the lines of all of them at once. Start with the product that breaks most.",
+        "more": "{count, plural, one {# more product can send logs} other {# more products can send logs}}"
+      }
     }
   }
 }
