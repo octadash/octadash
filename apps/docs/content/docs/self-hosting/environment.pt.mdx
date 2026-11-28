@@ -8,6 +8,7 @@ description: Cada configuração que o Octadash lê, e qual papel a lê.
 | `DATABASE_URL` | todos | Endereço de conexão do Postgres |
 | `OCTADASH_URL` | web, worker | Endereço público do painel |
 | `OCTADASH_INGEST_URL` | web | Endereço público do ingest |
+| `OCTADASH_BEHIND_PROXY` | web, worker | `true` quando um proxy atende nas portas 80 e 443 (o compose do Coolify já liga): a porta nos dois endereços públicos é a do contêiner e sai |
 | `OCTADASH_SECRET` | web, worker | No mínimo 32 caracteres; assina sessões e cifra segredos |
 | `OCTADASH_OPEN_SIGNUP` | web | `false` por padrão: só o dono e quem for convidado |
 | `LOG_LEVEL` | todos | `info` por padrão |

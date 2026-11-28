@@ -32,12 +32,46 @@ export const storageEnvSchema = z.object({
 /** Valkey (or Redis) holding the ingest streams: redis://:pass@valkey:6379 */
 const valkeyUrl = z.url({ protocol: /^rediss?$/ })
 
+/**
+ * A proxy in front answers on 80 and 443 (Coolify, Traefik, Caddy). Coolify
+ * writes a domain as https://host:4000 to name the container port, and its
+ * SERVICE_URL_* carries that port, which no visitor can reach. On, a port in
+ * OCTADASH_URL and OCTADASH_INGEST_URL is dropped.
+ */
+const behindProxy = z
+  .enum(['true', 'false'])
+  .default('false')
+  .transform((value) => value === 'true')
+
+/** The address without the port, and without a trailing slash at the root. */
+export function withoutPort(address: string): string {
+  const url = new URL(address)
+  url.port = ''
+  const text = url.toString()
+  return url.pathname === '/' && !url.search && !url.hash ? text.replace(/\/$/, '') : text
+}
+
+function dropPorts<
+  T extends { OCTADASH_BEHIND_PROXY: boolean; OCTADASH_URL: string; OCTADASH_INGEST_URL?: string },
+>(env: T): T {
+  if (!env.OCTADASH_BEHIND_PROXY) return env
+  return {
+    ...env,
+    OCTADASH_URL: withoutPort(env.OCTADASH_URL),
+    ...(env.OCTADASH_INGEST_URL === undefined
+      ? {}
+      : { OCTADASH_INGEST_URL: withoutPort(env.OCTADASH_INGEST_URL) }),
+  }
+}
+
 export const webEnvSchema = baseEnvSchema
   .extend({
     /** Public URL of the panel, e.g. https://octadash.example.com */
     OCTADASH_URL: z.url(),
     /** Public URL of the ingest service, used in SDK snippets and DSNs. */
     OCTADASH_INGEST_URL: z.url(),
+    /** A proxy answers on 80/443: drop the container port from the two public URLs. */
+    OCTADASH_BEHIND_PROXY: behindProxy,
     /** Secret used to sign sessions and encrypt integration credentials. */
     OCTADASH_SECRET: z.string().min(32, 'OCTADASH_SECRET must have at least 32 characters'),
     /** Anyone may create an account. Off on self-hosted installs: only the owner and invited people. */
@@ -55,6 +89,7 @@ export const webEnvSchema = baseEnvSchema
   })
   .extend(clickhouseEnvSchema.shape)
   .extend(storageEnvSchema.shape)
+  .transform(dropPorts)
 
 export const ingestEnvSchema = baseEnvSchema
   .extend({
@@ -73,6 +108,7 @@ export const workerEnvSchema = baseEnvSchema
     OCTADASH_SECRET: z.string().min(32, 'OCTADASH_SECRET must have at least 32 characters'),
     /** Public URL of the panel, for links in alerts. */
     OCTADASH_URL: z.url(),
+    OCTADASH_BEHIND_PROXY: behindProxy,
     VALKEY_URL: valkeyUrl,
     /** Let monitors reach private addresses (localhost, 10.x, 192.168.x). Only for development. */
     OCTADASH_UPTIME_ALLOW_PRIVATE: z
@@ -111,6 +147,7 @@ export const workerEnvSchema = baseEnvSchema
   })
   .extend(clickhouseEnvSchema.shape)
   .extend(storageEnvSchema.shape)
+  .transform(dropPorts)
 
 export type BaseEnv = z.infer<typeof baseEnvSchema>
 export type WebEnv = z.infer<typeof webEnvSchema>

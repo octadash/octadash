@@ -86,13 +86,14 @@ export async function AreaExample({ children }: { children: ReactNode }) {
   return (
     <section
       aria-label={t('exampleLabel')}
-      className="flex flex-col gap-4 rounded-xl border border-border bg-muted/30 p-5"
+      className="flex flex-col gap-4 self-start rounded-xl border border-dashed border-border bg-muted/30 p-5 lg:sticky lg:top-6"
     >
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">{t('example')}</h2>
         <Badge variant="outline">{t('exampleBadge')}</Badge>
       </div>
       {children}
+      <p className="text-xs text-muted-foreground">{t('exampleNote')}</p>
     </section>
   )
 }

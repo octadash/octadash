@@ -1495,7 +1495,7 @@
     "back": "Back to {name}",
     "wontUse": "I won't use Traffic in this product",
     "example": "What it will look like",
-    "exampleBadge": "Example",
+    "exampleBadge": "Made-up numbers",
     "exampleVisitors": "Visitors",
     "examplePageviews": "Pageviews",
     "private": "Private by default",
@@ -1974,7 +1974,7 @@
     "back": "Back to {name}",
     "wontUse": "I won’t use Errors in this product",
     "example": "What it will look like",
-    "exampleBadge": "Example",
+    "exampleBadge": "Made-up numbers",
     "exampleIssues": [
       {
         "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
@@ -2760,7 +2760,8 @@
     "restore": "Use {area} again",
     "example": "What it will look like",
     "exampleLabel": "Example of how this page will look",
-    "exampleBadge": "Example",
+    "exampleNote": "Not your data. Your numbers take this place when the first event arrives.",
+    "exampleBadge": "Made-up numbers",
     "featuresLabel": "What comes with it",
     "products": {
       "caption": "Where each product stands on {area}",

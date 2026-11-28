@@ -9,7 +9,10 @@ description: Publique a partir do repositório público com o compose do Coolify
    `/docker-compose.coolify.yml`.
 3. Deploy. O Coolify gera todas as senhas (Postgres, ClickHouse, Valkey,
    Garage), o segredo e um domínio para o painel (`web`) e outro para o ingest
-   (`ingest`). Troque os domínios em **Domains** se quiser usar os seus.
+   (`ingest`). Troque os domínios em **Domains** se quiser usar os seus. O
+   Coolify mostra cada um com a porta do contêiner
+   (`https://ingest.example.com:4000`): essa porta só diz ao proxy para onde
+   mandar, e o Octadash a tira do código que você cola.
 
 ## Primeiro acesso
 
