@@ -137,7 +137,7 @@ and why; anything here can be reversed.
   30 days in bars, where it happened (only the app's frames by default), what
   the person did before, who it hits and the event itself.
 - **pt-BR keeps the word "issue"** ("issues", "Abertas", "Voltaram"). It is
-  the word Sentry, GitHub and developers in Brazil use. Confirmed by Luciano
+  the word Sentry, GitHub and developers in Brazil use. Confirmed by the maintainer
   on the morning of 2026-11-28.
 - **Not built yet, on purpose**: release marks on the chart and a SPIKE badge
   (they need the alert rule first), a search box for filters, source maps and
@@ -397,7 +397,7 @@ and why; anything here can be reversed.
 
 ## Morning review, 2026-11-28
 
-Luciano reviewed the night's decisions that change the product or his risk.
+The maintainer reviewed the night's decisions that change the product or its risk.
 
 - **A change to a cost split holds from that day on.** Every change to a
   connection's split or to a product's part keeps a copy of the whole
@@ -425,7 +425,7 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - **A rule set to Off is no longer faded**: the faded text failed AA contrast,
   and the level toggle already says Off.
 
-## Money for one-off sales (2026-11-28, Luciano)
+## Money for one-off sales (2026-11-28, maintainer)
 
 - A product sold one purchase at a time (one-off sales, credit packs) showed MRR, new subscriptions and churn at zero.
 - Money now reads how each product is paid for from the last year of sales: subscriptions only, one-off only, or mixed. No setting.
@@ -433,7 +433,7 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - Mixed: the subscription numbers stay, and Revenue says how much was recurring and how much one-off.
 - Credit packs count as revenue when bought. How much credit was used is not in the gateway; it would come from a Product usage event (backlog).
 
-## Empty pages that teach (2026-11-28, Luciano)
+## Empty pages that teach (2026-11-28, maintainer)
 
 - An area with nothing yet says what it gives, shows an example of the page marked as an example, and offers the shortest next step for where the product stands. Errors is the first; the other areas follow the same model.
 - Errors, one product: never sent an error, so one click on where the code runs makes a source (Site for the script) and shows its code, a test error and a live wait. A product with a source that sends something else gets "Use {source}" first.
@@ -489,7 +489,7 @@ Luciano reviewed the night's decisions that change the product or his risk.
   position of a long line with no spaces (a token, a minified bundle), which
   took seconds on 100 KB. Found while keeping heartbeat output.
 
-## Uptime is "Disponibilidade" in Portuguese (2026-11-28, Luciano)
+## Uptime is "Disponibilidade" in Portuguese (2026-11-28, maintainer)
 
 - "No ar" read as a status, not as an area beside Tráfego, Uso, Erros and Logs. The area is now Disponibilidade in Portuguese and stays Uptime in English, in the panel, the docs and octadash.com.
 - The status words stay: a monitor is "no ar" or "fora do ar", and the Overview tile says "9 de 10 no ar agora".

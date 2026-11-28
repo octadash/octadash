@@ -36,10 +36,10 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
   })
 
   it('creates a product with a unique slug and no key until it has sources', async () => {
-    const first = await createProject(db, orgA, { name: 'Postato' })
-    const second = await createProject(db, orgA, { name: 'Postato' })
-    expect(first.slug).toBe('postato')
-    expect(second.slug).toBe('postato-2')
+    const first = await createProject(db, orgA, { name: 'Pagebird' })
+    const second = await createProject(db, orgA, { name: 'Pagebird' })
+    expect(first.slug).toBe('pagebird')
+    expect(second.slug).toBe('pagebird-2')
     expect(Number(first.ingest_id)).toBeGreaterThan(0)
     const keys = await db.selectFrom('source_key').where('project_id', '=', first.id).execute()
     expect(keys).toHaveLength(0)
@@ -62,19 +62,19 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
   })
 
   it('keeps tenants apart', async () => {
-    await createProject(db, orgB, { name: 'Postato' })
-    expect((await listProjects(db, orgB)).map((p) => p.slug)).toEqual(['postato'])
-    const ofA = await getProjectBySlug(db, orgA, 'postato')
+    await createProject(db, orgB, { name: 'Pagebird' })
+    expect((await listProjects(db, orgB)).map((p) => p.slug)).toEqual(['pagebird'])
+    const ofA = await getProjectBySlug(db, orgA, 'pagebird')
     expect(ofA).toBeDefined()
     expect(await deleteProject(db, orgB, ofA?.id ?? '')).toBe(false)
     expect(await updateProject(db, orgB, ofA?.id ?? '', { name: 'Hacked' })).toBeUndefined()
   })
 
   it('renames and deletes', async () => {
-    const project = await getProjectBySlug(db, orgA, 'postato-2')
-    const renamed = await updateProject(db, orgA, project?.id ?? '', { name: 'Intelibot' })
-    expect(renamed?.slug).toBe('intelibot')
+    const project = await getProjectBySlug(db, orgA, 'pagebird-2')
+    const renamed = await updateProject(db, orgA, project?.id ?? '', { name: 'Kitebox' })
+    expect(renamed?.slug).toBe('kitebox')
     expect(await deleteProject(db, orgA, project?.id ?? '')).toBe(true)
-    expect(await getProjectBySlug(db, orgA, 'intelibot')).toBeUndefined()
+    expect(await getProjectBySlug(db, orgA, 'kitebox')).toBeUndefined()
   })
 })

@@ -103,7 +103,7 @@ the service name OpenTelemetry already sends.
 | Data                            | Dado                            | Everything else, shown neutral.                                                                                                             |
 | Emergency strip                 | Faixa de emergência             | The red bar on top of every screen. One bar for any number of emergencies: "2 emergencies: …" with "See all 2". Ignores the product picker. |
 | Signals strip                   | Faixa de sinais                 | "3 things out of normal today" on the Overview.                                                                                             |
-| I'm on it                       | Estou cuidando                  | Button on an emergency. Stops repeated messages and shows everyone, live, "Luciano is on it · 6 min". The strip stays until it is resolved. |
+| I'm on it                       | Estou cuidando                  | Button on an emergency. Stops repeated messages and shows everyone, live, "Ana is on it · 6 min". The strip stays until it is resolved.     |
 | Resolved                        | Resolvido                       | The emergency ended (the check passed again, or someone closed it).                                                                         |
 | Still learning what is normal   | Aprendendo o normal             | A product with less than 4 weeks of data: no signals yet.                                                                                   |
 | Unassigned spend                | Gasto sem produto               | Cost seen on a provider account that no product claims.                                                                                     |
@@ -204,7 +204,7 @@ A source is one part of the product that sends data: "Site, Next.js",
 instructions come in tabs per platform with the source's own key filled in.
 Each source has its own key, so Octadash knows which part sent each event
 without any extra setting in the code, and it works with any Sentry SDK, which
-has no field for it. A product with one part has one source; the Intelibot has
+has no field for it. A product with one part has one source; Kitebox, for example, has
 four. The area's card on the product page shows each source with its state
 ("Next.js receiving, .NET no data yet").
 
@@ -334,7 +334,7 @@ The screen the owner looks at all day. It is not a copy of each product page:
 it puts every product side by side, area by area, and crosses areas. A group
 shows the same page filtered to its products; the product page follows the
 same pattern for one product, with the area cards after it. Closed with
-Luciano on 2026-11-28 in the panel canvas.
+the maintainer on 2026-11-28 in the panel canvas.
 
 From top to bottom:
 

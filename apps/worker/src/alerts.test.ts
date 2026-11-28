@@ -20,8 +20,8 @@ function incident(overrides: Partial<PendingIncident> = {}): PendingIncident {
     notified_open_at: null,
     parent_id: null,
     project_id: 'p1',
-    project_name: 'Tribunal de Ideias',
-    project_slug: 'tribunal',
+    project_name: 'Lumen Notes',
+    project_slug: 'lumen',
     ...overrides,
   }
 }
@@ -51,8 +51,8 @@ describe('alert text', () => {
     })
     expect(message.title).toBe('Site está fora do ar')
     expect(message.body).toBe('Respondeu HTTP 503. Fora do ar há 7 min.')
-    expect(message.project?.name).toBe('Tribunal de Ideias')
-    expect(message.url).toBe('https://octa.example.com/p/tribunal/uptime')
+    expect(message.project?.name).toBe('Lumen Notes')
+    expect(message.url).toBe('https://octa.example.com/p/lumen/uptime')
     expect(message.severity).toBe('critical')
   })
 
@@ -71,7 +71,7 @@ describe('alert text', () => {
     const message = alertMessage(
       [
         incident(),
-        incident({ id: 'i2', project_name: 'Intelibot', data: { name: 'API', reason: 'timeout' } }),
+        incident({ id: 'i2', project_name: 'Kitebox', data: { name: 'API', reason: 'timeout' } }),
       ],
       'open',
       { now: NOW, locale: 'pt-BR', panelUrl: 'https://octa.example.com' },
@@ -80,8 +80,8 @@ describe('alert text', () => {
     expect(message.project).toBeUndefined()
     expect(message.url).toBe('https://octa.example.com/all/uptime')
     expect(message.body.split('\n')).toEqual([
-      '• Tribunal de Ideias: Site está fora do ar. Respondeu HTTP 503. Fora do ar há 7 min.',
-      '• Intelibot: API está fora do ar. Não respondeu a tempo. Fora do ar há 7 min.',
+      '• Lumen Notes: Site está fora do ar. Respondeu HTTP 503. Fora do ar há 7 min.',
+      '• Kitebox: API está fora do ar. Não respondeu a tempo. Fora do ar há 7 min.',
     ])
   })
 
@@ -126,17 +126,17 @@ describe('alert text', () => {
       locale: 'en',
       panelUrl: 'https://x.dev/',
     })
-    expect(open.title).toBe('Error spike on Tribunal de Ideias: 240 errors in 15 min')
+    expect(open.title).toBe('Error spike on Lumen Notes: 240 errors in 15 min')
     expect(open.body).toBe(
       'Normal for this time is about 12. Most: TypeError: x is undefined (200).',
     )
-    expect(open.url).toBe('https://x.dev/p/tribunal/emergencies/i1')
+    expect(open.url).toBe('https://x.dev/p/lumen/emergencies/i1')
     const over = alertMessage([{ ...spike, resolved_at: NOW }], 'resolve', {
       now: NOW,
       locale: 'pt-BR',
       panelUrl: 'https://x.dev',
     })
-    expect(over.title).toBe('Os erros de Tribunal de Ideias voltaram ao normal')
+    expect(over.title).toBe('Os erros de Lumen Notes voltaram ao normal')
     expect(over.body).toBe('O pico durou 7 min.')
   })
 
@@ -147,9 +147,9 @@ describe('alert text', () => {
     })
     const one = alertMessage([fresh], 'open', { now: NOW, locale: 'en', panelUrl: 'https://x.dev' })
     expect(one.severity).toBe('info')
-    expect(one.title).toBe('New issue on Tribunal de Ideias')
+    expect(one.title).toBe('New issue on Lumen Notes')
     expect(one.body).toBe('TypeError: x is undefined In app/cart.ts.')
-    expect(one.url).toBe('https://x.dev/p/tribunal/errors/iss1')
+    expect(one.url).toBe('https://x.dev/p/lumen/errors/iss1')
     const many = alertMessage(
       [fresh, { ...fresh, id: 'i2', data: { type: 'RangeError' } }],
       'open',
@@ -161,8 +161,8 @@ describe('alert text', () => {
     )
     expect(many.title).toBe('2 issues novas')
     expect(many.body.split('\n')).toEqual([
-      '• Issue nova em Tribunal de Ideias. TypeError: x is undefined Em app/cart.ts.',
-      '• Issue nova em Tribunal de Ideias. RangeError',
+      '• Issue nova em Lumen Notes. TypeError: x is undefined Em app/cart.ts.',
+      '• Issue nova em Lumen Notes. RangeError',
     ])
     expect(many.url).toBe('https://x.dev/all/errors')
   })
@@ -190,15 +190,15 @@ describe('alert text', () => {
       locale: 'en',
       panelUrl: 'https://x.dev',
     })
-    expect(open.title).toBe('purchase_completed stopped on Tribunal de Ideias')
+    expect(open.title).toBe('purchase_completed stopped on Lumen Notes')
     expect(open.body).toBe('None for 1 h; normal for this time is about 12 an hour.')
-    expect(open.url).toBe('https://x.dev/p/tribunal/emergencies/i1')
+    expect(open.url).toBe('https://x.dev/p/lumen/emergencies/i1')
     const back = alertMessage([{ ...stopped, resolved_at: NOW }], 'resolve', {
       now: NOW,
       locale: 'pt-BR',
       panelUrl: 'https://x.dev',
     })
-    expect(back.title).toBe('purchase_completed voltou a chegar em Tribunal de Ideias')
+    expect(back.title).toBe('purchase_completed voltou a chegar em Lumen Notes')
     expect(back.body).toBe('Ficou sem chegar por 1 h.')
   })
 

@@ -8,10 +8,10 @@ describe('areas', () => {
   })
 
   it('reads the scope from the path', () => {
-    expect(scopeOf('/p/trinca/errors')).toEqual({
+    expect(scopeOf('/p/orbita/errors')).toEqual({
       kind: 'product',
-      base: '/p/trinca',
-      slug: 'trinca',
+      base: '/p/orbita',
+      slug: 'orbita',
     })
     expect(scopeOf('/g/clientes/uptime')).toEqual({
       kind: 'group',
@@ -23,12 +23,12 @@ describe('areas', () => {
   })
 
   it('reads the open area from the path', () => {
-    expect(areaOf('/p/trinca/errors')).toBe('errors')
+    expect(areaOf('/p/orbita/errors')).toBe('errors')
     expect(areaOf('/all/money')).toBe('money')
     expect(areaOf('/g/clientes/money')).toBe('money')
     expect(areaOf('/g/clientes/settings')).toBeNull()
-    expect(areaOf('/p/trinca/settings')).toBeNull()
-    expect(areaOf('/p/trinca')).toBeNull()
+    expect(areaOf('/p/orbita/settings')).toBeNull()
+    expect(areaOf('/p/orbita')).toBeNull()
     expect(areaOf('/all')).toBeNull()
   })
 })

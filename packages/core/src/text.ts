@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 
-/** URL-safe identifier from a display name: "Tribunal de Ideias" -> "tribunal-de-ideias". */
+/** URL-safe identifier from a display name: "Orbita de Ideias" -> "orbita-de-ideias". */
 export function slugify(input: string, maxLength = 48): string {
   const slug = input
     .normalize('NFKD')

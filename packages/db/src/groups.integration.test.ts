@@ -23,8 +23,8 @@ describe.skipIf(!url)('groups (needs DATABASE_URL)', () => {
   })
 
   it('groups products of the organization only', async () => {
-    const a = await createProject(db, org, { name: 'Intelibot' })
-    const b = await createProject(db, org, { name: 'Tribunal' })
+    const a = await createProject(db, org, { name: 'Kitebox' })
+    const b = await createProject(db, org, { name: 'Lumen' })
     const foreign = await createProject(db, other, { name: 'Alheio' })
     const group = await createGroup(db, org, {
       name: 'Clientes',

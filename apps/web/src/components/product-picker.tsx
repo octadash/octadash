@@ -43,7 +43,7 @@ interface PickerGroup {
   slug: string
   name: string
   status: ProductStatus
-  /** Its products' names, "Intelibot, Tribunal de Ideias", so the group says what it holds. */
+  /** Its products' names, "Kitebox, Lumen Notes", so the group says what it holds. */
   members: string
 }
 
