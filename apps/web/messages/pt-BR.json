@@ -86,7 +86,10 @@
     "notFound": "Não encontrado.",
     "confirmDelete": "Confirme a exclusão antes.",
     "invalidUrl": "Digite um endereço completo, como https://exemplo.com.br/health.",
-    "monitorName": "Dê um nome ao monitor."
+    "monitorName": "Dê um nome ao monitor.",
+    "ownersOnly": "Só donos podem fazer isso.",
+    "typeName": "Digite o nome exatamente como ele é para confirmar.",
+    "wrongPassword": "A senha atual não está certa."
   },
   "areas": {
     "overview": {
@@ -322,8 +325,87 @@
   "settings": {
     "members": "Membros",
     "channels": "Canais",
-    "alerts": "Alertas",
-    "watcher": "Vigia externo"
+    "alerts": "Regras de alerta",
+    "watcher": "Vigia externo",
+    "nav": "Menu de configurações",
+    "search": "Buscar nas configurações",
+    "none": "Nada encontrado.",
+    "trail": "Onde você está",
+    "sections": {
+      "organization": "Organização",
+      "alerts": "Alertas",
+      "install": "Esta instalação",
+      "you": "Você"
+    },
+    "ownerOnly": "dono",
+    "general": "Geral",
+    "generalKeywords": "nome moeda fuso horário dinheiro excluir",
+    "membersKeywords": "pessoas convidar papéis admin",
+    "productGroups": "Grupos",
+    "channelsKeywords": "email e-mail telegram webhook smtp resend",
+    "organizations": "Organizações",
+    "profile": "Perfil",
+    "profileKeywords": "senha nome email e-mail conta",
+    "productNote": "As chaves, os monitores e as mudanças de alerta de um produto ficam no produto, em Configurações do produto.",
+    "generalPage": {
+      "title": "Organização",
+      "intro": "O nome que todos veem e o padrão para dinheiro e horário.",
+      "nameTitle": "Nome",
+      "name": "Nome da organização",
+      "nameHint": "Aparece no seletor de produtos, nos convites e nas mensagens de alerta.",
+      "save": "Salvar",
+      "saved": "Salvo.",
+      "regionTitle": "Dinheiro e horário",
+      "regionInfoLabel": "Sobre dinheiro e horário",
+      "regionInfo": "As áreas de dinheiro mostram os totais na moeda principal. Cada pagamento guarda a própria moeda e o valor; o total converte pela cotação do dia em que ele aconteceu. O fuso decide onde cada dia começa nos gráficos, no “hoje” e no resumo diário.",
+      "currency": "Moeda principal",
+      "currencyHint": "Os totais aparecem nela. Um pagamento em USD guarda o valor e é convertido pela cotação daquele dia.",
+      "timeZone": "Fuso horário",
+      "timeZoneHint": "Decide quando o “hoje” começa e quando sai o resumo diário.",
+      "dangerTitle": "Zona de perigo",
+      "dangerBody": "Excluir {name} com {count, plural, one {# produto} other {# produtos}}, origens, monitores e todos os dados. Os membros perdem o acesso. Isso não pode ser desfeito; você vai precisar digitar o nome.",
+      "delete": "Excluir organização",
+      "deleteTitle": "Excluir {name}?",
+      "typeName": "Digite {name} para confirmar",
+      "ownersOnly": "Só donos veem isto."
+    },
+    "groupsPage": {
+      "title": "Grupos",
+      "intro": "Conjuntos salvos de produtos, como “Principais”. Escolher um grupo no seletor mostra só os produtos dele, em todas as áreas.",
+      "emptyTitle": "Nenhum grupo ainda",
+      "emptyBody": "Um grupo salva um conjunto de produtos para ver junto. Crie um pelo seletor de produtos, em Novo grupo.",
+      "noProducts": "Nenhum produto",
+      "edit": "Editar",
+      "editLabel": "Editar {name}",
+      "howToCreate": "Grupos novos são criados pelo seletor de produtos no topo, em Novo grupo."
+    },
+    "profilePage": {
+      "title": "Perfil",
+      "intro": "Seu nome, seu e-mail e sua senha. Só você vê isto.",
+      "aboutTitle": "Você",
+      "name": "Seu nome",
+      "nameHint": "Aparece para os outros membros, nos convites e em quem está cuidando de uma emergência.",
+      "email": "E-mail",
+      "emailHint": "Você entra com ele. Ainda não dá para mudar aqui.",
+      "save": "Salvar",
+      "saved": "Salvo.",
+      "passwordTitle": "Senha",
+      "current": "Senha atual",
+      "next": "Nova senha",
+      "nextHint": "Pelo menos 10 caracteres. Suas outras sessões são encerradas.",
+      "change": "Trocar senha",
+      "passwordChanged": "Senha trocada."
+    },
+    "organizationsPage": {
+      "title": "Organizações",
+      "intro": "As organizações de que você faz parte nesta instalação. Cada uma tem os próprios produtos, membros, canais e configurações.",
+      "current": "Aberta agora",
+      "open": "Abrir {name}",
+      "newTitle": "Nova organização",
+      "newBody": "Para outra empresa ou cliente, separada desta. Você será o dono e poderá convidar pessoas para ela.",
+      "name": "Nome",
+      "create": "Criar organização"
+    }
   },
   "channels": {
     "title": "Canais de alerta",

@@ -35,7 +35,7 @@ export function timeZoneGroups(at: Date): { region: string; zones: Choice[] }[] 
     const region = parts.length > 1 ? (parts[0] ?? '') : ''
     const place = (parts.slice(1).join(' / ') || zone).replaceAll('_', ' ')
     const list = groups.get(region) ?? []
-    list.push({ value: zone, label: `${place} (${utcOffset(zone, at)})` })
+    list.push({ value: zone, label: region ? `${place} (${utcOffset(zone, at)})` : zone })
     groups.set(region, list)
   }
   return [...groups]

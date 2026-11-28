@@ -18,11 +18,14 @@ export function RegionFields({
   currencies,
   zones,
   labels,
+  hints,
   initial,
 }: {
   currencies: Choice[]
   zones: { region: string; zones: Choice[] }[]
   labels: { currency: string; timeZone: string }
+  /** What each choice changes, under the field. */
+  hints?: { currency: string; timeZone: string }
   /** Saved values; without them the browser's guess wins. */
   initial?: { currency: string; timeZone: string }
 }) {
@@ -43,7 +46,7 @@ export function RegionFields({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Field label={labels.currency}>
+      <Field label={labels.currency} hint={hints?.currency}>
         <NativeSelect
           name="currency"
           value={currency}
@@ -57,7 +60,7 @@ export function RegionFields({
           ))}
         </NativeSelect>
       </Field>
-      <Field label={labels.timeZone}>
+      <Field label={labels.timeZone} hint={hints?.timeZone}>
         <NativeSelect
           name="timeZone"
           value={timeZone}

@@ -2,6 +2,7 @@ import { listGroups, listOrgMonitors, listProjects } from '@octadash/db'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
+import { HeaderScope } from '@/components/header-scope'
 import { LiveRefresh } from '@/components/live-refresh'
 import { LocaleSwitcher } from '@/components/locale-switcher'
 import { OrgSwitcher } from '@/components/org-switcher'
@@ -49,56 +50,60 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 md:px-8">
-          <ProductPicker
-            products={projects.map((p) => ({
-              id: p.id,
-              slug: p.slug,
-              name: p.name,
-              status: statusOf(p.id),
-            }))}
-            groups={groups.map((g) => ({
-              slug: g.slug,
-              name: g.name,
-              status: statusOfGroup(g.project_ids),
-              members: projects
-                .filter((p) => g.project_ids.includes(p.id))
-                .map((p) => p.name)
-                .join(', '),
-            }))}
-            canCreate={canManage(org.role)}
-            labels={{
-              label: t('picker.label'),
-              all: t('picker.all'),
-              search: t('picker.search'),
-              none: t('picker.none'),
-              new: t('picker.new'),
-              groups: t('picker.groups'),
-              products: t('picker.products'),
-              newGroup: t('picker.newGroup'),
-            }}
-            newGroupLabels={{
-              title: t('groups.newTitle'),
-              intro: t('groups.newIntro'),
-              cancel: t('common.cancel'),
-              create: t('groups.create'),
-            }}
-            groupFormLabels={{
-              name: t('groups.name'),
-              placeholder: t('groups.placeholder'),
-              products: t('groups.products'),
-              search: t('picker.search'),
-              none: t('picker.none'),
-              selected: t('groups.selected', { count: '#' }),
-            }}
-            newProductLabels={{
-              title: t('newProduct.title'),
-              intro: t('newProduct.intro'),
-              name: t('projects.name'),
-              placeholder: t('newProduct.placeholder'),
-              cancel: t('common.cancel'),
-              create: t('projects.create'),
-            }}
-          />
+          <HeaderScope
+            labels={{ org: org.name, settings: t('nav.settings'), trail: t('settings.trail') }}
+          >
+            <ProductPicker
+              products={projects.map((p) => ({
+                id: p.id,
+                slug: p.slug,
+                name: p.name,
+                status: statusOf(p.id),
+              }))}
+              groups={groups.map((g) => ({
+                slug: g.slug,
+                name: g.name,
+                status: statusOfGroup(g.project_ids),
+                members: projects
+                  .filter((p) => g.project_ids.includes(p.id))
+                  .map((p) => p.name)
+                  .join(', '),
+              }))}
+              canCreate={canManage(org.role)}
+              labels={{
+                label: t('picker.label'),
+                all: t('picker.all'),
+                search: t('picker.search'),
+                none: t('picker.none'),
+                new: t('picker.new'),
+                groups: t('picker.groups'),
+                products: t('picker.products'),
+                newGroup: t('picker.newGroup'),
+              }}
+              newGroupLabels={{
+                title: t('groups.newTitle'),
+                intro: t('groups.newIntro'),
+                cancel: t('common.cancel'),
+                create: t('groups.create'),
+              }}
+              groupFormLabels={{
+                name: t('groups.name'),
+                placeholder: t('groups.placeholder'),
+                products: t('groups.products'),
+                search: t('picker.search'),
+                none: t('picker.none'),
+                selected: t('groups.selected', { count: '#' }),
+              }}
+              newProductLabels={{
+                title: t('newProduct.title'),
+                intro: t('newProduct.intro'),
+                name: t('projects.name'),
+                placeholder: t('newProduct.placeholder'),
+                cancel: t('common.cancel'),
+                create: t('projects.create'),
+              }}
+            />
+          </HeaderScope>
           <div className="ml-auto flex items-center gap-2">
             {orgs.length > 1 && (
               <OrgSwitcher
@@ -115,6 +120,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               labels={{
                 account: t('common.account'),
                 members: t('common.members'),
+                profile: t('settings.profile'),
                 signOut: t('common.signOut'),
               }}
             />

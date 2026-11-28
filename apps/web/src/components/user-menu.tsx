@@ -21,7 +21,7 @@ export function UserMenu({
 }: {
   name: string
   email: string
-  labels: { account: string; members: string; signOut: string }
+  labels: { account: string; members: string; profile: string; signOut: string }
 }) {
   const [pending, startTransition] = useTransition()
   return (
@@ -37,6 +37,12 @@ export function UserMenu({
           <span className="truncate text-xs font-normal">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings/profile">
+            <UserIcon />
+            {labels.profile}
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings/members">
             <UsersIcon />

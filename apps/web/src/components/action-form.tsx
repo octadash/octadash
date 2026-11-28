@@ -28,11 +28,14 @@ export function ActionForm({
   children,
   className,
   onDone,
+  doneMessage,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>
   children: ReactNode
   className?: string
   onDone?: () => void
+  /** Said after a success, for forms that stay on the page: "Saved." */
+  doneMessage?: string
 }) {
   const [state, formAction, pending] = useActionState(action, undefined)
   const onDoneRef = useRef(onDone)
@@ -57,6 +60,11 @@ export function ActionForm({
         {state?.error && (
           <p role="alert" className="text-sm text-destructive">
             {state.error}
+          </p>
+        )}
+        {doneMessage && (
+          <p role="status" className="text-sm text-ok">
+            {state?.done && !pending ? doneMessage : ''}
           </p>
         )}
       </PendingContext>
