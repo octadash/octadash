@@ -2,13 +2,11 @@ import { createServer } from 'node:http'
 import { createLogger, OCTADASH_VERSION, parseEnv, workerEnvSchema } from '@octadash/core'
 import { createDb } from '@octadash/db'
 import { PgBoss } from 'pg-boss'
-import { startDiagnosisRunner } from './diagnosis'
 import { registerJobs } from './jobs'
 
 /**
- * The worker runs everything that is not a request: uptime checks, URL
- * diagnostics, alerts, connector syncs, rollups, partition upkeep and retention.
- * Jobs live in Postgres (pg-boss), so there is no Redis to install.
+ * The worker runs everything that is not a request: uptime checks, alerts,
+ * connector syncs, rollups and retention. Jobs live in Postgres (pg-boss).
  */
 const env = parseEnv(workerEnvSchema)
 const log = createLogger('worker', env.LOG_LEVEL)
@@ -20,9 +18,6 @@ const { db, pool } = createDb(env.DATABASE_URL, { max: 5, applicationName: 'octa
 
 await boss.start()
 await registerJobs(boss, db, log)
-const diagnosis = startDiagnosisRunner(db, pool, log, {
-  allowPrivate: env.OCTADASH_DIAGNOSIS_ALLOW_PRIVATE,
-})
 log.info('worker started')
 
 // Health endpoint for Docker/Coolify. It reports the process state and never queries the database.
@@ -44,7 +39,7 @@ async function shutdown(signal: string) {
   log.info({ signal }, 'shutting down')
   healthy = false
   health.close()
-  await Promise.all([diagnosis.stop(), boss.stop({ graceful: true, timeout: 20_000 })])
+  await boss.stop({ graceful: true, timeout: 20_000 })
   await pool.end()
   process.exit(0)
 }

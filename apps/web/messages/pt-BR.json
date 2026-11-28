@@ -42,12 +42,10 @@
     "newTitle": "Novo produto",
     "newIntro": "Cada produto ganha a sua aba, as suas chaves e os seus números.",
     "name": "Nome",
-    "url": "Endereço",
-    "urlHint": "Opcional. O endereço do site, usado pelo diagnóstico e pelo uptime.",
     "create": "Criar produto",
+    "allTitle": "Todos os produtos",
     "emptyTitle": "Nenhum produto ainda",
     "emptyBody": "Adicione o primeiro produto para começar a acompanhar.",
-    "noUrl": "Sem endereço",
     "open": "Abrir",
     "modulesTitle": "O que o Octadash acompanha",
     "modulesIntro": "Cada módulo liga para este produto quando os dados dele começam a chegar.",
@@ -119,110 +117,7 @@
     "invalidCredentials": "E-mail ou senha incorretos.",
     "invitationInvalid": "Este convite não vale mais.",
     "nameRequired": "Dê um nome ao produto.",
-    "invalidUrl": "Esse endereço não parece certo. Exemplo: postato.com.br",
     "notFound": "Não encontrado.",
     "confirmDelete": "Confirme a exclusão antes."
-  },
-  "diagnosis": {
-    "title": "Diagnóstico",
-    "intro": "O que o Octadash vê de fora do site, como alguém que entra pela primeira vez.",
-    "score": "{score} de {total} níveis",
-    "checked": "Verificado {time}",
-    "running": "Analisando o site. Leva até um minuto.",
-    "runAgain": "Rodar de novo",
-    "noUrl": "Coloque o endereço do site nas configurações para diagnosticar.",
-    "neverRan": "Nenhum diagnóstico ainda.",
-    "failed": "O último diagnóstico não terminou: {error}",
-    "toolsTitle": "Ferramentas encontradas",
-    "noTools": "Nenhuma ferramenta conhecida na página ou nos scripts dela.",
-    "status": {
-      "ok": "Respondido",
-      "partial": "Em parte",
-      "missing": "Falta",
-      "unknown": "Não dá para ver de fora"
-    },
-    "levels": {
-      "alive": {
-        "name": "No ar",
-        "question": "Está no ar e seguro de abrir?"
-      },
-      "used": {
-        "name": "Usado",
-        "question": "Você sabe quantas pessoas visitam?"
-      },
-      "breaking": {
-        "name": "Quebrando",
-        "question": "Você fica sabendo quando algo quebra?"
-      },
-      "growing": {
-        "name": "Crescendo",
-        "question": "Você sabe o que as pessoas fazem lá dentro?"
-      },
-      "earning": {
-        "name": "Faturando",
-        "question": "Você vê o dinheiro entrando?"
-      },
-      "understood": {
-        "name": "Entendido",
-        "question": "Está tudo junto em um lugar só?"
-      }
-    },
-    "findings": {
-      "unreachable": "O site não respondeu ({error}).",
-      "blocked_by_alive": "Depende de o site responder.",
-      "reachable": "Responde com HTTP {status}.",
-      "https": {
-        "ok": "Usa HTTPS.",
-        "missing": "Abre sem HTTPS."
-      },
-      "certificate": {
-        "ok": "Certificado válido por mais {days} dias.",
-        "unknown": "Não foi possível ler o certificado."
-      },
-      "certificate_expiring": "O certificado vence em {days} dias.",
-      "certificate_invalid": "O certificado é inválido ou venceu.",
-      "https_redirect": {
-        "ok": "http:// leva o visitante para https://.",
-        "missing": "http:// não leva o visitante para https://."
-      },
-      "speed": {
-        "ok": "A página inicial carregou em {ms} ms.",
-        "other": "A página inicial levou {ms} ms para carregar."
-      },
-      "health": {
-        "ok": "Endpoint de saúde em {path}.",
-        "missing": "Nenhum endpoint de saúde encontrado."
-      },
-      "used_found": "Visitas contadas por {tools}.",
-      "used_missing": "Nenhuma análise de visitas encontrada.",
-      "breaking_found": "Erros acompanhados por {tools}.",
-      "breaking_missing": "Nenhum monitor de erros no site. Se ele roda só no servidor, não dá para ver daqui.",
-      "growing_found": "{tools} está instalado. Os eventos próprios dele não dá para ver de fora.",
-      "growing_missing": "Nenhuma análise de produto encontrada.",
-      "earning_found": "Vende por {tools}. A receita aparece quando o gateway for conectado.",
-      "earning_unknown": "Nenhum checkout na página. O pagamento costuma ficar depois do login.",
-      "understood_later": "O Octadash responde isso quando os outros níveis mandarem dados."
-    },
-    "healthPrompt": {
-      "title": "Próximo passo: um endpoint de saúde",
-      "body": "O uptime usa ele para saber que o app está no ar sem carregar páginas nem acordar o banco. Cole isto no seu agente de IA:",
-      "text": "Crie um endpoint GET /api/health neste app. Ele deve responder HTTP 200 com o JSON '{\"status\":\"ok\"}' e Cache-Control: no-store, em menos de 100 ms, sem autenticação, e não pode consultar o banco de dados nem chamar outros serviços. Adicione um teste para ele."
-    },
-    "all": {
-      "title": "Todos os produtos",
-      "diagnosed": "{count} de {total} produtos diagnosticados",
-      "product": "Produto",
-      "score": "Níveis",
-      "pending": "Analisando",
-      "noUrl": "Sem endereço",
-      "noReport": "Ainda sem diagnóstico",
-      "gaps": {
-        "alive": "{count, plural, one {# produto} other {# produtos}} fora do ar",
-        "used": "{count, plural, one {# produto} other {# produtos}} sem análise de visitas",
-        "breaking": "{count, plural, one {# produto} other {# produtos}} sem monitor de erros",
-        "growing": "{count, plural, one {# produto} other {# produtos}} sem análise de produto"
-      },
-      "allGood": "Todos os produtos diagnosticados respondem os níveis visíveis de fora."
-    }
   }
 }

@@ -1,6 +1,4 @@
 export * from './client'
-export * from './diagnoses'
 export * from './migrate'
-export * from './partitions'
 export * from './projects'
 export type * from './schema'

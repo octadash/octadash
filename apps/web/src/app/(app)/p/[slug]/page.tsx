@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { CopyField } from '@/components/copy-field'
-import { DiagnosisCard } from '@/components/diagnosis/diagnosis-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,21 +31,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
-          {project.url ? (
-            <a
-              href={project.url}
-              className="text-sm text-muted-foreground hover:text-brand"
-              rel="noreferrer"
-              target="_blank"
-            >
-              {project.url.replace(/^https?:\/\//, '')}
-            </a>
-          ) : (
-            <span className="text-sm text-muted-foreground">{t('projects.noUrl')}</span>
-          )}
-        </div>
+        <h1 className="font-display text-2xl font-semibold">{project.name}</h1>
         <Button asChild variant="outline">
           <Link href={`/p/${project.slug}/settings`}>
             <SettingsIcon data-icon="inline-start" />
@@ -54,8 +39,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </Link>
         </Button>
       </div>
-
-      <DiagnosisCard orgId={org.id} project={project} />
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">

@@ -72,13 +72,13 @@ Open http://localhost:3000: the first visit creates the owner account.
 apps/
   web/            Next.js panel, API and MCP server
   ingest/         Hono service that receives data (Sentry, PostHog, OTLP, Octadash)
-  worker/         Jobs: uptime, diagnosis, alerts, syncs, rollups, retention
+  worker/         Jobs: uptime, alerts, syncs, rollups, retention
 packages/
   auth/           Better Auth setup: accounts, organizations, sign-up policy
   core/           Env parsing, logger, ids
-  db/             Kysely client, migrations, partition helpers
-  diagnosis/      Reads a site from outside and grades its observability levels
+  db/             Kysely client and migrations
   integrations/   Plugin contract for alert channels and data sources
+  uptime/         One uptime check: status, response time, redirects, HTTPS, certificate
 docs/             product.md (what and when), architecture.md (how), self-hosting.md
 ```
 

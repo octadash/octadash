@@ -36,9 +36,6 @@ export default async function ProductSettingsPage({
             <Field label={t('projects.name')}>
               <Input name="name" defaultValue={project.name} maxLength={80} required />
             </Field>
-            <Field label={t('projects.url')} hint={t('projects.urlHint')}>
-              <Input name="url" defaultValue={project.url ?? ''} inputMode="url" maxLength={300} />
-            </Field>
             <SubmitButton className="self-start">{t('common.save')}</SubmitButton>
           </ActionForm>
         </CardContent>
