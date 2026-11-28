@@ -366,19 +366,19 @@ Version 1.0 includes every step below. They ship one at a time, in this order.
 Each step ships with its MCP tools (read-only queries for AI assistants) and its
 docs.
 
-| #   | Step                  | Delivers                                                                                                                                                                                         | State |
-| --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
-| 0   | Foundation            | accounts, organizations, products, API keys, setup wizard                                                                                                                                        | done  |
-| 1   | New base              | ClickHouse and Valkey in the install, ingest that answers at once and queues in Valkey, area menu and product picker, product created by name, product page in setup mode, URL diagnosis removed | done  |
-| 2   | Uptime and alerts     | monitors, heartbeats, certificate, seeded rules, emergency strip, channels (email with SMTP and Resend, Telegram, webhook), outside watcher                                                      | next  |
-| 3   | Traffic               | Octadash browser script; first data in ClickHouse; overview starts                                                                                                                               |       |
-| 4   | Errors                | Octadash SDK (browser and Node), Sentry SDK compatibility                                                                                                                                        |       |
-| 5   | Product usage         | events, sign-ups, logins; signals start here                                                                                                                                                     |       |
-| 6   | Money                 | Stripe, Asaas, Paddle                                                                                                                                                                            |       |
-| 7   | AI cost               | Octadash wrapper, OpenTelemetry `gen_ai`                                                                                                                                                         |       |
-| 8   | Infra cost and margin | provider APIs or manual entries                                                                                                                                                                  |       |
-| 9   | Logs                  | OTLP over HTTP                                                                                                                                                                                   |       |
-| 10  | Daily summary         | what changed since yesterday, by email and the alert channels                                                                                                                                    |       |
+| #   | Step                  | Delivers                                                                                                                                                                                         | State       |
+| --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| 0   | Foundation            | accounts, organizations, products, API keys, setup wizard                                                                                                                                        | done        |
+| 1   | New base              | ClickHouse and Valkey in the install, ingest that answers at once and queues in Valkey, area menu and product picker, product created by name, product page in setup mode, URL diagnosis removed | done        |
+| 2   | Uptime and alerts     | monitors, heartbeats, certificate, seeded rules, emergency strip, channels (email with SMTP and Resend, Telegram, webhook), outside watcher                                                      | in progress |
+| 3   | Traffic               | Octadash browser script; first data in ClickHouse; overview starts                                                                                                                               | in progress |
+| 4   | Errors                | Octadash SDK (browser and Node), Sentry SDK compatibility                                                                                                                                        | in progress |
+| 5   | Product usage         | events, sign-ups, logins; signals start here                                                                                                                                                     | in progress |
+| 6   | Money                 | Stripe, Asaas, Paddle                                                                                                                                                                            | in progress |
+| 7   | AI cost               | Octadash wrapper, OpenTelemetry `gen_ai`                                                                                                                                                         | in progress |
+| 8   | Infra cost and margin | provider APIs or manual entries                                                                                                                                                                  | in progress |
+| 9   | Logs                  | OTLP over HTTP                                                                                                                                                                                   | in progress |
+| 10  | Daily summary         | what changed since yesterday, by email and the alert channels                                                                                                                                    | next        |
 
 Rules that apply to every step:
 
