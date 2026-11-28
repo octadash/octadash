@@ -1,6 +1,7 @@
 import { getMonitor, getOrganizationSettings, getProjectBySlug } from '@octadash/db'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
+import { DeleteMonitorDialog } from '@/components/delete-monitor-dialog'
 import { HeartbeatCalls } from '@/components/heartbeat-calls'
 import { MonitorFormPage } from '@/components/monitor-form-page'
 import { services } from '@/server/context'
@@ -19,11 +20,13 @@ export default async function EditMonitorPage({
   const { added } = await searchParams
   const { org } = await requireManager()
   const { db, clickhouse } = services()
-  const [project, monitor, settings, t] = await Promise.all([
+  const [project, monitor, settings, t, tu, common] = await Promise.all([
     getProjectBySlug(db, org.id, slug),
     getMonitor(db, org.id, monitorId),
     getOrganizationSettings(db, org.id),
     getTranslations('monitorForm'),
+    getTranslations('uptime'),
+    getTranslations('common'),
   ])
   if (!project || !monitor || monitor.project_id !== project.id) notFound()
   const stats =
@@ -71,6 +74,27 @@ export default async function EditMonitorPage({
           />
         )}
       </MonitorFormPage>
+      <section
+        aria-labelledby="delete-title"
+        className="flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4"
+      >
+        <div className="flex flex-col gap-0.5">
+          <h2 id="delete-title" className="text-sm font-semibold">
+            {t('deleteTitle')}
+          </h2>
+          <p className="text-sm text-muted-foreground">{tu('deleteBody')}</p>
+        </div>
+        <DeleteMonitorDialog
+          monitorId={monitor.id}
+          back={`/p/${project.slug}/uptime`}
+          labels={{
+            trigger: tu('delete'),
+            title: tu('deleteTitle', { name: monitor.name }),
+            body: tu('deleteBody'),
+            cancel: common('cancel'),
+          }}
+        />
+      </section>
     </>
   )
 }

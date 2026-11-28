@@ -125,7 +125,11 @@
     "wrongPassword": "The current password is not right.",
     "lastOwner": "The organization needs at least one owner. Make someone else owner first.",
     "notYourself": "You can’t remove yourself here.",
-    "invalidCron": "Five fields: minute, hour, day of month, month, weekday. For example 0 3 * * * is every day at 3:00."
+    "invalidCron": "Five fields: minute, hour, day of month, month, weekday. For example 0 3 * * * is every day at 3:00.",
+    "pickOne": "Pick at least one emergency.",
+    "writeNote": "Write the note first.",
+    "writeWhy": "Say why you are closing it.",
+    "noteTooLong": "Keep it under {max} characters."
   },
   "areas": {
     "overview": {
@@ -302,15 +306,8 @@
     "empty": "No monitor yet. Start with the site address; add a /health endpoint and a heartbeat for cron jobs later.",
     "name": "Name",
     "kind": "Type",
-    "kindSite": "Site",
-    "kindHealth": "API or /health",
-    "kindHeartbeat": "Heartbeat",
-    "kindSiteHint": "Opens the address like a visitor and expects a page.",
-    "kindHealthHint": "Expects 2xx and an answer that is not HTML, so a framework's error page does not count as up.",
-    "kindHeartbeatHint": "A cron job or backup calls an Octadash URL when it runs. Silence longer than the interval is an outage.",
     "url": "Address",
     "interval": "Check every",
-    "intervalHeartbeat": "Expected every",
     "grace": "Grace",
     "graceHint": "Extra time before silence counts as an outage, for jobs that take a while.",
     "seconds": "{count} s",
@@ -319,30 +316,13 @@
     "none": "None",
     "save": "Save",
     "create": "Add monitor",
-    "wakeTitle": "A page that queries the database wakes it on every check",
-    "wakeBody": "Databases like Neon suspend after 5 minutes idle and bill while awake. A check every minute on a page that reads the database keeps it awake all day. Point the monitor at a /health endpoint that answers without a query, or check this page every 5 minutes or more.",
-    "healthTitle": "A /health endpoint that never touches the database",
-    "healthBody": "It answers as long as the process runs. Pick your stack and paste it:",
-    "statusUp": "Up",
-    "statusDown": "Down",
-    "statusUnknown": "Waiting for the first check",
-    "statusPaused": "Paused",
-    "since": "since {time}",
-    "uptime30": "Uptime (30 days)",
     "response": "Response",
     "certificate": "Certificate",
     "certDays": "{count, plural, one {# day} other {# days}}",
-    "lastCheck": "Last check",
     "never": "never",
-    "pingUrl": "Ping URL",
-    "pingHint": "Call it at the end of the job. Example for cron:",
     "sameServerTitle": "Same server as Octadash",
     "sameServerBody": "This address points to the server Octadash runs on. If the server goes down, Octadash goes down with it and nobody is told. Set up the outside watcher in the settings, or monitor this product from another server.",
-    "productsTitle": "Uptime of every product",
-    "noMonitors": "no monitor",
     "monitors": "{count, plural, one {# monitor} other {# monitors}}",
-    "openArea": "Open Uptime",
-    "setUpHere": "Set up",
     "failure": {
       "timeout": "No answer in time",
       "refused": "Connection refused",
@@ -356,7 +336,11 @@
       "private": "Points to a private address",
       "tooManyRedirects": "Too many redirects",
       "other": "{code}"
-    }
+    },
+    "statusUp": "Up",
+    "statusDown": "Down",
+    "statusUnknown": "Waiting for the first check",
+    "statusPaused": "Paused"
   },
   "settings": {
     "members": "Members",
@@ -828,6 +812,204 @@
       "title": "Why heartbeats",
       "body": "A backup that stops running fails in silence: nothing is down, nothing errors, and you find out the day you need it. A heartbeat turns silence into an emergency.",
       "good": "Good for backups, cron jobs, queue workers, certificate renewals and nightly imports."
+    },
+    "deleteTitle": "Delete this monitor"
+  },
+  "uptimeBoard": {
+    "intro": "Every monitor, problems first. Checked from this server, each on its own interval.",
+    "incomplete": "Some numbers did not load. The states are current; uptime, response times and bars come back when the data store answers.",
+    "totals": "Totals",
+    "periods": {
+      "24h": "24 hours",
+      "7d": "7 days",
+      "45d": "45 days",
+      "90d": "90 days"
+    },
+    "periodShort": {
+      "24h": "24h",
+      "7d": "7d",
+      "45d": "45d",
+      "90d": "90d"
+    },
+    "periodsLabel": "Period",
+    "state": {
+      "paused": "Paused",
+      "waiting": "Waiting for the first check",
+      "waitingCall": "Waiting for the first call",
+      "late": "Late · due {time}",
+      "slow": "Slow · {time}",
+      "called": "Called {time} ago",
+      "up": "Up",
+      "down": "Down {time}",
+      "downWhy": "Down {time} · {reason}"
+    },
+    "bars": {
+      "none": "No checks in this period",
+      "hours": "{bad, plural, =0 {No failures in the last {count} hours} other {Failures in # of the last {count} hours}}",
+      "days": "{bad, plural, =0 {No failures in the last {count} days} other {Failures on # of the last {count} days}}"
+    },
+    "kind": {
+      "site": "Site",
+      "health": "API",
+      "heartbeat": "Heartbeat"
+    },
+    "tiles": {
+      "upNow": "Up now",
+      "upNowValue": "{up} of {total}",
+      "downOn": "{count} down on {products, plural, one {# product} other {# products}}",
+      "allUp": "All up",
+      "uptime": "Uptime, {period}",
+      "weighted": "All monitors, weighted by checks",
+      "response": "Response, median",
+      "noPrevious": "Nothing to compare with yet",
+      "vsPrevious": "{change}% vs previous {period}",
+      "certificates": "Certificates",
+      "expiring": "{count} expiring",
+      "noneExpiring": "None expiring",
+      "firstExpiring": "{product} in {days}",
+      "noneWithin": "None in the next {days} days"
+    },
+    "sameIp": {
+      "label": "Same address",
+      "title": "{products} went down {minutes, plural, =0 {at the same time} one {# minute apart} other {# minutes apart}}, on the same IP.",
+      "body": "{count, plural, =2 {Both resolve} other {All resolve}} to {ip}, so it may be that server. The control addresses answer normally, so Octadash's own network is fine. Each one stays its own emergency.",
+      "see": "See {product}"
+    },
+    "sameServer": "{monitors} point to the server Octadash runs on.",
+    "filters": "Filter by state",
+    "filter": {
+      "all": "All",
+      "down": "Down",
+      "lateOrSlow": "Late or slow",
+      "paused": "Paused"
+    },
+    "search": "Search monitors or products",
+    "product": "Product",
+    "now": "Now",
+    "last": "Last {period}",
+    "actions": "Actions",
+    "expand": "Show monitors",
+    "collapse": "Hide monitors",
+    "open": "Open product uptime",
+    "more": "# more products, all up",
+    "show": "Show",
+    "without": "{count, plural, one {# product has no monitor} other {# products have no monitor}}",
+    "nothing": "No monitor matches.",
+    "uptimeColumn": "Uptime"
+  },
+  "emergency": {
+    "trail": "Breadcrumb",
+    "emergencies": "Emergencies",
+    "side": "About this emergency",
+    "level": {
+      "emergency": "Emergency",
+      "signal": "Signal"
+    },
+    "ongoing": "ongoing",
+    "over": "over",
+    "area": {
+      "uptime": "Uptime",
+      "other": "Octadash"
+    },
+    "started": "Started {time} · {duration}",
+    "titles": {
+      "monitor_down": "{product} · {name} is down",
+      "heartbeat_missed": "{product} · {name} did not run",
+      "cert_expiring": "{product} · certificate expires in {days} days",
+      "other": "{product} · {name}"
+    },
+    "httpStatus": "HTTP {code}",
+    "summary": {
+      "down": "{reason} on the last {count, plural, one {check} other {# checks}}. It closes on its own when a check passes again.",
+      "heartbeat": "{reason}. It closes on its own when the job calls again.",
+      "other": "It closes on its own when the check passes again.",
+      "closed": "Over at {time}, after {duration}."
+    },
+    "onIt": "{name} is on it · since {time}",
+    "nobody": "Nobody on it yet",
+    "imOnIt": "I'm on it",
+    "takeOver": "Take over",
+    "close": {
+      "trigger": "Close anyway",
+      "title": "Close this emergency?",
+      "body": "For a false alarm, or a fix the checks don't see yet. Everyone sees who closed it and why. If the monitor recovers and fails again, a new emergency opens.",
+      "why": "Why"
+    },
+    "chart": {
+      "title": "Checks around it",
+      "response": "Response time",
+      "codes": "Results",
+      "showTable": "Show as a table",
+      "hideTable": "Hide the table",
+      "time": "Time",
+      "result": "Result",
+      "ms": "ms",
+      "count": "Checks",
+      "failure": "{reason} from {time}",
+      "noChecks": "No checks recorded in this window.",
+      "unavailable": "The checks did not load. The rest of the page is current.",
+      "call": "Call"
+    },
+    "happened": "What happened",
+    "entry": {
+      "firstFailure": "First failed check: {reason}",
+      "firstFailureIn": "First failed check: {reason} in {ms} ms",
+      "openedAfter": "{count, plural, one {Failed check} other {# failures in a row}}: emergency opened",
+      "opened": "Emergency opened",
+      "sameIp": "{product} · {name} went down at {time} on the same IP.",
+      "told": "Channels told",
+      "toldOver": "Channels told it is over",
+      "sent": "sent",
+      "failed": "failed",
+      "took": "{name} pressed “I'm on it”",
+      "tookHint": "Repeats stopped. Everyone sees it live.",
+      "tookOver": "{name} took over",
+      "closed": "{name} closed it:",
+      "resolved": "A check passed: emergency over"
+    },
+    "notePlaceholder": "Add a note for the team…",
+    "addNote": "Add note",
+    "checked": {
+      "title": "What Octadash checked",
+      "infoLabel": "About these checks",
+      "info": "When a monitor goes down, Octadash looks around once: where the name points, the certificate, what the server answered, and whether addresses that always answer do from here. If those answer, Octadash's own network is fine and the problem is on the product's side.",
+      "dns": "DNS",
+      "noDns": "{host} does not resolve",
+      "tls": "TLS certificate",
+      "tlsValid": "valid, {days} days",
+      "tlsUntrusted": "not trusted",
+      "response": "Response",
+      "control": "Control {target}",
+      "answers": "answers in {ms} ms",
+      "noAnswer": "no answer",
+      "sameServer": "Same server as Octadash",
+      "sameYes": "yes, same address",
+      "sameNo": "no, different IP",
+      "ok": "passed",
+      "fail": "failed",
+      "verdictServer": "Octadash reaches the internet and the address resolves, so the problem is behind {ip}.",
+      "verdictDns": "Octadash reaches the internet but the name does not resolve: look at the domain's DNS.",
+      "verdictNetwork": "Some control addresses did not answer either: part of the problem may be on Octadash's side."
+    },
+    "sameTime": {
+      "title": "Down at the same time",
+      "sameIp": "Same IP ({ip}) as some of them. They may be the same problem or not; you decide. Each emergency stays separate.",
+      "onIt": "{name} is on it",
+      "nobody": "nobody on it",
+      "submit": "I'm on these too"
+    },
+    "last": {
+      "title": "Last time",
+      "body": "{date}, {minutes} min down.",
+      "see": "See it",
+      "never": "First time this happened."
+    },
+    "onItYou": "You are on it · since {time}",
+    "titlesOver": {
+      "monitor_down": "{product} · {name} was down",
+      "heartbeat_missed": "{product} · {name} did not run",
+      "cert_expiring": "{product} · certificate was close to expiring",
+      "other": "{product} · {name}"
     }
   }
 }

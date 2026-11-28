@@ -82,6 +82,19 @@ describe('checkUrl', () => {
     expect(result.durationMs).toBeGreaterThanOrEqual(0)
   })
 
+  it('says which address the host resolved to, even when it fails', async () => {
+    const up = await checkUrl('http://203.0.113.7/', {
+      allowPrivate: true,
+      fetch: fakeFetch({ 'http://203.0.113.7/': () => new Response('ok') }),
+    })
+    expect(up.ip).toBe('203.0.113.7')
+    const down = await checkUrl('http://203.0.113.8/', {
+      allowPrivate: true,
+      fetch: fakeFetch({ 'http://203.0.113.8/': () => new Response('bad', { status: 502 }) }),
+    })
+    expect(down).toMatchObject({ up: false, ip: '203.0.113.8', error: 'HTTP 502' })
+  })
+
   it('skips the slow parts unless asked', async () => {
     const result = await checkUrl('https://example.com/', {
       allowPrivate: true,

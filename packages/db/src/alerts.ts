@@ -1,6 +1,7 @@
 import { uuidv7 } from '@octadash/core'
 import { sql } from 'kysely'
 import type { Db } from './client'
+import { addIncidentEvents } from './emergency'
 import type { AlertLevel } from './schema'
 
 /**
@@ -268,7 +269,7 @@ export async function acknowledgeIncidents(
   at: Date,
 ) {
   if (ids.length === 0) return []
-  return db
+  const taken = await db
     .updateTable('incident')
     .set({ acknowledged_at: at, acknowledged_by: userId })
     .where('org_id', '=', orgId)
@@ -278,6 +279,8 @@ export async function acknowledgeIncidents(
     .returning('id')
     .execute()
     .then((rows) => rows.map((row) => row.id))
+  await addIncidentEvents(db, orgId, taken, userId, 'took', null, at)
+  return taken
 }
 
 /**

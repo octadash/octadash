@@ -11,7 +11,14 @@ import {
   trafficSeriesByProduct,
   trafficSummary,
 } from './traffic'
-import { insertUptimeChecks, monitorStats, responseSeries, uptimeHistory } from './uptime'
+import {
+  insertUptimeChecks,
+  monitorChecks,
+  monitorStats,
+  responseSeries,
+  uptimeHistory,
+  uptimeTotals,
+} from './uptime'
 
 const url = process.env.CLICKHOUSE_URL
 
@@ -116,6 +123,12 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
       medianMs: 200,
     })
     expect(s?.uptime).toBeCloseTo(2 / 3)
+    const checks = await monitorChecks(client, org, monitor, new Date(0), new Date())
+    expect(checks.map((c) => [c.up, c.statusCode, c.error])).toEqual([
+      [true, 200, ''],
+      [true, 200, ''],
+      [false, 503, 'HTTP 503'],
+    ])
     expect(Math.abs((s?.lastAt?.getTime() ?? 0) - (Date.now() - 60_000))).toBeLessThan(5_000)
   })
 
@@ -253,5 +266,15 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     expect(response).toHaveLength(24)
     expect(response[0]?.medianMs).toBe(100)
     expect(response[1]?.medianMs).toBeNull()
+    expect(await uptimeTotals(client, { ...scope, projectIds: [a] })).toEqual({
+      checks: 3,
+      ups: 2,
+      medianMs: 100,
+    })
+    expect(await uptimeTotals(client, { ...scope, projectIds: [] })).toEqual({
+      checks: 0,
+      ups: 0,
+      medianMs: null,
+    })
   })
 })

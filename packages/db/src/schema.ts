@@ -20,6 +20,7 @@ export interface Database {
   channel: ChannelTable
   alert_rule: AlertRuleTable
   incident: IncidentTable
+  incident_event: IncidentEventTable
   notification: NotificationTable
   product_group: ProductGroupTable
   product_group_member: ProductGroupMemberTable
@@ -191,6 +192,18 @@ export interface IncidentTable {
   acknowledged_by: string | null
   notified_open_at: Date | null
   notified_resolve_at: Date | null
+}
+
+export type IncidentEventKind = 'took' | 'note' | 'closed'
+
+export interface IncidentEventTable {
+  id: string
+  org_id: string
+  incident_id: string
+  user_id: string | null
+  kind: IncidentEventKind
+  body: string | null
+  at: ColumnType<Date, Date | undefined, never>
 }
 
 export interface NotificationTable {

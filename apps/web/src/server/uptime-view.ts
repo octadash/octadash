@@ -13,12 +13,18 @@ export async function safeMonitorStats(
   }
 }
 
-/** "99.95%" with two decimals only when they matter. */
-export function formatUptime(ratio: number | null): string {
+/** "99.95%" (or "99,95%") with two decimals only when they matter. */
+export function formatUptime(ratio: number | null, locale = 'en'): string {
   if (ratio === null) return '–'
   const percent = ratio * 100
-  if (percent === 100 || percent === 0) return `${percent}%`
-  return `${percent.toFixed(percent >= 99 ? 2 : 1)}%`
+  const digits = percent === 100 || percent === 0 ? 0 : percent >= 99 ? 2 : 1
+  // Truncated, not rounded: 99.996% must not read as 100%.
+  const factor = 10 ** (digits + 2)
+  return new Intl.NumberFormat(locale, {
+    style: 'percent',
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(Math.floor(ratio * factor) / factor)
 }
 
 export { type ProductUptime, productUptime } from '@/lib/monitors'

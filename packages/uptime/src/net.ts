@@ -41,19 +41,30 @@ export class BlockedAddressError extends Error {
   override name = 'BlockedAddressError'
 }
 
-/** Throws when the URL is not http(s) or its host resolves to a private address. */
-export async function assertPublicUrl(url: URL, allowPrivate: boolean): Promise<void> {
+/**
+ * Throws when the URL is not http(s) or its host resolves to a private address.
+ * Returns the first address the host resolves to, so a check can say which
+ * server answered (two products down on the same address point to one server).
+ */
+export async function assertPublicUrl(url: URL, allowPrivate: boolean): Promise<string | null> {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     throw new BlockedAddressError(`unsupported protocol ${url.protocol}`)
   }
-  if (allowPrivate) return
   const host = url.hostname.replace(/^\[|\]$/g, '')
+  if (allowPrivate) {
+    if (isIP(host)) return host
+    return lookup(host, { verbatim: true }).then(
+      (entry) => entry.address,
+      () => null,
+    )
+  }
   const addresses = isIP(host)
     ? [host]
     : (await lookup(host, { all: true, verbatim: true })).map((entry) => entry.address)
   if (addresses.length === 0 || addresses.some(isPrivateAddress)) {
     throw new BlockedAddressError(`${host} resolves to a private address`)
   }
+  return addresses[0] ?? null
 }
 
 /** Reads a response body as text, stopping at `limit` bytes. */
