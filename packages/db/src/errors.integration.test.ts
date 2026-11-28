@@ -13,6 +13,7 @@ import {
   issueStats,
 } from './clickhouse/errors'
 import { migrateClickHouse } from './clickhouse/migrate'
+import { sourcesLastData } from './clickhouse/sources'
 import { createDb } from './client'
 import {
   countIssues,
@@ -235,6 +236,15 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
   })
 
   const scope = { orgId: org, projectIds: [project], from: T0, to: later(120) }
+
+  it('tells when each source last sent anything', async () => {
+    const last = await sourcesLastData(client, org, [project], T0)
+    expect(last.get('00000000-0000-0000-0000-000000000000')?.toISOString()).toBe(
+      later(90).toISOString(),
+    )
+    expect((await sourcesLastData(client, org, [project], later(91))).size).toBe(0)
+    expect((await sourcesLastData(client, org, [], T0)).size).toBe(0)
+  })
 
   it('counts events, issues and people, and draws the series', async () => {
     const one = { ...scope, from: later(-1), to: later(24) }

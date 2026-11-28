@@ -1879,7 +1879,17 @@
         "30d": "See the last 30 days"
       },
       "openLast": "Open the issue",
-      "resolved": "See resolved issues ({count})"
+      "resolved": "See resolved issues ({count})",
+      "real": "Every source set for Errors sent data in this period, so this zero is real, not silence.",
+      "sourcesTitle": "Sources that send errors",
+      "sending": "Sending · last data {ago}",
+      "silentSince": "Nothing in this period · last data {ago}",
+      "silentMonth": "Nothing in the last 30 days",
+      "sendingNote": "“Sending” means the source sent any data (a page view, an event, a log or an error) in the period.",
+      "silentTitle": "{count, plural, one {A source sent nothing in this period} other {# sources sent nothing in this period}}",
+      "silentBody": "{sources} sent nothing {period}. {count, plural, one {Its zero errors may be only silence} other {Their zero errors may be only silence}}: check that the SDK or the script is still on after the last deploy.",
+      "silentMore": "{count, plural, one {And # more.} other {And # more.}}",
+      "openSource": "See {source}"
     },
     "products": {
       "title": "No product sends errors yet",

@@ -1879,7 +1879,17 @@
         "30d": "Ver os últimos 30 dias"
       },
       "openLast": "Abrir a issue",
-      "resolved": "Ver issues resolvidas ({count})"
+      "resolved": "Ver issues resolvidas ({count})",
+      "real": "Todas as origens de Erros enviaram dados neste período, então este zero é zero de verdade, não silêncio.",
+      "sourcesTitle": "Origens que enviam erros",
+      "sending": "Enviando · último dado {ago}",
+      "silentSince": "Nada neste período · último dado {ago}",
+      "silentMonth": "Nada nos últimos 30 dias",
+      "sendingNote": "“Enviando” quer dizer que a origem mandou qualquer dado (visita, evento, log ou erro) no período.",
+      "silentTitle": "{count, plural, one {Uma origem não enviou nada no período} other {# origens não enviaram nada no período}}",
+      "silentBody": "{sources} não {count, plural, one {enviou} other {enviaram}} nada {period}. Zero erro {count, plural, one {dela} other {delas}} pode ser só silêncio: confira se o SDK ou o script continua ligado depois do último deploy.",
+      "silentMore": "{count, plural, one {E mais #.} other {E mais #.}}",
+      "openSource": "Ver {source}"
     },
     "products": {
       "title": "Nenhum produto envia erros ainda",

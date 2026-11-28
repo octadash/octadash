@@ -258,6 +258,8 @@ export async function ErrorsView({
       <div className="flex flex-col gap-6">
         {header}
         <ErrorsQuiet
+          orgId={orgId}
+          from={data.period.from}
           setup={sendingSetup}
           path={path}
           state={state}

@@ -44,6 +44,8 @@ export interface ProductSetup extends ErrorsSetup {
   product: { id: string; name: string; slug: string }
   /** The issue seen last, of any age and status. */
   last: { id: string; type: string; value: string; lastSeen: Date } | null
+  /** Sources set to send errors. */
+  errorSources: { id: string; name: string }[]
 }
 
 export interface ErrorsData {
@@ -152,6 +154,9 @@ export async function loadErrors(
     .map((p) => ({
       product: { id: p.id, name: p.name, slug: p.slug },
       last: last.get(p.id) ?? null,
+      errorSources: sources
+        .filter((s) => s.project_id === p.id && s.areas.includes('errors'))
+        .map((s) => ({ id: s.id, name: s.name })),
       ...errorsSetup({
         sources: sources.filter((s) => s.project_id === p.id),
         hadIssue: last.has(p.id),
