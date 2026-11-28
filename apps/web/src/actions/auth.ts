@@ -2,6 +2,7 @@
 
 import { needsSetup } from '@octadash/auth'
 import { slugify } from '@octadash/core'
+import { isCurrency, isTimeZone, saveOrganizationSettings } from '@octadash/db'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -16,26 +17,29 @@ const setupSchema = z.object({
   email: z.email(),
   password: z.string().min(10),
   orgName: z.string().trim().min(1),
+  currency: z.string().refine(isCurrency),
+  timeZone: z.string().refine(isTimeZone),
 })
 
-/** First run: creates the owner account and the first organization. */
+/** First run: creates the owner account and the first organization, with its currency and time zone. */
 export async function setupAction(_: FormState, formData: FormData): Promise<FormState> {
   const t = await getTranslations('errors')
-  const { auth, pool } = services()
+  const { auth, pool, db } = services()
   if (!(await needsSetup(pool))) redirect('/sign-in')
 
   const parsed = setupSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { error: t('checkFields') }
-  const { name, email, password, orgName } = parsed.data
+  const { name, email, password, orgName, currency, timeZone } = parsed.data
 
   try {
     const { user } = await auth.api.signUpEmail({
       body: { name, email, password },
       headers: await headers(),
     })
-    await auth.api.createOrganization({
+    const org = await auth.api.createOrganization({
       body: { name: orgName, slug: `${slugify(orgName)}-${user.id.slice(0, 6)}`, userId: user.id },
     })
+    if (org) await saveOrganizationSettings(db, org.id, { currency, timeZone })
   } catch (error) {
     return { error: errorMessage(error, t('generic')) }
   }

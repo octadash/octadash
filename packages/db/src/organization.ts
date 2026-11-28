@@ -63,3 +63,87 @@ export async function saveOrganizationSettings(
     )
     .execute()
 }
+
+/** True once someone hid the "Get started" list of this organization. */
+export async function isGetStartedHidden(db: Db, orgId: string): Promise<boolean> {
+  const row = await db
+    .selectFrom('organization_settings')
+    .select('get_started_hidden_at')
+    .where('org_id', '=', orgId)
+    .executeTakeFirst()
+  return Boolean(row?.get_started_hidden_at)
+}
+
+/** Hides the "Get started" list for everyone in the organization. */
+export async function hideGetStarted(db: Db, orgId: string, at = new Date()) {
+  await db
+    .insertInto('organization_settings')
+    .values({ org_id: orgId, get_started_hidden_at: at })
+    .onConflict((oc) => oc.column('org_id').doUpdateSet({ get_started_hidden_at: at }))
+    .execute()
+}
+
+/** The steps of "Get started", in the order the list shows them. */
+export const GET_STARTED_STEPS = ['product', 'area', 'alerts', 'watcher', 'invite'] as const
+export type GetStartedStep = (typeof GET_STARTED_STEPS)[number]
+
+/**
+ * Which "Get started" steps the organization has done: a product, one area
+ * set up (a monitor, a data source or an area marked set up), a channel that
+ * can receive alerts, the install's outside watcher, and someone invited.
+ */
+export async function getStartedProgress(
+  db: Db,
+  orgId: string,
+): Promise<Record<GetStartedStep, boolean>> {
+  const row = await db
+    .selectNoFrom((eb) => [
+      eb.exists(eb.selectFrom('project').select('id').where('org_id', '=', orgId)).as('product'),
+      eb
+        .or([
+          eb.exists(eb.selectFrom('monitor').select('id').where('org_id', '=', orgId)),
+          eb.exists(eb.selectFrom('source').select('id').where('org_id', '=', orgId)),
+          eb.exists(
+            eb
+              .selectFrom('project_area')
+              .select('project_id')
+              .where('org_id', '=', orgId)
+              .where('state', '=', 'set_up'),
+          ),
+        ])
+        .as('area'),
+      eb
+        .exists(
+          eb
+            .selectFrom('channel')
+            .select('id')
+            .where('org_id', '=', orgId)
+            .where('enabled', '=', true),
+        )
+        .as('alerts'),
+      eb
+        .exists(
+          eb.selectFrom('octadash_instance').select('id').where('watcher_url', 'is not', null),
+        )
+        .as('watcher'),
+      eb
+        .or([
+          eb.exists(
+            eb.selectFrom('auth_invitation').select('id').where('organizationId', '=', orgId),
+          ),
+          // Someone besides the first member.
+          eb.exists(
+            eb.selectFrom('auth_member').select('id').where('organizationId', '=', orgId).offset(1),
+          ),
+        ])
+        .as('invite'),
+    ])
+    .executeTakeFirstOrThrow()
+  return {
+    product: Boolean(row.product),
+    area: Boolean(row.area),
+    alerts: Boolean(row.alerts),
+    watcher: Boolean(row.watcher),
+    invite: Boolean(row.invite),
+  }
+}

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { dismissAreaAction, restoreAreaAction } from '@/actions/areas'
+import { GetStarted } from '@/components/get-started'
 import { MetricChart } from '@/components/metric-chart'
 import { StatusDot } from '@/components/status-dot'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import { AREA_ITEMS } from '@/lib/areas'
 import { parsePeriod } from '@/lib/period'
 import { cn } from '@/lib/utils'
 import { services } from '@/server/context'
+import { loadGetStarted } from '@/server/get-started'
 import type { TimelineItem } from '@/server/overview'
 import { loadProductPage, type MonitorLine } from '@/server/product-page'
 import { canManage, requireOrg } from '@/server/session'
@@ -48,11 +50,12 @@ export default async function ProductPage({
   const { org } = await requireOrg()
   const project = await getProjectBySlug(services().db, org.id, slug)
   if (!project) notFound()
-  const [data, t, tOverview, locale] = await Promise.all([
+  const [data, t, tOverview, locale, getStarted] = await Promise.all([
     loadProductPage(org.id, project, parsePeriod(periodParam)),
     getTranslations(),
     getTranslations('overview'),
     getLocale(),
+    loadGetStarted(org),
   ])
   const { overview, states, monitors, response } = data
   const { period, timeZone, traffic, uptime } = overview
@@ -121,6 +124,8 @@ export default async function ProductPage({
         }
         t={tOverview}
       />
+
+      {getStarted && <GetStarted data={getStarted} />}
 
       {!overview.complete && (
         <p role="status" className="rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm">
@@ -192,7 +197,7 @@ export default async function ProductPage({
         />
       )}
 
-      <section aria-labelledby="areas-title" className="flex flex-col gap-3">
+      <section id="areas" aria-labelledby="areas-title" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="areas-title" className="text-lg font-semibold">
             {t('productPage.areas')}

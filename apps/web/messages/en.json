@@ -13,19 +13,19 @@
   },
   "auth": {
     "setupTitle": "Welcome to Octadash",
-    "setupIntro": "Create the owner account and your organization. Only you can invite other people after this.",
+    "setupIntro": "This install has no owner yet. You will be the owner and can invite other people afterwards.",
     "name": "Your name",
     "email": "Email",
     "password": "Password",
     "passwordHint": "At least 10 characters.",
-    "orgName": "Organization",
+    "orgName": "Name",
     "orgNameHint": "Your company or your own name. Products live inside it.",
-    "createAccount": "Create account",
+    "createAccount": "Create account and organization",
     "signInTitle": "Sign in",
     "signIn": "Sign in",
     "inviteTitle": "Join {org}",
-    "inviteIntro": "You were invited as {role}. Create your account to join.",
-    "join": "Create account and continue",
+    "inviteIntro": "{inviter} invited you as {role}. You will see all products of {org}.",
+    "join": "Create account and join",
     "acceptTitle": "Join {org}",
     "acceptIntro": "You are signed in as {email}.",
     "accept": "Join organization",
@@ -33,13 +33,19 @@
     "invitationInvalid": "This invitation does not exist, was used or expired. Ask for a new one.",
     "noOrgTitle": "No organization",
     "noOrgBody": "Your account is not part of any organization. Ask an owner for an invitation.",
-    "haveAccount": "Already have an account? Sign in first."
+    "haveAccount": "Already have an account? Sign in first.",
+    "step": "Step {step} of {total}",
+    "orgSection": "Your organization",
+    "currency": "Main currency",
+    "timeZone": "Time zone",
+    "regionHint": "Currency and time zone come from your browser. Money in other currencies keeps its original value and is shown converted. “Today” and the daily summary follow this time zone.",
+    "someone": "Someone"
   },
   "projects": {
     "name": "Name",
     "create": "Create product",
     "emptyTitle": "No products yet",
-    "emptyBody": "Add your first product to start watching it.",
+    "emptyBody": "Create the first one to start. Only the name.",
     "open": "Open",
     "keysTitle": "Ingest keys",
     "keysIntro": "Use these when connecting SDKs. They identify the product and are safe to put in a browser.",
@@ -50,7 +56,9 @@
     "dangerTitle": "Delete product",
     "dangerBody": "Deletes the product, its keys and all its data. This cannot be undone.",
     "deleteDialogTitle": "Delete {name}?",
-    "delete": "Delete product"
+    "delete": "Delete product",
+    "emptyMember": "Ask an admin to add the first product.",
+    "createShort": "Create"
   },
   "members": {
     "title": "Members",
@@ -136,8 +144,13 @@
   },
   "newProduct": {
     "title": "New product",
-    "intro": "Just the name. Where it runs and how the data gets in you choose later, in each area.",
-    "placeholder": "e.g. Tribunal de Ideias"
+    "intro": "Just the name. Where it runs and how data gets in, you choose later, in each area.",
+    "placeholder": "e.g. My online store",
+    "name": "Product name",
+    "firstTitle": "What’s your first product?",
+    "firstIntro": "A site, an app or a SaaS you run. The others you add later from the product picker, one by one.",
+    "nextTitle": "What comes next",
+    "nextBody": "The product page opens with one card per area: Uptime, Traffic, Usage, Errors, Money, Costs. You set up what you want, when you want. Uptime takes one minute: just the address."
   },
   "productPage": {
     "setUp": "Set up",
@@ -482,6 +495,35 @@
       "failingTitle": "The signal to the outside watcher is failing.",
       "failingBody": "Octadash cannot call the watcher's URL. If this goes on, the watcher will report Octadash as down.",
       "action": "Set up the outside watcher"
+    }
+  },
+  "getStarted": {
+    "title": "Get started",
+    "progress": "{done} of {total} done",
+    "hide": "Hide",
+    "done": "Done",
+    "toDo": "Not done yet",
+    "steps": {
+      "product": {
+        "title": "Create your first product",
+        "text": "Only the name."
+      },
+      "area": {
+        "title": "Set up one area",
+        "text": "Uptime is the fastest: paste the address and it starts checking."
+      },
+      "alerts": {
+        "title": "Choose where alerts go",
+        "text": "Email, Telegram or a webhook. Until then, alerts reach no one."
+      },
+      "watcher": {
+        "title": "Set up the outside watcher",
+        "text": "So someone hears when Octadash itself goes down."
+      },
+      "invite": {
+        "title": "Invite people",
+        "text": "Admins and members. Optional."
+      }
     }
   }
 }

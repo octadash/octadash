@@ -43,6 +43,8 @@ interface PickerGroup {
   slug: string
   name: string
   status: ProductStatus
+  /** Its products' names, "Intelibot, Tribunal de Ideias", so the group says what it holds. */
+  members: string
 }
 
 /**
@@ -111,7 +113,7 @@ export function ProductPicker({
             <ChevronsUpDownIcon data-icon="inline-end" className="text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="flex w-72 flex-col gap-1">
+        <PopoverContent className="flex w-80 flex-col gap-1">
           <div className="flex items-center gap-2 border-b border-border px-2 pb-1.5">
             <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
             <input
@@ -141,7 +143,14 @@ export function ProductPicker({
                 active={scope.kind === 'group' && group.slug === scope.slug}
                 onSelect={() => setOpen(false)}
                 icon={<FolderIcon className="size-4 text-muted-foreground" />}
-                trailing={<StatusDot status={group.status} />}
+                trailing={
+                  <>
+                    <span className="max-w-48 truncate text-xs text-muted-foreground">
+                      {group.members}
+                    </span>
+                    <StatusDot status={group.status} />
+                  </>
+                }
               >
                 {group.name}
               </PickerItem>

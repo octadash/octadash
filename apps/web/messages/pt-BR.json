@@ -13,19 +13,19 @@
   },
   "auth": {
     "setupTitle": "Boas-vindas ao Octadash",
-    "setupIntro": "Crie a conta de dono e a sua organização. Depois disso, só você convida outras pessoas.",
+    "setupIntro": "Esta instalação ainda não tem dono. Você será o dono e poderá convidar outras pessoas depois.",
     "name": "Seu nome",
     "email": "E-mail",
     "password": "Senha",
     "passwordHint": "Pelo menos 10 caracteres.",
-    "orgName": "Organização",
+    "orgName": "Nome",
     "orgNameHint": "Sua empresa ou o seu nome. Os produtos ficam dentro dela.",
-    "createAccount": "Criar conta",
+    "createAccount": "Criar conta e organização",
     "signInTitle": "Entrar",
     "signIn": "Entrar",
     "inviteTitle": "Entrar em {org}",
-    "inviteIntro": "Você foi convidado como {role}. Crie sua conta para entrar.",
-    "join": "Criar conta e continuar",
+    "inviteIntro": "{inviter} convidou você como {role}. Você verá todos os produtos de {org}.",
+    "join": "Criar conta e entrar",
     "acceptTitle": "Entrar em {org}",
     "acceptIntro": "Você está conectado como {email}.",
     "accept": "Entrar na organização",
@@ -33,13 +33,19 @@
     "invitationInvalid": "Este convite não existe, já foi usado ou expirou. Peça um novo.",
     "noOrgTitle": "Sem organização",
     "noOrgBody": "Sua conta não faz parte de nenhuma organização. Peça um convite a um dono.",
-    "haveAccount": "Já tem conta? Entre primeiro."
+    "haveAccount": "Já tem conta? Entre primeiro.",
+    "step": "Passo {step} de {total}",
+    "orgSection": "Sua organização",
+    "currency": "Moeda principal",
+    "timeZone": "Fuso horário",
+    "regionHint": "Moeda e fuso vêm do seu navegador. Dinheiro em outras moedas guarda o valor original e aparece convertido. “Hoje” e o resumo diário seguem este fuso.",
+    "someone": "Alguém"
   },
   "projects": {
     "name": "Nome",
     "create": "Criar produto",
     "emptyTitle": "Nenhum produto ainda",
-    "emptyBody": "Adicione o primeiro produto para começar a acompanhar.",
+    "emptyBody": "Crie o primeiro para começar. Só o nome.",
     "open": "Abrir",
     "keysTitle": "Chaves de coleta",
     "keysIntro": "Use estas chaves ao conectar os SDKs. Elas identificam o produto e podem ficar no navegador.",
@@ -50,7 +56,9 @@
     "dangerTitle": "Excluir produto",
     "dangerBody": "Exclui o produto, as chaves e todos os dados dele. Não dá para desfazer.",
     "deleteDialogTitle": "Excluir {name}?",
-    "delete": "Excluir produto"
+    "delete": "Excluir produto",
+    "emptyMember": "Peça a um admin para adicionar o primeiro produto.",
+    "createShort": "Criar"
   },
   "members": {
     "title": "Membros",
@@ -136,8 +144,13 @@
   },
   "newProduct": {
     "title": "Novo produto",
-    "intro": "Só o nome. Onde ele roda e como os dados chegam você escolhe depois, em cada área.",
-    "placeholder": "Ex.: Tribunal de Ideias"
+    "intro": "Só o nome. Onde ele roda e como os dados chegam, você escolhe depois, em cada área.",
+    "placeholder": "ex.: Minha loja online",
+    "name": "Nome do produto",
+    "firstTitle": "Qual é o seu primeiro produto?",
+    "firstIntro": "Um site, um app ou um SaaS que você mantém. Os outros você adiciona depois pelo seletor de produtos, um por um.",
+    "nextTitle": "O que vem depois",
+    "nextBody": "A página do produto abre com um card por área: No ar, Tráfego, Uso, Erros, Dinheiro, Custos. Você configura o que quiser, quando quiser. No ar leva um minuto: só o endereço."
   },
   "productPage": {
     "setUp": "Configurar",
@@ -482,6 +495,35 @@
       "failingTitle": "O sinal para o vigia externo está falhando.",
       "failingBody": "O Octadash não consegue chamar a URL do vigia. Se continuar, o vigia vai avisar que o Octadash caiu.",
       "action": "Configurar vigia externo"
+    }
+  },
+  "getStarted": {
+    "title": "Primeiros passos",
+    "progress": "{done} de {total} feitos",
+    "hide": "Ocultar",
+    "done": "Feito",
+    "toDo": "Ainda não feito",
+    "steps": {
+      "product": {
+        "title": "Criar o primeiro produto",
+        "text": "Só o nome."
+      },
+      "area": {
+        "title": "Configurar uma área",
+        "text": "No ar é a mais rápida: cole o endereço e ele começa a checar."
+      },
+      "alerts": {
+        "title": "Escolher para onde vão os alertas",
+        "text": "E-mail, Telegram ou um webhook. Até lá, os alertas não chegam a ninguém."
+      },
+      "watcher": {
+        "title": "Configurar o vigia externo",
+        "text": "Para alguém saber quando o próprio Octadash cair."
+      },
+      "invite": {
+        "title": "Convidar pessoas",
+        "text": "Admins e membros. Opcional."
+      }
     }
   }
 }

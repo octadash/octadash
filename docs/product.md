@@ -147,11 +147,29 @@ job and is hidden from the panel and the MCP server.
 
 ## Onboarding
 
-1. **Create a product: only its name.** No URL, no platform. A product usually
+The first run has two steps and then the product page:
+
+1. **Account and organization, in one screen.** Whoever opens a new install
+   first becomes its owner. Besides name, email, password and organization name
+   it asks for the main currency and the time zone, both filled from the
+   browser: money in other currencies keeps its value and is shown converted,
+   and "today" and the daily summary follow that zone.
+2. **Create a product: only its name.** No URL, no platform. A product usually
    has parts in different languages (a JavaScript front end, a .NET back end),
    so the platform is chosen inside each area, not on the product.
-2. **Land on the product page**, which starts as a setup page and becomes the
+3. **Land on the product page**, which starts as a setup page and becomes the
    product's dashboard as data arrives, without changing screens.
+
+On top of the first screens, owners and admins see "Get started": five steps
+for the organization (first product, one area, where alerts go, the outside
+watcher, invite people), each opening where it is done. It goes away when all
+are done or when someone hides it, for everyone and for good.
+
+An invited person sets name and password (the email comes from the invitation)
+and lands on that organization's Overview, with no setup steps. An organization
+with no products (someone left step 2 halfway, or every product was removed)
+shows the step 2 form in place of the Overview, never an empty dashboard;
+members, who can't create products, are told to ask an admin.
 
 ### Product page
 

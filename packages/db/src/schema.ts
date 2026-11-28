@@ -61,6 +61,8 @@ export interface OrganizationSettingsTable {
   currency: ColumnType<string, string | undefined, string>
   /** IANA: "America/Sao_Paulo". */
   time_zone: ColumnType<string, string | undefined, string>
+  /** When someone hid the "Get started" list. */
+  get_started_hidden_at: ColumnType<Date | null, Date | null | undefined, Date | null>
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
 

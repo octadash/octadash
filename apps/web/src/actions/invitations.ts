@@ -41,7 +41,11 @@ const joinSchema = z.object({
   password: z.string().min(10),
 })
 
-/** An invited person creates their account; the invite page then lets them accept. */
+/**
+ * An invited person creates their account and joins in the same step, landing
+ * on the Overview of that organization. If joining fails, the invite page
+ * still offers to accept.
+ */
 export async function signUpInvitedAction(_: FormState, formData: FormData): Promise<FormState> {
   const t = await getTranslations('errors')
   const parsed = joinSchema.safeParse(Object.fromEntries(formData))
@@ -49,20 +53,40 @@ export async function signUpInvitedAction(_: FormState, formData: FormData): Pro
   const { db } = services()
   const invitation = await db
     .selectFrom('auth_invitation')
-    .select(['email'])
+    .select(['email', 'organizationId', 'role'])
     .where('id', '=', parsed.data.invitationId)
     .where('status', '=', 'pending')
+    .where('expiresAt', '>', new Date())
     .executeTakeFirst()
   if (!invitation) return { error: t('invitationInvalid') }
+  const { auth } = services()
+  let userId: string
   try {
-    await services().auth.api.signUpEmail({
+    const { user } = await auth.api.signUpEmail({
       body: { name: parsed.data.name, email: invitation.email, password: parsed.data.password },
       headers: await headers(),
     })
+    userId = user.id
   } catch (error) {
     return { error: errorMessage(error, t('generic')) }
   }
-  redirect(`/invite/${parsed.data.invitationId}`)
+  try {
+    await auth.api.addMember({
+      body: {
+        userId,
+        organizationId: invitation.organizationId,
+        role: invitation.role === 'admin' ? 'admin' : 'member',
+      },
+    })
+    await db
+      .updateTable('auth_invitation')
+      .set({ status: 'accepted' })
+      .where('id', '=', parsed.data.invitationId)
+      .execute()
+  } catch {
+    redirect(`/invite/${parsed.data.invitationId}`)
+  }
+  redirect('/all')
 }
 
 export async function acceptInvitationAction(_: FormState, formData: FormData): Promise<FormState> {
