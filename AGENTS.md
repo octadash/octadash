@@ -38,3 +38,7 @@ Read [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
   (English and Portuguese, São Paulo time, newest first; its README explains
   the format). Whoever merges the change adds the entry, in a short PR to the
   site right after. Several PRs of one change make one entry.
+- The same change also updates the site when it touches something the site
+  shows: a step's status in `src/data/areas.json` (roadmap and areas), the text
+  about a feature, a screenshot, an install step. Same short site PR as the
+  changelog entry; run `npm run og` there when a step's status changes.
