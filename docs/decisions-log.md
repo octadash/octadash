@@ -57,3 +57,24 @@ and why; anything here can be reversed.
   as coming later). "Octadash itself" stays the outside watcher for now; the
   queue and disk checks come with the install health page, since the worker
   cannot see the database disks from its container.
+- **A visit is a visitor on one calendar day** (in the organization's time
+  zone). Entry page, channel, source and campaign come from the visit's first
+  page view, so a click inside the site never counts as "Direct".
+- **Channels** are worked out from the referrer and UTM tags, in this order:
+  paid, email, AI assistants, search, social, direct, other sites.
+- **Returning visitors** are counted only for sources that turned on "Count
+  returning visitors"; the tile says how many sources count them. A visitor
+  returns when the same id was seen on an earlier day in the last 90 days.
+- **Today compares with yesterday up to the same hour**, so the numbers are
+  fair in the morning. Periods are Today, 24 hours, 7 and 30 days; a custom
+  range comes later.
+- **Places show countries only** for now. Regions and cities need a larger
+  location database in the ingest; the list is built so they fit as tabs.
+- **The chart has no split by product yet**; the Products card lists each
+  product's numbers and filters by it.
+- **Filters** are one value per list (up to 6 at once), kept in the address so
+  a link shows the same view. Details opens a side sheet with search, "load
+  more" and CSV export (up to 10,000 rows).
+- **Set up Traffic** reuses a product's existing source ("Use for Traffic")
+  before asking for a new one, so the same key sends errors, events and page
+  views. Step 3 asks every 3 seconds whether a page view arrived.
