@@ -302,7 +302,12 @@ export async function MoneyView({
               <CardTitle>
                 <h2 className="text-base font-semibold">{t('table.title')}</h2>
               </CardTitle>
-              <p className="text-xs text-muted-foreground">{t('table.margin')}</p>
+              <Link
+                href={path.replace(/money$/, 'costs')}
+                className="text-xs text-brand underline underline-offset-2"
+              >
+                {t('table.margin')}
+              </Link>
             </CardHeader>
             <CardContent>
               <Table scrollLabel={t('table.title')}>

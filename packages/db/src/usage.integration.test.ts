@@ -8,6 +8,7 @@ import {
   keyEventRates,
   lastUsageEvent,
   retentionCohorts,
+  signupsByProduct,
   usageEvents,
   usageSeries,
   usageTotals,
@@ -162,6 +163,11 @@ describe.skipIf(!chUrl)('product usage queries (needs CLICKHOUSE_URL)', () => {
     const series = await usageSeries(client, scope, 'hour', SIGNUP_EVENTS, keys)
     expect(series).toHaveLength(25)
     expect(series[1]).toMatchObject({ active: 3, signups: 2, keyEvents: 1 })
+    const byProduct = await signupsByProduct(client, scope, SIGNUP_EVENTS)
+    expect([...byProduct.values()].reduce((a, b) => a + b, 0)).toBe(2)
+    expect(await signupsByProduct(client, { ...scope, projectIds: [] }, SIGNUP_EVENTS)).toEqual(
+      new Map(),
+    )
     expect(await usageTotals(client, { ...scope, projectIds: [] }, SIGNUP_EVENTS, keys)).toEqual({
       active: 0,
       signups: 0,

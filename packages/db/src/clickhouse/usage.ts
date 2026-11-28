@@ -73,6 +73,24 @@ export async function usageTotals(
   }
 }
 
+/** Sign-ups per product in a period, for the Overview's table. */
+export async function signupsByProduct(
+  client: ClickHouseClient,
+  scope: UsageScope,
+  signups: string[],
+): Promise<Map<string, number>> {
+  if (scope.projectIds.length === 0) return new Map()
+  const result = await client.query({
+    query: `SELECT toString(project_id) AS project, count() AS signups
+      FROM events WHERE ${IN_SCOPE} AND ${PRODUCT_EVENT} AND ${IS_SIGNUP}
+      GROUP BY project`,
+    query_params: { ...params(scope), signups },
+    format: 'JSONEachRow',
+  })
+  const rows = await result.json<{ project: string; signups: string }>()
+  return new Map(rows.map((r) => [r.project, Number(r.signups)]))
+}
+
 export interface UsagePoint extends UsageTotals {
   at: Date
 }

@@ -226,7 +226,17 @@
     "errorSources": "{count, plural, one {# source sends errors} other {# sources send errors}}",
     "noIssues": "No unresolved issue was hit in this period.",
     "issueNumbers": "{events, plural, one {# event} other {# events}} · {people, plural, one {# person} other {# people}}",
-    "errorDays": "Errors per day, last 14 days: {total} in all"
+    "errorDays": "Errors per day, last 14 days: {total} in all",
+    "numbers": {
+      "before": "{value} the period before",
+      "noRevenue": "No revenue in Money for this period"
+    },
+    "logs": {
+      "lines": "Lines",
+      "errors": "Errors",
+      "warnings": "Warnings",
+      "bars": "Lines over {period}; errors in red, warnings in yellow"
+    }
   },
   "areaPage": {
     "soon": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows how to set it up for this product.",
@@ -260,7 +270,14 @@
       "visitors": "Visitors",
       "uptimeRatio": "{ratio} in {period}",
       "errors": "Errors",
-      "newIssues": "{count, plural, =0 {no new issues} one {# new issue} other {# new issues}}"
+      "newIssues": "{count, plural, =0 {no new issues} one {# new issue} other {# new issues}}",
+      "signups": "Sign-ups",
+      "signupsSub": "in {period}",
+      "revenue": "Revenue",
+      "mrr": "MRR {mrr}",
+      "costs": "Costs",
+      "costsToday": "Costs today",
+      "margin": "margin {margin}"
     },
     "chart": {
       "visitors": "Visitors",
@@ -269,7 +286,9 @@
       "asTable": "Show as a table",
       "time": "Time",
       "response": "Response time",
-      "errors": "Errors"
+      "errors": "Errors",
+      "signups": "Sign-ups",
+      "revenue": "Revenue"
     },
     "table": {
       "title": "Products",
@@ -286,7 +305,12 @@
       "footnote": "“—” means the product doesn't use that area. Click a row to open the product.",
       "shown": "{count, plural, one {# product} other {# products}}",
       "errors": "Errors",
-      "issues": "{count, plural, =0 {} one {# issue} other {# issues}}"
+      "issues": "{count, plural, =0 {} one {# issue} other {# issues}}",
+      "signups": "Sign-ups",
+      "revenue": "Revenue · MRR",
+      "mrr": "MRR {mrr}",
+      "margin": "Margin",
+      "cost": "cost {cost}"
     },
     "timeline": {
       "title": "What happened · {period}",
