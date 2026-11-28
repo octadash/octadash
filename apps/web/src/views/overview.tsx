@@ -38,12 +38,15 @@ export async function OverviewView({
   base,
   overview,
   action,
+  top,
 }: {
   title: string
   /** "/all" or "/g/<slug>": where the area links and the period links point. */
   base: string
   overview: Overview
   action?: ReactNode
+  /** Above the numbers: the "Get started" list while it lasts. */
+  top?: ReactNode
 }) {
   const [t, tRoot, locale] = await Promise.all([
     getTranslations('overview'),
@@ -73,6 +76,8 @@ export async function OverviewView({
         actions={action}
         t={t}
       />
+
+      {top}
 
       {!overview.complete && (
         <p role="status" className="rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm">

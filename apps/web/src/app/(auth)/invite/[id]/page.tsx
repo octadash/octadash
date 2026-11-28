@@ -15,11 +15,13 @@ async function findInvitation(id: string) {
   return services()
     .db.selectFrom('auth_invitation')
     .innerJoin('auth_organization', 'auth_organization.id', 'auth_invitation.organizationId')
+    .leftJoin('auth_user', 'auth_user.id', 'auth_invitation.inviterId')
     .select([
       'auth_invitation.id',
       'auth_invitation.email',
       'auth_invitation.role',
       'auth_organization.name as orgName',
+      'auth_user.name as inviterName',
     ])
     .where('auth_invitation.id', '=', id)
     .where('auth_invitation.status', '=', 'pending')
@@ -91,7 +93,13 @@ export default async function InvitePage({ params }: { params: Promise<{ id: str
             {t('auth.inviteTitle', { org: invitation.orgName })}
           </h1>
         </CardTitle>
-        <CardDescription>{t('auth.inviteIntro', { role })}</CardDescription>
+        <CardDescription>
+          {t('auth.inviteIntro', {
+            role,
+            org: invitation.orgName,
+            inviter: invitation.inviterName ?? t('auth.someone'),
+          })}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <ActionForm action={signUpInvitedAction}>

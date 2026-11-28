@@ -60,6 +60,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               slug: g.slug,
               name: g.name,
               status: statusOfGroup(g.project_ids),
+              members: projects
+                .filter((p) => g.project_ids.includes(p.id))
+                .map((p) => p.name)
+                .join(', '),
             }))}
             canCreate={canManage(org.role)}
             labels={{
@@ -116,7 +120,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             />
           </div>
         </header>
-        <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-8 md:px-8">
+        <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-6 px-4 py-8 md:px-8">
           {children}
         </main>
       </div>
