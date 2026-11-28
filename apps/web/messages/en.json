@@ -301,7 +301,8 @@
         "other": "Emergency",
         "error_spike": "Error spike",
         "key_event_stopped": "“{name}” stopped",
-        "log_alert": "Log alert “{name}”"
+        "log_alert": "Log alert “{name}”",
+        "payments_failing": "Payments failing"
       },
       "more": "{count, plural, one {# more on the product page} other {# more on the product page}}"
     }
@@ -598,7 +599,11 @@
       "expected": "Missing",
       "expectedUnit": "events that should have arrived",
       "silence": "At least",
-      "silenceUnit": "min without any"
+      "silenceUnit": "min without any",
+      "percent": "Failed",
+      "percentUnit": "% of charges in 15 min",
+      "charges": "At least",
+      "chargesUnit": "charges in 15 min"
     },
     "allChannels": "All channels",
     "noChannels": "No channels yet. Without one, the emergency shows only in the panel.",
@@ -636,6 +641,11 @@
         "title": "Log alert",
         "body": "A saved Logs search with Alert on matches a line. Each product with a match gets its own emergency.",
         "info": "Turn Alert on for a saved search on the Logs page. Octadash runs it every minute over the lines since it was turned on. It closes after the minutes you set pass without a match (at most 60). Only lines that arrive after Alert is on can fire it."
+      },
+      "payments_failing": {
+        "title": "Payments failing",
+        "body": "Failed charges at the gateway well above normal. Each product gets its own emergency.",
+        "info": "Octadash reads the charges of the last 15 minutes every minute. It opens when the share that failed reaches the percent you set, with at least the number of charges you set, so two failures at night do not wake anyone. It closes when the share falls back under."
       }
     },
     "legend": "Levels",
@@ -690,15 +700,6 @@
           "body": "Pageviews drop to zero while the site is up: the script was removed or broke.",
           "wait": "Needs a few days of traffic to know what to expect.",
           "params": "None in 30 min when 20 or more are expected"
-        }
-      },
-      "money": {
-        "starts": "Starts when Money is set up on a product",
-        "paymentsFailing": {
-          "title": "Payments failing",
-          "body": "Failed charges at the gateway well above normal.",
-          "wait": "No gateway is connected yet.",
-          "params": "20% failed in 15 min, at least 10 charges"
         }
       },
       "costs": {
@@ -998,7 +999,8 @@
       "other": "{product} · {name}",
       "error_spike": "{product} · error spike",
       "key_event_stopped": "{product} · {event} stopped",
-      "log_alert": "{product} · log alert “{search}”"
+      "log_alert": "{product} · log alert “{search}”",
+      "payments_failing": "{product} · payments failing"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1009,7 +1011,8 @@
       "spike": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where about {normal} is normal at this time. It closes on its own when errors fall back under the rule.",
       "spikeNone": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where this time of day usually has none. It closes on its own when errors fall back under the rule.",
       "keyEvent": "No {event} since {time}, where about {normal} an hour is normal at this time. It closes on its own when the next one arrives.",
-      "logAlert": "The saved search “{search}” ({query}) matched a line. It closes on its own after {minutes} min without a match."
+      "logAlert": "The saved search “{search}” ({query}) matched a line. It closes on its own after {minutes} min without a match.",
+      "paymentsFailing": "{failed} of {total} charges failed in the last {minutes} min. It closes on its own when the share falls back under the rule."
     },
     "onIt": "{name} is on it · since {time}",
     "nobody": "Nobody on it yet",
@@ -1099,7 +1102,8 @@
       "other": "{product} · {name}",
       "error_spike": "{product} · error spike",
       "key_event_stopped": "{product} · {event} stopped",
-      "log_alert": "{product} · log alert “{search}”"
+      "log_alert": "{product} · log alert “{search}”",
+      "payments_failing": "{product} · payments failing"
     },
     "spike": {
       "title": "Issues behind the spike",
@@ -1116,7 +1120,8 @@
       "other": "{product}: {name}",
       "error_spike": "{product}: error spike",
       "key_event_stopped": "{product}: {event} stopped",
-      "log_alert": "{product}: log alert “{search}”"
+      "log_alert": "{product}: log alert “{search}”",
+      "payments_failing": "{product}: payments failing"
     },
     "short": {
       "monitor_down": "{product} down",
@@ -1125,7 +1130,8 @@
       "other": "{product} {name}",
       "error_spike": "{product} error spike",
       "key_event_stopped": "{product} {event} stopped",
-      "log_alert": "{product} log alert"
+      "log_alert": "{product} log alert",
+      "payments_failing": "{product} payments failing"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
@@ -1134,7 +1140,8 @@
       "other": "{name}: {reason}",
       "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min",
       "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour",
-      "log_alert": "{count, plural, one {# matching line} other {# matching lines}}"
+      "log_alert": "{count, plural, one {# matching line} other {# matching lines}}",
+      "payments_failing": "{percent}% of charges failing ({failed} of {total})"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” is not answering",
@@ -1143,7 +1150,8 @@
       "other": "{name}",
       "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min",
       "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour",
-      "log_alert": "{count, plural, one {# matching line} other {# matching lines}}"
+      "log_alert": "{count, plural, one {# matching line} other {# matching lines}}",
+      "payments_failing": "{percent}% of charges failing ({failed} of {total})"
     },
     "kind": {
       "monitor_down": "Down",
@@ -1152,7 +1160,8 @@
       "other": "Emergency",
       "error_spike": "Error spike",
       "key_event_stopped": "Key event stopped",
-      "log_alert": "Log alert"
+      "log_alert": "Log alert",
+      "payments_failing": "Payments failing"
     },
     "count": "{count, plural, one {# emergency} other {# emergencies}}",
     "countProducts": "{count} emergencies on {products} products",
@@ -1210,7 +1219,8 @@
     },
     "spikeOver": "{product}: errors back to normal",
     "keyBack": "{product}: {event} is arriving again",
-    "logQuiet": "{product}: “{search}” is quiet again"
+    "logQuiet": "{product}: “{search}” is quiet again",
+    "paymentsBack": "{product}: payments are going through again"
   },
   "traffic": {
     "title": "Traffic",

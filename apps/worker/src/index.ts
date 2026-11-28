@@ -29,6 +29,7 @@ import { checkUrl, diagnose } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
 import { createAlerts, registerAlertJobs } from './alerts'
 import { registerJobs } from './jobs'
+import { createMoney, registerMoneyJobs } from './money'
 import { EventRouter } from './routing'
 import { startUptime, UptimeScheduler } from './uptime'
 import { pingUrl, startWatcher, Watcher } from './watcher'
@@ -76,6 +77,11 @@ const alerts = createAlerts({
   },
 })
 await registerAlertJobs(boss, alerts, log)
+await registerMoneyJobs(
+  boss,
+  createMoney({ db, clickhouse, secret: env.OCTADASH_SECRET, log }),
+  log,
+)
 const router = new EventRouter({
   loadDismissed: (projectIds) => listDismissedAreas(db, projectIds),
   recordDiscarded: (discarded, at) => recordDiscarded(db, discarded, at),

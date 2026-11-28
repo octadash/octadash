@@ -271,3 +271,35 @@ and why; anything here can be reversed.
 - **The disk estimate on step 2 comes from the last 24 hours** times the
   table's real compression, and says "at today's rate"; before any line it
   says nothing instead of guessing.
+
+### Money engine (2026-11-28)
+
+- **Webhooks land on the panel, not the ingest.** The canvas shows the
+  panel's address, and checking a signature needs the decrypted secret, which
+  only the panel and the worker hold. The gateway's own retries are the queue:
+  a failed store answers 500 and the gateway sends it again.
+- **Stripe is pinned to API version 2024-06-20** and a secret key (`sk_`) is
+  refused, so Octadash can never charge or refund. The key needs Read on
+  charges, invoices, subscriptions, products and balance (the canvas listed
+  "customers count and payouts"; invoices give the product of a charge and
+  balance gives the fee, so those replace them).
+- **Asaas keys cannot be read-only.** Asaas has no restricted keys, so the
+  "i" says to create one just for Octadash and that Octadash only sends GET
+  requests with it. Asaas lists give only the day of a payment; webhooks give
+  the moment.
+- **Asaas does not say when a subscription ended**: Octadash keeps the first
+  time it saw it ended, so churn may be off by up to an hour without the
+  webhook.
+- **Paddle refunds are not read yet** (they are adjustments, another list);
+  Paddle revenue counts what was billed.
+- **MRR uses each subscription's current price**, so a plan change moves its
+  whole history. MRR movements (expansion, contraction) are on the backlog.
+- **Exchange rates from Frankfurter (ECB)**, free and without a key; weekends
+  take Friday's rate. A currency the ECB does not publish shows unconverted.
+- **Payments failing looks at the last 15 minutes with at least 10 charges**,
+  as the canvas says, so two failed cards at night do not wake anyone.
+- **A failed first import (a wrong key) tries again every 15 minutes**, not
+  every minute, so a bad key does not hammer the gateway.
+- **Tested against the gateways' documented shapes, not live accounts.** A
+  fake Asaas key reached the real Asaas sandbox and came back with its error
+  message, which confirms the address and header; the rest needs a real key.

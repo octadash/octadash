@@ -1,5 +1,6 @@
 export * from './builtin'
 export * from './define'
 export * from './form'
+export * from './money'
 export * from './registry'
 export type * from './types'

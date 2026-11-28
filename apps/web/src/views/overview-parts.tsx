@@ -317,6 +317,7 @@ function kindKey(kind: string) {
     'error_spike',
     'key_event_stopped',
     'log_alert',
+    'payments_failing',
   ].includes(kind)
     ? kind
     : 'other'

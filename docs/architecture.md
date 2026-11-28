@@ -272,6 +272,37 @@ versions and passwords generated at install. Each has one job.
   minutes (15) without a match. Deleting the search or turning Alert off
   closes it without a message.
 
+### Money
+
+- Gateways (`packages/integrations/src/money`): Stripe, Asaas and Paddle,
+  each turning its charges and subscriptions into one shape (`MoneyPayment`,
+  `MoneySubscription`, amounts in minor units, no conversion). Read-only by
+  contract: only GET requests. Stripe is pinned to API version `2024-06-20`
+  and refuses a secret key (`sk_`); a restricted key is asked for.
+- A connection (`connection`) is one gateway account of the organization; its
+  key and webhook secret are encrypted with `OCTADASH_SECRET`. Each product it
+  serves (`connection_project`) picks its payments by a rule: the whole
+  account, some gateway products, or a `product` metadata value (Asaas: the
+  external reference). The most specific rule wins, so a shared account
+  counts nothing twice; payments no rule picks are not stored.
+- The worker (`money-sync`, every minute) imports 12 months for a new
+  connection, then reads the last 3 days of payments every 5 minutes (so a
+  late refund is seen) and lists subscriptions every hour. Webhooks reach the
+  panel at `/hooks/<gateway>/<token>`, are checked (Stripe and Paddle
+  signatures, Asaas access token) and stored at once; a failure answers 500 so
+  the gateway sends it again.
+- ClickHouse `payments` and `subscriptions` are ReplacingMergeTree by
+  connection and id, read with FINAL: a payment sent again (paid, then
+  refunded) replaces itself. Customers are kept as hashes. MRR at a moment is
+  the sum of subscriptions started and not ended by then, without trials, at
+  each subscription's current price.
+- Exchange rates (`fx_rate`, every day filled) come from the European Central
+  Bank through Frankfurter (`money-fx`, every 6 hours, no key). Totals convert
+  each payment at the rate of its day into the organization's currency.
+- Payments failing (`payments_failing`): every minute, per product, the
+  charges of the last 15 minutes; it opens at `percent` (20) failed with at
+  least `charges` (10) charges and closes when the share falls back under.
+
 ### Integrations are plugins
 
 Alert channels and data sources share one contract (`packages/integrations`):
