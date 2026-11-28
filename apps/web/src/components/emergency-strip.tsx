@@ -7,6 +7,7 @@ import {
   CheckIcon,
   ClockIcon,
   InfoIcon,
+  ReceiptIcon,
   ShieldAlertIcon,
   TerminalIcon,
   TriangleAlertIcon,
@@ -71,6 +72,7 @@ const KIND_ICON: Record<StripKind, typeof ActivityIcon> = {
   key_event_stopped: UserIcon,
   log_alert: TerminalIcon,
   payments_failing: WalletIcon,
+  cost_runaway: ReceiptIcon,
   other: TriangleAlertIcon,
 }
 

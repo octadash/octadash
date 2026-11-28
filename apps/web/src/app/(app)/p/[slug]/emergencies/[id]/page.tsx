@@ -25,6 +25,7 @@ const KINDS = [
   'key_event_stopped',
   'log_alert',
   'payments_failing',
+  'cost_runaway',
 ] as const
 
 const AREA_OF: Record<Kind | 'other', string> = {
@@ -35,6 +36,7 @@ const AREA_OF: Record<Kind | 'other', string> = {
   key_event_stopped: 'usage',
   log_alert: 'logs',
   payments_failing: 'money',
+  cost_runaway: 'costs',
   other: 'other',
 }
 type Kind = (typeof KINDS)[number]
@@ -78,6 +80,8 @@ export default async function EmergencyPage({
   const timeZone = settings.timeZone
   const time = new Intl.DateTimeFormat(locale, { timeStyle: 'short', timeZone })
   const day = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone })
+  const usd = (cents: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(cents / 100)
   const open = incident.resolved_at === null
   const name = typeof data.name === 'string' ? data.name : (incident.monitor_name ?? '')
   const reason = typeof data.reason === 'string' ? data.reason : null
@@ -139,7 +143,13 @@ export default async function EmergencyPage({
                     total: typeof data.total === 'number' ? data.total : 0,
                     minutes: typeof data.minutes === 'number' ? data.minutes : 15,
                   })
-                : t('summary.other')
+                : kind === 'cost_runaway'
+                  ? t('summary.costRunaway', {
+                      spent: usd(typeof data.spent === 'number' ? data.spent : 0),
+                      normal: usd(typeof data.normal === 'number' ? data.normal : 0),
+                      times: typeof data.times === 'number' ? data.times : 0,
+                    })
+                  : t('summary.other')
 
   return (
     <div className="flex flex-col gap-6">

@@ -5,6 +5,7 @@ import {
   claimPendingIncidents,
   closeStaleMonitorIncidents,
   compileLogQuery,
+  costTotalsByTag,
   type createClickHouse,
   type Db,
   errorRates,
@@ -13,6 +14,9 @@ import {
   keyEventRates,
   latestCertDays,
   listActiveMonitors,
+  listAllConnections,
+  listCostHours,
+  listCostShares,
   listEnabledChannels,
   listKeyEvents,
   listLogSearches,
@@ -29,7 +33,14 @@ import {
   resolveIncident,
   ruleFor,
 } from '@octadash/db'
-import { builtinIntegrations, type NotificationIntegration } from '@octadash/integrations'
+import {
+  builtinIntegrations,
+  type CostShare,
+  costProvider,
+  type NotificationIntegration,
+  type SplitMode,
+  splitCost,
+} from '@octadash/integrations'
 import type { LivePublisher, LiveTopic } from '@octadash/queue'
 import type { PgBoss } from 'pg-boss'
 import { type AlertEvent, alertLocale, alertMessage } from './alert-text'
@@ -48,6 +59,8 @@ export const ALERT_QUEUES = {
   logs: 'alerts-logs',
   /** Payments failing, every minute. */
   money: 'alerts-money',
+  /** Cost runaway, every 10 minutes: costs arrive hourly at best. */
+  costs: 'alerts-costs',
 } as const
 
 /** The longest quiet spell a Log alert waits for before it closes, in minutes. */
@@ -556,6 +569,109 @@ export function createAlerts(deps: AlertsDeps) {
     }
   }
 
+  /**
+   * Cost runaway: a product's AI spend in its latest hour with data (the last
+   * 6 hours) reaches `times` its normal hour and at least `dollars` US dollars.
+   * Normal is the last 7 whole days' average hour. Shared accounts are divided
+   * as their split says (traffic counts as equal parts here). Ends when the
+   * latest hour falls back under, or after 6 hours without spend.
+   */
+  async function checkCostRunaway() {
+    const at = now()
+    const today = Math.floor(at.getTime() / 86_400_000) * 86_400_000
+    const day = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+    const [connections, shares, hours, base, open] = await Promise.all([
+      listAllConnections(deps.db),
+      listCostShares(deps.db, null),
+      listCostHours(deps.db, null, new Date(at.getTime() - RUNAWAY_HOURS * 3_600_000)),
+      costTotalsByTag(deps.db, day(today - 7 * 86_400_000), day(today - 86_400_000)),
+      listOpenIncidentKeys(deps.db, 'cost_runaway'),
+    ])
+    const ai = new Map(
+      connections
+        .filter((c) => costProvider(c.integration)?.kind === 'ai')
+        .map((c) => [c.id, c] as const),
+    )
+    const sharesOf = new Map<string, CostShare[]>()
+    for (const s of shares) {
+      const list = sharesOf.get(s.connectionId) ?? []
+      list.push(s)
+      sharesOf.set(s.connectionId, list)
+    }
+    const allocate = (connectionId: string, tag: string, amount: number) => {
+      const mode = (ai.get(connectionId)?.split ?? 'equal') as SplitMode
+      return splitCost(
+        { tag, amount },
+        sharesOf.get(connectionId) ?? [],
+        mode === 'traffic' ? 'equal' : mode,
+      )
+    }
+    const orgOf = new Map<string, string>()
+    const normal = new Map<string, number>()
+    for (const row of base) {
+      if (!ai.has(row.connectionId)) continue
+      for (const [project, amount] of allocate(row.connectionId, row.tag, row.amount)) {
+        normal.set(project, (normal.get(project) ?? 0) + amount / (7 * 24))
+        orgOf.set(project, row.orgId)
+      }
+    }
+    // Each connection's latest hour with data, and what each product spent in it.
+    const latest = new Map<string, number>()
+    for (const h of hours)
+      if (ai.has(h.connectionId))
+        latest.set(h.connectionId, Math.max(latest.get(h.connectionId) ?? 0, h.hour.getTime()))
+    const spent = new Map<string, { hour: number; amount: number }>()
+    for (const h of hours) {
+      if (!ai.has(h.connectionId) || h.hour.getTime() !== latest.get(h.connectionId)) continue
+      for (const [project, amount] of allocate(h.connectionId, h.tag, h.amount)) {
+        const was = spent.get(project)
+        const hour = h.hour.getTime()
+        if (!was || hour > was.hour) spent.set(project, { hour, amount })
+        else if (hour === was.hour) was.amount += amount
+        orgOf.set(project, h.orgId)
+      }
+    }
+    const keyOf = (projectId: string) => `costs:${projectId}:runaway`
+    const openKeys = new Set(open.map((row) => row.dedupe_key))
+    const seen = new Set<string>()
+    const changed = new Set<string>()
+    for (const [projectId, hour] of spent) {
+      const orgId = orgOf.get(projectId)
+      if (!orgId) continue
+      const key = keyOf(projectId)
+      seen.add(key)
+      const rule = await ruleFor(deps.db, orgId, projectId, 'cost_runaway')
+      const usual = normal.get(projectId) ?? 0
+      const running = rule.level !== 'off' && costRunaway(hour.amount, usual, rule.params)
+      if (running && !openKeys.has(key)) {
+        const opened = await openIncident(deps.db, {
+          orgId,
+          projectId,
+          kind: 'cost_runaway',
+          dedupeKey: key,
+          data: {
+            spent: Math.round(hour.amount),
+            normal: Math.round(usual),
+            times: usual > 0 ? Math.round((hour.amount / usual) * 10) / 10 : 0,
+            hour: new Date(hour.hour).toISOString(),
+          },
+          at,
+        })
+        if (opened) changed.add(orgId)
+      } else if (!running && openKeys.has(key)) {
+        if (await resolveIncident(deps.db, key, at)) changed.add(orgId)
+      }
+    }
+    for (const row of open) {
+      if (!seen.has(row.dedupe_key) && (await resolveIncident(deps.db, row.dedupe_key, at)))
+        changed.add(row.org_id)
+    }
+    if (changed.size > 0) {
+      await wake()
+      await tell(changed, 'incidents')
+    }
+  }
+
   return {
     onTransition,
     notify,
@@ -564,6 +680,7 @@ export function createAlerts(deps: AlertsDeps) {
     checkKeyEvents,
     checkLogAlerts,
     checkPaymentsFailing,
+    checkCostRunaway,
   }
 }
 
@@ -602,6 +719,28 @@ export async function registerAlertJobs(boss: PgBoss, alerts: Alerts, log: Logge
       .checkPaymentsFailing()
       .catch((err) => log.warn({ err }, 'payments failing check failed'))
   })
+  await boss.createQueue(ALERT_QUEUES.costs)
+  await boss.schedule(ALERT_QUEUES.costs, '*/10 * * * *')
+  await boss.work(ALERT_QUEUES.costs, async () => {
+    await alerts.checkCostRunaway().catch((err) => log.warn({ err }, 'cost runaway check failed'))
+  })
+}
+
+/** Hours of spend "Cost runaway" looks back on for each product's latest hour. */
+export const RUNAWAY_HOURS = 6
+
+/**
+ * True when an hour's spend (cents) reaches `times` the normal hour and at
+ * least `dollars` US dollars. A product with no history runs away at that much.
+ */
+export function costRunaway(
+  spent: number,
+  normal: number,
+  params: Record<string, number>,
+): boolean {
+  const times = params.times ?? 3
+  const minimum = (params.dollars ?? 5) * 100
+  return spent >= Math.max(minimum, times * normal)
 }
 
 /** Minutes of charges "Payments failing" looks at. */

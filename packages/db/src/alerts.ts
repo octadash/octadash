@@ -38,6 +38,11 @@ export const RULE_DEFAULTS = {
    * with at least `charges` charges. Ends when the rate falls back under.
    */
   payments_failing: { level: 'emergency', params: { percent: 20, charges: 10 } },
+  /**
+   * A product spent in one hour `times` its normal hour (the last 7 days'
+   * average) and at least `dollars` US dollars. Ends when an hour falls back under.
+   */
+  cost_runaway: { level: 'emergency', params: { times: 3, dollars: 5 } },
 } as const satisfies Record<string, { level: AlertLevel | 'off'; params: Record<string, number> }>
 
 export type IncidentKind = keyof typeof RULE_DEFAULTS

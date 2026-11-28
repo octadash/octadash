@@ -37,6 +37,10 @@ interface Words {
   paymentsFailed: (failed: number, total: number, minutes: number) => string
   paymentsBack: (product: string) => string
   paymentsLasted: (duration: string) => string
+  runaway: (product: string, times: number) => string
+  runawaySpent: (spent: string, normal: string) => string
+  runawayOver: (product: string) => string
+  runawayLasted: (duration: string) => string
   downFor: (duration: string) => string
   wasDownFor: (duration: string) => string
   manyDown: (count: number) => string
@@ -76,6 +80,11 @@ const words: Record<AlertLocale, Words> = {
     paymentsFailed: (f, t, m) => `${f} of ${t} charges failed in the last ${m} min.`,
     paymentsBack: (p) => `Payments are going through again on ${p}`,
     paymentsLasted: (d) => `They failed for ${d}.`,
+    runaway: (p, x) =>
+      x > 0 ? `Cost runaway on ${p}: ${x}× its normal hour` : `Cost runaway on ${p}`,
+    runawaySpent: (s, n) => `${s} spent in one hour; a normal hour is ${n}.`,
+    runawayOver: (p) => `Spend is back to normal on ${p}`,
+    runawayLasted: (d) => `It ran high for ${d}.`,
     downFor: (d) => `Down for ${d}.`,
     wasDownFor: (d) => `It was down for ${d}.`,
     manyDown: (n) => `${n} monitors are down`,
@@ -125,6 +134,11 @@ const words: Record<AlertLocale, Words> = {
     paymentsFailed: (f, t, m) => `${f} de ${t} cobranças falharam nos últimos ${m} min.`,
     paymentsBack: (p) => `Os pagamentos voltaram a passar em ${p}`,
     paymentsLasted: (d) => `Falharam por ${d}.`,
+    runaway: (p, x) =>
+      x > 0 ? `Custo disparado em ${p}: ${x}× uma hora normal` : `Custo disparado em ${p}`,
+    runawaySpent: (s, n) => `${s} gastos em uma hora; uma hora normal é ${n}.`,
+    runawayOver: (p) => `O gasto voltou ao normal em ${p}`,
+    runawayLasted: (d) => `Ficou alto por ${d}.`,
     downFor: (d) => `Fora do ar há ${d}.`,
     wasDownFor: (d) => `Ficou fora do ar por ${d}.`,
     manyDown: (n) => `${n} monitores fora do ar`,
@@ -180,6 +194,10 @@ interface IncidentData {
   failed?: number
   total?: number
   percent?: number
+  /** Cost runaway: cents spent in the hour, its multiple of normal, and the hour. */
+  spent?: number
+  times?: number
+  hour?: string
 }
 
 export type AlertEvent = 'open' | 'resolve'
@@ -253,6 +271,19 @@ function describe(incident: PendingIncident, event: AlertEvent, now: Date, local
           detail: w.paymentsFailed(data.failed ?? 0, data.total ?? 0, data.minutes ?? 15),
         }
   }
+  if (incident.kind === 'cost_runaway') {
+    const usd = (cents: number) =>
+      new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(cents / 100)
+    return event === 'resolve'
+      ? {
+          title: w.runawayOver(incident.project_name),
+          detail: w.runawayLasted(duration(ended - started, locale)),
+        }
+      : {
+          title: w.runaway(incident.project_name, data.times ?? 0),
+          detail: w.runawaySpent(usd(data.spent ?? 0), usd(data.normal ?? 0)),
+        }
+  }
   if (incident.kind === 'cert_expiring') {
     return event === 'open'
       ? { title: w.cert(name, data.days ?? 0), detail: data.url ?? '' }
@@ -299,7 +330,8 @@ export function alertMessage(
         first.kind === 'error_spike' ||
         first.kind === 'key_event_stopped' ||
         first.kind === 'log_alert' ||
-        first.kind === 'payments_failing'
+        first.kind === 'payments_failing' ||
+        first.kind === 'cost_runaway'
           ? `${base}/p/${first.project_slug}/emergencies/${first.id}`
           : `${base}/p/${first.project_slug}/uptime`,
       occurredAt: now,
@@ -322,7 +354,8 @@ export function alertMessage(
       incident.kind === 'error_spike' ||
       incident.kind === 'key_event_stopped' ||
       incident.kind === 'log_alert' ||
-      incident.kind === 'payments_failing'
+      incident.kind === 'payments_failing' ||
+      incident.kind === 'cost_runaway'
         ? line.title
         : `${incident.project_name}: ${line.title}`
     return `• ${title}. ${line.detail}`.trim()

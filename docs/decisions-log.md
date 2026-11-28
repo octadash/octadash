@@ -328,3 +328,26 @@ and why; anything here can be reversed.
   "Margin is in Costs", as the canvas does.
 - **"Custom" period is not built**: Money uses the same periods as Traffic
   (Today, 24h, 7d, 30d), like the other areas.
+
+### Costs engine (2026-11-28)
+
+- **OpenAI and Anthropic first; AWS, Neon, Vercel and Google Cloud later.**
+  Both AI reports were checked in their current documentation and answered a
+  fake admin key with their own "invalid key" message. Neon's API gives usage
+  (compute hours, storage), not money, so it needs each plan's prices; AWS
+  Cost Explorer charges US$ 0.01 a request and needs request signing;
+  Vercel's billing export is not settled. The provider contract holds them
+  all; each is one file.
+- **Anthropic is read through the new cost analytics report** (the old cost
+  report is legacy). It refreshes about every 4 hours, so its last hours
+  arrive late and a runaway shows up to 4 hours after it starts.
+- **OpenAI gives days only.** Read every hour, the growth of today's total
+  is that hour's spend, which is what Cost runaway looks at.
+- **A shared account is divided when reading, not when storing.** Changing
+  the split changes the whole history. The canvas says past months keep their
+  split; that needs a frozen month table and is on the backlog.
+- **Cost runaway needs at least US$ 5 in the hour** besides 3× normal, so a
+  product that spends cents never wakes anyone. Traffic split counts as equal
+  parts for the runaway check.
+- **Costs stay in Postgres**: a few hundred rows a day per account, and
+  re-reading a day must replace it, which Postgres does simply.
