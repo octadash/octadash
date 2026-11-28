@@ -24,10 +24,13 @@ import {
 } from '@/lib/money'
 import { percentChange } from '@/lib/period'
 import { cn } from '@/lib/utils'
+import { loadConnectionSetup } from '@/server/connection-setup'
 import { loadMoney } from '@/server/money'
 
 const GATEWAYS = { stripe: 'Stripe', asaas: 'Asaas', paddle: 'Paddle' }
 
+import { AreaProductsPage } from './area-start'
+import { AccountProducts, MoneyStartView } from './area-start-accounts'
 /**
  * Money, as closed in the Money canvas: revenue, MRR, new subscriptions,
  * churn and failed payments on top, the chart, every product with its
@@ -66,35 +69,20 @@ export async function MoneyView({
   const several = data.projects.length > 1
 
   if (data.connected === 0) {
+    const setup = await loadConnectionSetup(orgId, data.projects, 'money')
+    const [first] = setup
+    if (product && first) return <MoneyStartView product={product} setup={first} />
     return (
-      <div className="flex max-w-2xl flex-col gap-4">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <Card>
-          <CardContent className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{t('none.title')}</h2>
-            <p className="text-sm text-muted-foreground">{t('none.body')}</p>
-            <p className="text-sm text-muted-foreground">{t('none.readOnly')}</p>
-            {product ? (
-              <Button asChild className="self-start">
-                <Link href={`/p/${product.slug}/money/setup`}>{t('none.connect')}</Link>
-              </Button>
-            ) : (
-              <>
-                <p className="text-sm font-medium">{t('none.all')}</p>
-                <ul className="flex flex-wrap gap-2">
-                  {data.projects.map((p) => (
-                    <li key={p.id}>
-                      <Button asChild variant="outline">
-                        <Link href={`/p/${p.slug}/money/setup`}>{p.name}</Link>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <AreaProductsPage
+        title={t('title')}
+        intro={
+          group
+            ? t('introGroup', { group, currency: data.currency })
+            : t('intro', { currency: data.currency })
+        }
+      >
+        <AccountProducts area="money" setup={setup} folded={false} />
+      </AreaProductsPage>
     )
   }
 

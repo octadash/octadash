@@ -51,7 +51,11 @@ export async function LogsView({
   if (!data.anyLine && !setup.some((s) => s.state === 'sending')) {
     const [first] = setup
     if (product && first) return <LogsStartView orgId={orgId} product={product} setup={first} />
-    return <AreaProductsPage area="logs" title={t('title')} intro={t('intro')} setup={setup} />
+    return (
+      <AreaProductsPage title={t('title')} intro={t('intro')}>
+        <AreaProducts area="logs" setup={setup} folded={false} />
+      </AreaProductsPage>
+    )
   }
 
   const kept =

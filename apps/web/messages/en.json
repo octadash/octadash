@@ -336,14 +336,12 @@
     "title": "Uptime",
     "intro": "Octadash checks each address from outside, on its interval, and tells you when it stops answering.",
     "add": "Add monitor",
-    "addFirst": "Add the first monitor",
     "edit": "Edit",
     "pause": "Pause",
     "resume": "Resume",
     "delete": "Delete",
     "deleteTitle": "Delete {name}?",
     "deleteBody": "The monitor stops and its history is no longer shown.",
-    "empty": "No monitor yet. Start with the site address; add a /health endpoint and a heartbeat for cron jobs later.",
     "name": "Name",
     "kind": "Type",
     "url": "Address",
@@ -2282,13 +2280,6 @@
   },
   "moneyArea": {
     "title": "Money",
-    "none": {
-      "title": "No payment gateway connected",
-      "body": "Connect Stripe, Asaas or Paddle and this page shows revenue, MRR, new subscriptions, churn and failed payments, with each product apart.",
-      "readOnly": "Octadash only reads your payments. It never charges, refunds or changes anything.",
-      "connect": "Connect a payment gateway",
-      "all": "Connect a gateway in a product:"
-    },
     "intro": "Revenue, subscriptions and failed payments of every product, read from your payment gateways. Shown in {currency}; other currencies converted at the day’s rate.",
     "introOne": "Revenue, subscriptions and failed payments of {product}, read from its payment gateways. Shown in {currency}; other currencies converted at the day’s rate.",
     "introGroup": "Revenue, subscriptions and failed payments of the products in {group}. Shown in {currency}; other currencies converted at the day’s rate.",
@@ -2498,13 +2489,6 @@
   },
   "costsArea": {
     "title": "Costs",
-    "none": {
-      "title": "No cost connected",
-      "body": "Connect OpenAI or Anthropic, or type a fixed bill (a server, a tool paid yearly), and this page shows what each product spends, the month’s forecast against a budget, and the margin against Money.",
-      "readOnly": "Octadash only reads what providers charged, with a read-only admin key. It never pays or changes anything.",
-      "connect": "Connect a cost",
-      "all": "Connect a cost in a product:"
-    },
     "intro": "What every product costs to run (AI, servers, fixed bills) and its margin against Money. Shown in {currency}; other currencies converted at the day’s rate.",
     "introOne": "What {product} costs to run (AI, servers, fixed bills) and its margin against Money. Shown in {currency}; other currencies converted at the day’s rate.",
     "introGroup": "What the products in {group} cost to run and their margin against Money. Shown in {currency}; other currencies converted at the day’s rate.",
@@ -2736,7 +2720,6 @@
     "use": "Use {source}",
     "waiting": "{source} is set to send {what}.",
     "viewer": "An owner or admin sets up {area} for this product.",
-    "options": "Other platforms and options",
     "wontUse": "I won’t use {area} in this product",
     "dismissed": "You marked that this product won’t use {area}.",
     "restore": "Use {area} again",
@@ -2832,7 +2815,8 @@
         "waitingAction": "Send a test error",
         "productsTitle": "No product sends errors yet",
         "productsBody": "When they do, this page puts the errors of all of them in one list, with the product on each issue. Start with the product that worries you most.",
-        "more": "{count, plural, one {# more product can send errors} other {# more products can send errors}}"
+        "more": "{count, plural, one {# more product can send errors} other {# more products can send errors}}",
+        "options": "Other platforms and options"
       },
       "traffic": {
         "name": "Traffic",
@@ -2902,7 +2886,8 @@
         "waitingAction": "Open the code",
         "productsTitle": "No product sends page views yet",
         "productsBody": "When they do, this page adds the visits of all of them, and you can compare products side by side. Start with the product with most visits.",
-        "more": "{count, plural, one {# more product can send page views} other {# more products can send page views}}"
+        "more": "{count, plural, one {# more product can send page views} other {# more products can send page views}}",
+        "options": "Other platforms and options"
       },
       "usage": {
         "name": "Product usage",
@@ -2969,7 +2954,8 @@
         "waitingAction": "Open the code",
         "productsTitle": "No product sends events yet",
         "productsBody": "When they do, this page shows the events of all of them, and funnels can cross products. Start with the product whose sign-ups matter most.",
-        "more": "{count, plural, one {# more product can send events} other {# more products can send events}}"
+        "more": "{count, plural, one {# more product can send events} other {# more products can send events}}",
+        "options": "Other platforms and options"
       },
       "logs": {
         "name": "Logs",
@@ -3035,8 +3021,213 @@
         "waitingAction": "Open the code",
         "productsTitle": "No product sends logs yet",
         "productsBody": "When they do, this page searches the lines of all of them at once. Start with the product that breaks most.",
-        "more": "{count, plural, one {# more product can send logs} other {# more products can send logs}}"
+        "more": "{count, plural, one {# more product can send logs} other {# more products can send logs}}",
+        "options": "Other platforms and options"
+      },
+      "money": {
+        "name": "Money",
+        "eyebrow": "Money",
+        "title": "What came in, what repeats and who stopped paying",
+        "body": "Connect your payment gateway and this page shows revenue, MRR, new subscriptions, churn and failed payments, for each product.",
+        "readOnly": "Read only. Octadash never charges, refunds or changes anything in the gateway.",
+        "canUse": "The {account} account already serves {products}. It can serve {product} too: you choose which payments belong to this product.",
+        "canUseMore": "{count, plural, one {# more account can serve it.} other {# more accounts can serve it.}}",
+        "canUseAction": "Use an existing account",
+        "canUseRow": "The {account} account of {products} can serve this one too",
+        "noneRow": "No gateway connected",
+        "noneAction": "Connect",
+        "options": "See accounts and rules",
+        "example": {
+          "tiles": [
+            {
+              "label": "Revenue · 30d",
+              "value": "$18.2k",
+              "note": "↑ 9% vs last month"
+            },
+            {
+              "label": "MRR",
+              "value": "$9,870",
+              "note": "142 subscriptions"
+            },
+            {
+              "label": "Failed",
+              "value": "3",
+              "note": "$297 to recover"
+            }
+          ],
+          "rowsTitle": "Latest payments",
+          "rows": [
+            {
+              "label": "Pro plan · monthly",
+              "value": "$19"
+            },
+            {
+              "label": "500 credits pack",
+              "value": "$49"
+            },
+            {
+              "label": "Team plan · yearly",
+              "value": "$490"
+            },
+            {
+              "label": "Pro plan · card declined",
+              "value": "$19"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Subscriptions and one-off sales",
+            "body": "MRR and churn for subscriptions; revenue and credit packs for one-off sales. Octadash tells which on its own."
+          },
+          {
+            "title": "One account, several products",
+            "body": "One Stripe account can serve several products. You say which payments belong to each."
+          },
+          {
+            "title": "Read only",
+            "body": "Uses a restricted read key where the gateway has one. Nothing is charged or refunded from here."
+          }
+        ],
+        "productsTitle": "No product has a gateway connected yet",
+        "productsBody": "Once connected, this page adds up the revenue of all of them in the organization's currency, and you compare the products side by side.",
+        "more": "{count, plural, one {# more product can connect a gateway} other {# more products can connect a gateway}}"
+      },
+      "costs": {
+        "name": "Costs",
+        "eyebrow": "Costs",
+        "title": "What each product costs and what is left",
+        "body": "Connect OpenAI or Anthropic, or type a fixed bill, and this page shows each product's spend, the month's forecast against the budget and the margin against Money.",
+        "readOnly": "We only read what providers charged, with a read-only admin key. Octadash never pays or changes anything.",
+        "canUse": "The {account} account is already split with {products}. It can count toward {product} too: you choose this product’s part.",
+        "canUseMore": "{count, plural, one {# more account can be split.} other {# more accounts can be split.}}",
+        "canUseAction": "Split an existing account",
+        "canUseRow": "The {account} account of {products} can be split with this one too",
+        "noneRow": "No cost connected",
+        "noneAction": "Connect",
+        "options": "See accounts, splits and budget",
+        "example": {
+          "tiles": [
+            {
+              "label": "This month",
+              "value": "$396",
+              "note": "forecast $432"
+            },
+            {
+              "label": "AI today",
+              "value": "$13",
+              "note": "1.1× the average"
+            },
+            {
+              "label": "Margin",
+              "value": "78%",
+              "note": "against Money"
+            }
+          ],
+          "rowsTitle": "Where the money goes",
+          "rows": [
+            {
+              "label": "OpenAI",
+              "value": "$224"
+            },
+            {
+              "label": "Anthropic",
+              "value": "$108"
+            },
+            {
+              "label": "Server (fixed bill)",
+              "value": "$50"
+            },
+            {
+              "label": "Domain (yearly, per month)",
+              "value": "$14"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Per product",
+            "body": "An AI account or a server split between products by project, in equal parts or by percentage."
+          },
+          {
+            "title": "Monthly budget",
+            "body": "The month's forecast against each product's budget, so you see it before it goes over."
+          },
+          {
+            "title": "Margin",
+            "body": "Cost against revenue from Money: what is left of each product."
+          }
+        ],
+        "productsTitle": "No product has a cost connected yet",
+        "productsBody": "Once connected, this page adds up the cost of all of them and shows each product's margin against Money.",
+        "more": "{count, plural, one {# more product can connect costs} other {# more products can connect costs}}"
+      },
+      "uptime": {
+        "name": "Uptime",
+        "eyebrow": "Uptime",
+        "title": "Know it is down before anyone tells you",
+        "body": "We check from outside, every minute, without waking your database. If it goes down, the team hears about it on the channels you chose.",
+        "urlLabel": "Site address",
+        "urlHint": "The home page is enough. We check every minute.",
+        "start": "Start",
+        "others": "An API with /health, a scheduled job (heartbeat) or another interval:",
+        "othersLink": "full form",
+        "options": "Other kinds of monitor",
+        "noneRow": "No monitor",
+        "noneAction": "Start",
+        "example": {
+          "tiles": [
+            {
+              "label": "Last 30 days",
+              "value": "99.98%",
+              "note": "9 min down"
+            },
+            {
+              "label": "Response",
+              "value": "182 ms",
+              "note": "median"
+            },
+            {
+              "label": "Certificate",
+              "value": "64 days",
+              "note": "warned before it expires"
+            }
+          ],
+          "rowsTitle": "Monitors",
+          "rows": [
+            {
+              "label": "Site · pagebird.com",
+              "value": "Up"
+            },
+            {
+              "label": "API · /health",
+              "value": "Up"
+            },
+            {
+              "label": "Nightly backup (heartbeat)",
+              "value": "Called at 3:00 AM"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "From outside, no database cost",
+            "body": "The check never wakes your product's database. Use a /health that answers without a query."
+          },
+          {
+            "title": "Alerts that arrive",
+            "body": "Telegram, email or a webhook. An emergency opens only after a few minutes down, never for a single failed check."
+          },
+          {
+            "title": "Scheduled jobs",
+            "body": "A heartbeat tells you when a backup or a routine did not run on time."
+          }
+        ],
+        "productsTitle": "No product has a monitor yet",
+        "productsBody": "Start with each product's site address: it takes a minute. Then add /health and heartbeats.",
+        "more": "{count, plural, one {# more product without a monitor} other {# more products without a monitor}}"
       }
-    }
+    },
+    "orNewAccount": "Or connect another account:"
   }
 }
