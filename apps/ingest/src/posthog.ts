@@ -56,11 +56,12 @@ export function parsePostHogBody(request: PostHogRequest): unknown {
 }
 
 /**
- * Events about the SDK itself or about person profiles, which Octadash does
- * not keep: autocapture clicks, recordings, flag calls, web vitals, person and
- * group updates. Exceptions belong to Errors, which takes Sentry SDKs.
+ * Events that are not product events: autocapture clicks, recordings, flag
+ * calls, web vitals, surveys shown, person and group updates. They are not
+ * thrown away: each goes to `received` as it came (masked), for the areas that
+ * will read them. Exceptions go to Errors.
  */
-const SKIPPED = new Set([
+export const NOT_PRODUCT_EVENTS = new Set([
   '$autocapture',
   '$rageclick',
   '$dead_click',
@@ -70,7 +71,6 @@ const SKIPPED = new Set([
   '$feature_flag_called',
   '$feature_view',
   '$feature_interaction',
-  '$exception',
   '$set',
   '$groupidentify',
   '$create_alias',
@@ -81,6 +81,9 @@ const SKIPPED = new Set([
   '$survey_dismissed',
 ])
 
+/** posthog-js and the server SDKs report errors as this event. */
+export const EXCEPTION_EVENT = '$exception'
+
 /** Properties that repeat the person's id; the id itself is kept only as a hash. */
 const ID_PROPERTIES = ['distinct_id', '$user_id', '$anon_distinct_id', '$device_id', 'token']
 
@@ -89,11 +92,23 @@ const isObject = (value: unknown): value is Json =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 const str = (value: unknown) => (typeof value === 'string' && value ? value : undefined)
 
+/** An event that is not a product event, as it came. */
+export interface PostHogItem {
+  name: string
+  item: Json
+  /** When it happened, read like a product event's time. */
+  at: Date | undefined
+  /** Size as it arrived, in JSON. */
+  bytes: number
+}
+
 export interface PostHogBatch {
   key: string | undefined
   events: IncomingEvent[]
-  /** Events left out by SKIPPED, counted so a test can see them go. */
-  skipped: number
+  /** `$exception` events, for Errors. */
+  exceptions: PostHogItem[]
+  /** NOT_PRODUCT_EVENTS, for `received`. */
+  other: PostHogItem[]
 }
 
 /**
@@ -115,15 +130,27 @@ export function readPostHogBatch(body: unknown, received: Date): PostHogBatch {
   }
 
   const events: IncomingEvent[] = []
-  let skipped = 0
+  const exceptions: PostHogItem[] = []
+  const other: PostHogItem[] = []
   for (const item of raw) {
     if (!isObject(item)) continue
     const name = str(item.event)?.trim()
     if (!name) continue
     const properties: Json = isObject(item.properties) ? { ...item.properties } : {}
     key ??= str(item.api_key) ?? str(properties.token) ?? str(item.token)
-    if (SKIPPED.has(name)) {
-      skipped++
+    if (name === EXCEPTION_EVENT || NOT_PRODUCT_EVENTS.has(name)) {
+      const at = Date.parse(str(item.timestamp) ?? '')
+      const entry: PostHogItem = {
+        name,
+        item,
+        at: !Number.isNaN(at)
+          ? new Date(at)
+          : typeof item.offset === 'number'
+            ? new Date(sentAt - item.offset)
+            : undefined,
+        bytes: Buffer.byteLength(JSON.stringify(item)),
+      }
+      ;(name === EXCEPTION_EVENT ? exceptions : other).push(entry)
       continue
     }
     const distinctId =
@@ -149,7 +176,47 @@ export function readPostHogBatch(body: unknown, received: Date): PostHogBatch {
       properties,
     })
   }
-  return { key, events, skipped }
+  return { key, events, exceptions, other }
+}
+
+/**
+ * A `$exception` event in the shape of a Sentry event, so Errors reads it with
+ * the same code: `$exception_list` is already Sentry's exception list, cause
+ * first where Sentry puts it last. Older SDKs sent only the type and message.
+ */
+export function exceptionAsSentryEvent(entry: PostHogItem): Json {
+  const properties = isObject(entry.item.properties) ? entry.item.properties : {}
+  let list = Array.isArray(properties.$exception_list) ? [...properties.$exception_list] : []
+  if (list.length === 0) {
+    const type = str(properties.$exception_type)
+    const value = str(properties.$exception_message)
+    if (type || value) list = [{ type, value }]
+  }
+  const fingerprint = properties.$exception_fingerprint
+  const distinctId = str(entry.item.distinct_id) ?? str(properties.distinct_id)
+  const url = str(properties.$current_url)
+  const userAgent = str(properties.$raw_user_agent) ?? str(properties.$user_agent)
+  const uuid = str(entry.item.uuid)?.replaceAll('-', '').toLowerCase()
+  const lib = str(properties.$lib)
+  return {
+    event_id: uuid && /^[0-9a-f]{32}$/.test(uuid) ? uuid : undefined,
+    timestamp: (entry.at ?? new Date()).toISOString(),
+    level: str(properties.$exception_level) ?? 'error',
+    platform: lib === 'web' ? 'javascript' : (lib ?? 'other'),
+    exception: { values: list.reverse() },
+    fingerprint:
+      typeof fingerprint === 'string'
+        ? [fingerprint]
+        : Array.isArray(fingerprint)
+          ? fingerprint
+          : undefined,
+    release: str(properties.$app_version) ?? str(properties.release),
+    environment: str(properties.environment) ?? str(properties.$environment),
+    request:
+      url || userAgent ? { url, headers: userAgent ? { 'User-Agent': userAgent } : {} } : undefined,
+    user: distinctId ? { id: distinctId } : undefined,
+    sdk: lib ? { name: `posthog-${lib}` } : undefined,
+  }
 }
 
 /**

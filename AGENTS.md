@@ -20,6 +20,10 @@ Read [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
 - Migrations live in `packages/db/src/migrations/`, are registered in
   `index.ts`, and are never edited after release.
 - Alert channels and data sources are integrations in `packages/integrations`.
+- Never throw away data the ingest receives. What no area reads yet goes to
+  `received`; a new route or kind of data declares its fate in
+  `apps/ingest/src/fates.ts`; a discard needs a reason in `DISCARDS` and a
+  `dropped:` count ([architecture](docs/architecture.md#nothing-received-is-thrown-away)).
 - UI strings go in `apps/web/messages/en.json` and `pt-BR.json`.
 - Brand: magenta `#C04482` (dark-theme accent `#E875AF`, light-theme accent
   `#A32C69`), Outfit for display text, Inter for body text.

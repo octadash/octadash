@@ -1,12 +1,12 @@
 import { brotliDecompressSync, gunzipSync, inflateSync } from 'node:zlib'
 import { OCTADASH_VERSION } from '@octadash/core'
-import type { EventRow } from '@octadash/db'
+import type { EventRow, QueuedError, QueuedReceived } from '@octadash/db'
 import type { EventSink, HeartbeatStore, SaltStore } from '@octadash/queue'
 import { type Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { cors } from 'hono/cors'
 import { requestContext } from './context'
-import { parseEnvelope, sentryKey, toErrorRow } from './errors'
+import { type EnvelopeItem, parseEnvelope, sentryKey, toErrorRow } from './errors'
 import {
   batchSchema,
   type IncomingEvent,
@@ -15,22 +15,24 @@ import {
   type Sender,
   toEventRows,
 } from './events'
-import type { HeartbeatResolver, KeyResolver } from './keys'
+import type { HeartbeatResolver, IngestScope, KeyResolver } from './keys'
 import { MAX_LOGS_PER_REQUEST, toLogRows } from './logs'
 import { decodeLogsJson, decodeLogsProtobuf, exportAnswer, type OtlpLog } from './otlp'
 import {
+  exceptionAsSentryEvent,
   POSTHOG_ASSETS,
   POSTHOG_FLAGS,
   parsePostHogBody,
   readPostHogBatch,
   UnsupportedCompression,
 } from './posthog'
+import { bodyOf, droppedRow, receivedRow, timeOf } from './received'
 import { BROWSER_SCRIPT } from './script'
 import { visitorHash } from './visitor'
 
 /** Requests bigger than this are refused before they are read. */
 export const MAX_BODY_BYTES = 1024 * 1024
-/** Sentry envelopes may carry attachments, which are read and dropped. */
+/** Sentry envelopes may carry attachments; each is kept in `received` up to its own limit. */
 export const MAX_ENVELOPE_BYTES = 10 * 1024 * 1024
 /** At most this much after decompression. */
 const MAX_INFLATED_BYTES = 20 * 1024 * 1024
@@ -133,25 +135,44 @@ export function createApp(deps: IngestDeps) {
     }
   }
 
-  /**
-   * Validates the key and queues the events: the same path for the Octadash
-   * format and PostHog's. Answers with a Response on failure, or the count.
-   */
-  const acceptEvents = async (
-    c: Context,
-    key: string,
-    events: IncomingEvent[],
-  ): Promise<Response | number> => {
-    let scope: Awaited<ReturnType<KeyResolver['resolve']>>
+  /** The product and source a key sends for, or the answer to give when there is none. */
+  const scopeOf = async (c: Context, key: string): Promise<IngestScope | Response> => {
+    let scope: IngestScope | null
     try {
       scope = await deps.keys.resolve(key)
     } catch (err) {
       deps.onError?.(err)
       return c.json({ error: 'unavailable' }, 503)
     }
-    if (!scope) return c.json({ error: 'invalid_key' }, 401)
-    if (events.length === 0) return 0
+    return scope ?? c.json({ error: 'invalid_key' }, 401)
+  }
 
+  /** Queues rows on a stream; a Response when the queue cannot take them. */
+  const queue = async (
+    c: Context,
+    kind: 'events' | 'errors' | 'received',
+    rows: readonly unknown[],
+  ): Promise<Response | null> => {
+    if (rows.length === 0) return null
+    try {
+      await deps.sink.write(kind, rows)
+      return null
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
+    }
+  }
+
+  /**
+   * Queues the events: the same path for the Octadash format and PostHog's.
+   * Answers with a Response on failure, or the count.
+   */
+  const acceptEvents = async (
+    c: Context,
+    scope: IngestScope,
+    events: IncomingEvent[],
+  ): Promise<Response | number> => {
+    if (events.length === 0) return 0
     const received = new Date(now())
     let rows: EventRow[]
     try {
@@ -163,13 +184,7 @@ export function createApp(deps: IngestDeps) {
       deps.onError?.(err)
       return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
     }
-    try {
-      await deps.sink.write('events', rows)
-    } catch (err) {
-      deps.onError?.(err)
-      return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
-    }
-    return rows.length
+    return (await queue(c, 'events', rows)) ?? rows.length
   }
 
   app.post(
@@ -201,21 +216,21 @@ export function createApp(deps: IngestDeps) {
           400,
         )
       }
-      const accepted = await acceptEvents(
-        c,
-        keyFrom(c) ?? parsed.data.key ?? '',
-        parsed.data.events,
-      )
+      const scope = await scopeOf(c, keyFrom(c) ?? parsed.data.key ?? '')
+      if (scope instanceof Response) return scope
+      const accepted = await acceptEvents(c, scope, parsed.data.events)
       return typeof accepted === 'number' ? c.json({ accepted }, 202) : accepted
     },
   )
 
   /**
    * PostHog SDKs, by changing only the host (see posthog.ts). They read
-   * `{ status: 1 }` as accepted.
+   * `{ status: 1 }` as accepted. Product events go to `events`, `$exception`
+   * to Errors, and the rest (autocapture, web vitals, profile updates...) to
+   * `received`.
    */
   const posthog = async (c: Context) => {
-    if (deps.sink.isFull('events')) return queueFull(c)
+    if (deps.sink.isFull('events') || deps.sink.isFull('received')) return queueFull(c)
     let body: unknown
     try {
       body = parsePostHogBody({
@@ -234,7 +249,30 @@ export function createApp(deps: IngestDeps) {
     if (batch.events.length > MAX_EVENTS_PER_REQUEST) {
       return c.json({ error: 'too_many_events' }, 400)
     }
-    const accepted = await acceptEvents(c, keyFrom(c) ?? batch.key ?? '', batch.events)
+    const scope = await scopeOf(c, keyFrom(c) ?? batch.key ?? '')
+    if (scope instanceof Response) return scope
+    const received = new Date(now())
+    const sender = senderOf(c, scope.project_id, received)
+    const errorRows: QueuedError[] = []
+    const others: QueuedReceived[] = []
+    const keep = (kind: string, entry: (typeof batch.other)[number]) =>
+      others.push(
+        receivedRow(
+          scope,
+          { kind, body: { encoding: 'json', value: entry.item }, bytes: entry.bytes, at: entry.at },
+          received,
+        ),
+      )
+    for (const entry of batch.exceptions) {
+      const row = await toErrorRow(scope, exceptionAsSentryEvent(entry), sender, received)
+      // An exception with no type, message or stack is still something the app sent.
+      if (row) errorRows.push(row)
+      else keep('posthog.$exception', entry)
+    }
+    for (const entry of batch.other) keep(`posthog.${entry.name}`, entry)
+    const failed = (await queue(c, 'errors', errorRows)) ?? (await queue(c, 'received', others))
+    if (failed) return failed
+    const accepted = await acceptEvents(c, scope, batch.events)
     return typeof accepted === 'number' ? c.json({ status: 1 }) : accepted
   }
   const posthogLimit = bodyLimit({
@@ -245,8 +283,52 @@ export function createApp(deps: IngestDeps) {
     app.post(path, posthogLimit, posthog)
     app.post(`${path}/`, posthogLimit, posthog)
   }
-  // Person updates: Octadash keeps no profiles, so they are taken and dropped.
-  for (const path of ['/engage', '/engage/']) app.post(path, (c) => c.json({ status: 1 }))
+  /**
+   * Person updates (`/engage/`, older SDKs). No area reads profiles yet, so
+   * each is kept in `received`, its e-mail, phone and name masked.
+   */
+  const engage = async (c: Context) => {
+    if (deps.sink.isFull('received')) return queueFull(c)
+    let body: unknown
+    try {
+      body = parsePostHogBody({
+        body: new Uint8Array(await c.req.arrayBuffer()),
+        contentType: c.req.header('content-type'),
+        contentEncoding: c.req.header('content-encoding'),
+        compression: c.req.query('compression'),
+      })
+    } catch (err) {
+      if (err instanceof UnsupportedCompression) {
+        return c.json({ error: 'unsupported_compression' }, 400)
+      }
+      return c.json({ error: 'invalid_body' }, 400)
+    }
+    const items = (Array.isArray(body) ? body : [body]).filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === 'object' && item !== null && !Array.isArray(item),
+    )
+    const text = (v: unknown) => (typeof v === 'string' && v ? v : undefined)
+    const key =
+      keyFrom(c) ??
+      items.map((item) => text(item.$token) ?? text(item.token) ?? text(item.api_key)).find(Boolean)
+    const scope = await scopeOf(c, key ?? '')
+    if (scope instanceof Response) return scope
+    const received = new Date(now())
+    const rows = items.map((item) =>
+      receivedRow(
+        scope,
+        {
+          kind: 'posthog.$engage',
+          body: { encoding: 'json', value: item },
+          bytes: Buffer.byteLength(JSON.stringify(item)),
+          at: timeOf(item.$time ?? item.timestamp),
+        },
+        received,
+      ),
+    )
+    return (await queue(c, 'received', rows)) ?? c.json({ status: 1 })
+  }
+  for (const path of ['/engage', '/engage/']) app.post(path, posthogLimit, engage)
   for (const path of ['/flags', '/flags/', '/decide', '/decide/']) {
     app.on(['GET', 'POST'], path, (c) => c.json(POSTHOG_FLAGS))
   }
@@ -268,12 +350,12 @@ export function createApp(deps: IngestDeps) {
    * Errors, from any Sentry SDK (`/api/<id>/envelope/` and the older
    * `/api/<id>/store/`) and from the Octadash script (`/o/v1/errors`, the same
    * event JSON, one or a list). The id in the address is ignored: the key
-   * names the product and the source. Other envelope items (sessions,
-   * transactions, replays, attachments) are accepted and dropped until their
-   * areas exist, so the SDK does not retry them.
+   * names the product and the source. Every other envelope item (sessions,
+   * transactions, check-ins, feedback, client reports, replays, attachments,
+   * and any type a future SDK sends) is kept in `received` as it came.
    */
   const errors = (format: 'envelope' | 'store' | 'octadash') => async (c: Context) => {
-    if (deps.sink.isFull('errors')) return queueFull(c)
+    if (deps.sink.isFull('errors') || deps.sink.isFull('received')) return queueFull(c)
     let body: Uint8Array
     try {
       body = inflate(new Uint8Array(await c.req.arrayBuffer()), c.req.header('content-encoding'))
@@ -283,13 +365,17 @@ export function createApp(deps: IngestDeps) {
 
     let events: unknown[]
     let dsn: string | undefined
+    let others: EnvelopeItem[] = []
+    let sentAt: Date | undefined
     try {
       if (format === 'envelope') {
         const envelope = parseEnvelope(body)
         dsn = typeof envelope.header.dsn === 'string' ? envelope.header.dsn : undefined
+        sentAt = timeOf(envelope.header.sent_at)
         events = envelope.items
           .filter((item) => item.type === 'event')
           .map((item) => JSON.parse(new TextDecoder().decode(item.payload)))
+        others = envelope.items.filter((item) => item.type !== 'event')
       } else {
         const parsed = JSON.parse(new TextDecoder().decode(body))
         if (format === 'octadash' && parsed && typeof parsed === 'object' && 'events' in parsed) {
@@ -310,28 +396,57 @@ export function createApp(deps: IngestDeps) {
         c.req.header('authorization'),
         dsn,
       ) ?? keyFrom(c)
-    let scope: Awaited<ReturnType<KeyResolver['resolve']>>
-    try {
-      scope = await deps.keys.resolve(key ?? '')
-    } catch (err) {
-      deps.onError?.(err)
-      return c.json({ error: 'unavailable' }, 503)
-    }
-    if (!scope) return c.json({ error: 'invalid_key' }, 401)
+    const scope = await scopeOf(c, key ?? '')
+    if (scope instanceof Response) return scope
 
     const received = new Date(now())
     const sender = senderOf(c, scope.project_id, received)
-    const rows = []
+    const rows: QueuedError[] = []
+    const kept: QueuedReceived[] = others.map((item) => {
+      const content = bodyOf(item.payload)
+      const value = content.encoding === 'json' ? content.value : undefined
+      const facts = value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+      return receivedRow(
+        scope,
+        {
+          kind: `sentry.${item.type || 'unknown'}`,
+          meta: item.header,
+          body: content,
+          bytes: item.payload.length,
+          at: timeOf(facts.timestamp ?? facts.started ?? facts.start_timestamp) ?? sentAt,
+        },
+        received,
+      )
+    })
     for (const event of events.slice(0, MAX_ERRORS_PER_REQUEST)) {
       const row = await toErrorRow(scope, event, sender, received)
+      // An event with no exception and no message is still kept, as it came.
       if (row) rows.push(row)
+      else {
+        const bytes = Buffer.byteLength(JSON.stringify(event) ?? '')
+        kept.push(
+          receivedRow(
+            scope,
+            { kind: 'sentry.event', body: { encoding: 'json', value: event }, bytes },
+            received,
+          ),
+        )
+      }
     }
-    try {
-      if (rows.length > 0) await deps.sink.write('errors', rows)
-    } catch (err) {
-      deps.onError?.(err)
-      return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
+    if (events.length > MAX_ERRORS_PER_REQUEST) {
+      kept.push(
+        droppedRow(
+          scope,
+          'error',
+          'too_many_in_request',
+          0,
+          events.length - MAX_ERRORS_PER_REQUEST,
+          received,
+        ),
+      )
     }
+    const failed = (await queue(c, 'errors', rows)) ?? (await queue(c, 'received', kept))
+    if (failed) return failed
     // Sentry SDKs read the event id back.
     return c.json(
       format === 'octadash' ? { accepted: rows.length } : { id: rows[0]?.event_id ?? null },

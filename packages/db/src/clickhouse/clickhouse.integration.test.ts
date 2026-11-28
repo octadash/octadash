@@ -3,6 +3,7 @@ import { bucketStarts } from './buckets'
 import { createClickHouse, parseClickHouseUrl } from './client'
 import { insertEvents, toClickHouseTime } from './events'
 import { migrateClickHouse } from './migrate'
+import { insertReceived } from './received'
 import { sourceActivity } from './sources'
 import {
   fillSeries,
@@ -49,6 +50,7 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     await client
       .command({ query: `DELETE FROM uptime_checks WHERE org_id = '${org}'` })
       .catch(() => {})
+    await client.command({ query: `DELETE FROM received WHERE org_id = '${org}'` }).catch(() => {})
     await client.close()
   })
 
@@ -89,6 +91,37 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     ).json<{ n: string }>()
     expect(Number(result[0]?.n)).toBe(1)
   })
+  it('keeps received data with its retention, once per retried batch', async () => {
+    const now = toClickHouseTime(new Date())
+    const row = {
+      org_id: org,
+      project_id: '00000000-0000-4000-8000-0000000000c2',
+      source_id: '00000000-0000-4000-8000-0000000000c3',
+      kind: 'sentry.session',
+      timestamp: now,
+      received_at: now,
+      payload: '{"body":{"status":"ok"}}',
+      encoding: 'json' as const,
+      bytes: 17,
+      masked: 0,
+      retention_days: 30,
+    }
+    const token = `test:received:${now}`
+    await insertReceived(client, [row, { ...row, kind: 'dropped:sentry.attachment' }], token)
+    await insertReceived(client, [row, { ...row, kind: 'dropped:sentry.attachment' }], token)
+    const result = await (
+      await client.query({
+        query: 'SELECT kind, retention_days FROM received WHERE org_id = {org:UUID} ORDER BY kind',
+        query_params: { org },
+        format: 'JSONEachRow',
+      })
+    ).json<{ kind: string; retention_days: number }>()
+    expect(result).toEqual([
+      { kind: 'dropped:sentry.attachment', retention_days: 30 },
+      { kind: 'sentry.session', retention_days: 30 },
+    ])
+  })
+
   it('sums up uptime checks per monitor', async () => {
     const project = '00000000-0000-4000-8000-0000000000c2'
     const monitor = crypto.randomUUID()

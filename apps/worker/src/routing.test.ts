@@ -1,4 +1,4 @@
-import { type EventRow, NO_SOURCE } from '@octadash/db'
+import { areaOfReceived, type EventRow, NO_SOURCE } from '@octadash/db'
 import { describe, expect, it } from 'vitest'
 import { EventRouter } from './routing'
 
@@ -70,5 +70,21 @@ describe('EventRouter', () => {
     advance(60_000)
     await router.route([row('p1', 'a')])
     expect(calls.loads).toBe(2)
+  })
+
+  it('routes received data by the area it belongs to, and always keeps data of no area', async () => {
+    const { router, calls } = setup({ p1: ['errors'] })
+    const kinds = ['sentry.session', 'posthog.$autocapture', 'dropped:sentry.attachment', 'x.new']
+    const kept = await router.route(
+      kinds.map((kind) => ({ project_id: 'p1', source_id: 's1', kind })),
+      (r) => areaOfReceived(r.kind),
+    )
+    expect(kept.map((r) => r.kind)).toEqual([
+      'posthog.$autocapture',
+      'dropped:sentry.attachment',
+      'x.new',
+    ])
+    expect(calls.discarded).toEqual([{ project_id: 'p1', area: 'errors', count: 1 }])
+    expect(calls.fed).toEqual([{ source_id: 's1', area: 'usage' }])
   })
 })

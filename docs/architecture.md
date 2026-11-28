@@ -181,9 +181,11 @@ versions and passwords generated at install. Each has one job.
 
 - The ingest reads Sentry events (envelopes, gzip or not, and the old
   `/store/`) and the same JSON from the Octadash script at `/o/v1/errors`, and
-  queues one row per event on the `errors` stream with its fingerprint. Other
-  envelope items (sessions, transactions, replays, attachments) are accepted
-  and dropped until their areas exist.
+  queues one row per event on the `errors` stream with its fingerprint. Every
+  other envelope item (sessions, transactions, check-ins, feedback, client
+  reports, replays, attachments, and types an SDK starts sending later) goes
+  to `received` as it came (see "Nothing received is thrown away"). PostHog's
+  `$exception` is read as a Sentry event and joins the same issues.
 - Grouping: the app's `fingerprint` wins (`{{ default }}` stands for the usual
   one). Otherwise the main exception's type and the app's own frames (module or
   file without the build hash, and function), or every frame when none is the
@@ -216,8 +218,9 @@ versions and passwords generated at install. Each has one job.
   JSON, gzip, or base64 in a form). `/flags/`, `/decide/` and
   `/array/<key>/config` answer with no flags and every extra of posthog-js off
   (autocapture, recordings, surveys), and `/static/*.js` sends the snippet to
-  PostHog's CDN for the library. Events about the SDK or person profiles
-  (`$autocapture`, `$set`, `$exception` and others) are dropped at the door.
+  PostHog's CDN for the library. Events that are not product events
+  (`$autocapture`, `$web_vitals`, `$set`, `/engage/` and others) go to
+  `received`, masked, and `$exception` goes to Errors.
   Tested with posthog-js 1.x and posthog-node 5.x.
 - Privacy at the door, for every event: `distinct_id` is stored as a hash of
   the product and the id, never as sent; the script's `identify(id)` and
@@ -380,6 +383,36 @@ streamable HTTP endpoint.
 
 Every role applies pending migrations on start (a lock makes parallel starts
 safe), so upgrades are "pull the new image and restart".
+
+### Nothing received is thrown away
+
+Data that reaches the ingest and could ever be useful is kept, even when no
+screen reads it yet: the area that comes later starts with its history.
+
+- What an area reads goes to that area's stream (`events`, `errors`, `logs`).
+- What no area reads yet goes to the `received` stream and the ClickHouse
+  table `received`, as it came: one row per item with its `kind`
+  (`sentry.session`, `posthog.$autocapture`), the body as JSON, text or base64,
+  and the masked values counted. Kept 30 days (`OCTADASH_RECEIVED_RETENTION_DAYS`).
+- A kind nobody has seen before is kept there by default. The default is keep,
+  not drop.
+- Masking still applies (`apps/ingest/src/received.ts`): secrets and personal
+  fields by name, a person's name inside a person object, e-mails, documents,
+  cards and keys inside any text, and ids of a person replaced by the
+  product's hash.
+- Leaving data out is the exception. Every case is in `DISCARDS`
+  (`apps/ingest/src/fates.ts`) with its reason, and the ones taken with a 200
+  answer leave a `dropped:<kind>` row in `received` with the count, so nothing
+  goes missing silently. Today: personal data (masked), areas marked "I won't
+  use this" (counted on the card), error events beyond the limit of one
+  request, and items over 1 MB.
+- Files (replays, attachments, profiles) go to file storage, the fourth
+  bundled store: Garage, S3-compatible, managed by Octadash, or an external S3
+  or R2 set in Settings. Retention is applied by Octadash, so it works the
+  same on every store. Until that step lands, items over 1 MB are counted,
+  not stored.
+- `fates.test.ts` fails when a route has no entry in `ROUTES`, or when any
+  Sentry item type or PostHog event stops reaching a stream.
 
 ### Getting data in: compatible formats and own SDKs
 
