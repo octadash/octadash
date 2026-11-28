@@ -1,0 +1,54 @@
+---
+title: Money
+description: Revenue, MRR, churn and failed payments of every product, read from Stripe, Paddle and Asaas with a read-only key.
+---
+
+Money reads payments and subscriptions from your payment gateways. It never
+charges, refunds or changes anything.
+
+## Connect a gateway
+
+In a product, open **Money** > **Set up** (or **Product settings** > **Areas** >
+Money), pick the gateway and follow the steps.
+
+1. **Key.** Octadash checks it when you save and stores it encrypted.
+
+   | Gateway | Key                                                                                                         |
+   | ------- | ----------------------------------------------------------------------------------------------------------- |
+   | Stripe  | A restricted key (`rk_…`) with Read only. A secret key (`sk_…`) is refused, since it can charge and refund. |
+   | Paddle  | A key with Read on transactions, subscriptions and products, and nothing else.                              |
+   | Asaas   | Asaas has no read-only keys. Create one just for Octadash and delete it in Asaas to cut access at once.     |
+
+2. **Which payments are this product's.** All of the account, only some of the
+   gateway's products, or by metadata (`product` in Stripe and Paddle, the
+   external reference in Asaas). One account can serve several products without
+   counting anything twice.
+3. **Live updates.** Add the webhook the page shows (Stripe: `charge.*` and
+   `customer.subscription.*`; Paddle: `transaction.*` and `subscription.*`;
+   Asaas: payment and subscription events, with the access token). Without it,
+   Octadash reads every 5 minutes.
+4. **History.** The last 12 months are imported in the background, so MRR and
+   churn start with history.
+
+## What it shows
+
+- **Revenue** paid in the period, with the one-off part apart, and what was
+  refunded.
+- **MRR**: what every active subscription adds per month, at its price today.
+  Yearly plans count a twelfth; trials only once they pay.
+- **New subscriptions** and **churn** (subscriptions that ended, out of those
+  active when the period started).
+- **Failed payments**, and the emergency **Payments failing**: 20% of charges
+  fail in 15 minutes, with at least 10 charges. Changeable in the product's
+  alert rules.
+- Customers who paid and who **bought again**, and the average sale.
+
+Every amount is shown in the organization's currency (**Octadash settings** >
+**General**); other currencies are converted at the day's rate. Margin, against
+what the product costs, is in [Costs](/use/costs).
+
+## Ask your AI
+
+With a token that reads Money, the [MCP server](/use/mcp) answers `money`: the
+same totals for a period against the one before, per product, with the latest
+payments.

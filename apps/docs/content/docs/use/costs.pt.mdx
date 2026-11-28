@@ -1,0 +1,57 @@
+---
+title: Custos
+description: Quanto cada produto custa para rodar (provedores de IA, servidores, contas fixas), a margem contra Dinheiro, uma previsão do mês e orçamentos.
+---
+
+Custos lê o que os provedores cobram e conta as contas fixas que você digita,
+divide entre os produtos e coloca contra [Dinheiro](/pt/use/money) para a margem
+de cada produto. O Octadash nunca paga nada.
+
+## Conecte um custo
+
+Em um produto, abra **Custos** > **Configurar** (ou **Configurações do
+produto** > **Áreas** > Custos).
+
+- **OpenAI ou Anthropic**: uma chave de admin, usada só para ler custos e a
+  lista de projetos. O Octadash lê os últimos 90 dias em segundo plano, depois
+  a cada hora. Os provedores publicam custos com atraso (a Anthropic até umas 4
+  horas), então os números de hoje crescem ao longo do dia.
+- **Conta fixa**, para o que não tem API (um servidor, um domínio, uma
+  ferramenta paga por ano): nome, valor, moeda, desde quando, todo mês ou todo
+  ano. Contada dia a dia, para cada mês fechar com o valor da conta.
+
+## Custos compartilhados
+
+Uma conta de IA ou um servidor muitas vezes serve vários produtos. Cada produto
+fica com os projetos do provedor que são só dele, e com uma parte do resto,
+dividida:
+
+- **Igualmente** entre os produtos que compartilham;
+- **Pelo tráfego**: a fatia de visitantes de cada produto naquele dia, vinda de
+  [Tráfego](/pt/send-data/traffic);
+- **Percentual fixo**, ajustado para somar 100.
+
+Uma mudança vale de hoje em diante: os dias passados mantêm a divisão que
+tinham, então margens passadas não mudam.
+
+## O que mostra
+
+- **Gasto** no período (este mês, 7 ou 30 dias) contra o período anterior, e o
+  gasto por dia.
+- **Previsão do mês**: o gasto até agora, mais a média diária dos últimos 7 dias
+  para cada dia que falta.
+- **Margem**: a receita de Dinheiro (pago menos estornado) menos os custos,
+  sobre a receita. Produtos sem receita não mostram margem.
+- **IA hoje** contra a média diária, e o produto mais acima da própria média.
+- **Orçamentos**: um orçamento mensal por produto com um percentual de aviso. A
+  página avisa quando a previsão chega nele. Gasto 3× o normal por uma hora é a
+  emergência **Custo disparado**, com ou sem orçamento.
+
+Os valores aparecem na moeda da organização; outras moedas são convertidas pela
+cotação do dia.
+
+## Pergunte à sua IA
+
+Com um token que lê Custos, o [servidor MCP](/pt/use/mcp) responde `costs`:
+gasto, receita e margem de um período contra o anterior, a previsão do mês
+contra os orçamentos, IA hoje, por produto e por provedor.

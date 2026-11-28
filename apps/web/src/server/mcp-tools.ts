@@ -3,6 +3,7 @@ import {
   compileLogQuery,
   createProject,
   createSource,
+  currencyDigits,
   getIssue,
   hasPageScript,
   issueEvent,
@@ -38,6 +39,8 @@ import { z } from 'zod'
 import type { McpTool } from '@/lib/mcp'
 import { SOURCE_PLATFORMS } from '@/lib/sources'
 import { services } from './context'
+import { loadCosts } from './costs'
+import { loadMoney } from './money'
 
 /**
  * The tools of Octadash's MCP server, one set per area. Each reading tool
@@ -77,6 +80,8 @@ async function productsOf(orgId: string, chosen: string | undefined) {
 }
 
 const slugOf = (all: Project[], id: string) => all.find((p) => p.id === id)?.slug ?? id
+/** Already in percent, to one decimal. */
+const oneDecimal = (value: number | null) => (value === null ? null : Math.round(value * 10) / 10)
 const pct = (value: number | null) => (value === null ? null : Math.round(value * 10_000) / 100)
 
 export const MCP_TOOLS: Tool[] = [
@@ -400,6 +405,143 @@ export const MCP_TOOLS: Tool[] = [
           })),
           tags: event.tags,
         },
+      }
+    },
+  },
+  {
+    name: 'money',
+    needs: [['money', 'read']],
+    title: 'Money',
+    description:
+      'Revenue, MRR, new subscriptions, churn and failed charges for a period, against the period before, per product and with the latest payments. Amounts are in the organization currency, converted at each day rate.',
+    input: z.object({
+      product,
+      period: z
+        .enum(['today', '24h', '7d', '30d'])
+        .default('30d')
+        .describe('today, 24h, 7d or 30d (default).'),
+    }),
+    async run(input, { orgId }) {
+      const { scope } = await productsOf(orgId, input.product as string | undefined)
+      const data = await loadMoney(orgId, input.product ? scope.map((p) => p.id) : null, {
+        period: input.period as '30d',
+        metric: 'revenue',
+      })
+      const major = (minor: number) => minor / 10 ** currencyDigits(data.currency)
+      const share = (value: number | null) => (value === null ? null : Math.round(value * 10) / 10)
+      return {
+        currency: data.currency,
+        period: { from: data.period.from, to: data.period.to },
+        productsWithGateway: data.connected,
+        totals: {
+          revenue: major(data.totals.revenue),
+          oneOffRevenue: major(data.totals.oneOffRevenue),
+          refunded: major(data.totals.refunded),
+          mrr: major(data.totals.mrr),
+          newSubscriptions: data.totals.started,
+          churnPercent: share(data.totals.churn),
+          failedChargesPercent: share(data.totals.failed),
+          buyers: data.totals.buyers,
+          returningBuyers: data.totals.returning,
+        },
+        previous: {
+          revenue: major(data.previous.revenue),
+          mrr: major(data.previous.mrr),
+          newSubscriptions: data.previous.started,
+        },
+        ...(data.failingNow
+          ? { failingNow: { product: data.failingNow.name, percent: share(data.failingNow.share) } }
+          : {}),
+        byProduct: data.byProduct.map((p) => ({
+          product: p.project.slug,
+          gateway: p.connected,
+          revenue: major(p.revenue),
+          mrr: major(p.mrr),
+          mrrChangePercent: p.mrrChange,
+          today: major(p.today),
+          paying: p.paying,
+          churnPercent: share(p.churn),
+          failedNowPercent: share(p.failedNow),
+        })),
+        latestPayments: data.latest.slice(0, 10).map((pay) => ({
+          product: pay.product.slug,
+          at: pay.at,
+          status: pay.status,
+          amount: pay.amount / 10 ** currencyDigits(pay.currency),
+          currency: pay.currency,
+          gateway: pay.gateway,
+          subscription: pay.subscription,
+          ...(pay.failure ? { failure: pay.failure } : {}),
+        })),
+        ...(data.unconverted.length > 0 ? { leftOutNoRate: data.unconverted } : {}),
+        ...(data.complete ? {} : { partial: true }),
+      }
+    },
+  },
+  {
+    name: 'costs',
+    needs: [['costs', 'read']],
+    title: 'Costs and margin',
+    description:
+      'What the products cost (AI providers and fixed bills, split between products), revenue and margin for a period against the period before, this month forecast against budgets, and AI spend today against its average. Amounts in the organization currency.',
+    input: z.object({
+      product,
+      period: z
+        .enum(['month', '7d', '30d'])
+        .default('month')
+        .describe('month (this calendar month, default), 7d or 30d.'),
+    }),
+    async run(input, { orgId }) {
+      const { scope } = await productsOf(orgId, input.product as string | undefined)
+      const data = await loadCosts(orgId, input.product ? scope.map((p) => p.id) : null, {
+        period: input.period as 'month',
+      })
+      const major = (minor: number) => minor / 10 ** currencyDigits(data.currency)
+      return {
+        currency: data.currency,
+        period: { from: data.period.from, to: data.period.to },
+        totals: {
+          spend: major(data.totals.spend),
+          revenue: major(data.totals.revenue),
+          marginPercent: oneDecimal(data.totals.margin),
+        },
+        previous: {
+          spend: major(data.previous.spend),
+          marginPercent: oneDecimal(data.previous.margin),
+        },
+        month: {
+          spent: major(data.month.spent),
+          forecast: major(data.month.forecast),
+          ...(data.month.budget
+            ? {
+                budget: major(data.month.budget.amount),
+                budgetForecast: major(data.month.budget.forecast),
+              }
+            : {}),
+        },
+        aiToday: {
+          spend: major(data.ai.today),
+          dailyAverage: major(data.ai.average),
+          ...(data.ai.top ? { furthestAbove: data.ai.top } : {}),
+        },
+        byProduct: data.byProduct.map((p) => ({
+          product: p.project.slug,
+          cost: major(p.cost),
+          revenue: major(p.revenue),
+          marginPercent: oneDecimal(p.margin),
+          ...(p.aiTimes ? { aiTodayTimesAverage: p.aiTimes } : {}),
+          ...(p.budget ? { budget: p.budget } : {}),
+        })),
+        byProvider: data.byProvider.map((c) => ({
+          name: c.name,
+          provider: c.provider,
+          amount: major(c.amount),
+          unassigned: major(c.unassigned),
+          status: c.status,
+          syncedAt: c.syncedAt,
+        })),
+        ...(data.unconverted.length > 0 ? { leftOutNoRate: data.unconverted } : {}),
+        ...(data.complete ? {} : { partial: true }),
       }
     },
   },

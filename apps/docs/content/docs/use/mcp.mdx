@@ -96,6 +96,8 @@ assistant sees.
 | `search_logs`      | Logs: read | Log lines, newest first, with the same search the Logs page takes (`level:error timeout`), up to 7 days back. |
 | `list_issues`      | Errors: read | Error issues, most recently seen first (unresolved, new, regressed, resolved or ignored), with events and people in the period. |
 | `issue_details`    | Errors: read | One issue with its newest event: exception chain and stack trace, the last breadcrumbs, tags, release and browser. |
+| `money`            | Money: read | Revenue, MRR, new subscriptions, churn and failed charges for a period against the one before, per product, with the latest payments. |
+| `costs`            | Costs: read | Spend, revenue and margin for a period against the one before, the month's forecast against budgets, AI today, per product and provider. |
 | `list_sources`     | Sources: read | A product's sources, the areas each feeds and when each last sent a page view, an event, an error or a log line. |
 | `source_setup`     | Sources and keys: read | A source's public key, DSN and the exact install code per area, the same code the panel shows. |
 | `create_product`   | Products: write | Creates a product by name, or returns the one with that name. |
