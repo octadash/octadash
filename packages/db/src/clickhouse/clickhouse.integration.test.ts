@@ -15,6 +15,7 @@ import {
   trafficSeriesByProduct,
   trafficSummary,
 } from './traffic'
+import { TV_SLOTS, tvActivity } from './tv'
 import {
   insertUptimeChecks,
   monitorChecks,
@@ -391,5 +392,61 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
       ups: 0,
       medianMs: null,
     })
+  })
+
+  it('reads what the TV tiles show for the last 4 hours', async () => {
+    const shop = crypto.randomUUID()
+    const now = new Date('2026-11-22T12:02:00Z')
+    const ago = (minutes: number) => toClickHouseTime(new Date(now.getTime() - minutes * 60_000))
+    const check = (minutes: number, up: 0 | 1, ms: number) => ({
+      org_id: org,
+      project_id: shop,
+      monitor_id: crypto.randomUUID(),
+      timestamp: ago(minutes),
+      up,
+      status_code: up ? 200 : 502,
+      duration_ms: ms,
+      error: up ? '' : 'HTTP 502',
+      cert_days: null,
+    })
+    await insertUptimeChecks(client, [check(1, 1, 100), check(30, 1, 300), check(200, 0, 900)])
+    const event = (minutes: number, event: string, visitor: string, extra = {}) => ({
+      org_id: org,
+      project_id: shop,
+      source_id: crypto.randomUUID(),
+      uuid: crypto.randomUUID(),
+      received_at: ago(minutes),
+      timestamp: ago(minutes),
+      distinct_id: '',
+      session_id: '',
+      properties: '{}',
+      event,
+      visitor_id: visitor,
+      is_bot: 0,
+      ...extra,
+    })
+    await insertEvents(client, [
+      event(2, '$pageview', 'v1'),
+      event(3, '$pageview', 'v2'),
+      event(3, '$pageview', 'bot', { is_bot: 1 }),
+      event(60, '$pageview', 'v3'),
+      event(10, 'signed_up', 'v1'),
+      // Yesterday: not today, outside the 4 hours.
+      event(13 * 60, '$pageview', 'v4'),
+    ])
+    const dayStart = new Date('2026-11-22T00:00:00Z')
+    const tv = await tvActivity(client, org, [shop], dayStart, now)
+    const tile = tv.get(shop)
+    expect(tile).toMatchObject({
+      responseMs: 200,
+      visitorsNow: 2,
+      pageviewsToday: 3,
+      eventsToday: 1,
+    })
+    expect(tile?.checks).toHaveLength(TV_SLOTS)
+    expect(tile?.checks?.at(-1)).toBe('up')
+    expect(tile?.checks?.filter((c) => c === 'down')).toHaveLength(1)
+    expect(tile?.spark.reduce((a, b) => a + b, 0)).toBe(3)
+    expect(await tvActivity(client, org, [], dayStart, now)).toEqual(new Map())
   })
 })

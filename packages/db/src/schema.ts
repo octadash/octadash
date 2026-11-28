@@ -14,6 +14,7 @@ export interface Database {
   organization_settings: OrganizationSettingsTable
   project: ProjectTable
   project_slug_alias: ProjectSlugAliasTable
+  tv_link: TvLinkTable
   source: SourceTable
   source_key: SourceKeyTable
   project_area: ProjectAreaTable
@@ -45,6 +46,18 @@ export interface OctadashInstanceTable {
   watcher_status: ColumnType<WatcherStatus, WatcherStatus | undefined, WatcherStatus>
   watcher_checked_at: ColumnType<Date | null, Date | null | undefined, Date | null>
   watcher_error: ColumnType<string | null, string | null | undefined, string | null>
+}
+
+/** A private TV link; only the token's hash is stored. */
+export interface TvLinkTable {
+  id: string
+  org_id: string
+  token_hash: string
+  settings: Json
+  created_by: string | null
+  created_at: CreatedAt
+  last_opened_at: Date | null
+  stopped_at: Date | null
 }
 
 /** An old address of a product, kept after a rename so links keep working. */

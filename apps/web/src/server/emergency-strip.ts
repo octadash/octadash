@@ -17,6 +17,8 @@ export async function loadStrip(
   userId: string,
   canManage: boolean,
   now = new Date(),
+  /** TV mode shows signals too, on their products' tiles. */
+  withSignals = false,
 ): Promise<StripData> {
   const { db } = services()
   const [open, ended, members, watcher, t, tu, te] = await Promise.all([
@@ -38,7 +40,7 @@ export async function loadStrip(
   }
 
   const items: StripItem[] = open
-    .filter((i) => i.level === 'emergency')
+    .filter((i) => i.level === 'emergency' || (withSignals && i.level === 'signal'))
     .map((incident) => {
       const data = (incident.data ?? {}) as Record<string, unknown>
       const kind = (KINDS as string[]).includes(incident.kind)
@@ -54,6 +56,7 @@ export async function loadStrip(
         href: `/p/${incident.project_slug}/emergencies/${incident.id}`,
         projectId: incident.project_id,
         product: incident.project_name,
+        signal: incident.level !== 'emergency',
         kind,
         title: t(`title.${kind}`, values),
         short: t(`short.${kind}`, values),

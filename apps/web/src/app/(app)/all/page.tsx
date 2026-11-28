@@ -2,6 +2,7 @@ import { listProjects } from '@octadash/db'
 import { getTranslations } from 'next-intl/server'
 import { FirstProduct } from '@/components/first-product'
 import { GetStarted } from '@/components/get-started'
+import { TvButton } from '@/components/tv-button'
 import { parsePeriod } from '@/lib/period'
 import { services } from '@/server/context'
 import { loadGetStarted } from '@/server/get-started'
@@ -33,6 +34,7 @@ export default async function AllPage({
       title={t('areas.overview.name')}
       base="/all"
       overview={overview}
+      action={<TvButton scope="all" />}
       top={getStarted && <GetStarted data={getStarted} />}
     />
   )

@@ -98,3 +98,20 @@ and why; anything here can be reversed.
   Logs as "coming later".
 - **A source "went quiet"** after 24 hours without data: the Sources page then
   says "Nothing for 3 days" with a diamond, instead of the green dot.
+- **TV mode** follows the TV canvas: the strip of emergencies on top, one tile
+  per product (status in word and icon, who is on it, 4 hours of checks, three
+  numbers, a sparkline), "What happened" in the footer. Products in trouble
+  come first and stay on every page; the screen turns the page every 20
+  seconds. It opens from "TV mode" on the Overview, a group and a product.
+- **The numbers offered on a tile are only the ones already built**: online
+  now, page views today, events today and response time. Errors, sales and
+  sign-ups join the list when their areas exist.
+- **One private link per organization**. Making a new one stops the old one;
+  "Stop link" turns it off. The token is shown once and only its hash is
+  stored. The link opens the screen with the settings chosen when it was made,
+  and shows nothing else. "Last opened" has no place or device, only the time.
+- **Sound is off by default.** Browsers only play sound after a click, so the
+  TV shows "Allow sound" once.
+- **A product whose monitor is down counts as down** on the TV, even before
+  its emergency opens, so the header never says "all up" while a tile says
+  "Down".

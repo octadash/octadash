@@ -1,9 +1,28 @@
+import { openTvLink } from '@octadash/db'
 import type { LiveEvent } from '@octadash/queue'
+import { services } from '@/server/context'
 import { live } from '@/server/live'
 import { getViewer, listMemberships } from '@/server/session'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+/**
+ * Whose events to send: the signed-in viewer's organization, or the one a
+ * private TV link (`?tv=<token>`) belongs to.
+ */
+async function orgOf(request: Request): Promise<string | Response> {
+  const token = new URL(request.url).searchParams.get('tv')
+  if (token) {
+    const link = await openTvLink(services().db, token)
+    return link ? link.orgId : new Response(null, { status: 404 })
+  }
+  const viewer = await getViewer()
+  if (!viewer) return new Response(null, { status: 401 })
+  const orgs = await listMemberships(viewer.user.id)
+  const org = orgs.find((o) => o.id === viewer.session.activeOrganizationId) ?? orgs[0]
+  return org ? org.id : new Response(null, { status: 403 })
+}
 
 /** Comment line that keeps proxies from closing a quiet connection. */
 const KEEPALIVE_MS = 25_000
@@ -14,11 +33,8 @@ const KEEPALIVE_MS = 25_000
  * reloads its own data, so it never receives anything its viewer may not see.
  */
 export async function GET(request: Request) {
-  const viewer = await getViewer()
-  if (!viewer) return new Response(null, { status: 401 })
-  const orgs = await listMemberships(viewer.user.id)
-  const org = orgs.find((o) => o.id === viewer.session.activeOrganizationId) ?? orgs[0]
-  if (!org) return new Response(null, { status: 403 })
+  const orgId = await orgOf(request)
+  if (orgId instanceof Response) return orgId
 
   const encoder = new TextEncoder()
   let close = () => {}
@@ -37,7 +53,7 @@ export async function GET(request: Request) {
       write('retry: 5000\n\n')
       let unsubscribe: () => void = () => {}
       try {
-        unsubscribe = await live().hub.subscribe([org.id, null], send)
+        unsubscribe = await live().hub.subscribe([orgId, null], send)
       } catch {
         controller.close()
         return
