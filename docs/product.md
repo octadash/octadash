@@ -47,6 +47,68 @@ what do I do about it?**
 - **The list grows step by step.** The [backlog](#backlog) is the full size of what
   can be built. Items leave it when they are needed, not all at once.
 
+## Glossary
+
+The names below are the only names. The panel, the site, the docs, the API and
+the code use them as written here (the Portuguese column is the panel's
+translation). A new concept gets its row here before it reaches a screen.
+
+### Structure
+
+| Name            | Portuguese        | Meaning                                                                                                                      |
+| --------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Organization    | Organização       | Who owns products and invites members. One install can hold several.                                                         |
+| Product         | Produto           | Something the owner runs (a site, an app, a SaaS). Created with a name only.                                                 |
+| All products    | Todos os produtos | The first option of the product picker: every product of the organization.                                                   |
+| Group           | Grupo             | A saved set of products ("Main", "Clients"). Opens the same pages as All products, filtered. A product can be in several.    |
+| Area            | Área              | One entry of the menu (below). Every area works for all products, a group or one product.                                    |
+| Source          | Origem            | One part of a product that sends data to an area: "Site, Next.js", "API, .NET", "Worker, Node". Each source has its own key. |
+| Source key      | Chave da origem   | Identifies product and source at the ingest, also inside a Sentry DSN. The install snippet comes with it filled in.          |
+| Monitor         | Monitor           | One Uptime check of a product: Site, API or /health, Heartbeat.                                                              |
+| Heartbeat       | Heartbeat         | A monitor that waits for a call from a cron job, worker or backup; silence is the failure.                                   |
+| Connection      | Conexão           | A link to an outside account that Money or Costs read from: Stripe, Asaas, Paddle, OpenAI, a VPS provider.                   |
+| Channel         | Canal             | Where alerts go: Email, Telegram, Webhook.                                                                                   |
+| Outside watcher | Vigia externo     | The outside service Octadash pings every minute, so someone hears when Octadash itself goes down.                            |
+
+There is no "service" entity: the parts of a product are the sources of each
+area, the monitors of Uptime and the connections of Money and Costs. Logs take
+the service name OpenTelemetry already sends.
+
+### Menu
+
+| Name          | Portuguese    | Notes                                                                                      |
+| ------------- | ------------- | ------------------------------------------------------------------------------------------ |
+| Overview      | Visão geral   | With All products or a group: every area side by side. With one product: the product page. |
+| Uptime        | No ar         | Monitors, certificates, heartbeats.                                                        |
+| Traffic       | Tráfego       | Visitors and where they come from.                                                         |
+| Product usage | Uso           | Sign-ups, logins, key actions, funnel, retention.                                          |
+| Errors        | Erros         | Browser and server errors.                                                                 |
+| Money         | Dinheiro      | Revenue, MRR, churn, refunds.                                                              |
+| Costs         | Custos        | Two parts: AI costs and Infra costs, plus the margin. The site may show them as two steps. |
+| Logs          | Logs          | Logs and traces.                                                                           |
+| Settings      | Configurações | Organization, members, channels, alert rules, groups, outside watcher.                     |
+
+### On screen
+
+| Name                            | Portuguese                      | Meaning                                                                                                                                     |
+| ------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product page                    | Página do produto               | Overview with one product: one card per area.                                                                                               |
+| Set up                          | Configurar                      | Opens an area's setup: what it does, add a source, instructions per platform.                                                               |
+| Add source                      | Adicionar origem                | Creates a source with a name and a platform and shows its snippet.                                                                          |
+| I won't use this                | Não vou usar                    | Moves an area's card to the collapsed strip.                                                                                                |
+| Also available for this product | Também disponível neste produto | The collapsed strip with the areas put aside; "Use again" brings one back.                                                                  |
+| Example                         | Exemplo                         | Label on a blurred sample card: set up, no data yet. Never "waiting".                                                                       |
+| Emergency                       | Emergência                      | Needs action now. Goes to the channels and to the emergency strip.                                                                          |
+| Signal                          | Sinal                           | Out of normal, no message. Highlighted in its area and in the signals strip.                                                                |
+| Data                            | Dado                            | Everything else, shown neutral.                                                                                                             |
+| Emergency strip                 | Faixa de emergência             | The red bar on top of every screen. One bar for any number of emergencies: "2 emergencies: …" with "See all 2". Ignores the product picker. |
+| Signals strip                   | Faixa de sinais                 | "3 things out of normal today" on the Overview.                                                                                             |
+| I'm on it                       | Estou cuidando                  | Button on an emergency. Stops repeated messages and shows everyone, live, "Luciano is on it · 6 min". The strip stays until it is resolved. |
+| Resolved                        | Resolvido                       | The emergency ended (the check passed again, or someone closed it).                                                                         |
+| Still learning what is normal   | Aprendendo o normal             | A product with less than 4 weeks of data: no signals yet.                                                                                   |
+| Unassigned spend                | Gasto sem produto               | Cost seen on a provider account that no product claims.                                                                                     |
+| TV mode                         | Modo TV                         | Full screen Overview for All products or a group, updated live.                                                                             |
+
 ## Areas
 
 Every area works for **all products at once**, for **a group of products** or
@@ -60,16 +122,16 @@ filtered to its products and with their totals. A TV screen can show one group.
 The emergency strip ignores the filter: an outage anywhere shows on every
 screen.
 
-| Area            | Answers                                           | Runs in                 |
-| --------------- | ------------------------------------------------- | ----------------------- |
-| Overview        | what needs my attention, and the day in numbers   | (built from the others) |
-| Uptime          | is it up, is the certificate valid, did a job run | Octadash (no code)      |
-| Traffic         | who comes and from where                          | browser                 |
-| Product usage   | sign-ups, logins, key actions, funnel, retention  | browser and server      |
-| Errors          | what broke and for how many people                | browser and server      |
-| Money           | revenue, MRR, churn, refunds                      | connectors (no code)    |
-| Costs           | AI cost, infra cost, margin                       | server and connectors   |
-| Logs and traces | what the server did at that moment                | server                  |
+| Area          | Answers                                           | Runs in                 |
+| ------------- | ------------------------------------------------- | ----------------------- |
+| Overview      | what needs my attention, and the day in numbers   | (built from the others) |
+| Uptime        | is it up, is the certificate valid, did a job run | Octadash (no code)      |
+| Traffic       | who comes and from where                          | browser                 |
+| Product usage | sign-ups, logins, key actions, funnel, retention  | browser and server      |
+| Errors        | what broke and for how many people                | browser and server      |
+| Money         | revenue, MRR, churn, refunds                      | connectors (no code)    |
+| Costs         | AI cost, infra cost, margin                       | server and connectors   |
+| Logs          | what the server did at that moment (logs, traces) | server                  |
 
 Alert channels and data sources are integrations (`packages/integrations`).
 Community modules and integrations use the same contract and arrive by pull
@@ -109,20 +171,28 @@ There is no "skip" or "not now": leaving a card alone already means "not now".
 ### Set up an area
 
 "Set up" opens the area's empty state, modelled on PostHog's: what the area
-does, instructions in tabs per platform with the product's keys already filled
-in, and a sample of what the data will look like. Browser and server use the
-same project key, as in Sentry and PostHog; only the snippet changes.
+does, the product's sources for that area with their state, "Add source", and a
+sample of what the data will look like.
+
+A source is one part of the product that sends data: "Site, Next.js",
+"API, .NET", "Worker, Node". Adding one asks for a name and a platform, and the
+instructions come in tabs per platform with the source's own key filled in.
+Each source has its own key, so Octadash knows which part sent each event
+without any extra setting in the code, and it works with any Sentry SDK, which
+has no field for it. A product with one part has one source; the Intelibot has
+four. The area's card on the product page shows each source with its state
+("Next.js receiving, .NET no data yet").
 
 ## Getting data in
 
-| Area            | Primary path (best supported)         | Other languages and tools                            |
-| --------------- | ------------------------------------- | ---------------------------------------------------- |
-| Traffic         | Octadash browser script               | (any site can add the script)                        |
-| Errors          | Octadash SDK for the browser and Node | Sentry SDKs (every language Sentry supports)         |
-| Product usage   | Octadash SDK for the browser and Node | OpenTelemetry; PostHog SDKs as a compatibility extra |
-| Costs (AI)      | Octadash wrapper for Node             | OpenTelemetry `gen_ai`                               |
-| Logs and traces | OpenTelemetry (OTLP over HTTP)        | any OpenTelemetry SDK                                |
-| Uptime, Money   | nothing to install                    |                                                      |
+| Area          | Primary path (best supported)         | Other languages and tools                            |
+| ------------- | ------------------------------------- | ---------------------------------------------------- |
+| Traffic       | Octadash browser script               | (any site can add the script)                        |
+| Errors        | Octadash SDK for the browser and Node | Sentry SDKs (every language Sentry supports)         |
+| Product usage | Octadash SDK for the browser and Node | OpenTelemetry; PostHog SDKs as a compatibility extra |
+| Costs (AI)    | Octadash wrapper for Node             | OpenTelemetry `gen_ai`                               |
+| Logs          | OpenTelemetry (OTLP over HTTP)        | any OpenTelemetry SDK                                |
+| Uptime, Money | nothing to install                    |                                                      |
 
 Octadash writes its own SDKs only where they bring something extra: one browser
 script for traffic, errors and events together, and a package for Node and
@@ -152,11 +222,11 @@ a format change breaks a test before it reaches a user.
 
 Octadash separates three kinds of information:
 
-| Kind      | Example                                 | What happens                                                                                                          |
-| --------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Emergency | site down, checkout broken, error spike | Sent at once to the chosen channels, and a red strip on top of every screen until someone resolves or acknowledges it |
-| Signal    | sign-ups on one product dropped         | No message. Highlighted in its area (the product's row turns red with the difference) and listed in the daily summary |
-| Data      | everything else                         | Shown, neutral                                                                                                        |
+| Kind      | Example                                 | What happens                                                                                                                          |
+| --------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Emergency | site down, checkout broken, error spike | Sent at once to the chosen channels, and a red strip on top of every screen until it is resolved ("I'm on it" only stops the repeats) |
+| Signal    | sign-ups on one product dropped         | No message. Highlighted in its area (the product's row turns red with the difference) and listed in the daily summary                 |
+| Data      | everything else                         | Shown, neutral                                                                                                                        |
 
 Every rule ships as a seed and can be changed per product: "down for 2
 minutes" can become 5, "certificate expires in 7 days" can become 10, "errors 5
@@ -261,7 +331,7 @@ docs.
 | 6   | Money                 | Stripe, Asaas, Paddle                                                                                                                                                                            |       |
 | 7   | AI cost               | Octadash wrapper, OpenTelemetry `gen_ai`                                                                                                                                                         |       |
 | 8   | Infra cost and margin | provider APIs or manual entries                                                                                                                                                                  |       |
-| 9   | Logs and traces       | OTLP over HTTP                                                                                                                                                                                   |       |
+| 9   | Logs                  | OTLP over HTTP                                                                                                                                                                                   |       |
 | 10  | Daily summary         | what changed since yesterday, by email and the alert channels                                                                                                                                    |       |
 
 Rules that apply to every step:
@@ -413,7 +483,7 @@ spare.
 | Queue size, oldest job and failures         | Better Stack           | medium   |
 | Backups done and restore tests              | none                   | medium   |
 
-### Logs and traces (beyond step 9)
+### Logs (beyond step 9)
 
 | Item                                                    | Seen in           | Priority |
 | ------------------------------------------------------- | ----------------- | -------- |
