@@ -129,7 +129,10 @@
     "search": "Search product",
     "none": "No product found",
     "new": "New product",
-    "label": "Product"
+    "label": "Product",
+    "groups": "Groups",
+    "products": "Products",
+    "newGroup": "New group"
   },
   "newProduct": {
     "title": "New product",
@@ -148,7 +151,8 @@
   "areaPage": {
     "soon": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows how to set it up for this product.",
     "soonAll": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows it for every product at once.",
-    "back": "Back to {name}"
+    "back": "Back to {name}",
+    "soonGroup": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows it for the products of this group."
   },
   "overview": {
     "count": "{count, plural, one {# product} other {# products}}."
@@ -347,6 +351,27 @@
         "title": "Certificate expiring",
         "body": "A monitor's HTTPS certificate expires in a few days."
       }
+    }
+  },
+  "groups": {
+    "newTitle": "New group",
+    "newIntro": "A group gathers products to see only them: the overview and every area show the group's products. A product can be in several groups.",
+    "create": "Create group",
+    "name": "Name",
+    "placeholder": "Clients",
+    "products": "Products",
+    "selected": "Chosen: {count}",
+    "edit": "Edit group",
+    "empty": "No products in this group yet. Choose them in Edit group.",
+    "settingsTitle": "Group",
+    "settingsIntro": "The group's name and the products it shows.",
+    "deleteTitle": "Delete group",
+    "deleteBody": "Deletes the group only. Its products and their data stay.",
+    "delete": "Delete group",
+    "deleteDialog": "Delete the group {name}?",
+    "errors": {
+      "name": "Give the group a name.",
+      "notFound": "Group not found."
     }
   }
 }

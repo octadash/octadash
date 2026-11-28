@@ -30,20 +30,32 @@ export const OverviewIcon = LayoutGridIcon
 
 const AREA_IDS: readonly string[] = AREA_ITEMS.map((item) => item.id)
 
-/** Where the visitor is: one product (`/p/<slug>`) or every product (`/all`). */
+/**
+ * Where the visitor is: one product (`/p/<slug>`), one group of products
+ * (`/g/<slug>`) or every product (`/all`). A group and "all" show the same
+ * pages, filtered.
+ */
 export interface Scope {
+  kind: 'all' | 'group' | 'product'
   base: string
   slug: string | null
 }
 
 export function scopeOf(pathname: string): Scope {
-  const match = /^\/p\/([^/]+)/.exec(pathname)
-  if (match?.[1]) return { base: `/p/${match[1]}`, slug: decodeURIComponent(match[1]) }
-  return { base: '/all', slug: null }
+  const match = /^\/(p|g)\/([^/]+)/.exec(pathname)
+  if (match?.[2]) {
+    return {
+      kind: match[1] === 'p' ? 'product' : 'group',
+      base: `/${match[1]}/${match[2]}`,
+      slug: decodeURIComponent(match[2]),
+    }
+  }
+  return { kind: 'all', base: '/all', slug: null }
 }
 
 /** The area open in the path, if any, so switching products keeps it. */
 export function areaOf(pathname: string): string | null {
-  const segment = pathname.split('/').filter(Boolean)[pathname.startsWith('/p/') ? 2 : 1]
+  const nested = pathname.startsWith('/p/') || pathname.startsWith('/g/')
+  const segment = pathname.split('/').filter(Boolean)[nested ? 2 : 1]
   return segment && AREA_IDS.includes(segment) ? segment : null
 }

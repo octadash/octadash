@@ -21,7 +21,7 @@ export interface SidebarLabels {
 export function AppSidebar({ labels }: { labels: SidebarLabels }) {
   const pathname = usePathname()
   const scope = scopeOf(pathname)
-  const settingsHref = scope.slug ? `${scope.base}/settings` : '/settings/members'
+  const settingsHref = scope.kind === 'all' ? '/settings/members' : `${scope.base}/settings`
   const items = [
     { href: scope.base, label: labels.overview, icon: OverviewIcon, exact: true },
     ...AREA_ITEMS.map((area) => ({
