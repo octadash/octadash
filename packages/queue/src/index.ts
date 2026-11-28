@@ -1,5 +1,6 @@
 export * from './consumer'
 export * from './heartbeats'
 export * from './live'
+export * from './salts'
 export * from './sink'
 export * from './streams'

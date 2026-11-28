@@ -257,6 +257,20 @@ usage) with one key. The worker routes each batch:
 Keys from before sources (product keys) keep working, without a source, until
 the setup screens create sources; then they are dropped.
 
+Traffic needs no cookie. The browser script (`/o/v1/script.js`, served by the
+ingest) sends `$pageview` with `$current_url` and `$referrer`, PostHog's names,
+so PostHog's web SDK fills the same columns. The ingest turns each request into
+columns Traffic reads directly (`path`, `referrer_host`, `utm_*`, `browser`,
+`os`, `device`, `country`, `is_bot`) and a `visitor_id`: a hash of a random
+salt of the day (kept in Valkey for two days), the product, the address and the
+browser. The address itself is never stored, and once the salt expires no one
+can link two days. When the app names the person (`distinct_id`), that name
+counts instead. The country comes from a proxy header (Cloudflare,
+CloudFront, Vercel); without one it stays empty. Bots are stored with
+`is_bot = 1` and shown apart, not dropped. Traffic queries take a list of
+products or null for all of them, so All products, a group and one product
+are the same query.
+
 ### URL diagnosis removed
 
 The first version read a product's address from outside and guessed what it

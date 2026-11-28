@@ -1,10 +1,14 @@
 import { OCTADASH_VERSION } from '@octadash/core'
-import type { EventSink, HeartbeatStore } from '@octadash/queue'
+import type { EventRow } from '@octadash/db'
+import type { EventSink, HeartbeatStore, SaltStore } from '@octadash/queue'
 import { type Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { cors } from 'hono/cors'
+import { requestContext } from './context'
 import { batchSchema, PropertiesTooLargeError, toEventRows } from './events'
 import type { HeartbeatResolver, KeyResolver } from './keys'
+import { BROWSER_SCRIPT } from './script'
+import { visitorHash } from './visitor'
 
 /** Requests bigger than this are refused before they are read. */
 export const MAX_BODY_BYTES = 1024 * 1024
@@ -15,6 +19,8 @@ export interface IngestDeps {
   sink: EventSink
   keys: KeyResolver
   heartbeats: { resolver: HeartbeatResolver; store: HeartbeatStore }
+  /** Daily salts for the visitor hash. */
+  salts: SaltStore
   now?: () => number
   onError?: (err: unknown) => void
 }
@@ -33,6 +39,7 @@ export interface IngestDeps {
  */
 export function createApp(deps: IngestDeps) {
   const app = new Hono()
+  const now = deps.now ?? Date.now
 
   // SDKs call ingest from browsers on other domains.
   app.use(
@@ -47,6 +54,14 @@ export function createApp(deps: IngestDeps) {
 
   app.get('/health', (c) => c.json({ status: 'ok', service: 'ingest', version: OCTADASH_VERSION }))
 
+  // The browser script. An hour of cache: a fix reaches every site within the hour.
+  app.get('/o/v1/script.js', (c) =>
+    c.body(BROWSER_SCRIPT, 200, {
+      'content-type': 'application/javascript; charset=utf-8',
+      'cache-control': 'public, max-age=3600',
+    }),
+  )
+
   // A cron job or backup reports that it ran. The token is the secret; the
   // ping is kept in Valkey and the worker compares it with the monitor's interval.
   const heartbeat = async (c: Context) => {
@@ -54,7 +69,7 @@ export function createApp(deps: IngestDeps) {
     let monitorId: string | null
     try {
       monitorId = await deps.heartbeats.resolver.resolve(token)
-      if (monitorId) await deps.heartbeats.store.record(monitorId, (deps.now ?? Date.now)())
+      if (monitorId) await deps.heartbeats.store.record(monitorId, now())
     } catch (err) {
       deps.onError?.(err)
       return c.json({ error: 'unavailable' }, 503)
@@ -105,14 +120,30 @@ export function createApp(deps: IngestDeps) {
       }
       if (!scope) return c.json({ error: 'invalid_key' }, 401)
 
-      let rows: ReturnType<typeof toEventRows>
+      const request = requestContext((name) => c.req.header(name))
+      // Only a browser speaks for a visitor; a server's own address is nobody.
+      const fromBrowser = Boolean(c.req.header('origin') || c.req.header('referer'))
+      const received = new Date(now())
+      const projectId = scope.project_id
+      let rows: EventRow[]
       try {
-        rows = toEventRows(scope, parsed.data.events)
+        rows = await toEventRows(
+          scope,
+          parsed.data.events,
+          {
+            ip: fromBrowser ? request.ip : '',
+            userAgent: fromBrowser ? request.userAgent : '',
+            country: request.country,
+            visitor: (ip, ua) => visitorHash(deps.salts, received, projectId, ip, ua),
+          },
+          received,
+        )
       } catch (err) {
         if (err instanceof PropertiesTooLargeError) {
           return c.json({ error: 'properties_too_large', event: err.message }, 400)
         }
-        throw err
+        deps.onError?.(err)
+        return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
       }
 
       try {
