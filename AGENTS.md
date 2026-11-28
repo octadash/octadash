@@ -27,3 +27,8 @@ Read [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
 - UI strings go in `apps/web/messages/en.json` and `pt-BR.json`.
 - Brand: magenta `#C04482` (dark-theme accent `#E875AF`, light-theme accent
   `#A32C69`), Outfit for display text, Inter for body text.
+- Every change merged to `main` (feature, fix, decision, docs, roadmap) gets an
+  entry in the site's changelog: `src/data/changelog.json` in `octadash/site`
+  (English and Portuguese, São Paulo time, newest first; its README explains
+  the format). Whoever merges the change adds the entry, in a short PR to the
+  site right after. Several PRs of one change make one entry.
