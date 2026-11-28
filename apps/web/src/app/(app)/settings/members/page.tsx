@@ -1,170 +1,181 @@
-import { getFormatter, getTranslations } from 'next-intl/server'
-import { cancelInvitationAction, inviteAction } from '@/actions/invitations'
-import { ActionForm } from '@/components/action-form'
-import { CopyField } from '@/components/copy-field'
-import { Field } from '@/components/field'
-import { RoleSelect } from '@/components/role-select'
-import { SubmitButton } from '@/components/submit-button'
+import { listChannels, listMembers, listPendingInvitations } from '@octadash/db'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { cancelInvitationAction } from '@/actions/invitations'
+import { CopyButton } from '@/components/copy-button'
+import { InviteDialog } from '@/components/invite-dialog'
+import { MembersTable, type Role } from '@/components/members-table'
+import { SettingsHeader } from '@/components/settings-page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { services } from '@/server/context'
-import { canManage, requireOrg } from '@/server/session'
+import { inviteChannelOf } from '@/server/invitations'
+import { canManage, isOwner, requireOrg } from '@/server/session'
 
-function roleKey(role: string | null) {
-  if (role?.includes('owner')) return 'roleOwner' as const
-  if (role?.includes('admin')) return 'roleAdmin' as const
-  return 'roleMember' as const
+function roleOf(role: string | null): Role {
+  if (role && isOwner(role)) return 'owner'
+  if (role?.split(',').some((r) => r.trim() === 'admin')) return 'admin'
+  return 'member'
 }
 
+/** "Now", "2 hr. ago", "yesterday", "12 days ago". */
+function since(locale: string, at: Date, now: Date, nowText: string) {
+  const minutes = Math.floor((now.getTime() - at.getTime()) / 60_000)
+  // "Last seen" is written at most every 5 minutes.
+  if (minutes < 5) return nowText
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' })
+  if (minutes < 60) return rtf.format(-minutes, 'minute')
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return rtf.format(-hours, 'hour')
+  return rtf.format(-Math.floor(hours / 24), 'day')
+}
+
+/**
+ * Settings › Members: who can open the organization, their roles and when
+ * they last did, and the invitations still open.
+ */
 export default async function MembersPage() {
   const { org, user } = await requireOrg()
   const { db, env } = services()
-  const [members, invitations, t, format] = await Promise.all([
-    db
-      .selectFrom('auth_member')
-      .innerJoin('auth_user', 'auth_user.id', 'auth_member.userId')
-      .select([
-        'auth_member.id',
-        'auth_member.role',
-        'auth_user.id as userId',
-        'auth_user.name',
-        'auth_user.email',
-      ])
-      .where('auth_member.organizationId', '=', org.id)
-      .orderBy('auth_user.name')
-      .execute(),
-    db
-      .selectFrom('auth_invitation')
-      .select(['id', 'email', 'role', 'expiresAt'])
-      .where('organizationId', '=', org.id)
-      .where('status', '=', 'pending')
-      .where('expiresAt', '>', new Date())
-      .orderBy('createdAt', 'desc')
-      .execute(),
+  const [members, invitations, channels, t, common, locale] = await Promise.all([
+    listMembers(db, org.id),
+    listPendingInvitations(db, org.id),
+    listChannels(db, org.id),
     getTranslations('members'),
-    getFormatter(),
+    getTranslations('common'),
+    getLocale(),
   ])
   const manager = canManage(org.role)
-  const common = await getTranslations('common')
+  const now = new Date()
+  const roles = { owner: t('roleOwner'), admin: t('roleAdmin'), member: t('roleMember') }
+  const mailer = inviteChannelOf(channels)
+  const days = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
 
   return (
-    <div className="flex max-w-3xl flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('intro', { org: org.name })}</p>
-      </div>
+    <div className="flex max-w-4xl flex-col gap-6">
+      <SettingsHeader
+        title={t('title')}
+        intro={t('intro', { org: org.name })}
+        action={
+          manager && (
+            <InviteDialog
+              labels={{
+                trigger: t('invite'),
+                title: t('inviteTitle', { org: org.name }),
+                intro: mailer
+                  ? t('inviteIntroEmail', { channel: mailer.name })
+                  : t('inviteIntroLink'),
+                email: t('email'),
+                role: t('role'),
+                roleHint: t('inviteRoleHint'),
+                admin: roles.admin,
+                member: roles.member,
+                send: t('sendInvite'),
+                close: common('close'),
+              }}
+            />
+          )
+        }
+      />
 
-      <Card className="py-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-4">{t('name')}</TableHead>
-              <TableHead>E-mail</TableHead>
-              <TableHead className="pr-4 text-right">{t('role')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members.map((m) => (
-              <TableRow key={m.id}>
-                <TableCell className="pl-4 font-medium">
-                  {m.name}
-                  {m.userId === user.id && (
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      ({t('you')})
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="text-muted-foreground">{m.email}</TableCell>
-                <TableCell className="pr-4 text-right">
-                  <Badge variant={m.role.includes('owner') ? 'brand' : 'secondary'}>
-                    {t(roleKey(m.role))}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      <MembersTable
+        members={members.map((m) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          role: roleOf(m.role),
+          you: m.userId === user.id,
+          seen:
+            m.userId === user.id
+              ? t('now')
+              : m.seenAt
+                ? since(locale, m.seenAt, now, t('now'))
+                : t('never'),
+        }))}
+        canEdit={manager}
+        canTouchOwners={isOwner(org.role)}
+        labels={{
+          search: t('search'),
+          count: { one: t('countOne'), other: t('countOther') },
+          name: t('name'),
+          email: t('email'),
+          role: t('role'),
+          roleInfo: {
+            label: t('rolesInfoLabel'),
+            title: t('rolesTitle'),
+            owner: t('roleInfo.owner'),
+            admin: t('roleInfo.admin'),
+            member: t('roleInfo.member'),
+          },
+          lastSeen: t('lastSeen'),
+          you: t('you'),
+          roles,
+          actions: t('actions'),
+          remove: t('remove', { org: org.name }),
+          removeTitle: t('removeTitle', { org: org.name, name: '{name}' }),
+          removeBody: t('removeBody'),
+          cancel: common('cancel'),
+          nobody: t('nobody'),
+        }}
+      />
 
       {manager && invitations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <h2 className="font-display text-lg font-semibold">{t('pending')}</h2>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {invitations.map((inv) => (
-              <div
-                key={inv.id}
-                className="flex flex-col gap-2 border-t border-border pt-4 first:border-0 first:pt-0"
-              >
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <section
+          aria-labelledby="pending-title"
+          className="overflow-hidden rounded-xl border border-border bg-card"
+        >
+          <h2 id="pending-title" className="border-b border-border px-4 py-3 text-sm font-semibold">
+            {t('pending')}{' '}
+            <span className="font-normal text-muted-foreground">· {invitations.length}</span>
+          </h2>
+          <ul className="divide-y divide-border">
+            {invitations.map((inv) => {
+              const left = Math.max(
+                1,
+                Math.ceil((inv.expiresAt.getTime() - now.getTime()) / 86_400_000),
+              )
+              const expires = t('expiresIn', { when: days.format(left, 'day') })
+              const status = inv.emailSentAt
+                ? t('emailSent')
+                : inv.emailError
+                  ? t('emailFailed', { error: inv.emailError })
+                  : t('emailNotSent')
+              return (
+                <li key={inv.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
                   <span className="font-medium">{inv.email}</span>
-                  <Badge variant="secondary">{t(roleKey(inv.role))}</Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {t('expires', {
-                      date: format.dateTime(inv.expiresAt, { dateStyle: 'medium' }),
-                    })}
+                  <Badge variant="secondary">{roles[roleOf(inv.role)]}</Badge>
+                  <span
+                    className={
+                      inv.emailError && !inv.emailSentAt
+                        ? 'text-sm text-error'
+                        : 'text-sm text-muted-foreground'
+                    }
+                  >
+                    {status} · {expires}
                   </span>
-                  <form action={cancelInvitationAction} className="ml-auto">
-                    <input type="hidden" name="invitationId" value={inv.id} />
-                    <Button type="submit" variant="ghost" size="sm">
-                      {t('cancelInvite')}
-                    </Button>
-                  </form>
-                </div>
-                <span className="text-xs text-muted-foreground">{t('inviteLink')}</span>
-                <CopyField
-                  value={`${env.OCTADASH_URL}/invite/${inv.id}`}
-                  copyLabel={common('copy')}
-                  copiedLabel={common('copied')}
-                />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {manager && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <h2 className="font-display text-lg font-semibold">{t('inviteTitle')}</h2>
-            </CardTitle>
-            <CardDescription>{t('inviteIntro')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ActionForm
-              action={inviteAction}
-              className="flex flex-col gap-4 sm:flex-row sm:items-end"
-            >
-              <div className="flex-1">
-                <Field label="E-mail">
-                  <Input name="email" type="email" required />
-                </Field>
-              </div>
-              <RoleSelect
-                label={t('role')}
-                options={[
-                  { value: 'member', label: t('roleMember') },
-                  { value: 'admin', label: t('roleAdmin') },
-                ]}
-              />
-              <SubmitButton>{t('invite')}</SubmitButton>
-            </ActionForm>
-          </CardContent>
-        </Card>
+                  <span className="ml-auto flex items-center gap-2">
+                    <CopyButton
+                      value={`${env.OCTADASH_URL}/invite/${inv.id}`}
+                      label={t('copyLink')}
+                      copiedLabel={common('copied')}
+                      name={inv.email}
+                    />
+                    <form action={cancelInvitationAction}>
+                      <input type="hidden" name="invitationId" value={inv.id} />
+                      <Button
+                        type="submit"
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`${t('cancelInvite')}, ${inv.email}`}
+                      >
+                        {t('cancelInvite')}
+                      </Button>
+                    </form>
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
       )}
     </div>
   )

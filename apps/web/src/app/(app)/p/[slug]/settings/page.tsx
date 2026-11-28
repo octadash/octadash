@@ -71,7 +71,7 @@ export default async function ProductSettingsPage({
           </CardContent>
         </Card>
 
-        <section className="flex flex-col gap-3">
+        <section id="alerts" className="flex scroll-mt-20 flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h2 className="font-display text-lg font-semibold">{t('alerts.productTitle')}</h2>
             <p className="text-sm text-muted-foreground">{t('alerts.productIntro')}</p>
@@ -80,6 +80,7 @@ export default async function ProductSettingsPage({
             orgId={org.id}
             project={{ id: project.id, slug: project.slug }}
             canEdit={canManage(org.role)}
+            heading="h3"
           />
         </section>
 

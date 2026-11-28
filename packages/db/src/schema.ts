@@ -27,6 +27,8 @@ export interface Database {
   auth_organization: AuthOrganizationTable
   auth_member: AuthMemberTable
   auth_invitation: AuthInvitationTable
+  member_seen: MemberSeenTable
+  invitation_email: InvitationEmailTable
 }
 
 type CreatedAt = ColumnType<Date, Date | undefined, never>
@@ -227,6 +229,22 @@ export interface AuthInvitationTable {
   expiresAt: Date
   inviterId: string
   createdAt: Date
+}
+
+export interface MemberSeenTable {
+  org_id: string
+  user_id: string
+  seen_at: Date
+}
+
+export interface InvitationEmailTable {
+  invitation_id: string
+  org_id: string
+  /** The email channel it went through. */
+  channel_id: string | null
+  sent_at: Date | null
+  /** Why it did not go out, as the provider said. */
+  error: string | null
 }
 
 export interface ProductGroupTable {

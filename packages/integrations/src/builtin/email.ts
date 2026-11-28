@@ -1,7 +1,7 @@
 import { createTransport } from 'nodemailer'
 import { z } from 'zod'
 import { defineNotification } from '../define'
-import type { AlertMessage } from '../types'
+import type { AlertMessage, IntegrationContext } from '../types'
 
 /** One or more addresses separated by commas. */
 const recipients = z
@@ -104,11 +104,12 @@ async function callResend(
   text: string,
   fetchFn: typeof fetch,
   signal?: AbortSignal,
+  to = splitAddresses(cfg.to),
 ) {
   const response = await fetchFn('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${cfg.apiKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: cfg.from, to: splitAddresses(cfg.to), subject, text }),
+    body: JSON.stringify({ from: cfg.from, to, subject, text }),
     signal,
   })
   if (!response.ok) {
@@ -146,3 +147,41 @@ export const resend = defineNotification({
     await callResend(cfg, emailSubject(message), emailText(message), ctx.fetch, ctx.signal)
   },
 })
+
+/** The email integrations, which can also write to one person (an invitation). */
+export const EMAIL_INTEGRATIONS = ['smtp', 'resend'] as const
+export type EmailIntegration = (typeof EMAIL_INTEGRATIONS)[number]
+
+export function isEmailIntegration(id: string): id is EmailIntegration {
+  return (EMAIL_INTEGRATIONS as readonly string[]).includes(id)
+}
+
+/**
+ * Sends one email to one address through an email channel's account, from
+ * the channel's sender. Used for invitations, which go to a person who is not
+ * among the channel's recipients yet.
+ */
+export async function sendDirectEmail(
+  integration: EmailIntegration,
+  config: unknown,
+  mail: { to: string; subject: string; text: string },
+  ctx: IntegrationContext,
+): Promise<void> {
+  if (integration === 'resend') {
+    const cfg = resendConfig.parse(config)
+    await callResend(cfg, mail.subject, mail.text, ctx.fetch, ctx.signal, [mail.to])
+    return
+  }
+  const cfg = smtpConfig.parse(config)
+  const transport = smtpTransport(cfg)
+  try {
+    await transport.sendMail({
+      from: cfg.from,
+      to: mail.to,
+      subject: mail.subject,
+      text: mail.text,
+    })
+  } finally {
+    transport.close()
+  }
+}

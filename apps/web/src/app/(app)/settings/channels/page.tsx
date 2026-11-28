@@ -34,6 +34,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { services } from '@/server/context'
+import { inviteChannelOf } from '@/server/invitations'
 import { canManage, requireOrg } from '@/server/session'
 
 const notifiers = builtinIntegrations.filter(
@@ -167,6 +168,7 @@ export default async function ChannelsPage() {
     }
   }
 
+  const mailer = inviteChannelOf(channels)
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <SettingsHeader
@@ -222,6 +224,9 @@ export default async function ChannelsPage() {
                       <Badge variant="outline">
                         {channel.locale === 'pt-BR' ? 'Português' : 'English'}
                       </Badge>
+                      {channel.id === mailer?.id && (
+                        <Badge variant="outline">{t('sendsInvites')}</Badge>
+                      )}
                     </p>
                     <p className="truncate text-sm text-muted-foreground">
                       {target(channel.integration, config)}

@@ -165,6 +165,8 @@ export async function deleteOrganizationData(db: Db, orgId: string) {
       'product_group',
       'project',
       'organization_settings',
+      'member_seen',
+      'invitation_email',
     ] as const) {
       await tx.deleteFrom(table).where('org_id', '=', orgId).execute()
     }

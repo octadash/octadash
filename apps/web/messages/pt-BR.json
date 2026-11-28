@@ -9,7 +9,8 @@
     "settings": "Configurações",
     "language": "Idioma",
     "organization": "Organização",
-    "account": "Conta"
+    "account": "Conta",
+    "close": "Fechar"
   },
   "auth": {
     "setupTitle": "Boas-vindas ao Octadash",
@@ -62,20 +63,52 @@
   },
   "members": {
     "title": "Membros",
-    "intro": "Pessoas que veem todos os produtos de {org}.",
+    "intro": "Pessoas que podem abrir {org}. Todo membro vê todos os produtos da organização.",
     "name": "Nome",
     "invite": "Convidar",
-    "inviteTitle": "Convidar alguém",
-    "inviteIntro": "O Octadash gera um link para você enviar. O envio por e-mail chega com o módulo de alertas.",
+    "inviteTitle": "Convidar para {org}",
     "role": "Papel",
     "roleMember": "Membro",
     "roleAdmin": "Admin",
     "roleOwner": "Dono",
     "pending": "Convites pendentes",
-    "inviteLink": "Link do convite",
     "cancelInvite": "Cancelar",
     "you": "você",
-    "expires": "Expira em {date}"
+    "inviteIntroEmail": "O convite vai por e-mail pelo canal “{channel}”. Você também pode copiar o link na lista.",
+    "inviteIntroLink": "Ainda não há canal de e-mail, então o Octadash cria um link para você enviar. Com um canal de e-mail, os convites saem sozinhos.",
+    "inviteRoleHint": "Admins configuram produtos, canais e regras. Membros veem tudo e podem apertar “Estou cuidando”.",
+    "email": "E-mail",
+    "sendInvite": "Enviar convite",
+    "invitedSent": "Convite enviado para {email}.",
+    "invitedCopy": "Convite criado. Copie o link em Convites pendentes e envie.",
+    "invitedFailed": "Convite criado, mas o e-mail não saiu: {error}. Copie o link em Convites pendentes.",
+    "search": "Buscar por nome ou e-mail",
+    "lastSeen": "Último acesso",
+    "now": "Agora",
+    "never": "Nunca",
+    "actions": "Ações",
+    "remove": "Tirar de {org}",
+    "removeTitle": "Tirar {name} de {org}?",
+    "removeBody": "A pessoa perde o acesso na hora. Incidentes que ela estava cuidando continuam como estão. Dá para convidar de novo depois.",
+    "nobody": "Ninguém corresponde a esta busca.",
+    "rolesInfoLabel": "Sobre os papéis",
+    "rolesTitle": "Papéis",
+    "roleInfo": {
+      "owner": "tudo, inclusive apagar a organização e as configurações da instalação. Pelo menos um por organização.",
+      "admin": "configura produtos, áreas, canais e regras, e convida pessoas.",
+      "member": "vê tudo e pode apertar “Estou cuidando”. Não muda configurações."
+    },
+    "expiresIn": "vence {when}",
+    "emailSent": "E-mail enviado",
+    "emailFailed": "E-mail falhou: {error}",
+    "emailNotSent": "Sem e-mail, copie o link",
+    "copyLink": "Copiar link",
+    "mail": {
+      "subject": "{inviter} convidou você para {org} no Octadash",
+      "body": "{inviter} convidou você para {org} no Octadash, onde o time acompanha uptime, tráfego e emergências dos produtos.\n\nAbra este link para criar sua conta e entrar:\n{link}\n\nO link vale até {date}. Se você não esperava este convite, ignore este e-mail."
+    },
+    "countOne": "# membro",
+    "countOther": "# membros"
   },
   "errors": {
     "generic": "Algo deu errado. Tente de novo.",
@@ -89,7 +122,9 @@
     "monitorName": "Dê um nome ao monitor.",
     "ownersOnly": "Só donos podem fazer isso.",
     "typeName": "Digite o nome exatamente como ele é para confirmar.",
-    "wrongPassword": "A senha atual não está certa."
+    "wrongPassword": "A senha atual não está certa.",
+    "lastOwner": "A organização precisa de pelo menos um dono. Torne outra pessoa dona antes.",
+    "notYourself": "Você não pode se tirar por aqui."
   },
   "areas": {
     "overview": {
@@ -533,11 +568,12 @@
       "email": "E-mail da equipe",
       "telegram": "Telegram do plantão",
       "webhook": "Automação"
-    }
+    },
+    "sendsInvites": "Também envia convites"
   },
   "alerts": {
     "title": "Regras de alerta",
-    "intro": "O que vira emergência e quanto esperar antes de avisar. Vale para todos os produtos; cada produto pode ter o seu ajuste nas configurações dele. As mensagens vão para os <channels>canais</channels>.",
+    "intro": "O que vira emergência, o que é só um sinal e quanto esperar. Estas são as regras da organização; cada produto pode mudar as suas.",
     "productTitle": "Alertas deste produto",
     "productIntro": "Por padrão, este produto segue as regras da organização. Mudar aqui vale só para ele.",
     "level": "Nível",
@@ -547,9 +583,9 @@
       "off": "Desligado"
     },
     "levelHint": {
-      "emergency": "Avisa os canais e mostra a faixa vermelha no painel até alguém resolver ou reconhecer.",
-      "signal": "Não manda mensagem. Fica destacado no painel e entra no resumo diário.",
-      "off": "Não avisa nem destaca."
+      "emergency": "Precisa de ação agora. Mensagem para os canais e faixa vermelha em todas as telas até resolver.",
+      "signal": "Fora do normal. Sem mensagem: destacado na área e no resumo diário.",
+      "off": "Não avisa nem destaca. Os dados continuam sendo gravados."
     },
     "params": {
       "minutes": "Esperar",
@@ -557,27 +593,64 @@
       "days": "Avisar com",
       "daysUnit": "dias de antecedência"
     },
-    "channels": "Canais",
-    "allChannels": "Nenhum marcado: avisa todos os canais.",
+    "allChannels": "Todos os canais",
     "noChannels": "Nenhum canal ainda. Sem canal, a emergência aparece só no painel.",
-    "save": "Salvar",
     "saved": "Salvo",
     "reset": "Voltar ao padrão da organização",
     "custom": "Ajustado",
     "kinds": {
       "monitor_down": {
         "title": "Site ou API fora do ar",
-        "body": "Um monitor de site ou /health falhou 3 vezes seguidas. Se voltar antes do tempo de espera, ninguém é avisado."
+        "body": "Um monitor de site ou /health falhou 3 checagens seguidas. Se voltar antes do tempo de espera, ninguém é avisado.",
+        "info": "O Octadash checa a cada minuto. Uma falha pode ser a rede; três seguidas é o site. Aí ele espera os minutos que você definiu e, se continuar fora, avisa os canais e abre a faixa vermelha. Use 0 para checkout ou login, onde cada minuto conta."
       },
       "heartbeat_missed": {
         "title": "Heartbeat sem sinal",
-        "body": "Um cron, backup ou worker não deu sinal no intervalo combinado mais a tolerância."
+        "body": "Um cron, backup ou worker não deu sinal no intervalo combinado mais a tolerância.",
+        "info": "Cada heartbeat tem seu intervalo e sua tolerância. Quando os dois passam sem sinal, a tarefa atrasou e esta regra decide o que acontece.",
+        "note": "A tolerância é definida em cada heartbeat."
       },
       "cert_expiring": {
         "title": "Certificado vencendo",
-        "body": "O certificado HTTPS de um monitor vence em poucos dias."
+        "body": "O certificado HTTPS de um monitor vence em breve.",
+        "info": "O Octadash lê o certificado em toda checagem. A maioria renova sozinha uns 30 dias antes de vencer; se um continua velho tão perto do fim, a renovação falhou."
       }
-    }
+    },
+    "legend": "Níveis",
+    "rulesFor": "Regras de",
+    "allProducts": "Todos os produtos (organização)",
+    "oneProduct": "Regras próprias de um produto",
+    "sendTo": "Enviar para",
+    "channelsCount": "# canais",
+    "about": "Sobre {name}",
+    "changedOn": "Mudada em {count, plural, one {# produto} other {# produtos}}:",
+    "rulesCount": "{count, plural, one {# regra} other {# regras}}",
+    "areas": {
+      "uptime": "No ar",
+      "errors": "Erros",
+      "usage": "Uso do produto"
+    },
+    "future": {
+      "errors": {
+        "starts": "Começa quando Erros estiver configurado em um produto",
+        "errorSpike": {
+          "title": "Pico de erros",
+          "body": "Erros por minuto bem acima do normal deste produto para a hora.",
+          "wait": "Nenhum produto envia erros ainda.",
+          "params": "5× o normal, no mínimo 20 erros"
+        }
+      },
+      "usage": {
+        "starts": "Começa quando Uso do produto estiver configurado",
+        "signupsDropped": {
+          "title": "Cadastros caíram",
+          "body": "Cadastros longe do que esta hora e este dia da semana costumam ter.",
+          "wait": "Precisa de 4 semanas de dados para aprender o normal.",
+          "params": "30% abaixo do esperado, no mínimo 10 eventos"
+        }
+      }
+    },
+    "moreAreas": "Cada área traz suas regras quando chegar (Dinheiro: pagamentos falhando; Custos: gasto acima do normal). Elas aparecem aqui já configuradas, para ninguém escrever do zero."
   },
   "groups": {
     "newTitle": "Novo grupo",

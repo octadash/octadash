@@ -1,38 +1,71 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import type { FormState } from '@/components/action-form'
 import { services } from '@/server/context'
+import { emailInvitation } from '@/server/invitations'
 import { requireManager } from '@/server/session'
 import { errorMessage } from './errors'
 
 const inviteSchema = z.object({ email: z.email(), role: z.enum(['member', 'admin']) })
 
+/**
+ * Invites someone. The link goes out by email when the organization has an
+ * email channel; either way it can be copied from the list.
+ */
 export async function inviteAction(_: FormState, formData: FormData): Promise<FormState> {
   const t = await getTranslations('errors')
-  const { org } = await requireManager()
-  const parsed = inviteSchema.safeParse(Object.fromEntries(formData))
+  const tm = await getTranslations('members')
+  const { org, user } = await requireManager()
+  const parsed = inviteSchema.safeParse({
+    email: String(formData.get('email') ?? '')
+      .trim()
+      .toLowerCase(),
+    role: formData.get('role'),
+  })
   if (!parsed.success) return { error: t('checkFields') }
+  let invitation: { id: string; expiresAt: Date }
   try {
-    await services().auth.api.createInvitation({
+    invitation = await services().auth.api.createInvitation({
       body: { ...parsed.data, organizationId: org.id },
       headers: await headers(),
     })
   } catch (error) {
     return { error: errorMessage(error, t('generic')) }
   }
-  redirect('/settings/members')
+  const emailed = await emailInvitation({
+    orgId: org.id,
+    orgName: org.name,
+    inviterName: user.name,
+    invitationId: invitation.id,
+    email: parsed.data.email,
+    expiresAt: new Date(invitation.expiresAt),
+  })
+  revalidatePath('/settings/members')
+  if (!emailed) return { done: true, notice: { ok: true, text: tm('invitedCopy') } }
+  if (emailed.sent) {
+    return {
+      done: true,
+      notice: { ok: true, text: tm('invitedSent', { email: parsed.data.email }) },
+    }
+  }
+  return {
+    done: true,
+    notice: { ok: false, text: tm('invitedFailed', { error: emailed.error }) },
+  }
 }
 
 export async function cancelInvitationAction(formData: FormData) {
+  await requireManager()
   await services().auth.api.cancelInvitation({
     body: { invitationId: String(formData.get('invitationId') ?? '') },
     headers: await headers(),
   })
-  redirect('/settings/members')
+  revalidatePath('/settings/members')
 }
 
 const joinSchema = z.object({
