@@ -479,3 +479,11 @@ Luciano reviewed the night's decisions that change the product or his risk.
   one table, `metrics`, 30 days by default (`OCTADASH_METRIC_RETENTION_DAYS`).
   Points are small, so they keep longer than spans; a product's own setting
   comes with the Metrics area.
+- **The whole error event is kept**, masked, next to the columns the screens
+  read. Cookies are now masked by name everywhere (logs included).
+- **Uptime keeps what each check learned** (resolved address, redirects,
+  https redirect, certificate issuer and trust, the failed answer) and a
+  heartbeat keeps the output its job posts, the last 100,000 characters.
+- **Masking scans long lines once**: the e-mail patterns used to try every
+  position of a long line with no spaces (a token, a minified bundle), which
+  took seconds on 100 KB. Found while keeping heartbeat output.

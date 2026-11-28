@@ -194,6 +194,9 @@ versions and passwords generated at install. Each has one job.
 - The worker groups each batch by product and fingerprint, finds or creates the
   issue in Postgres (`error_issue`, one transaction per issue, row locked) and
   writes every event to ClickHouse (`errors`, 90 days) with the issue's id.
+  Each row also keeps the whole event as the SDK sent it, masked (`event`):
+  contexts, extra, request, modules, `debug_meta` for source maps, frame
+  variables, measurements. The other columns hold what the screens read today.
   A resolved issue comes back as Regressed with its next event; "Resolve in
   next release" keeps the release it was last seen in and comes back only with
   an event from another one. An ignored issue comes back when its condition
@@ -415,6 +418,17 @@ safe), so upgrades are "pull the new image and restart".
   buckets, the rest in `extra` (JSON). Attributes are masked like logs. Kept
   30 days (`OCTADASH_METRIC_RETENTION_DAYS`) until each product has its own
   setting. There is no Metrics screen yet.
+
+### Uptime facts and heartbeat output
+
+- Each check row keeps what the check learned besides up or down: the address
+  the name resolved to, the final URL and every redirect, whether http sends
+  people to https and who issued the certificate (deeper checks), and, when
+  the check failed, what the server answered (`detail`: its headers without
+  cookies and the first KB of the body).
+- A heartbeat ping sent by POST carries the job's output (`curl --data-binary
+  @backup.log`). It is kept with the ping, masked, up to its last 100,000
+  characters, and lands in `detail` of the ping's row.
 
 ### Nothing received is thrown away
 

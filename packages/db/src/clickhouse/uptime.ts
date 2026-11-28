@@ -15,6 +15,17 @@ export interface UptimeCheckRow {
   duration_ms: number | null
   error: string
   cert_days: number | null
+  /** Where the host name resolved. */
+  ip?: string
+  /** Where the redirects led, and each hop. */
+  final_url?: string
+  redirects?: string[]
+  /** Plain http sends people to https (deeper checks only). */
+  https_redirect?: 0 | 1 | null
+  tls_issuer?: string
+  tls_trusted?: 0 | 1 | null
+  /** A failed check: what the server answered. A heartbeat: what the job sent. */
+  detail?: string
 }
 
 export async function insertUptimeChecks(client: ClickHouseClient, rows: UptimeCheckRow[]) {

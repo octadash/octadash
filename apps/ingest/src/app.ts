@@ -30,6 +30,7 @@ import {
   UnsupportedCompression,
 } from './posthog'
 import { bodyOf, droppedRow, receivedRow, timeOf } from './received'
+import { redact } from './redact'
 import { BROWSER_SCRIPT } from './script'
 import { sentryLogs, standaloneSpan, transactionSpans } from './sentry-traces'
 import { MAX_SPANS_PER_REQUEST, toSpanRows } from './spans'
@@ -101,6 +102,8 @@ export function createApp(deps: IngestDeps) {
 
   // A cron job or backup reports that it ran. The token is the secret; the
   // ping is kept in Valkey and the worker compares it with the monitor's interval.
+  // A POST body is the job's output (`curl --data-binary @backup.log`): kept,
+  // masked, with the ping.
   // `/fail` reports that the job ran and failed, so people hear at once
   // instead of after the grace.
   const heartbeat = (failed: boolean) => async (c: Context) => {
@@ -109,8 +112,16 @@ export function createApp(deps: IngestDeps) {
     try {
       monitorId = await deps.heartbeats.resolver.resolve(token)
       if (monitorId) {
-        if (failed) await deps.heartbeats.store.recordFailure(monitorId, now())
-        else await deps.heartbeats.store.record(monitorId, now())
+        // A body too big to read still counts as a ping; the output says why it is missing.
+        const size = Number(c.req.header('content-length') ?? 0)
+        const output =
+          c.req.method !== 'POST'
+            ? undefined
+            : size > MAX_BODY_BYTES
+              ? `[Octadash: output of ${size} bytes not read; at most ${MAX_BODY_BYTES}]`
+              : heartbeatOutput(await c.req.text())
+        if (failed) await deps.heartbeats.store.recordFailure(monitorId, now(), output)
+        else await deps.heartbeats.store.record(monitorId, now(), output)
       }
     } catch (err) {
       deps.onError?.(err)
@@ -268,7 +279,13 @@ export function createApp(deps: IngestDeps) {
         ),
       )
     for (const entry of batch.exceptions) {
-      const row = await toErrorRow(scope, exceptionAsSentryEvent(entry), sender, received)
+      const row = await toErrorRow(
+        scope,
+        exceptionAsSentryEvent(entry),
+        sender,
+        received,
+        entry.item,
+      )
       // An exception with no type, message or stack is still something the app sent.
       if (row) errorRows.push(row)
       else keep('posthog.$exception', entry)
@@ -593,6 +610,16 @@ function inflate(body: Uint8Array, encoding: string | undefined): Uint8Array {
     default:
       return body
   }
+}
+
+/** Output kept with a heartbeat ping: the end of it, where a job's errors are, masked. */
+export const MAX_HEARTBEAT_OUTPUT_CHARS = 100_000
+
+function heartbeatOutput(text: string): string | undefined {
+  if (!text.trim()) return undefined
+  if (text.length <= MAX_HEARTBEAT_OUTPUT_CHARS) return redact(text).text
+  const cut = text.length - MAX_HEARTBEAT_OUTPUT_CHARS
+  return `[Octadash: first ${cut} characters not kept]\n${redact(text.slice(cut)).text}`
 }
 
 function queueFull(c: Context) {

@@ -32,6 +32,11 @@ export interface UptimeDeps {
   readPings(monitorIds: string[]): Promise<Map<string, number>>
   /** When each heartbeat's job last called /fail. */
   readFailures?(monitorIds: string[]): Promise<Map<string, number>>
+  /** What each job sent with its last ping (`failed` false) or failure (true). */
+  readOutputs?(
+    monitorIds: string[],
+    failed: boolean,
+  ): Promise<Map<string, { at: number; output: string }>>
   writeRows(rows: UptimeCheckRow[]): Promise<void>
   /** Saves a state change; false when the monitor changed meanwhile. */
   setStatus(monitorId: string, from: MonitorStatus, to: MonitorStatus, at: Date): Promise<boolean>
@@ -188,6 +193,13 @@ export class UptimeScheduler {
         duration_ms: result.durationMs,
         error: result.error ?? (result.up ? '' : `HTTP ${result.status}`),
         cert_days: result.tls?.daysLeft ?? null,
+        ip: result.ip ?? '',
+        final_url: result.finalUrl ?? '',
+        redirects: result.redirects,
+        https_redirect: result.httpsRedirect === null ? null : result.httpsRedirect ? 1 : 0,
+        tls_issuer: result.tls?.issuer ?? '',
+        tls_trusted: result.tls ? (result.tls.trusted ? 1 : 0) : null,
+        detail: result.answer ? JSON.stringify(result.answer) : '',
       })
       if (result.up) {
         slot.failures = 0
@@ -220,10 +232,14 @@ export class UptimeScheduler {
     const ids = slots.map((slot) => slot.monitor.id)
     let pings: Map<string, number>
     let failures: Map<string, number>
+    let outputs: Map<string, { at: number; output: string }>
+    let failOutputs: Map<string, { at: number; output: string }>
     try {
-      ;[pings, failures] = await Promise.all([
+      ;[pings, failures, outputs, failOutputs] = await Promise.all([
         this.deps.readPings(ids),
         this.deps.readFailures?.(ids) ?? new Map<string, number>(),
+        this.deps.readOutputs?.(ids, false) ?? new Map(),
+        this.deps.readOutputs?.(ids, true) ?? new Map(),
       ])
     } catch (err) {
       // Without Valkey nothing can be said about heartbeats; do not call them down.
@@ -237,12 +253,30 @@ export class UptimeScheduler {
       const fail = failures.get(monitor.id) ?? null
       if (ping !== null && ping !== slot.lastPing) {
         slot.lastPing = ping
-        this.rows.push(this.heartbeatRow(monitor, new Date(ping), true, ''))
+        const output = outputs.get(monitor.id)
+        this.rows.push(
+          this.heartbeatRow(
+            monitor,
+            new Date(ping),
+            true,
+            '',
+            output?.at === ping ? output.output : '',
+          ),
+        )
       }
       if (fail !== null && fail !== slot.lastFail) {
         slot.lastFail = fail
         if (fail > (ping ?? 0)) {
-          this.rows.push(this.heartbeatRow(monitor, new Date(fail), false, 'job reported failure'))
+          const output = failOutputs.get(monitor.id)
+          this.rows.push(
+            this.heartbeatRow(
+              monitor,
+              new Date(fail),
+              false,
+              'job reported failure',
+              output?.at === fail ? output.output : '',
+            ),
+          )
         }
       }
       const judged = judgeHeartbeat(
@@ -289,6 +323,7 @@ export class UptimeScheduler {
     at: Date,
     up: boolean,
     error: string,
+    detail = '',
   ): UptimeCheckRow {
     return {
       org_id: monitor.org_id,
@@ -300,6 +335,7 @@ export class UptimeScheduler {
       duration_ms: null,
       error,
       cert_days: null,
+      detail,
     }
   }
 

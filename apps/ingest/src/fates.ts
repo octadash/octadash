@@ -15,7 +15,8 @@
 export const ROUTES: Record<string, string> = {
   'GET /health': 'no data: answers the health check',
   'GET /o/v1/script.js': 'no data: serves the browser script',
-  'GET /hb/:token': 'heartbeat ping (Valkey), then a row in uptime_checks',
+  'GET /hb/:token':
+    'heartbeat ping (Valkey), then a row in uptime_checks; a POST body is its output',
   'POST /hb/:token': 'heartbeat ping (Valkey), then a row in uptime_checks',
   'GET /hb/:token/fail': 'heartbeat failure (Valkey), then a row in uptime_checks',
   'POST /hb/:token/fail': 'heartbeat failure (Valkey), then a row in uptime_checks',
@@ -75,6 +76,8 @@ export const DISCARDS = {
     'An item bigger than 1 MB is counted, not stored, until file storage (Garage, or an external S3 or R2) keeps files whole.',
   too_many_in_request:
     'Error events beyond the limit of one request are counted, not stored. SDKs send one per request.',
+  heartbeat_output_head:
+    'A heartbeat output over 100,000 characters keeps its end, where errors are; the output itself says how much of the start was cut. Over 1 MB it is not read, and the output says so.',
   invalid_span_id:
     'A Sentry span without a valid trace and span id cannot be placed in any trace. It is counted, not stored.',
 } as const
