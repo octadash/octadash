@@ -1,6 +1,8 @@
 import {
   ERROR_PLATFORMS,
+  ERROR_PLATFORMS_BY_RUNTIME,
   type ErrorPlatform,
+  type ErrorRuntime,
   errorSnippet,
   LOG_TABS,
   type LogTab,
@@ -117,7 +119,11 @@ function Code({ block }: { block: Block }) {
   )
 }
 
-function blocks(area: Props['area'], lang: Lang): { id: string; name: string; blocks: Block[] }[] {
+function blocks(
+  area: Props['area'],
+  lang: Lang,
+  runtime?: ErrorRuntime,
+): { id: string; name: string; blocks: Block[] }[] {
   switch (area) {
     case 'traffic':
       return TRAFFIC_PLATFORMS.map((p) => ({
@@ -136,7 +142,7 @@ function blocks(area: Props['area'], lang: Lang): { id: string; name: string; bl
         ],
       }))
     case 'errors':
-      return ERROR_PLATFORMS.map((p) => ({
+      return (runtime ? ERROR_PLATFORMS_BY_RUNTIME[runtime] : ERROR_PLATFORMS).map((p) => ({
         id: p,
         name: label(p, lang),
         blocks: [
@@ -194,12 +200,18 @@ const WHERE_PT = {
 interface Props {
   area: 'traffic' | 'errors' | 'logs' | 'usage'
   lang: Lang
+  /** Errors: only the platforms of one place, as the panel asks (browser, then server). */
+  runtime?: ErrorRuntime
 }
 
-export function Snippets({ area, lang }: Props) {
-  const items = blocks(area, lang)
+export function Snippets({ area, lang, runtime }: Props) {
+  const items = blocks(area, lang, runtime)
   return (
-    <Tabs items={items.map((i) => i.name)} groupId={`snippets-${area}`} persist>
+    <Tabs
+      items={items.map((i) => i.name)}
+      groupId={`snippets-${area}${runtime ? `-${runtime}` : ''}`}
+      persist
+    >
       {items.map((item) => (
         <Tab key={item.id} value={item.name}>
           {item.blocks.map((b) => (

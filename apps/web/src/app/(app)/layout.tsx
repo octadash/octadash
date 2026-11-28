@@ -55,7 +55,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           labels={{
             nav: t('nav.label'),
             overview: t('areas.overview.name'),
-            settings: t('nav.settings'),
+            productSettings: t('nav.productSettings'),
+            groupSettings: t('nav.groupSettings'),
             areas: areaLabels,
           }}
           version={{
@@ -79,7 +80,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 md:px-8">
             <HeaderScope
-              labels={{ org: org.name, settings: t('nav.settings'), trail: t('settings.trail') }}
+              labels={{
+                org: org.name,
+                settings: t('nav.octadashSettings'),
+                trail: t('settings.trail'),
+              }}
             >
               <ProductPicker
                 products={projects.map((p) => ({
@@ -149,6 +154,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                   account: t('common.account'),
                   members: t('common.members'),
                   profile: t('settings.profile'),
+                  settings: t('nav.octadashSettings'),
                   signOut: t('common.signOut'),
                 }}
               />

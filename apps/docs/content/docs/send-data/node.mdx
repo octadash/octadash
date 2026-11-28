@@ -1,0 +1,76 @@
+---
+title: Node.js SDK
+description: Errors and events from a Node.js server, with one small package and no dependencies.
+---
+
+`@octadash/node` sends errors (for **Errors**) and events (for **Product usage**)
+from a Node.js 18+ server. It speaks the same endpoints as the panel's Set up, so
+a source's key is all it needs. Any Sentry SDK also works for errors; this
+package is the shorter path when you want both in one place.
+
+<Callout type="warn">
+  The first version is on its way to npm. Until `npm install @octadash/node`
+  works, use the Sentry SDK for errors and the HTTP call for events, as Set up
+  shows.
+</Callout>
+
+## Install
+
+```sh
+npm install @octadash/node
+```
+
+```ts
+import { Octadash } from '@octadash/node'
+
+export const octadash = new Octadash({
+  key: process.env.OCTADASH_KEY, // the source's key, from Set up
+  host: 'https://ingest.example.com', // your Octadash ingest
+  release: process.env.RELEASE,
+})
+```
+
+Use a **server** source: Set up Errors > **Add source** > **On a server**.
+
+## Events
+
+```ts
+octadash.track('signed_up', { distinctId: user.id, properties: { plan: 'pro' } })
+```
+
+`distinctId` is the person: Octadash keeps only a hash of it.
+
+## Errors
+
+```ts
+try {
+  await charge(order)
+} catch (err) {
+  octadash.captureException(err, { distinctId: user.id, tags: { gateway: 'stripe' } })
+}
+```
+
+Uncaught exceptions and unhandled rejections are reported by themselves, then
+the process exits with 1, as Node does. `captureUncaught: false` turns that off.
+An error's `cause` chain is kept.
+
+## How it sends
+
+- Calls never throw and never wait. Events go in batches every 2 seconds,
+  errors right away.
+- When the ingest does not answer (a redeploy takes it down for seconds), it
+  tries again up to 3 times, waiting longer each time. A refusal, such as a
+  wrong key, is not tried again.
+- At most 1,000 items wait (`maxQueue`); the oldest go first.
+- Without a key every call does nothing, so local runs send nothing.
+- In a short script, `await octadash.shutdown()` before it ends.
+
+| Option            | Default                | What it does                                 |
+| ----------------- | ---------------------- | -------------------------------------------- |
+| `key`             | (required)             | The source's key; empty turns the client off |
+| `host`            | (required)             | The ingest's public address                  |
+| `release`         | none                   | The version running                          |
+| `environment`     | `NODE_ENV` or `production` | Shown with each error                    |
+| `captureUncaught` | `true`                 | Report crashes, then exit as Node does       |
+| `flushInterval`   | `2000`                 | Milliseconds events wait to go together      |
+| `maxQueue`        | `1000`                 | Most items kept while the ingest is down     |

@@ -1,6 +1,6 @@
 'use client'
 
-import { LogOutIcon, UserIcon, UsersIcon } from 'lucide-react'
+import { LogOutIcon, SettingsIcon, UserIcon, UsersIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useTransition } from 'react'
 import { signOutAction } from '@/actions/auth'
@@ -21,7 +21,14 @@ export function UserMenu({
 }: {
   name: string
   email: string
-  labels: { account: string; members: string; profile: string; signOut: string }
+  labels: {
+    account: string
+    members: string
+    profile: string
+    /** "Octadash settings": channels, members, updates, the install. */
+    settings: string
+    signOut: string
+  }
 }) {
   const [pending, startTransition] = useTransition()
   return (
@@ -49,6 +56,13 @@ export function UserMenu({
             {labels.members}
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/settings/general">
+            <SettingsIcon />
+            {labels.settings}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => startTransition(() => signOutAction())}>
           <LogOutIcon />
           {labels.signOut}

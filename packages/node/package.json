@@ -1,0 +1,48 @@
+{
+  "name": "@octadash/node",
+  "version": "0.1.0",
+  "description": "Send errors and events from Node.js to Octadash.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/octadash/octadash.git",
+    "directory": "packages/node"
+  },
+  "homepage": "https://docs.octadash.com/send-data/node",
+  "keywords": [
+    "octadash",
+    "errors",
+    "analytics",
+    "monitoring"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "types": "./dist/index.d.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^5.1.2"
+  }
+}

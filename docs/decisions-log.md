@@ -533,3 +533,20 @@ The maintainer reviewed the night's decisions that change the product or its ris
   organization from the `received` rows, not by listing.
 - **CI starts the dev compose's Garage** and runs the S3 client against it, so
   the bootstrap and the signing are tested for real.
+
+## Settings follow the picker, and @octadash/node (2026-11-28)
+
+- **Three kinds of settings, one place each.** The sidebar's settings item is
+  the chosen product's or group's, and is not shown for All products. Octadash's
+  own settings (members, channels, organization rules, updates, the install)
+  are in the account menu at the top right, as on Vercel and Sentry.
+- **Errors asks where the code runs first** (browser or server), then the
+  language. Next.js is in both lists, since one SDK covers the page and the
+  server. The docs show the same two lists.
+- **@octadash/node is MIT**, not AGPL like the rest: an SDK is linked into the
+  customer's own code, and AGPL there would keep people from adopting it. One
+  file, no dependencies, Node 18+. It retries a few times when the ingest does
+  not answer, which is the part of "upgrade without losing data" an SDK can do.
+  Published from a `node-v*` tag by `.github/workflows/publish-node.yml`, which
+  needs the `NPM_TOKEN` secret. Set up keeps showing the Sentry SDK and the HTTP
+  call until the package is on npm.
