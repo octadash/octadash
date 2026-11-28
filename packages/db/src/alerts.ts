@@ -196,30 +196,42 @@ export async function resolveIncident(db: Db, dedupeKey: string, at: Date) {
 
 /** Open incidents of an organization, newest first, with the product name. */
 export function listOpenIncidents(db: Db, orgId: string) {
-  return db
-    .selectFrom('incident')
-    .innerJoin('project', 'project.id', 'incident.project_id')
-    .select([
-      'incident.id',
-      'incident.kind',
-      'incident.level',
-      'incident.data',
-      'incident.started_at',
-      'incident.acknowledged_at',
-      'incident.acknowledged_by',
-      'incident.parent_id',
-      'incident.monitor_id',
-      'project.id as project_id',
-      'project.name as project_name',
-      'project.slug as project_slug',
-    ])
-    .where('incident.org_id', '=', orgId)
-    .where('incident.resolved_at', 'is', null)
-    .orderBy('incident.started_at', 'desc')
-    .execute()
+  return (
+    db
+      .selectFrom('incident')
+      .innerJoin('project', 'project.id', 'incident.project_id')
+      // Better Auth keys users by uuid; acknowledged_by is text.
+      .leftJoin('auth_user', (join) =>
+        join.on(sql<boolean>`auth_user.id::text = incident.acknowledged_by`),
+      )
+      .select([
+        'incident.id',
+        'incident.kind',
+        'incident.level',
+        'incident.data',
+        'incident.started_at',
+        'incident.notify_after',
+        'incident.acknowledged_at',
+        'incident.acknowledged_by',
+        'auth_user.name as acknowledged_by_name',
+        'incident.parent_id',
+        'incident.monitor_id',
+        'project.id as project_id',
+        'project.name as project_name',
+        'project.slug as project_slug',
+      ])
+      .where('incident.org_id', '=', orgId)
+      .where('incident.resolved_at', 'is', null)
+      .orderBy('incident.started_at', 'desc')
+      .execute()
+  )
 }
 
-/** Someone takes the emergencies: the strip says who and since when, for everyone. */
+/**
+ * Someone takes the emergencies: the strip says who and since when, for
+ * everyone. The first person wins; taking an incident someone already took, or
+ * one already over, changes nothing. Returns the incidents taken now.
+ */
 export async function acknowledgeIncidents(
   db: Db,
   orgId: string,
@@ -227,14 +239,17 @@ export async function acknowledgeIncidents(
   userId: string,
   at: Date,
 ) {
-  if (ids.length === 0) return
-  await db
+  if (ids.length === 0) return []
+  return db
     .updateTable('incident')
     .set({ acknowledged_at: at, acknowledged_by: userId })
     .where('org_id', '=', orgId)
     .where('id', 'in', ids)
     .where('acknowledged_at', 'is', null)
+    .where('resolved_at', 'is', null)
+    .returning('id')
     .execute()
+    .then((rows) => rows.map((row) => row.id))
 }
 
 /**
@@ -336,7 +351,8 @@ export function listOpenIncidentKeys(db: Db, kind: IncidentKind) {
 /**
  * Closes, without a message, monitor incidents left open after their monitor
  * was paused, edited or found up by another path. Saying "back up" for a
- * monitor someone paused would be false.
+ * monitor someone paused would be false. Returns the organization of each
+ * incident closed.
  */
 export async function closeStaleMonitorIncidents(db: Db, at: Date) {
   const rows = await db
@@ -347,7 +363,7 @@ export async function closeStaleMonitorIncidents(db: Db, at: Date) {
     .where('incident.kind', 'in', ['monitor_down', 'heartbeat_missed'])
     .where('incident.resolved_at', 'is', null)
     .where((eb) => eb.or([eb('monitor.paused', '=', true), eb('monitor.status', '<>', 'down')]))
-    .returning('incident.id')
+    .returning('incident.org_id')
     .execute()
-  return rows.length
+  return rows.map((row) => row.org_id)
 }

@@ -15,7 +15,7 @@ import {
   recordWatcherPing,
   setMonitorStatus,
 } from '@octadash/db'
-import { createValkey, ValkeyHeartbeats } from '@octadash/queue'
+import { createValkey, ValkeyHeartbeats, ValkeyLivePublisher } from '@octadash/queue'
 import { checkUrl } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
 import { createAlerts, registerAlertJobs } from './alerts'
@@ -40,6 +40,11 @@ const { db, pool } = createDb(env.DATABASE_URL, { max: 5, applicationName: 'octa
 const clickhouse = createClickHouse(env.CLICKHOUSE_URL, { applicationName: 'octadash-worker' })
 const valkey = createValkey(env.VALKEY_URL, { name: 'octadash-worker' })
 valkey.on('error', (err) => log.warn({ err: err.message }, 'valkey connection error'))
+// The stream readers block on their connection (XREADGROUP BLOCK); sharing it
+// would hold heartbeat reads and live updates behind every wait.
+const streams = createValkey(env.VALKEY_URL, { name: 'octadash-worker-streams' })
+streams.on('error', (err) => log.warn({ err: err.message }, 'valkey connection error'))
+const live = new ValkeyLivePublisher(valkey)
 
 await boss.start()
 await registerJobs(boss, db, log)
@@ -49,10 +54,11 @@ const alerts = createAlerts({
   boss,
   secret: env.OCTADASH_SECRET,
   panelUrl: env.OCTADASH_URL,
+  live,
   log,
 })
 await registerAlertJobs(boss, alerts, log)
-const writers = startWriters(valkey, clickhouse, log)
+const writers = startWriters(streams, clickhouse, log)
 const heartbeats = new ValkeyHeartbeats(valkey)
 const uptime = startUptime(
   new UptimeScheduler({
@@ -76,7 +82,10 @@ const watcher = startWatcher(
       return row?.watcher_url ? decryptSecret(row.watcher_url, env.OCTADASH_SECRET) : null
     },
     ping: pingUrl,
-    record: (status, error, at) => recordWatcherPing(db, status, error, at),
+    record: async (status, error, at) => {
+      await recordWatcherPing(db, status, error, at)
+      await live.publish(null, 'watcher').catch(() => {})
+    },
     now: Date.now,
     log,
   }),
@@ -106,6 +115,7 @@ async function shutdown(signal: string) {
   watcher.stop()
   await Promise.all([writers.stop(), uptime.stop(), boss.stop({ graceful: true, timeout: 20_000 })])
   valkey.disconnect()
+  streams.disconnect()
   await Promise.all([clickhouse.close(), pool.end()])
   process.exit(0)
 }

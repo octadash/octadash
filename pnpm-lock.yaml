@@ -66,6 +66,9 @@ importers:
       '@octadash/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
+      '@octadash/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       '@octadash/uptime':
         specifier: workspace:*
         version: link:../../packages/uptime
