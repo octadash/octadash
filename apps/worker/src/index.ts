@@ -134,7 +134,10 @@ const writers = startWriters(
     insert: (rows, token) => insertLogs(clickhouse, rows, token),
   },
   log,
-  env.OCTADASH_RECEIVED_RETENTION_DAYS,
+  {
+    receivedDays: env.OCTADASH_RECEIVED_RETENTION_DAYS,
+    traceDays: env.OCTADASH_TRACE_RETENTION_DAYS,
+  },
 )
 const heartbeats = new ValkeyHeartbeats(valkey)
 const uptime = startUptime(

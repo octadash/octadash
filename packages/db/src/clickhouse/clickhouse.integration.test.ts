@@ -5,6 +5,7 @@ import { insertEvents, toClickHouseTime } from './events'
 import { migrateClickHouse } from './migrate'
 import { insertReceived } from './received'
 import { sourceActivity } from './sources'
+import { insertSpans } from './spans'
 import {
   fillSeries,
   lastPageview,
@@ -51,6 +52,7 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
       .command({ query: `DELETE FROM uptime_checks WHERE org_id = '${org}'` })
       .catch(() => {})
     await client.command({ query: `DELETE FROM received WHERE org_id = '${org}'` }).catch(() => {})
+    await client.command({ query: `DELETE FROM spans WHERE org_id = '${org}'` }).catch(() => {})
     await client.close()
   })
 
@@ -119,6 +121,47 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     expect(result).toEqual([
       { kind: 'dropped:sentry.attachment', retention_days: 30 },
       { kind: 'sentry.session', retention_days: 30 },
+    ])
+  })
+
+  it('keeps spans with nanosecond times and finds them by trace', async () => {
+    await insertSpans(client, [
+      {
+        org_id: org,
+        project_id: '00000000-0000-4000-8000-0000000000c2',
+        source_id: '00000000-0000-4000-8000-0000000000c3',
+        timestamp: '2026-11-28 12:00:00.123456789',
+        duration_ns: 250_000_000,
+        trace_id: 'a'.repeat(32),
+        span_id: 'b'.repeat(16),
+        parent_span_id: '',
+        trace_state: '',
+        name: 'GET /orders',
+        kind: 'server',
+        service: 'api',
+        scope: '',
+        scope_version: '',
+        status_code: 'ok',
+        status_message: '',
+        attributes: { 'http.route': '/orders' },
+        resource: { 'service.name': 'api' },
+        events: '[]',
+        links: '[]',
+        dropped: 0,
+        masked: 0,
+        retention_days: 14,
+      },
+    ])
+    const result = await (
+      await client.query({
+        query: `SELECT name, toString(timestamp) AS at, attributes['http.route'] AS route
+          FROM spans WHERE org_id = {org:UUID} AND trace_id = {trace:String}`,
+        query_params: { org, trace: 'a'.repeat(32) },
+        format: 'JSONEachRow',
+      })
+    ).json<{ name: string; at: string; route: string }>()
+    expect(result).toEqual([
+      { name: 'GET /orders', at: '2026-11-28 12:00:00.123456789', route: '/orders' },
     ])
   })
 

@@ -9,6 +9,7 @@ export const STREAMS = {
   events: 'octadash:ingest:events',
   errors: 'octadash:ingest:errors',
   logs: 'octadash:ingest:logs',
+  spans: 'octadash:ingest:spans',
   /** Data no area reads yet, kept as it came (the `received` table). */
   received: 'octadash:ingest:received',
 } as const

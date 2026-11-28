@@ -250,8 +250,10 @@ versions and passwords generated at install. Each has one job.
   `x-octadash-key` or `Authorization: Bearer`. Protobuf is read by a small
   wire-format decoder (`apps/ingest/src/otlp.ts`), so the bundle needs no
   generated code. Tested with the OpenTelemetry JS exporters (proto and http).
-  `/v1/traces` and `/v1/metrics` answer with a partial success that says they
-  are not kept yet, so a Collector sending all three does not retry them.
+  `/v1/metrics` answers with a partial success that says it is not kept yet,
+  so a Collector sending all three does not retry it.
+- Sentry's own logs (envelope items of type `log`) are read into the same
+  rows, so a Sentry SDK with logs turned on lands next to OTLP.
 - Masking at the door: e-mails, card numbers (Luhn), CPF, CNPJ, SSN, bearer
   tokens, JWTs, private keys, well-known API key shapes, `password=` and
   `user:password@` are replaced in the message and in every attribute, and
@@ -384,6 +386,25 @@ streamable HTTP endpoint.
 Every role applies pending migrations on start (a lock makes parallel starts
 safe), so upgrades are "pull the new image and restart".
 
+### Traces
+
+- Spans arrive over OTLP/HTTP at `/v1/traces` (also `/otlp/v1/traces`),
+  protobuf or JSON, read by the same small decoder as logs
+  (`apps/ingest/src/otlp-traces.ts`). Sentry transactions (the root span and
+  its children) and standalone `span` items are read into the same shape, so
+  a Sentry SDK with tracing on and an OpenTelemetry SDK land in one table.
+  What a transaction carries that is not a span (request, user, contexts,
+  breadcrumbs) goes to `received` without its span list.
+- The worker writes them to ClickHouse `spans`, in OpenTelemetry's shape
+  (trace and span ids, parent, kind, status, attributes, resource, events and
+  links), masked like logs. Kept 14 days (`OCTADASH_TRACE_RETENTION_DAYS`)
+  until each product has its own setting. Errors and log lines already carry
+  the trace id that finds them.
+- A span with no valid trace or span id belongs to no trace: OTLP answers it
+  as rejected, and a Sentry one leaves a `dropped:` count.
+- There is no Traces screen yet; the data is kept so the screen starts with
+  history.
+
 ### Nothing received is thrown away
 
 Data that reaches the ingest and could ever be useful is kept, even when no
@@ -423,7 +444,7 @@ changing one URL:
 - PostHog capture (`/e/`, `/i/v0/e/`, `/batch/`, `/capture/`) for events;
   `$ai_generation` and the newer `/i/v1/...` endpoints come with their areas.
 - OTLP over HTTP (`/v1/logs`, `/v1/traces`, `/v1/metrics`) for logs, traces and
-  `gen_ai` spans. Logs are kept now; traces and metrics come with their areas.
+  `gen_ai` spans. Logs and traces are kept now; metrics come next.
 
 Octadash writes its own SDKs only where it adds something: one browser script
 (traffic, errors and events) and a Node.js and Next.js package. Every other

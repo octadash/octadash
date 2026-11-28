@@ -471,3 +471,7 @@ Luciano reviewed the night's decisions that change the product or his risk.
   won't use this" (counted on the card), `/flags` and config requests (no
   data). Gateway and AI cost data is read from the provider, which keeps it,
   so fields Octadash does not read today can be read again later.
+- **Traces are kept before their screen**: OTLP spans, Sentry transactions and
+  Sentry spans go to `spans` (OpenTelemetry's shape), 14 days by default
+  (`OCTADASH_TRACE_RETENTION_DAYS`), shorter than received data because spans
+  are the largest stream. Sentry logs go to Logs.

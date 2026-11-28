@@ -18,6 +18,7 @@ import {
 import type { HeartbeatResolver, IngestScope, KeyResolver } from './keys'
 import { MAX_LOGS_PER_REQUEST, toLogRows } from './logs'
 import { decodeLogsJson, decodeLogsProtobuf, exportAnswer, type OtlpLog } from './otlp'
+import { decodeTracesJson, decodeTracesProtobuf, type OtlpSpan } from './otlp-traces'
 import {
   exceptionAsSentryEvent,
   POSTHOG_ASSETS,
@@ -28,6 +29,8 @@ import {
 } from './posthog'
 import { bodyOf, droppedRow, receivedRow, timeOf } from './received'
 import { BROWSER_SCRIPT } from './script'
+import { sentryLogs, standaloneSpan, transactionSpans } from './sentry-traces'
+import { MAX_SPANS_PER_REQUEST, toSpanRows } from './spans'
 import { visitorHash } from './visitor'
 
 /** Requests bigger than this are refused before they are read. */
@@ -59,8 +62,8 @@ export interface IngestDeps {
  *   - Octadash script/SDK   /o/v1/events                       (step 1)
  *   - Sentry envelopes      /api/:projectId/envelope/          (errors step)
  *   - PostHog capture       /e/, /i/v0/e/, /batch/, /capture/, /flags/
- *   - OpenTelemetry (OTLP)  /v1/logs (also under /otlp/); traces and metrics
- *                           are answered and not kept yet
+ *   - OpenTelemetry (OTLP)  /v1/logs and /v1/traces (also under /otlp/);
+ *                           metrics are answered and not kept yet
  * Heartbeat monitors ping /hb/<token> (GET or POST) from cron jobs and backups.
  * The health check touches nothing, so uptime probes never wake a database.
  */
@@ -150,7 +153,7 @@ export function createApp(deps: IngestDeps) {
   /** Queues rows on a stream; a Response when the queue cannot take them. */
   const queue = async (
     c: Context,
-    kind: 'events' | 'errors' | 'received',
+    kind: 'events' | 'errors' | 'received' | 'spans' | 'logs',
     rows: readonly unknown[],
   ): Promise<Response | null> => {
     if (rows.length === 0) return null
@@ -355,7 +358,9 @@ export function createApp(deps: IngestDeps) {
    * and any type a future SDK sends) is kept in `received` as it came.
    */
   const errors = (format: 'envelope' | 'store' | 'octadash') => async (c: Context) => {
-    if (deps.sink.isFull('errors') || deps.sink.isFull('received')) return queueFull(c)
+    if (['errors', 'received', 'spans', 'logs'].some((k) => deps.sink.isFull(k as 'errors'))) {
+      return queueFull(c)
+    }
     let body: Uint8Array
     try {
       body = inflate(new Uint8Array(await c.req.arrayBuffer()), c.req.header('content-encoding'))
@@ -402,22 +407,43 @@ export function createApp(deps: IngestDeps) {
     const received = new Date(now())
     const sender = senderOf(c, scope.project_id, received)
     const rows: QueuedError[] = []
-    const kept: QueuedReceived[] = others.map((item) => {
+    const kept: QueuedReceived[] = []
+    const spans: OtlpSpan[] = []
+    const logs: OtlpLog[] = []
+    for (const item of others) {
       const content = bodyOf(item.payload)
       const value = content.encoding === 'json' ? content.value : undefined
-      const facts = value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
-      return receivedRow(
-        scope,
-        {
-          kind: `sentry.${item.type || 'unknown'}`,
-          meta: item.header,
-          body: content,
-          bytes: item.payload.length,
-          at: timeOf(facts.timestamp ?? facts.started ?? facts.start_timestamp) ?? sentAt,
-        },
-        received,
+      const facts =
+        value && typeof value === 'object' && !Array.isArray(value)
+          ? (value as Record<string, unknown>)
+          : undefined
+      let body = content
+      // Tracing and logs go where OTLP's go; what is not a span stays as it came.
+      if (facts && item.type === 'transaction') {
+        spans.push(...transactionSpans(facts))
+        const { spans: _children, ...rest } = facts
+        body = { encoding: 'json', value: rest }
+      } else if (facts && item.type === 'span') {
+        spans.push(standaloneSpan(facts))
+        continue
+      } else if (facts && item.type === 'log') {
+        logs.push(...sentryLogs(facts))
+        continue
+      }
+      kept.push(
+        receivedRow(
+          scope,
+          {
+            kind: `sentry.${item.type || 'unknown'}`,
+            meta: item.header,
+            body,
+            bytes: item.payload.length,
+            at: timeOf(facts?.timestamp ?? facts?.started ?? facts?.start_timestamp) ?? sentAt,
+          },
+          received,
+        ),
       )
-    })
+    }
     for (const event of events.slice(0, MAX_ERRORS_PER_REQUEST)) {
       const row = await toErrorRow(scope, event, sender, received)
       // An event with no exception and no message is still kept, as it came.
@@ -445,7 +471,15 @@ export function createApp(deps: IngestDeps) {
         ),
       )
     }
-    const failed = (await queue(c, 'errors', rows)) ?? (await queue(c, 'received', kept))
+    const spanRows = toSpanRows(scope, spans, received)
+    const logRows = toLogRows(scope, logs, received)
+    const lost = spans.length - spanRows.length
+    if (lost > 0) kept.push(droppedRow(scope, 'sentry.span', 'invalid_span_id', 0, lost, received))
+    const failed =
+      (await queue(c, 'errors', rows)) ??
+      (await queue(c, 'spans', spanRows)) ??
+      (await queue(c, 'logs', logRows)) ??
+      (await queue(c, 'received', kept))
     if (failed) return failed
     // Sentry SDKs read the event id back.
     return c.json(
@@ -464,9 +498,10 @@ export function createApp(deps: IngestDeps) {
 
   /**
    * OpenTelemetry over HTTP, protobuf or JSON. The key comes in a header
-   * (`x-octadash-key` or `Authorization: Bearer`). Logs are masked and queued;
-   * traces and metrics are answered with a warning so a Collector sending all
-   * three does not retry them, until their areas keep them.
+   * (`x-octadash-key` or `Authorization: Bearer`). Logs and spans are masked
+   * and queued; what a request holds beyond the limits is answered as
+   * rejected, so the SDK knows. Metrics are answered with a warning until the
+   * metrics step keeps them.
    */
   const otlp = (kind: 'logs' | 'spans' | 'dataPoints') => async (c: Context) => {
     const encoding = (c.req.header('content-type') ?? '').includes('json') ? 'json' : 'protobuf'
@@ -474,45 +509,49 @@ export function createApp(deps: IngestDeps) {
       const out = exportAnswer(rejected, message, encoding, kind)
       return c.body(out.body as never, 200, { 'content-type': out.contentType })
     }
-    if (kind === 'logs' && deps.sink.isFull('logs')) return queueFull(c)
-    let scope: Awaited<ReturnType<KeyResolver['resolve']>>
-    try {
-      scope = await deps.keys.resolve(keyFrom(c) ?? '')
-    } catch (err) {
-      deps.onError?.(err)
-      return c.json({ error: 'unavailable' }, 503)
+    if (kind !== 'dataPoints' && deps.sink.isFull(kind)) return queueFull(c)
+    const scope = await scopeOf(c, keyFrom(c) ?? '')
+    if (scope instanceof Response) return scope
+    if (kind === 'dataPoints') {
+      return answer(0, 'Octadash keeps logs and traces only for now; this was not stored.')
     }
-    if (!scope) return c.json({ error: 'invalid_key' }, 401)
-    if (kind !== 'logs') return answer(0, 'Octadash keeps logs only for now; this was not stored.')
 
-    let logs: OtlpLog[]
+    let decoded: OtlpLog[] | OtlpSpan[]
     try {
       const body = inflate(
         new Uint8Array(await c.req.arrayBuffer()),
         c.req.header('content-encoding'),
       )
-      logs =
-        encoding === 'json'
-          ? decodeLogsJson(JSON.parse(new TextDecoder().decode(body)))
-          : decodeLogsProtobuf(body)
+      const json = () => JSON.parse(new TextDecoder().decode(body))
+      if (kind === 'logs') {
+        decoded = encoding === 'json' ? decodeLogsJson(json()) : decodeLogsProtobuf(body)
+      } else {
+        decoded = encoding === 'json' ? decodeTracesJson(json()) : decodeTracesProtobuf(body)
+      }
     } catch {
       return c.json({ error: 'invalid_body' }, 400)
     }
-    if (logs.length === 0) return answer(0, '')
-    const rows = toLogRows(scope, logs, new Date(now()))
+    if (decoded.length === 0) return answer(0, '')
+    const received = new Date(now())
+    const rows =
+      kind === 'logs'
+        ? toLogRows(scope, decoded as OtlpLog[], received)
+        : toSpanRows(scope, decoded as OtlpSpan[], received)
     try {
       // Large batches go in pieces, so one stream entry stays small.
       for (let i = 0; i < rows.length; i += 1000) {
-        await deps.sink.write('logs', rows.slice(i, i + 1000))
+        await deps.sink.write(kind, rows.slice(i, i + 1000))
       }
     } catch (err) {
       deps.onError?.(err)
       return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
     }
-    const rejected = logs.length - rows.length
+    const rejected = decoded.length - rows.length
+    const limit =
+      kind === 'logs' ? `${MAX_LOGS_PER_REQUEST} log records` : `${MAX_SPANS_PER_REQUEST} spans`
     return answer(
       rejected,
-      rejected > 0 ? `At most ${MAX_LOGS_PER_REQUEST} log records per request.` : '',
+      rejected > 0 ? `At most ${limit} per request, each span with a valid trace and span id.` : '',
     )
   }
   const otlpLimit = errorLimit(MAX_ENVELOPE_BYTES)

@@ -47,15 +47,17 @@ export const ROUTES: Record<string, string> = {
   'GET /array/:token/config': 'no data: answers the remote config request',
   'GET /array/:token/config.js': 'no data: answers the remote config request',
   'GET /static/:file': 'no data: redirects to the posthog-js files',
-  'POST /api/:id/envelope/': 'errors; every other item type to received',
-  'POST /api/:id/envelope': 'errors; every other item type to received',
+  'POST /api/:id/envelope/':
+    'errors; transactions and spans to spans; logs to logs; every other item type to received',
+  'POST /api/:id/envelope':
+    'errors; transactions and spans to spans; logs to logs; every other item type to received',
   'POST /api/:id/store/': 'errors',
   'POST /api/:id/store': 'errors',
   'POST /o/v1/errors': 'errors',
   'POST /v1/logs': 'logs',
   'POST /otlp/v1/logs': 'logs',
-  'POST /v1/traces': 'NOT KEPT YET: answered with a warning (traces step)',
-  'POST /otlp/v1/traces': 'NOT KEPT YET: answered with a warning (traces step)',
+  'POST /v1/traces': 'spans',
+  'POST /otlp/v1/traces': 'spans',
   'POST /v1/metrics': 'NOT KEPT YET: answered with a warning (metrics step)',
   'POST /otlp/v1/metrics': 'NOT KEPT YET: answered with a warning (metrics step)',
 }
@@ -73,6 +75,8 @@ export const DISCARDS = {
     'An item bigger than 1 MB is counted, not stored, until file storage (Garage, or an external S3 or R2) keeps files whole.',
   too_many_in_request:
     'Error events beyond the limit of one request are counted, not stored. SDKs send one per request.',
+  invalid_span_id:
+    'A Sentry span without a valid trace and span id cannot be placed in any trace. It is counted, not stored.',
 } as const
 
 export type DiscardReason = keyof typeof DISCARDS

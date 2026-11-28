@@ -5,9 +5,11 @@ import {
   type EventRow,
   insertEvents,
   insertReceived,
+  insertSpans,
   type QueuedError,
   type QueuedLog,
   type QueuedReceived,
+  type QueuedSpan,
 } from '@octadash/db'
 import { type Redis, startConsumer } from '@octadash/queue'
 import { type ErrorWriterDeps, writeErrors } from './errors'
@@ -25,7 +27,7 @@ export function startWriters(
   errors: Omit<ErrorWriterDeps, 'router' | 'log'>,
   logs: Omit<LogWriterDeps, 'router' | 'log'>,
   log: Logger,
-  receivedRetentionDays: number,
+  retention: { receivedDays: number; traceDays: number },
 ) {
   const writeLogs = createLogWriter({ ...logs, router, log })
   const consumers = [
@@ -55,10 +57,24 @@ export function startWriters(
         const kept = await router.route(rows as QueuedReceived[], (row) => areaOfReceived(row.kind))
         await insertReceived(
           clickhouse,
-          kept.map((row) => ({ ...row, retention_days: receivedRetentionDays })),
+          kept.map((row) => ({ ...row, retention_days: retention.receivedDays })),
           token,
         )
         log.debug({ rows: kept.length, discarded: rows.length - kept.length }, 'received written')
+      },
+      { log },
+    ),
+    startConsumer(
+      valkey,
+      'spans',
+      async (rows, token) => {
+        // Spans belong to no area yet, so no product can have turned them off.
+        await insertSpans(
+          clickhouse,
+          (rows as QueuedSpan[]).map((row) => ({ ...row, retention_days: retention.traceDays })),
+          token,
+        )
+        log.debug({ rows: rows.length }, 'spans written')
       },
       { log },
     ),
