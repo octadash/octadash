@@ -14,7 +14,7 @@ O painel, estes docs e a API usam estes nomes, sempre como estão aqui.
 | Área | Uma entrada do menu: Visão geral, Disponibilidade, Tráfego, Uso, Erros, Dinheiro, Custos, Logs. Cada área funciona para todos os produtos, um grupo ou um produto. |
 | Origem | Uma parte do produto que envia dados: "Site, Next.js", "API, .NET", "Worker, Node". Tem a própria chave e pode alimentar várias áreas. |
 | Chave da origem | Diz ao ingest qual produto e qual origem enviou o dado, também dentro de um DSN do Sentry. Não é segredo: navegadores a veem. |
-| Monitor | Uma checagem de Disponibilidade de um produto: site, API ou `/health`, heartbeat. |
+| Monitor | Uma checagem de Disponibilidade de um produto: site, API ou `/health`, heartbeat. Pode indicar a origem que checa ("Docs"), para a Disponibilidade diferenciar uma da outra; apagar a origem mantém o monitor. |
 | Heartbeat | Um monitor que espera uma chamada de um cron, worker ou backup. O silêncio é a falha. |
 | Conexão | Uma ligação com uma conta de fora de onde Dinheiro ou Custos leem: Stripe, Asaas, Paddle, OpenAI, Anthropic. |
 | Canal | Para onde vão os alertas: e-mail, Telegram, webhook. |

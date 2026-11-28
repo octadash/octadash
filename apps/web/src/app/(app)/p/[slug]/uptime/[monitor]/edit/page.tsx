@@ -60,6 +60,7 @@ export default async function EditMonitorPage({
           grace: monitor.grace_seconds,
           schedule: monitor.schedule,
           token: monitor.heartbeat_token ?? undefined,
+          sourceId: monitor.source_id,
         }}
       >
         {monitor.kind === 'heartbeat' && (

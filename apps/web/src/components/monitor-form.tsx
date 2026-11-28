@@ -1,6 +1,6 @@
 'use client'
 
-import { CircleCheckIcon, TriangleAlertIcon } from 'lucide-react'
+import { ChevronDownIcon, CircleCheckIcon, TriangleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { startTransition, useActionState, useState } from 'react'
 import {
@@ -18,6 +18,7 @@ import { HealthSnippets, heartbeatSnippets } from './health-snippets'
 import { SubmitButton } from './submit-button'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { Input } from './ui/input'
 import { NativeSelect, NativeSelectOption } from './ui/native-select'
 
@@ -35,6 +36,8 @@ export interface MonitorFormValues {
   /** Heartbeats: "0 3 * * *" or null for every interval. */
   schedule: string | null
   token: string
+  /** The product's source this monitor checks ("Docs"), or null. */
+  sourceId: string | null
 }
 
 export interface MonitorFormLabels {
@@ -47,7 +50,12 @@ export interface MonitorFormLabels {
   url: string
   urlHint: Record<'site' | 'health', string>
   homeTitle: string
+  homeMore: string
   homeBody: string
+  source: string
+  sourceHint: string
+  sourceNone: string
+  sourceInfo: { label: string; body: string }
   snippetsTitle: string
   framework: string
   runner: string
@@ -94,6 +102,7 @@ export function MonitorForm({
   heartbeatUrl,
   cancelHref,
   labels,
+  sources,
   children,
   aside,
 }: {
@@ -105,6 +114,8 @@ export function MonitorForm({
   heartbeatUrl: string
   cancelHref: string
   labels: MonitorFormLabels
+  /** The product's sources, for the optional "Source" field. */
+  sources: { id: string; name: string }[]
   /** Shown under the heartbeat address: whether calls arrive. */
   children?: React.ReactNode
   /** The right column: an example, then how checks work or why heartbeats. */
@@ -188,6 +199,27 @@ export function MonitorForm({
               />
             </Field>
 
+            {sources.length > 0 && (
+              <Field
+                label={labels.source}
+                hint={labels.sourceHint}
+                info={{
+                  label: labels.sourceInfo.label,
+                  title: labels.source,
+                  body: labels.sourceInfo.body,
+                }}
+              >
+                <NativeSelect name="source" defaultValue={values.sourceId ?? ''} className="w-60">
+                  <NativeSelectOption value="">{labels.sourceNone}</NativeSelectOption>
+                  {sources.map((source) => (
+                    <NativeSelectOption key={source.id} value={source.id}>
+                      {source.name}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </Field>
+            )}
+
             {kind !== 'heartbeat' ? (
               <>
                 <Field label={labels.url} hint={labels.urlHint[kind]}>
@@ -205,22 +237,31 @@ export function MonitorForm({
                 </Field>
 
                 {home && (
-                  <div className="flex flex-col gap-3 rounded-lg border border-warn/40 bg-warn/10 p-4 text-sm">
-                    <div className="flex gap-3">
-                      <TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-warn" aria-hidden />
-                      <div className="flex flex-col gap-1">
-                        <p className="font-medium">{labels.homeTitle}</p>
-                        <p className="text-muted-foreground">{labels.homeBody}</p>
-                      </div>
+                  <Collapsible className="rounded-lg border border-warn/40 bg-warn/10 px-3 py-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <TriangleAlertIcon className="size-4 shrink-0 text-warn" aria-hidden />
+                      <p className="flex-1 font-medium">{labels.homeTitle}</p>
+                      <CollapsibleTrigger asChild>
+                        <Button type="button" variant="ghost" size="sm" className="group -mr-1">
+                          {labels.homeMore}
+                          <ChevronDownIcon
+                            className="transition-transform group-data-[state=open]:rotate-180"
+                            aria-hidden
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
                     </div>
-                    <p className="font-medium">{labels.snippetsTitle}</p>
-                    <HealthSnippets
-                      copy={labels.copy}
-                      copied={labels.copied}
-                      label={labels.framework}
-                      other={labels.other}
-                    />
-                  </div>
+                    <CollapsibleContent className="flex flex-col gap-3 pt-2 pb-2">
+                      <p className="text-muted-foreground">{labels.homeBody}</p>
+                      <p className="font-medium">{labels.snippetsTitle}</p>
+                      <HealthSnippets
+                        copy={labels.copy}
+                        copied={labels.copied}
+                        label={labels.framework}
+                        other={labels.other}
+                      />
+                    </CollapsibleContent>
+                  </Collapsible>
                 )}
 
                 <div className="flex flex-wrap items-end gap-4">

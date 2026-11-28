@@ -1,4 +1,4 @@
-import { generateHeartbeatToken, listRules } from '@octadash/db'
+import { generateHeartbeatToken, listRules, listSources } from '@octadash/db'
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { durationLabel, GRACES, INTERVALS } from '@/lib/monitors'
@@ -28,11 +28,12 @@ export async function MonitorFormPage({
   children?: React.ReactNode
 }) {
   const { db, env } = services()
-  const [t, tu, common, rules] = await Promise.all([
+  const [t, tu, common, rules, sources] = await Promise.all([
     getTranslations('monitorForm'),
     getTranslations('uptime'),
     getTranslations('common'),
     listRules(db, orgId, project.id),
+    listSources(db, orgId, project.id),
   ])
   const editing = Boolean(values.id)
   const token = values.token ?? generateHeartbeatToken()
@@ -46,6 +47,7 @@ export async function MonitorFormPage({
     grace: values.grace ?? 1800,
     schedule: values.schedule ?? null,
     token,
+    sourceId: values.sourceId ?? null,
   }
   const duration = (seconds: number) => durationLabel(seconds, (key, v) => tu(key, v))
   const wait = (rules.find((r) => r.kind === 'monitor_down')?.params.minutes as number) ?? 2
@@ -67,7 +69,12 @@ export async function MonitorFormPage({
     url: t('url'),
     urlHint: { site: t('urlHint.site'), health: t('urlHint.health') },
     homeTitle: t('homeTitle'),
+    homeMore: t('homeMore'),
     homeBody: t('homeBody'),
+    source: t('source'),
+    sourceHint: t('sourceHint'),
+    sourceNone: t('sourceNone'),
+    sourceInfo: { label: t('sourceInfoLabel'), body: t('sourceInfo') },
     snippetsTitle: t('snippetsTitle'),
     framework: t('framework'),
     runner: t('runner'),
@@ -176,6 +183,7 @@ export async function MonitorFormPage({
       heartbeatUrl={`${env.OCTADASH_INGEST_URL.replace(/\/$/, '')}/o/v1/hb/${token}`}
       cancelHref={`/p/${project.slug}/uptime`}
       labels={labels}
+      sources={sources.map((s) => ({ id: s.id, name: s.name }))}
       aside={{ preview, how, why }}
     >
       {children}

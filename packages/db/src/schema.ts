@@ -355,6 +355,10 @@ export interface MonitorTable {
   paused: Generated<boolean>
   status: Generated<MonitorStatus>
   status_since: Date | null
+  /** The source of the product this monitor checks ("Docs"); null when not linked. */
+  source_id: ColumnType<string | null, string | null | undefined, string | null>
+  /** When someone closed the "same server as Octadash" notice for this monitor. */
+  same_server_dismissed_at: ColumnType<Date | null, Date | null | undefined, Date | null>
   created_at: CreatedAt
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
