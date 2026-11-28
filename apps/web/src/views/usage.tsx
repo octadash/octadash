@@ -33,7 +33,10 @@ import {
   usageHref,
 } from '@/lib/usage'
 import { cn } from '@/lib/utils'
+import { loadAreaSetup } from '@/server/area-setup'
 import { type FunnelResult, loadUsage, type UsageEvent } from '@/server/usage'
+import { AreaProducts, AreaProductsPage } from './area-start'
+import { UsageStartView } from './area-start-views'
 
 /** "Normal?": a shape and the words, never the color alone. */
 const NORMAL_ICON: Record<NormalStatus, { icon: typeof CircleIcon; className: string }> = {
@@ -77,40 +80,17 @@ export async function UsageView({
   const now = new Date()
   const several = data.projects.length > 1
 
-  if (!data.anyEvent) {
+  const setup = await loadAreaSetup(orgId, data.projects, 'usage')
+  if (!data.anyEvent && !setup.some((s) => s.state === 'sending')) {
+    const [first] = setup
+    if (product && first) return <UsageStartView orgId={orgId} product={product} setup={first} />
     return (
-      <div className="flex max-w-2xl flex-col gap-4">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <Card>
-          <CardContent className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{t('none.title')}</h2>
-            <p className="text-sm text-muted-foreground">{t('none.body')}</p>
-            <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-muted-foreground">
-              <li>{t('none.script')}</li>
-              <li>{t('none.server')}</li>
-              <li>{t('none.posthog')}</li>
-            </ul>
-            {product ? (
-              <Button asChild className="self-start">
-                <Link href={`/p/${product.slug}/usage/setup`}>{t('none.setUp')}</Link>
-              </Button>
-            ) : (
-              <>
-                <p className="text-sm font-medium">{t('none.all')}</p>
-                <ul className="flex flex-wrap gap-2">
-                  {data.projects.map((p) => (
-                    <li key={p.id}>
-                      <Button asChild variant="outline">
-                        <Link href={`/p/${p.slug}/usage/setup`}>{p.name}</Link>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <AreaProductsPage
+        area="usage"
+        title={t('title')}
+        intro={group ? t('introGroup', { group }) : t('intro')}
+        setup={setup}
+      />
     )
   }
 
@@ -462,6 +442,7 @@ export async function UsageView({
         )}
         <Retention cohorts={data.cohorts} scope={product?.name ?? group ?? null} />
       </div>
+      {several && <AreaProducts area="usage" setup={setup} folded />}
     </div>
   )
 }
