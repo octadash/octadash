@@ -475,3 +475,7 @@ Luciano reviewed the night's decisions that change the product or his risk.
   Sentry spans go to `spans` (OpenTelemetry's shape), 14 days by default
   (`OCTADASH_TRACE_RETENTION_DAYS`), shorter than received data because spans
   are the largest stream. Sentry logs go to Logs.
+- **Metrics are kept before their screen**: every OTLP metric type goes to
+  one table, `metrics`, 30 days by default (`OCTADASH_METRIC_RETENTION_DAYS`).
+  Points are small, so they keep longer than spans; a product's own setting
+  comes with the Metrics area.

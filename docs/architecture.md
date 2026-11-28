@@ -250,8 +250,6 @@ versions and passwords generated at install. Each has one job.
   `x-octadash-key` or `Authorization: Bearer`. Protobuf is read by a small
   wire-format decoder (`apps/ingest/src/otlp.ts`), so the bundle needs no
   generated code. Tested with the OpenTelemetry JS exporters (proto and http).
-  `/v1/metrics` answers with a partial success that says it is not kept yet,
-  so a Collector sending all three does not retry it.
 - Sentry's own logs (envelope items of type `log`) are read into the same
   rows, so a Sentry SDK with logs turned on lands next to OTLP.
 - Masking at the door: e-mails, card numbers (Luhn), CPF, CNPJ, SSN, bearer
@@ -405,6 +403,19 @@ safe), so upgrades are "pull the new image and restart".
 - There is no Traces screen yet; the data is kept so the screen starts with
   history.
 
+### Metrics
+
+- Data points arrive over OTLP/HTTP at `/v1/metrics` (also
+  `/otlp/v1/metrics`), protobuf or JSON (`apps/ingest/src/otlp-metrics.ts`).
+  Every type is read whole: gauges and sums, histograms with their buckets,
+  exponential histograms and summaries, and exemplars, which link a point to
+  the trace it came from.
+- The worker writes them to ClickHouse `metrics`, one row per point: gauges
+  and sums in `value`, histograms in `count`, `sum`, `min`, `max` and their
+  buckets, the rest in `extra` (JSON). Attributes are masked like logs. Kept
+  30 days (`OCTADASH_METRIC_RETENTION_DAYS`) until each product has its own
+  setting. There is no Metrics screen yet.
+
 ### Nothing received is thrown away
 
 Data that reaches the ingest and could ever be useful is kept, even when no
@@ -444,7 +455,7 @@ changing one URL:
 - PostHog capture (`/e/`, `/i/v0/e/`, `/batch/`, `/capture/`) for events;
   `$ai_generation` and the newer `/i/v1/...` endpoints come with their areas.
 - OTLP over HTTP (`/v1/logs`, `/v1/traces`, `/v1/metrics`) for logs, traces and
-  `gen_ai` spans. Logs and traces are kept now; metrics come next.
+  `gen_ai` spans. All three are kept.
 
 Octadash writes its own SDKs only where it adds something: one browser script
 (traffic, errors and events) and a Node.js and Next.js package. Every other

@@ -482,18 +482,6 @@ describe('OpenTelemetry logs', () => {
     expect(refused.status).toBe(401)
   })
 
-  it('answers metrics with a warning and keeps nothing yet', async () => {
-    const { app, sink } = setup()
-    const res = await app.request('/v1/metrics', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-octadash-key': KEY },
-      body: '{}',
-    })
-    expect(res.status).toBe(200)
-    expect(await res.json()).toMatchObject({ partialSuccess: { rejectedDataPoints: '0' } })
-    expect(sink.batches).toHaveLength(0)
-  })
-
   it('refuses a body that is not OTLP', async () => {
     const res = await setup().app.request('/v1/logs', {
       method: 'POST',

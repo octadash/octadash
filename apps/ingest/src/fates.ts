@@ -58,8 +58,8 @@ export const ROUTES: Record<string, string> = {
   'POST /otlp/v1/logs': 'logs',
   'POST /v1/traces': 'spans',
   'POST /otlp/v1/traces': 'spans',
-  'POST /v1/metrics': 'NOT KEPT YET: answered with a warning (metrics step)',
-  'POST /otlp/v1/metrics': 'NOT KEPT YET: answered with a warning (metrics step)',
+  'POST /v1/metrics': 'metrics',
+  'POST /otlp/v1/metrics': 'metrics',
 }
 
 /**

@@ -4,10 +4,12 @@ import {
   type ClickHouseClient,
   type EventRow,
   insertEvents,
+  insertMetrics,
   insertReceived,
   insertSpans,
   type QueuedError,
   type QueuedLog,
+  type QueuedMetric,
   type QueuedReceived,
   type QueuedSpan,
 } from '@octadash/db'
@@ -27,7 +29,7 @@ export function startWriters(
   errors: Omit<ErrorWriterDeps, 'router' | 'log'>,
   logs: Omit<LogWriterDeps, 'router' | 'log'>,
   log: Logger,
-  retention: { receivedDays: number; traceDays: number },
+  retention: { receivedDays: number; traceDays: number; metricDays: number },
 ) {
   const writeLogs = createLogWriter({ ...logs, router, log })
   const consumers = [
@@ -75,6 +77,20 @@ export function startWriters(
           token,
         )
         log.debug({ rows: rows.length }, 'spans written')
+      },
+      { log },
+    ),
+    startConsumer(
+      valkey,
+      'metrics',
+      async (rows, token) => {
+        // Metrics belong to no area yet, so no product can have turned them off.
+        await insertMetrics(
+          clickhouse,
+          (rows as QueuedMetric[]).map((row) => ({ ...row, retention_days: retention.metricDays })),
+          token,
+        )
+        log.debug({ rows: rows.length }, 'metrics written')
       },
       { log },
     ),

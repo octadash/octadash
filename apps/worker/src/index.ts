@@ -137,6 +137,7 @@ const writers = startWriters(
   {
     receivedDays: env.OCTADASH_RECEIVED_RETENTION_DAYS,
     traceDays: env.OCTADASH_TRACE_RETENTION_DAYS,
+    metricDays: env.OCTADASH_METRIC_RETENTION_DAYS,
   },
 )
 const heartbeats = new ValkeyHeartbeats(valkey)

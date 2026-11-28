@@ -82,6 +82,8 @@ export const workerEnvSchema = baseEnvSchema
     OCTADASH_RECEIVED_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
     /** Days spans from traces are kept, until each product has its own setting. */
     OCTADASH_TRACE_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(14),
+    /** Days metric data points are kept, until each product has its own setting. */
+    OCTADASH_METRIC_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
   })
   .extend(clickhouseEnvSchema.shape)
 
