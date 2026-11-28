@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { cachedHeartbeatResolver, cachedResolver } from './keys'
 
 const KEY = 'c'.repeat(32)
-const scope = { org_id: 'o', project_id: 'p' }
+const scope = { org_id: 'o', project_id: 'p', source_id: 's' }
 
 describe('cachedResolver', () => {
   it('asks Postgres once per key while the answer is fresh', async () => {

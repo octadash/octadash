@@ -240,6 +240,23 @@ against the ingest on every pull request and once a week against their latest
 releases, so a format change upstream shows up as a failing build instead of
 lost data.
 
+Keys belong to sources. A source is one part of a product ("Site, Next.js",
+"API, .NET") with its own key (`source_key`); the key tells the ingest the
+product and the source, also inside a Sentry DSN. A source can hold a new key
+and an old one with a revocation time, so an app is redeployed before the old
+key stops. The area of each piece of data comes from its kind, never from the
+key: one browser script sends page views (Traffic) and product events (Product
+usage) with one key. The worker routes each batch:
+
+- data of a kind a source had not sent adds that area to the source, so the
+  area's setup lists it with no action;
+- data for an area marked "I won't use this" is not stored; the area counts it
+  (`discarded_events`) so its card can say it is receiving data while off. The
+  ingest stays a thin, fast door with no lookup per area.
+
+Keys from before sources (product keys) keep working, without a source, until
+the setup screens create sources; then they are dropped.
+
 ### URL diagnosis removed
 
 The first version read a product's address from outside and guessed what it

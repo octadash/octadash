@@ -12,7 +12,8 @@ import type { ColumnType, Generated } from 'kysely'
 export interface Database {
   octadash_instance: OctadashInstanceTable
   project: ProjectTable
-  project_key: ProjectKeyTable
+  source: SourceTable
+  source_key: SourceKeyTable
   project_area: ProjectAreaTable
   monitor: MonitorTable
   channel: ChannelTable
@@ -53,10 +54,26 @@ export interface ProjectTable {
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
 
-export interface ProjectKeyTable {
+export interface SourceTable {
   id: string
   org_id: string
   project_id: string
+  /** "Site", "API", "Worker". */
+  name: string
+  /** "nextjs", "dotnet", "node"... picks the install instructions. */
+  platform: string
+  /** The areas this source feeds; shown on each area's setup. */
+  areas: ColumnType<string[], string[] | undefined, string[]>
+  created_at: CreatedAt
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export interface SourceKeyTable {
+  id: string
+  org_id: string
+  project_id: string
+  /** Null for a product key from before sources. */
+  source_id: ColumnType<string | null, string | null | undefined, string | null>
   public_key: string
   label: Generated<string>
   created_at: CreatedAt
@@ -71,6 +88,9 @@ export interface ProjectAreaTable {
   area: string
   state: ProjectAreaState
   updated_at: ColumnType<Date, Date | undefined, Date>
+  /** Events not stored because the area is dismissed. */
+  discarded_events: ColumnType<string, never, string | number>
+  discarded_at: ColumnType<Date | null, never, Date | null>
 }
 
 export type MonitorKind = 'site' | 'health' | 'heartbeat'
