@@ -13,7 +13,7 @@ import '../global.css'
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { template: '%s · Octadash Docs', default: 'Octadash Docs' },
-  icons: { icon: '/favicon.svg' },
+  icons: { icon: '/favicon.svg?v=2' },
 }
 
 export function generateStaticParams() {
