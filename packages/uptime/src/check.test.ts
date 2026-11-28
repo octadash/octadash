@@ -126,6 +126,23 @@ describe('checkUrl', () => {
     expect(result).toMatchObject({ up: false, status: 502, error: 'HTTP 502' })
   })
 
+  it('keeps what the server answered when a check fails, without cookies', async () => {
+    const result = await checkUrl('https://example.com/', {
+      allowPrivate: true,
+      fetch: fakeFetch({
+        'https://example.com/': () =>
+          new Response('upstream timed out'.padEnd(3000, '.'), {
+            status: 504,
+            headers: { server: 'nginx', 'set-cookie': 'sid=secret' },
+          }),
+      }),
+    })
+    expect(result.answer?.headers).toMatchObject({ server: 'nginx' })
+    expect(result.answer?.headers).not.toHaveProperty('set-cookie')
+    expect(result.answer?.body.startsWith('upstream timed out')).toBe(true)
+    expect(result.answer?.body).toHaveLength(1024)
+  })
+
   it('reports why a site could not be reached', async () => {
     const result = await checkUrl('https://down.example/', {
       allowPrivate: true,

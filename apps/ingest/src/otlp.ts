@@ -34,9 +34,9 @@ export class OtlpDecodeError extends Error {
 // ---------------------------------------------------------------------------
 // Protobuf wire format
 
-type Value = string | boolean | number | bigint | Value[] | { [key: string]: Value } | null
+export type Value = string | boolean | number | bigint | Value[] | { [key: string]: Value } | null
 
-class Reader {
+export class Reader {
   pos = 0
   constructor(
     private readonly buf: Uint8Array,
@@ -124,10 +124,10 @@ class Reader {
 }
 
 const decoder = new TextDecoder()
-const hex = (bytes: Uint8Array) =>
+export const hex = (bytes: Uint8Array) =>
   Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 
-function readAnyValue(r: Reader): Value {
+export function readAnyValue(r: Reader): Value {
   let value: Value = null
   r.each((n, wire) => {
     if (n === 1 && wire === 2) value = r.string()
@@ -176,7 +176,7 @@ function readKeyValue(r: Reader): [string, Value] {
   return [key, value]
 }
 
-function readAttributes(r: Reader, into: Record<string, Value>) {
+export function readAttributes(r: Reader, into: Record<string, Value>) {
   const [key, value] = readKeyValue(r)
   if (key) into[key] = value
 }
@@ -274,12 +274,13 @@ function readLogRecord(r: Reader, scope: string, resource: Record<string, string
 // ---------------------------------------------------------------------------
 // JSON (OTLP/JSON: camelCase names, 64-bit numbers as strings, ids in hex)
 
-type Json = Record<string, unknown>
-const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
-const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
-const pick = (o: Json, camel: string, snake: string) => o[camel] ?? o[snake]
+export type Json = Record<string, unknown>
+export const isObject = (v: unknown): v is Json =>
+  typeof v === 'object' && v !== null && !Array.isArray(v)
+export const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
+export const pick = (o: Json, camel: string, snake: string) => o[camel] ?? o[snake]
 
-function jsonAnyValue(v: unknown): Value {
+export function jsonAnyValue(v: unknown): Value {
   if (!isObject(v)) return null
   if ('stringValue' in v || 'string_value' in v)
     return String(pick(v, 'stringValue', 'string_value'))
@@ -310,7 +311,7 @@ function jsonAnyValue(v: unknown): Value {
   return null
 }
 
-function jsonAttributes(v: unknown): Record<string, Value> {
+export function jsonAttributes(v: unknown): Record<string, Value> {
   const out: Record<string, Value> = {}
   for (const item of list(v)) {
     if (isObject(item) && typeof item.key === 'string') out[item.key] = jsonAnyValue(item.value)
@@ -318,7 +319,7 @@ function jsonAttributes(v: unknown): Record<string, Value> {
   return out
 }
 
-const nanos = (v: unknown): bigint => {
+export const nanos = (v: unknown): bigint => {
   if (typeof v !== 'string' && typeof v !== 'number') return 0n
   try {
     return BigInt(typeof v === 'number' ? Math.trunc(v) : v)
@@ -327,7 +328,7 @@ const nanos = (v: unknown): bigint => {
   }
 }
 
-const idHex = (v: unknown) =>
+export const idHex = (v: unknown) =>
   typeof v === 'string' && /^[0-9a-fA-F]*$/.test(v) ? v.toLowerCase() : ''
 
 /** Reads an `ExportLogsServiceRequest` in OTLP/JSON. */
@@ -369,7 +370,7 @@ export function decodeLogsJson(body: unknown): OtlpLog[] {
 // ---------------------------------------------------------------------------
 // Shared
 
-const toJson = (v: Value): unknown => {
+export const toJson = (v: Value): unknown => {
   if (typeof v === 'bigint') return Number(v)
   if (Array.isArray(v)) return v.map(toJson)
   if (v && typeof v === 'object') {
@@ -386,7 +387,11 @@ function bodyText(v: Value): string {
 }
 
 /** Nested maps become dotted keys; lists become JSON. */
-function flatten(values: Record<string, Value>, prefix = '', out: Record<string, string> = {}) {
+export function flatten(
+  values: Record<string, Value>,
+  prefix = '',
+  out: Record<string, string> = {},
+) {
   for (const [key, value] of Object.entries(values)) {
     const name = prefix ? `${prefix}.${key}` : key
     if (value === null) continue

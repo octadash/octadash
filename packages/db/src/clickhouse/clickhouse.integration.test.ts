@@ -2,9 +2,11 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { bucketStarts } from './buckets'
 import { createClickHouse, parseClickHouseUrl } from './client'
 import { insertEvents, toClickHouseTime } from './events'
+import { insertMetrics } from './metrics'
 import { migrateClickHouse } from './migrate'
 import { insertReceived } from './received'
 import { sourceActivity } from './sources'
+import { insertSpans } from './spans'
 import {
   fillSeries,
   lastPageview,
@@ -51,6 +53,8 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
       .command({ query: `DELETE FROM uptime_checks WHERE org_id = '${org}'` })
       .catch(() => {})
     await client.command({ query: `DELETE FROM received WHERE org_id = '${org}'` }).catch(() => {})
+    await client.command({ query: `DELETE FROM spans WHERE org_id = '${org}'` }).catch(() => {})
+    await client.command({ query: `DELETE FROM metrics WHERE org_id = '${org}'` }).catch(() => {})
     await client.close()
   })
 
@@ -119,6 +123,104 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     expect(result).toEqual([
       { kind: 'dropped:sentry.attachment', retention_days: 30 },
       { kind: 'sentry.session', retention_days: 30 },
+    ])
+  })
+
+  it('keeps spans with nanosecond times and finds them by trace', async () => {
+    await insertSpans(client, [
+      {
+        org_id: org,
+        project_id: '00000000-0000-4000-8000-0000000000c2',
+        source_id: '00000000-0000-4000-8000-0000000000c3',
+        timestamp: '2026-11-28 12:00:00.123456789',
+        duration_ns: 250_000_000,
+        trace_id: 'a'.repeat(32),
+        span_id: 'b'.repeat(16),
+        parent_span_id: '',
+        trace_state: '',
+        name: 'GET /orders',
+        kind: 'server',
+        service: 'api',
+        scope: '',
+        scope_version: '',
+        status_code: 'ok',
+        status_message: '',
+        attributes: { 'http.route': '/orders' },
+        resource: { 'service.name': 'api' },
+        events: '[]',
+        links: '[]',
+        dropped: 0,
+        masked: 0,
+        retention_days: 14,
+      },
+    ])
+    const result = await (
+      await client.query({
+        query: `SELECT name, toString(timestamp) AS at, attributes['http.route'] AS route
+          FROM spans WHERE org_id = {org:UUID} AND trace_id = {trace:String}`,
+        query_params: { org, trace: 'a'.repeat(32) },
+        format: 'JSONEachRow',
+      })
+    ).json<{ name: string; at: string; route: string }>()
+    expect(result).toEqual([
+      { name: 'GET /orders', at: '2026-11-28 12:00:00.123456789', route: '/orders' },
+    ])
+  })
+
+  it('keeps metric points of every type', async () => {
+    const base = {
+      org_id: org,
+      project_id: '00000000-0000-4000-8000-0000000000c2',
+      source_id: '00000000-0000-4000-8000-0000000000c3',
+      timestamp: '2026-11-28 12:00:00.000000001',
+      start_timestamp: '2026-11-28 11:59:00.000000000',
+      description: '',
+      unit: 'ms',
+      temporality: 'delta',
+      is_monotonic: 0,
+      service: 'api',
+      scope: '',
+      attributes: {},
+      resource: {},
+      value: null,
+      count: 0,
+      sum: null,
+      min: null,
+      max: null,
+      bucket_counts: [],
+      explicit_bounds: [],
+      extra: '',
+      flags: 0,
+      masked: 0,
+      retention_days: 30,
+    }
+    await insertMetrics(client, [
+      { ...base, name: 'cpu', type: 'gauge', value: 0.5 },
+      {
+        ...base,
+        name: 'latency',
+        type: 'histogram',
+        count: 3,
+        sum: 300,
+        min: 50,
+        max: 200,
+        bucket_counts: [1, 2],
+        explicit_bounds: [100],
+      },
+    ])
+    const result = await (
+      await client.query({
+        query: `SELECT name, value, count, bucket_counts FROM metrics
+          WHERE org_id = {org:UUID} ORDER BY name`,
+        query_params: { org },
+        format: 'JSONEachRow',
+      })
+    ).json<{ name: string; value: number | null; count: string; bucket_counts: string[] }>()
+    expect(
+      result.map((r) => [r.name, r.value, Number(r.count), r.bucket_counts.map(Number)]),
+    ).toEqual([
+      ['cpu', 0.5, 0, []],
+      ['latency', null, 3, [1, 2]],
     ])
   })
 

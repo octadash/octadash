@@ -42,8 +42,11 @@ const SENTRY_ITEMS: [type: string, body: string][] = [
     '{"sid":"s1","did":"ana@example.com","status":"ok","started":"2026-11-28T10:00:00Z"}',
   ],
   ['sessions', '{"aggregates":[{"started":"2026-11-28T10:00:00Z","exited":3}]}'],
-  ['transaction', '{"type":"transaction","transaction":"/checkout","spans":[]}'],
-  ['span', '{"span_id":"a1","trace_id":"b2","op":"http"}'],
+  [
+    'transaction',
+    `{"type":"transaction","transaction":"/checkout","start_timestamp":1795000000,"timestamp":1795000001,"contexts":{"trace":{"trace_id":"${'1'.repeat(32)}","span_id":"${'2'.repeat(16)}","op":"http.server"}},"spans":[{"span_id":"${'3'.repeat(16)}","parent_span_id":"${'2'.repeat(16)}","op":"db","description":"select"}]}`,
+  ],
+  ['span', `{"span_id":"${'4'.repeat(16)}","trace_id":"${'1'.repeat(32)}","op":"http"}`],
   ['check_in', '{"check_in_id":"c1","monitor_slug":"backup","status":"ok"}'],
   ['user_report', '{"event_id":"e1","name":"Ana","email":"ana@example.com","comments":"broke"}'],
   ['feedback', '{"contexts":{"feedback":{"message":"slow","contact_email":"a@b.co"}}}'],
@@ -101,8 +104,16 @@ describe('fates', () => {
     })
     expect(res.status).toBe(200)
     expect(rows('errors')).toHaveLength(1)
+    // Spans and logs go where OTLP's go; a transaction also keeps what is not a span.
+    expect(rows('spans')).toHaveLength(3)
+    expect(rows('logs')).toHaveLength(1)
     expect(received().map((row) => row.kind)).toEqual(
-      SENTRY_ITEMS.map(([type]) => `sentry.${type}`),
+      SENTRY_ITEMS.filter(([type]) => type !== 'span' && type !== 'log').map(
+        ([type]) => `sentry.${type}`,
+      ),
+    )
+    expect(received().find((row) => row.kind === 'sentry.transaction')?.payload).not.toContain(
+      'select',
     )
     const session = received().find((row) => row.kind === 'sentry.session')
     expect(session?.payload).not.toContain('ana@example.com')

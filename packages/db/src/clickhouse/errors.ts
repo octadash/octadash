@@ -68,6 +68,8 @@ export interface ErrorRow {
   tags: string
   /** The trace it happened in, lowercase hex; empty when the SDK sent none. */
   trace_id: string
+  /** The whole event as sent, masked (JSON). Empty for rows queued before it existed. */
+  event?: string
 }
 
 /** What the ingest queues: a row before the worker knows its issue. */

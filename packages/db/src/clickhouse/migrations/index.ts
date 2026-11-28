@@ -8,6 +8,10 @@ import { migration as m0006 } from './0006_logs'
 import { migration as m0007 } from './0007_errors_trace'
 import { migration as m0008 } from './0008_money'
 import { migration as m0009 } from './0009_received'
+import { migration as m0010 } from './0010_spans'
+import { migration as m0011 } from './0011_metrics'
+import { migration as m0012 } from './0012_errors_event'
+import { migration as m0013 } from './0013_uptime_facts'
 
 /**
  * ClickHouse migrations, applied in this order. Imported statically so they
@@ -25,4 +29,8 @@ export const clickhouseMigrations: ClickHouseMigration[] = [
   m0007,
   m0008,
   m0009,
+  m0010,
+  m0011,
+  m0012,
+  m0013,
 ]

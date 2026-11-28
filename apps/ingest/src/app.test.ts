@@ -73,6 +73,23 @@ describe('ingest app', () => {
     expect(pings.pings.size).toBe(1)
   })
 
+  it('keeps what a job posts with its ping as its output, masked, the end of a long one', async () => {
+    const { app, pings } = setup()
+    await app.request(`/hb/${TOKEN}`, { method: 'POST', body: 'backup ok for ana@shop.example' })
+    expect(pings.outputs.get(MONITOR)).toMatchObject({
+      output: 'backup ok for [email]',
+      failed: false,
+    })
+    await app.request(`/hb/${TOKEN}/fail`, {
+      method: 'POST',
+      body: `${'x'.repeat(100_010)}disk full`,
+    })
+    const failed = pings.outputs.get(MONITOR)
+    expect(failed?.failed).toBe(true)
+    expect(failed?.output.startsWith('[Octadash: first 19 characters not kept]')).toBe(true)
+    expect(failed?.output.endsWith('disk full')).toBe(true)
+  })
+
   it('records a failure reported on /fail, under both addresses', async () => {
     const { app, pings } = setup()
     expect((await app.request(`/o/v1/hb/${TOKEN}`)).status).toBe(200)
@@ -480,18 +497,6 @@ describe('OpenTelemetry logs', () => {
       body: JSON.stringify(request([])),
     })
     expect(refused.status).toBe(401)
-  })
-
-  it('answers traces and metrics with a warning and keeps nothing', async () => {
-    const { app, sink } = setup()
-    const res = await app.request('/v1/traces', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-octadash-key': KEY },
-      body: '{}',
-    })
-    expect(res.status).toBe(200)
-    expect(await res.json()).toMatchObject({ partialSuccess: { rejectedSpans: '0' } })
-    expect(sink.batches).toHaveLength(0)
   })
 
   it('refuses a body that is not OTLP', async () => {

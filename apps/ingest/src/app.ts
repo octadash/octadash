@@ -17,7 +17,10 @@ import {
 } from './events'
 import type { HeartbeatResolver, IngestScope, KeyResolver } from './keys'
 import { MAX_LOGS_PER_REQUEST, toLogRows } from './logs'
+import { MAX_POINTS_PER_REQUEST, toMetricRows } from './metrics'
 import { decodeLogsJson, decodeLogsProtobuf, exportAnswer, type OtlpLog } from './otlp'
+import { decodeMetricsJson, decodeMetricsProtobuf, type OtlpPoint } from './otlp-metrics'
+import { decodeTracesJson, decodeTracesProtobuf, type OtlpSpan } from './otlp-traces'
 import {
   exceptionAsSentryEvent,
   POSTHOG_ASSETS,
@@ -27,7 +30,10 @@ import {
   UnsupportedCompression,
 } from './posthog'
 import { bodyOf, droppedRow, receivedRow, timeOf } from './received'
+import { redact } from './redact'
 import { BROWSER_SCRIPT } from './script'
+import { sentryLogs, standaloneSpan, transactionSpans } from './sentry-traces'
+import { MAX_SPANS_PER_REQUEST, toSpanRows } from './spans'
 import { visitorHash } from './visitor'
 
 /** Requests bigger than this are refused before they are read. */
@@ -59,8 +65,7 @@ export interface IngestDeps {
  *   - Octadash script/SDK   /o/v1/events                       (step 1)
  *   - Sentry envelopes      /api/:projectId/envelope/          (errors step)
  *   - PostHog capture       /e/, /i/v0/e/, /batch/, /capture/, /flags/
- *   - OpenTelemetry (OTLP)  /v1/logs (also under /otlp/); traces and metrics
- *                           are answered and not kept yet
+ *   - OpenTelemetry (OTLP)  /v1/logs, /v1/traces, /v1/metrics (also under /otlp/)
  * Heartbeat monitors ping /hb/<token> (GET or POST) from cron jobs and backups.
  * The health check touches nothing, so uptime probes never wake a database.
  */
@@ -97,6 +102,8 @@ export function createApp(deps: IngestDeps) {
 
   // A cron job or backup reports that it ran. The token is the secret; the
   // ping is kept in Valkey and the worker compares it with the monitor's interval.
+  // A POST body is the job's output (`curl --data-binary @backup.log`): kept,
+  // masked, with the ping.
   // `/fail` reports that the job ran and failed, so people hear at once
   // instead of after the grace.
   const heartbeat = (failed: boolean) => async (c: Context) => {
@@ -105,8 +112,16 @@ export function createApp(deps: IngestDeps) {
     try {
       monitorId = await deps.heartbeats.resolver.resolve(token)
       if (monitorId) {
-        if (failed) await deps.heartbeats.store.recordFailure(monitorId, now())
-        else await deps.heartbeats.store.record(monitorId, now())
+        // A body too big to read still counts as a ping; the output says why it is missing.
+        const size = Number(c.req.header('content-length') ?? 0)
+        const output =
+          c.req.method !== 'POST'
+            ? undefined
+            : size > MAX_BODY_BYTES
+              ? `[Octadash: output of ${size} bytes not read; at most ${MAX_BODY_BYTES}]`
+              : heartbeatOutput(await c.req.text())
+        if (failed) await deps.heartbeats.store.recordFailure(monitorId, now(), output)
+        else await deps.heartbeats.store.record(monitorId, now(), output)
       }
     } catch (err) {
       deps.onError?.(err)
@@ -150,7 +165,7 @@ export function createApp(deps: IngestDeps) {
   /** Queues rows on a stream; a Response when the queue cannot take them. */
   const queue = async (
     c: Context,
-    kind: 'events' | 'errors' | 'received',
+    kind: 'events' | 'errors' | 'received' | 'spans' | 'logs',
     rows: readonly unknown[],
   ): Promise<Response | null> => {
     if (rows.length === 0) return null
@@ -264,7 +279,13 @@ export function createApp(deps: IngestDeps) {
         ),
       )
     for (const entry of batch.exceptions) {
-      const row = await toErrorRow(scope, exceptionAsSentryEvent(entry), sender, received)
+      const row = await toErrorRow(
+        scope,
+        exceptionAsSentryEvent(entry),
+        sender,
+        received,
+        entry.item,
+      )
       // An exception with no type, message or stack is still something the app sent.
       if (row) errorRows.push(row)
       else keep('posthog.$exception', entry)
@@ -355,7 +376,9 @@ export function createApp(deps: IngestDeps) {
    * and any type a future SDK sends) is kept in `received` as it came.
    */
   const errors = (format: 'envelope' | 'store' | 'octadash') => async (c: Context) => {
-    if (deps.sink.isFull('errors') || deps.sink.isFull('received')) return queueFull(c)
+    if (['errors', 'received', 'spans', 'logs'].some((k) => deps.sink.isFull(k as 'errors'))) {
+      return queueFull(c)
+    }
     let body: Uint8Array
     try {
       body = inflate(new Uint8Array(await c.req.arrayBuffer()), c.req.header('content-encoding'))
@@ -402,22 +425,43 @@ export function createApp(deps: IngestDeps) {
     const received = new Date(now())
     const sender = senderOf(c, scope.project_id, received)
     const rows: QueuedError[] = []
-    const kept: QueuedReceived[] = others.map((item) => {
+    const kept: QueuedReceived[] = []
+    const spans: OtlpSpan[] = []
+    const logs: OtlpLog[] = []
+    for (const item of others) {
       const content = bodyOf(item.payload)
       const value = content.encoding === 'json' ? content.value : undefined
-      const facts = value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
-      return receivedRow(
-        scope,
-        {
-          kind: `sentry.${item.type || 'unknown'}`,
-          meta: item.header,
-          body: content,
-          bytes: item.payload.length,
-          at: timeOf(facts.timestamp ?? facts.started ?? facts.start_timestamp) ?? sentAt,
-        },
-        received,
+      const facts =
+        value && typeof value === 'object' && !Array.isArray(value)
+          ? (value as Record<string, unknown>)
+          : undefined
+      let body = content
+      // Tracing and logs go where OTLP's go; what is not a span stays as it came.
+      if (facts && item.type === 'transaction') {
+        spans.push(...transactionSpans(facts))
+        const { spans: _children, ...rest } = facts
+        body = { encoding: 'json', value: rest }
+      } else if (facts && item.type === 'span') {
+        spans.push(standaloneSpan(facts))
+        continue
+      } else if (facts && item.type === 'log') {
+        logs.push(...sentryLogs(facts))
+        continue
+      }
+      kept.push(
+        receivedRow(
+          scope,
+          {
+            kind: `sentry.${item.type || 'unknown'}`,
+            meta: item.header,
+            body,
+            bytes: item.payload.length,
+            at: timeOf(facts?.timestamp ?? facts?.started ?? facts?.start_timestamp) ?? sentAt,
+          },
+          received,
+        ),
       )
-    })
+    }
     for (const event of events.slice(0, MAX_ERRORS_PER_REQUEST)) {
       const row = await toErrorRow(scope, event, sender, received)
       // An event with no exception and no message is still kept, as it came.
@@ -445,7 +489,15 @@ export function createApp(deps: IngestDeps) {
         ),
       )
     }
-    const failed = (await queue(c, 'errors', rows)) ?? (await queue(c, 'received', kept))
+    const spanRows = toSpanRows(scope, spans, received)
+    const logRows = toLogRows(scope, logs, received)
+    const lost = spans.length - spanRows.length
+    if (lost > 0) kept.push(droppedRow(scope, 'sentry.span', 'invalid_span_id', 0, lost, received))
+    const failed =
+      (await queue(c, 'errors', rows)) ??
+      (await queue(c, 'spans', spanRows)) ??
+      (await queue(c, 'logs', logRows)) ??
+      (await queue(c, 'received', kept))
     if (failed) return failed
     // Sentry SDKs read the event id back.
     return c.json(
@@ -464,9 +516,9 @@ export function createApp(deps: IngestDeps) {
 
   /**
    * OpenTelemetry over HTTP, protobuf or JSON. The key comes in a header
-   * (`x-octadash-key` or `Authorization: Bearer`). Logs are masked and queued;
-   * traces and metrics are answered with a warning so a Collector sending all
-   * three does not retry them, until their areas keep them.
+   * (`x-octadash-key` or `Authorization: Bearer`). Logs, spans and metric
+   * points are masked and queued; what a request holds beyond the limits is
+   * answered as rejected, so the SDK knows.
    */
   const otlp = (kind: 'logs' | 'spans' | 'dataPoints') => async (c: Context) => {
     const encoding = (c.req.header('content-type') ?? '').includes('json') ? 'json' : 'protobuf'
@@ -474,46 +526,52 @@ export function createApp(deps: IngestDeps) {
       const out = exportAnswer(rejected, message, encoding, kind)
       return c.body(out.body as never, 200, { 'content-type': out.contentType })
     }
-    if (kind === 'logs' && deps.sink.isFull('logs')) return queueFull(c)
-    let scope: Awaited<ReturnType<KeyResolver['resolve']>>
-    try {
-      scope = await deps.keys.resolve(keyFrom(c) ?? '')
-    } catch (err) {
-      deps.onError?.(err)
-      return c.json({ error: 'unavailable' }, 503)
-    }
-    if (!scope) return c.json({ error: 'invalid_key' }, 401)
-    if (kind !== 'logs') return answer(0, 'Octadash keeps logs only for now; this was not stored.')
+    const stream = kind === 'dataPoints' ? 'metrics' : kind
+    if (deps.sink.isFull(stream)) return queueFull(c)
+    const scope = await scopeOf(c, keyFrom(c) ?? '')
+    if (scope instanceof Response) return scope
 
-    let logs: OtlpLog[]
+    let decoded: OtlpLog[] | OtlpSpan[] | OtlpPoint[]
     try {
       const body = inflate(
         new Uint8Array(await c.req.arrayBuffer()),
         c.req.header('content-encoding'),
       )
-      logs =
-        encoding === 'json'
-          ? decodeLogsJson(JSON.parse(new TextDecoder().decode(body)))
-          : decodeLogsProtobuf(body)
+      const json = () => JSON.parse(new TextDecoder().decode(body))
+      if (kind === 'logs') {
+        decoded = encoding === 'json' ? decodeLogsJson(json()) : decodeLogsProtobuf(body)
+      } else if (kind === 'spans') {
+        decoded = encoding === 'json' ? decodeTracesJson(json()) : decodeTracesProtobuf(body)
+      } else {
+        decoded = encoding === 'json' ? decodeMetricsJson(json()) : decodeMetricsProtobuf(body)
+      }
     } catch {
       return c.json({ error: 'invalid_body' }, 400)
     }
-    if (logs.length === 0) return answer(0, '')
-    const rows = toLogRows(scope, logs, new Date(now()))
+    if (decoded.length === 0) return answer(0, '')
+    const received = new Date(now())
+    const rows =
+      kind === 'logs'
+        ? toLogRows(scope, decoded as OtlpLog[], received)
+        : kind === 'spans'
+          ? toSpanRows(scope, decoded as OtlpSpan[], received)
+          : toMetricRows(scope, decoded as OtlpPoint[], received)
     try {
       // Large batches go in pieces, so one stream entry stays small.
       for (let i = 0; i < rows.length; i += 1000) {
-        await deps.sink.write('logs', rows.slice(i, i + 1000))
+        await deps.sink.write(stream, rows.slice(i, i + 1000))
       }
     } catch (err) {
       deps.onError?.(err)
       return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
     }
-    const rejected = logs.length - rows.length
-    return answer(
-      rejected,
-      rejected > 0 ? `At most ${MAX_LOGS_PER_REQUEST} log records per request.` : '',
-    )
+    const rejected = decoded.length - rows.length
+    const limit = {
+      logs: `${MAX_LOGS_PER_REQUEST} log records per request`,
+      spans: `${MAX_SPANS_PER_REQUEST} spans per request, each with a valid trace and span id`,
+      dataPoints: `${MAX_POINTS_PER_REQUEST} data points per request, each with a metric name`,
+    }[kind]
+    return answer(rejected, rejected > 0 ? `At most ${limit}.` : '')
   }
   const otlpLimit = errorLimit(MAX_ENVELOPE_BYTES)
   for (const prefix of ['', '/otlp']) {
@@ -552,6 +610,16 @@ function inflate(body: Uint8Array, encoding: string | undefined): Uint8Array {
     default:
       return body
   }
+}
+
+/** Output kept with a heartbeat ping: the end of it, where a job's errors are, masked. */
+export const MAX_HEARTBEAT_OUTPUT_CHARS = 100_000
+
+function heartbeatOutput(text: string): string | undefined {
+  if (!text.trim()) return undefined
+  if (text.length <= MAX_HEARTBEAT_OUTPUT_CHARS) return redact(text).text
+  const cut = text.length - MAX_HEARTBEAT_OUTPUT_CHARS
+  return `[Octadash: first ${cut} characters not kept]\n${redact(text.slice(cut)).text}`
 }
 
 function queueFull(c: Context) {
