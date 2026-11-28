@@ -83,6 +83,92 @@ export async function listCostShares(db: Db, orgId: string | null): Promise<Cost
   }))
 }
 
+export interface CostSplitVersion {
+  connectionId: string
+  /** "2026-11-28": the division holds from this day until the next version. */
+  validFrom: string
+  split: CostSplit
+  shares: CostShareRow[]
+}
+
+/**
+ * Keeps a copy of a connection's whole division from `day` (by default
+ * today in the organization's time zone), after its split or a product's part
+ * changed. A second change on the same day replaces the first.
+ */
+export async function recordCostSplit(db: Db, orgId: string, connectionId: string, day?: string) {
+  const connection = await db
+    .selectFrom('connection')
+    .select('split')
+    .where('org_id', '=', orgId)
+    .where('id', '=', connectionId)
+    .executeTakeFirst()
+  if (!connection) return
+  const shares = (await listCostShares(db, orgId))
+    .filter((s) => s.connectionId === connectionId)
+    .map(({ projectId, tags, rest, percent }) => ({ projectId, tags, rest, percent }))
+  const validFrom =
+    day ??
+    (
+      await sql<{ day: string }>`
+        select to_char((now() at time zone coalesce(
+          (select time_zone from organization_settings where org_id = ${orgId}), 'UTC'))::date,
+          'YYYY-MM-DD') as day`.execute(db)
+    ).rows[0]?.day ??
+    new Date().toISOString().slice(0, 10)
+  const values = { split: connection.split, shares: JSON.stringify(shares) }
+  await db
+    .insertInto('cost_split_history')
+    .values({ connection_id: connectionId, org_id: orgId, valid_from: validFrom, ...values })
+    .onConflict((oc) => oc.columns(['connection_id', 'valid_from']).doUpdateSet(values))
+    .execute()
+}
+
+/** Every version of every connection's division, oldest first. */
+export async function listCostSplitHistory(db: Db, orgId: string): Promise<CostSplitVersion[]> {
+  const rows = await db
+    .selectFrom('cost_split_history')
+    .select([
+      'connection_id',
+      sql<string>`to_char(valid_from, 'YYYY-MM-DD')`.as('valid_from'),
+      'split',
+      'shares',
+    ])
+    .where('org_id', '=', orgId)
+    .orderBy('connection_id')
+    .orderBy('valid_from')
+    .execute()
+  return rows.map((row) => ({
+    connectionId: row.connection_id,
+    validFrom: row.valid_from,
+    split: (['equal', 'traffic', 'percent'].includes(row.split) ? row.split : 'equal') as CostSplit,
+    shares: (row.shares as Omit<CostShareRow, 'connectionId'>[]).map((s) => ({
+      connectionId: row.connection_id,
+      projectId: s.projectId,
+      tags: s.tags ?? [],
+      rest: Boolean(s.rest),
+      percent: s.percent === null || s.percent === undefined ? null : Number(s.percent),
+    })),
+  }))
+}
+
+/**
+ * The division that holds on `day`: the last version from that day or
+ * before. Days before the first version (costs read back from before the
+ * connection existed) use the first one.
+ */
+export function splitOn<T extends { validFrom: string }>(
+  versions: T[],
+  day: string,
+): T | undefined {
+  let found: T | undefined
+  for (const v of versions) {
+    if (v.validFrom <= day) found = v
+    else break
+  }
+  return found ?? versions[0]
+}
+
 export interface FixedCost {
   connectionId: string
   /** Minor units. */

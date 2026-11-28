@@ -136,9 +136,9 @@ and why; anything here can be reversed.
   and the order by people hit first. The issue page has its actions, numbers,
   30 days in bars, where it happened (only the app's frames by default), what
   the person did before, who it hits and the event itself.
-- **Question for Luciano: pt-BR keeps the word "issue"** ("issues", "Abertas",
-  "Voltaram"). It is the word Sentry, GitHub and developers in Brazil use.
-  "Problema" would read well but needs gendered rewording on every label.
+- **pt-BR keeps the word "issue"** ("issues", "Abertas", "Voltaram"). It is
+  the word Sentry, GitHub and developers in Brazil use. Confirmed by Luciano
+  on the morning of 2026-11-28.
 - **Not built yet, on purpose**: release marks on the chart and a SPIKE badge
   (they need the alert rule first), a search box for filters, source maps and
   commit details on the stack. "Set up Errors" is not a page yet: the empty
@@ -394,3 +394,25 @@ and why; anything here can be reversed.
   with bars over the period (the numbers say it, the bars only draw it).
 - **Money's "Margin is in Costs" is now a link** to the Costs page of the
   same scope.
+
+## Morning review, 2026-11-28
+
+Luciano reviewed the night's decisions that change the product or his risk.
+
+- **A change to a cost split holds from that day on.** Every change to a
+  connection's split or to a product's part keeps a copy of the whole
+  division from that day, in the organization's time zone
+  (`cost_split_history`); each day of cost is divided by the version of its
+  day. Past months keep their margins, as the Costs canvas said. Costs read
+  back from before the connection existed use its first version. Existing
+  connections got their current division from the start.
+- **The Money form says what each key can do, in the open**, not only in the
+  "i": Stripe takes restricted keys only, Paddle keys get Read only, and an
+  Asaas key can also charge (Asaas has no read-only keys), shown as a warning
+  before the key is pasted.
+- **PostHog compatibility covers events in v1.** Click autocapture, person
+  profiles and heatmaps go to the backlog as per-product options, off by
+  default; session recording is its own module after v1, since it needs file
+  storage (S3 or MinIO), masking and retention.
+- **A new issue can send a message, as an optional rule off by default.** The
+  error spike stays the emergency.

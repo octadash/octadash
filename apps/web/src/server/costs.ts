@@ -7,10 +7,12 @@ import {
   listCostBudgets,
   listCostDays,
   listCostShares,
+  listCostSplitHistory,
   listFixedCosts,
   listProjects,
   type PaymentDay,
   paymentDays,
+  splitOn,
   trafficSeriesByProduct,
 } from '@octadash/db'
 import { type CostShare, costProvider, type SplitMode, splitCost } from '@octadash/integrations'
@@ -106,11 +108,12 @@ export async function loadCosts(
   now = new Date(),
 ): Promise<CostsData> {
   const { db, clickhouse } = services()
-  const [settings, allProjects, connections, shares, fixed, budgets] = await Promise.all([
+  const [settings, allProjects, connections, shares, history, fixed, budgets] = await Promise.all([
     getOrganizationSettings(db, orgId),
     listProjects(db, orgId),
     listConnections(db, orgId),
     listCostShares(db, orgId),
+    listCostSplitHistory(db, orgId),
     listFixedCosts(db, orgId),
     listCostBudgets(db, orgId),
   ])
@@ -133,7 +136,23 @@ export async function loadCosts(
     list.push(s)
     sharesOf.set(s.connectionId, list)
   }
-  const usesTraffic = costConnections.some((c) => c.split === 'traffic')
+  // Each connection's division day by day: a change holds from its day on.
+  const versionsOf = new Map<string, typeof history>()
+  for (const v of history) {
+    const list = versionsOf.get(v.connectionId) ?? []
+    list.push(v)
+    versionsOf.set(v.connectionId, list)
+  }
+  const divisionOn = (connectionId: string, day: string) => {
+    const version = splitOn(versionsOf.get(connectionId) ?? [], day)
+    if (version) return { split: version.split as SplitMode, shares: version.shares as CostShare[] }
+    return {
+      split: (costConnections.find((c) => c.id === connectionId)?.split ?? 'equal') as SplitMode,
+      shares: sharesOf.get(connectionId) ?? [],
+    }
+  }
+  const usesTraffic =
+    costConnections.some((c) => c.split === 'traffic') || history.some((v) => v.split === 'traffic')
 
   let complete = true
   const safe = <T>(run: () => Promise<T>, fallback: T) =>
@@ -208,14 +227,13 @@ export async function loadCosts(
   }
   const landed: Landed[] = []
   const land = (connectionId: string, day: string, tag: string, amount: number, from: string) => {
-    const split = (costConnections.find((c) => c.id === connectionId)?.split ??
-      'equal') as SplitMode
     const value = convert(amount, from, day)
     if (!value) return
+    const division = divisionOn(connectionId, day)
     const parts = splitCost(
       { tag, amount: value },
-      sharesOf.get(connectionId) ?? [],
-      split,
+      division.shares,
+      division.split,
       visitors.get(day),
     )
     let given = 0

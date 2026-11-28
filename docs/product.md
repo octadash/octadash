@@ -437,22 +437,23 @@ spare.
 
 ### Product events (beyond step 5)
 
-| Item                               | Seen in                      | Priority |
-| ---------------------------------- | ---------------------------- | -------- |
-| Activation and time to first value | Amplitude, Mixpanel          | high     |
-| Feature adoption                   | PostHog, Pendo               | high     |
-| Inactive and reactivated users     | Mixpanel                     | high     |
-| Stickiness (DAU/MAU)               | Mixpanel                     | medium   |
-| Cohorts and segments               | PostHog, Amplitude           | medium   |
-| User journeys                      | Amplitude                    | medium   |
-| North Star metric                  | Amplitude                    | medium   |
-| Click autocapture                  | PostHog, Heap                | medium   |
-| In-app surveys (NPS, CSAT)         | Formbricks, PostHog          | medium   |
-| Feedback and bug report widget     | Sentry, Userback             | medium   |
-| Session replay                     | PostHog, OpenReplay, Clarity | low      |
-| Heatmaps, rage clicks, dead clicks | Clarity, Hotjar              | low      |
-| Feature flags                      | PostHog, Unleash             | low      |
-| A/B tests                          | GrowthBook, PostHog          | low      |
+| Item                                                                   | Seen in                      | Priority |
+| ---------------------------------------------------------------------- | ---------------------------- | -------- |
+| Activation and time to first value                                     | Amplitude, Mixpanel          | high     |
+| Feature adoption                                                       | PostHog, Pendo               | high     |
+| Inactive and reactivated users                                         | Mixpanel                     | high     |
+| Stickiness (DAU/MAU)                                                   | Mixpanel                     | medium   |
+| Cohorts and segments                                                   | PostHog, Amplitude           | medium   |
+| User journeys                                                          | Amplitude                    | medium   |
+| North Star metric                                                      | Amplitude                    | medium   |
+| Click autocapture (per product, off by default)                        | PostHog, Heap                | medium   |
+| Person profiles (per product, off by default)                          | PostHog, Mixpanel            | medium   |
+| In-app surveys (NPS, CSAT)                                             | Formbricks, PostHog          | medium   |
+| Feedback and bug report widget                                         | Sentry, Userback             | medium   |
+| Session replay (own module after v1: file storage, masking, retention) | PostHog, OpenReplay, Clarity | low      |
+| Heatmaps, rage clicks, dead clicks (per product, off by default)       | Clarity, Hotjar, PostHog     | medium   |
+| Feature flags                                                          | PostHog, Unleash             | low      |
+| A/B tests                                                              | GrowthBook, PostHog          | low      |
 
 ### Ecommerce and conversion
 
