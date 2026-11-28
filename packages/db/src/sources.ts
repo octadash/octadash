@@ -1,6 +1,7 @@
 import { generatePublicKey, uuidv7 } from '@octadash/core'
 import { sql } from 'kysely'
 import type { Db } from './client'
+import type { VisitorMode } from './schema'
 
 /**
  * Sources of a product: each has a name, a platform, the areas it feeds and
@@ -20,6 +21,8 @@ export interface Source {
   name: string
   platform: string
   areas: string[]
+  /** How Traffic counts this source's visitors; the install snippet follows it. */
+  visitor_mode: VisitorMode
   /** The key the install snippet uses: the newest one not revoked. */
   public_key: string | null
   created_at: Date
@@ -43,6 +46,7 @@ export function listSources(db: Db, orgId: string, projectId: string): Promise<S
       'source.name',
       'source.platform',
       'source.areas',
+      'source.visitor_mode',
       'source.created_at',
       (eb) =>
         eb
@@ -78,7 +82,7 @@ export async function createSource(
     const source = await trx
       .insertInto('source')
       .values({ id: uuidv7(), org_id: orgId, project_id: projectId, ...clean(input) })
-      .returning(['id', 'project_id', 'name', 'platform', 'areas', 'created_at'])
+      .returning(['id', 'project_id', 'name', 'platform', 'areas', 'visitor_mode', 'created_at'])
       .executeTakeFirstOrThrow()
     const key = await trx
       .insertInto('source_key')
@@ -100,6 +104,26 @@ export async function updateSource(db: Db, orgId: string, sourceId: string, inpu
   const result = await db
     .updateTable('source')
     .set({ ...clean(input), updated_at: new Date() })
+    .where('org_id', '=', orgId)
+    .where('id', '=', sourceId)
+    .executeTakeFirst()
+  return result.numUpdatedRows > 0n
+}
+
+/**
+ * Changes how Traffic counts a source's visitors. The ingest follows within a
+ * minute (its key cache); the site's snippet needs `data-visitor="persistent"`
+ * for the browser to keep an id.
+ */
+export async function setSourceVisitorMode(
+  db: Db,
+  orgId: string,
+  sourceId: string,
+  mode: VisitorMode,
+) {
+  const result = await db
+    .updateTable('source')
+    .set({ visitor_mode: mode, updated_at: new Date() })
     .where('org_id', '=', orgId)
     .where('id', '=', sourceId)
     .executeTakeFirst()

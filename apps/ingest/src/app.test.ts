@@ -4,12 +4,14 @@ import { createApp, MAX_BODY_BYTES } from './app'
 import { staticResolver } from './keys'
 
 const KEY = 'a'.repeat(32)
+const PERSISTENT = 'd'.repeat(32)
 const TOKEN = 'T'.repeat(32)
 const MONITOR = '00000000-0000-4000-8000-0000000000c1'
 const scope = {
   org_id: '00000000-0000-4000-8000-00000000000a',
   project_id: '00000000-0000-4000-8000-0000000000b1',
   source_id: '00000000-0000-4000-8000-0000000000c1',
+  visitor_mode: 'daily' as const,
 }
 
 function setup() {
@@ -17,7 +19,10 @@ function setup() {
   const pings = new MemoryHeartbeats()
   const app = createApp({
     sink,
-    keys: staticResolver({ [KEY]: scope }),
+    keys: staticResolver({
+      [KEY]: scope,
+      [PERSISTENT]: { ...scope, visitor_mode: 'persistent' },
+    }),
     heartbeats: {
       resolver: { resolve: async (token) => (token === TOKEN ? MONITOR : null) },
       store: pings,
@@ -95,7 +100,9 @@ describe('POST /o/v1/events', () => {
     expect(sink.batches).toHaveLength(1)
     expect(sink.batches[0]?.kind).toBe('events')
     expect(sink.batches[0]?.rows[0]).toMatchObject({
-      ...scope,
+      org_id: scope.org_id,
+      project_id: scope.project_id,
+      source_id: scope.source_id,
       event: 'pageview',
       timestamp: '2026-11-18 10:00:00.000',
       distinct_id: 'u1',
@@ -144,6 +151,50 @@ describe('POST /o/v1/events', () => {
     expect(rows[2]?.visitor_id).not.toBe(rows[0]?.visitor_id)
     // A server call without $ip speaks for nobody.
     expect(rows[3]).toMatchObject({ visitor_id: '', browser: '', path: '' })
+  })
+
+  it('counts a returning visitor by the browser id only where the source allows it', async () => {
+    const { sink, post } = setup()
+    const browser = { origin: 'https://postato.com.br', 'user-agent': 'Mozilla/5.0 Firefox/140.0' }
+    const pageview = (id: string) => ({
+      events: [
+        {
+          event: '$pageview',
+          properties: { $visitor_id: id, $current_url: 'https://postato.com.br/' },
+        },
+      ],
+    })
+    const id = 'c'.repeat(32)
+    await post(pageview(id), {
+      ...browser,
+      'x-octadash-key': PERSISTENT,
+      'x-forwarded-for': '203.0.113.7',
+    })
+    await post(pageview(id), {
+      ...browser,
+      'x-octadash-key': PERSISTENT,
+      'x-forwarded-for': '198.51.100.9',
+    })
+    await post(pageview('not-an-id'), {
+      ...browser,
+      'x-octadash-key': PERSISTENT,
+      'x-forwarded-for': '198.51.100.9',
+    })
+    await post(pageview(id), {
+      ...browser,
+      'x-octadash-key': KEY,
+      'x-forwarded-for': '198.51.100.9',
+    })
+    const rows = sink.batches.map((batch) => batch.rows[0] as Record<string, unknown>)
+    // Same browser id from two addresses: one visitor, and not the id as sent.
+    expect(rows[1]?.visitor_id).toBe(rows[0]?.visitor_id)
+    expect(rows[0]?.visitor_id).toMatch(/^[0-9a-f]{32}$/)
+    expect(rows[0]?.visitor_id).not.toBe(id)
+    // A malformed id, or a source that counts by the day, falls back to the daily hash.
+    expect(rows[2]?.visitor_id).not.toBe(rows[0]?.visitor_id)
+    expect(rows[3]?.visitor_id).toBe(rows[2]?.visitor_id)
+    // The id itself is never stored.
+    for (const row of rows) expect(row.properties).not.toContain('$visitor_id')
   })
 
   it('takes the key from a bearer header or from the body (sendBeacon)', async () => {

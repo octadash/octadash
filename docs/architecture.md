@@ -264,8 +264,15 @@ columns Traffic reads directly (`path`, `referrer_host`, `utm_*`, `browser`,
 `os`, `device`, `country`, `is_bot`) and a `visitor_id`: a hash of a random
 salt of the day (kept in Valkey for two days), the product, the address and the
 browser. The address itself is never stored, and once the salt expires no one
-can link two days. When the app names the person (`distinct_id`), that name
-counts instead. The country comes from a proxy header (Cloudflare,
+can link two days. A source can count returning visitors instead
+(`source.visitor_mode = 'persistent'`, off by default): its snippet carries
+`data-visitor="persistent"`, the script keeps a random id in the site's
+localStorage and sends it as `$visitor_id`, and the ingest stores a hash of it
+with the product as `visitor_id`, never the id itself. The ingest ignores the
+id when the source counts by the day, so the setting in the panel decides.
+Turning it on is the site owner's choice, consent included where the law asks
+for it. When the app names the person (`distinct_id`), that name counts
+instead. The country comes from a proxy header (Cloudflare,
 CloudFront, Vercel); without one it stays empty. Bots are stored with
 `is_bot = 1` and shown apart, not dropped. Traffic queries take a list of
 products or null for all of them, so All products, a group and one product

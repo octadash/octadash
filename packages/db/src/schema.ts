@@ -64,9 +64,17 @@ export interface SourceTable {
   platform: string
   /** The areas this source feeds; shown on each area's setup. */
   areas: ColumnType<string[], string[] | undefined, string[]>
+  visitor_mode: ColumnType<VisitorMode, VisitorMode | undefined, VisitorMode>
   created_at: CreatedAt
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
+
+/**
+ * How Traffic tells visitors apart. `daily`: a hash of the day, with nothing
+ * in the browser. `persistent`: a random id the browser script keeps, so
+ * returning visitors count once.
+ */
+export type VisitorMode = 'daily' | 'persistent'
 
 export interface SourceKeyTable {
   id: string

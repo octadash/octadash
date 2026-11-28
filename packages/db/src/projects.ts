@@ -1,6 +1,7 @@
 import { generatePublicKey, slugify, uuidv7 } from '@octadash/core'
 import { sql } from 'kysely'
 import type { Db } from './client'
+import type { VisitorMode } from './schema'
 
 /**
  * Data access for products. Every function takes the organization id: there is
@@ -119,10 +120,22 @@ export function findIngestKey(db: Db, publicKey: string) {
   return (
     db
       .selectFrom('source_key')
-      .select(['org_id', 'project_id', 'source_id'])
-      .where('public_key', '=', publicKey)
+      .leftJoin('source', 'source.id', 'source_key.source_id')
+      .select([
+        'source_key.org_id',
+        'source_key.project_id',
+        'source_key.source_id',
+        // A product key from before sources counts by the day.
+        sql<VisitorMode>`coalesce(source.visitor_mode, 'daily')`.as('visitor_mode'),
+      ])
+      .where('source_key.public_key', '=', publicKey)
       // A rotated key keeps working until its revocation time.
-      .where((eb) => eb.or([eb('revoked_at', 'is', null), eb('revoked_at', '>', sql<Date>`now()`)]))
+      .where((eb) =>
+        eb.or([
+          eb('source_key.revoked_at', 'is', null),
+          eb('source_key.revoked_at', '>', sql<Date>`now()`),
+        ]),
+      )
       .executeTakeFirst()
   )
 }
