@@ -1730,9 +1730,9 @@
       "title": "Nenhum erro ainda",
       "body": "Os erros chegam de dois jeitos, e os dois usam a chave de qualquer origem do produto:",
       "script": "O script do Octadash, o mesmo do Tráfego, já envia os erros do navegador. Coloque data-release na tag para saber em qual versão cada um começou.",
-      "sentry": "Código que já usa um SDK do Sentry (qualquer linguagem) envia para cá trocando o DSN. Cada origem mostra o seu DSN nas configurações do produto.",
-      "sources": "Ver as origens e o DSN",
-      "all": "Escolha um produto para ver as origens:"
+      "sentry": "Código que já usa um SDK do Sentry (qualquer linguagem) envia para cá trocando o DSN. Configurar Erros mostra o DSN e o código para cada plataforma.",
+      "sources": "Configurar Erros",
+      "all": "Escolha um produto para configurar:"
     },
     "ignore": {
       "trigger": "Ignorar",
@@ -1797,6 +1797,88 @@
       "previous": "← Evento anterior",
       "newest": "Evento mais recente"
     },
-    "spike": "Pico"
+    "spike": "Pico",
+    "setUp": "Origens e código"
+  },
+  "errorsSetup": {
+    "title": "Configurar Erros",
+    "intro": "Erros do navegador e do servidor, agrupados, com quantas pessoas cada um atingiu e desde quando. Qualquer SDK do Sentry funciona trocando só o DSN.",
+    "trail": "Onde você está",
+    "errors": "Erros",
+    "sources": "Origens",
+    "sourcesHint": "Este produto já tem uma origem. Use-a, e a mesma chave passa a enviar erros também; ou adicione uma nova abaixo.",
+    "status": {
+      "receiving": "envia erros · último {time}",
+      "waiting": "para Erros · esperando o primeiro erro",
+      "other": "envia {areas} · ainda não envia erros",
+      "nothing": "adicionada · nada recebido ainda"
+    },
+    "areaNames": {
+      "traffic": "visualizações",
+      "usage": "eventos",
+      "logs": "logs",
+      "errors": "erros",
+      "money": "pagamentos",
+      "costs": "custos",
+      "uptime": "checagens"
+    },
+    "useForErrors": "Usar para Erros",
+    "show": "Ver código",
+    "addSource": "Adicionar origem",
+    "addAnother": "Adicionar outra origem",
+    "name": "Nome",
+    "namePlaceholder": "API",
+    "nameHint": "Para você reconhecer depois: Site, API, Worker.",
+    "platform": "Onde o código roda?",
+    "create": "Adicionar origem",
+    "dsn": "DSN",
+    "dsnInfo": "O endereço para onde um SDK do Sentry envia. Ele leva a chave desta origem, que não é segredo: navegadores também a veem. Cada origem tem a sua, para separar o site da API.",
+    "dsnInfoLabel": "Sobre o DSN",
+    "dsnHint": "O código abaixo já tem o DSN.",
+    "step1": "Adicione o código",
+    "codeLabel": "Plataforma",
+    "install": "Instalar",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "noteSdk": "Este é o SDK do Sentry: o Octadash lê o que ele envia. Defina a release para ver em qual versão um erro começou. Testado até agora: @sentry/node 9.",
+    "noteScript": "O script do Octadash informa erros não tratados e promises rejeitadas (até 10 por página). Troque o data-release a cada deploy. Ele ignora localhost, a não ser que a tag tenha data-local.",
+    "noteOther": "Qualquer SDK do Sentry funciona com este DSN. Sem SDK, faça POST do mesmo JSON de evento em /o/v1/errors com a chave.",
+    "step2": "Envie um erro de teste",
+    "step2Body": "Envia um erro deste navegador com a chave desta origem, para conferir o endereço e a chave antes do deploy.",
+    "sendTest": "Enviar erro de teste",
+    "testSent": "Enviado. Aparece abaixo em alguns segundos.",
+    "testFailed": "Este navegador não alcançou o endereço de ingestão. Confira o OCTADASH_INGEST_URL.",
+    "step3": "Espere o primeiro erro",
+    "waitingBody": "Esperando o primeiro erro. Envie o teste acima ou provoque um no seu app; ele aparece aqui em segundos.",
+    "arrived": "Os erros estão chegando. O último: {error} ({time}).",
+    "openIssue": "Abrir a issue",
+    "openErrors": "Abrir Erros",
+    "back": "Voltar para {name}",
+    "wontUse": "Não vou usar Erros neste produto",
+    "example": "Como vai ficar",
+    "exampleBadge": "Exemplo",
+    "exampleIssues": [
+      {
+        "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
+        "meta": "CartTotal em app/checkout/page.tsx · 412 pessoas · desde a v2.14"
+      },
+      {
+        "title": "ChunkLoadError: Loading chunk 512 failed",
+        "meta": "webpack runtime · 201 pessoas · 12 dias"
+      },
+      {
+        "title": "TimeoutError: database did not answer in 5 s",
+        "meta": "OrdersController.Create · 61 pessoas · voltou na v3.2"
+      }
+    ],
+    "exampleNote": "Cada erro mostra a linha do código, o navegador, a release e quantas pessoas atingiu.",
+    "private": "O que fica guardado",
+    "privateItems": [
+      "A pessoa é o usuário que seu app envia; sem ele, o hash diário do visitante.",
+      "O endereço IP nunca é guardado.",
+      "E-mails e nomes só quando seu app envia.",
+      "Os erros ficam guardados por 90 dias."
+    ],
+    "noSource": "Nenhuma origem envia erros ainda. Um dono ou administrador adiciona aqui."
   }
 }

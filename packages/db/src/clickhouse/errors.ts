@@ -442,3 +442,31 @@ export async function errorRates(
     }
   })
 }
+
+/** The newest error of one source in the last day: Set up Errors waits for it. */
+export async function lastError(
+  client: ClickHouseClient,
+  orgId: string,
+  projectId: string,
+  sourceId: string,
+): Promise<{ at: Date; type: string; value: string; issueId: string } | null> {
+  const result = await client.query({
+    query: `SELECT toString(timestamp) AS at, type, value, toString(issue_id) AS issue
+      FROM errors
+      WHERE org_id = {org:UUID} AND project_id = {project:UUID} AND source_id = {source:UUID}
+        AND timestamp >= now() - INTERVAL 1 DAY
+      ORDER BY timestamp DESC
+      LIMIT 1`,
+    query_params: { org: orgId, project: projectId, source: sourceId },
+    format: 'JSONEachRow',
+  })
+  const [row] = await result.json<{ at: string; type: string; value: string; issue: string }>()
+  return row
+    ? {
+        at: new Date(`${row.at.replace(' ', 'T')}Z`),
+        type: row.type,
+        value: row.value,
+        issueId: row.issue,
+      }
+    : null
+}

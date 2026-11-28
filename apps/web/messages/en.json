@@ -1730,9 +1730,9 @@
       "title": "No errors yet",
       "body": "Errors arrive in two ways, and both work with the key of any source of the product:",
       "script": "The Octadash script, the same one Traffic uses, already reports errors from the browser. Add data-release to the tag to know which release each one started in.",
-      "sentry": "Code that already uses a Sentry SDK (any language) sends here by changing its DSN. Each source shows its DSN in the product settings.",
-      "sources": "See the sources and their DSN",
-      "all": "Pick a product to see its sources:"
+      "sentry": "Code that already uses a Sentry SDK (any language) sends here by changing its DSN. Set up Errors shows the DSN and the code for each platform.",
+      "sources": "Set up Errors",
+      "all": "Pick a product to set up:"
     },
     "ignore": {
       "trigger": "Ignore",
@@ -1797,6 +1797,88 @@
       "previous": "← Previous event",
       "newest": "Newest event"
     },
-    "spike": "Spike"
+    "spike": "Spike",
+    "setUp": "Sources and code"
+  },
+  "errorsSetup": {
+    "title": "Set up Errors",
+    "intro": "Browser and server errors, grouped, with how many people each one hit and since when. Any Sentry SDK works by changing only the DSN.",
+    "trail": "Where you are",
+    "errors": "Errors",
+    "sources": "Sources",
+    "sourcesHint": "This product already has a source. Use it and the same key starts sending errors too, or add a new one below.",
+    "status": {
+      "receiving": "sends errors · last {time}",
+      "waiting": "for Errors · waiting for the first error",
+      "other": "sends {areas} · no errors yet",
+      "nothing": "added · nothing received yet"
+    },
+    "areaNames": {
+      "traffic": "page views",
+      "usage": "events",
+      "logs": "logs",
+      "errors": "errors",
+      "money": "payments",
+      "costs": "costs",
+      "uptime": "checks"
+    },
+    "useForErrors": "Use for Errors",
+    "show": "Show code",
+    "addSource": "Add source",
+    "addAnother": "Add another source",
+    "name": "Name",
+    "namePlaceholder": "API",
+    "nameHint": "So you recognize it later: Site, API, Worker.",
+    "platform": "Where does the code run?",
+    "create": "Add source",
+    "dsn": "DSN",
+    "dsnInfo": "The address a Sentry SDK sends to. It holds this source’s key, which is not a secret: browsers see it too. Each source has its own, so you can tell the site from the API.",
+    "dsnInfoLabel": "About the DSN",
+    "dsnHint": "The code below already has it.",
+    "step1": "Add the code",
+    "codeLabel": "Platform",
+    "install": "Install",
+    "copy": "Copy",
+    "copied": "Copied",
+    "noteSdk": "This is the Sentry SDK: Octadash reads what it sends. Set the release to see which version an error started in. Tested so far: @sentry/node 9.",
+    "noteScript": "The Octadash script reports uncaught errors and rejected promises (up to 10 per page). Change data-release with each deploy. It skips localhost unless the tag has data-local.",
+    "noteOther": "Any Sentry SDK works with this DSN. Without an SDK, POST the same event JSON to /o/v1/errors with the key.",
+    "step2": "Send a test error",
+    "step2Body": "Sends one error from this browser with this source’s key, to check the address and the key before you deploy.",
+    "sendTest": "Send test error",
+    "testSent": "Sent. It shows below in a few seconds.",
+    "testFailed": "This browser could not reach the ingest address. Check OCTADASH_INGEST_URL.",
+    "step3": "Wait for the first error",
+    "waitingBody": "Waiting for the first error. Send the test above or trigger one in your app; it shows here in seconds.",
+    "arrived": "Errors are arriving. The last one: {error} ({time}).",
+    "openIssue": "Open the issue",
+    "openErrors": "Open Errors",
+    "back": "Back to {name}",
+    "wontUse": "I won’t use Errors in this product",
+    "example": "What it will look like",
+    "exampleBadge": "Example",
+    "exampleIssues": [
+      {
+        "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
+        "meta": "CartTotal in app/checkout/page.tsx · 412 people · since v2.14"
+      },
+      {
+        "title": "ChunkLoadError: Loading chunk 512 failed",
+        "meta": "webpack runtime · 201 people · 12 days"
+      },
+      {
+        "title": "TimeoutError: database did not answer in 5 s",
+        "meta": "OrdersController.Create · 61 people · came back in v3.2"
+      }
+    ],
+    "exampleNote": "Each error shows the line of code, the browser, the release and how many people it hit.",
+    "private": "What is kept",
+    "privateItems": [
+      "The person is the user your app sends; without one, the daily visitor hash.",
+      "The IP address is never stored.",
+      "E-mails and names only when your app sends them.",
+      "Errors are kept 90 days."
+    ],
+    "noSource": "No source sends errors yet. An owner or admin adds one here."
   }
 }

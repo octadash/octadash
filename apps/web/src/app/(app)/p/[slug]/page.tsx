@@ -482,7 +482,15 @@ function AreaCard({
           <p className="text-sm text-muted-foreground">{t(`areas.${area.id}.how`)}</p>
           <div className="mt-auto flex flex-wrap gap-2">
             <Button asChild size="lg" className="px-4">
-              <Link href={`/p/${slug}/${area.id}`}>{t('productPage.setUp')}</Link>
+              <Link
+                href={
+                  area.id === 'errors' || area.id === 'traffic'
+                    ? `/p/${slug}/${area.id}/setup`
+                    : `/p/${slug}/${area.id}`
+                }
+              >
+                {t('productPage.setUp')}
+              </Link>
             </Button>
             {manager && (
               <form action={dismissAreaAction}>

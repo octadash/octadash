@@ -129,7 +129,7 @@ export async function ErrorsView({
             </ul>
             {product ? (
               <Button asChild className="self-start">
-                <Link href={`/p/${product.slug}/settings/sources`}>{t('none.sources')}</Link>
+                <Link href={`/p/${product.slug}/errors/setup`}>{t('none.sources')}</Link>
               </Button>
             ) : (
               <>
@@ -138,7 +138,7 @@ export async function ErrorsView({
                   {data.projects.map((p) => (
                     <li key={p.id}>
                       <Button asChild variant="outline">
-                        <Link href={`/p/${p.slug}/settings/sources`}>{p.name}</Link>
+                        <Link href={`/p/${p.slug}/errors/setup`}>{p.name}</Link>
                       </Button>
                     </li>
                   ))}
@@ -232,21 +232,28 @@ export async function ErrorsView({
             </p>
           )}
         </div>
-        <nav aria-label={t('periodLabel')} className="flex rounded-lg border border-border p-0.5">
-          {ERROR_PERIODS.map((id) => (
-            <Link
-              key={id}
-              href={errorsHref(path, state, { period: id })}
-              aria-current={id === state.period ? 'true' : undefined}
-              className={cn(
-                'rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground',
-                id === state.period && 'bg-secondary font-medium text-foreground',
-              )}
-            >
-              {t(`periods.${id}`)}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex flex-wrap items-center gap-2">
+          {product && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/p/${product.slug}/errors/setup`}>{t('setUp')}</Link>
+            </Button>
+          )}
+          <nav aria-label={t('periodLabel')} className="flex rounded-lg border border-border p-0.5">
+            {ERROR_PERIODS.map((id) => (
+              <Link
+                key={id}
+                href={errorsHref(path, state, { period: id })}
+                aria-current={id === state.period ? 'true' : undefined}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground',
+                  id === state.period && 'bg-secondary font-medium text-foreground',
+                )}
+              >
+                {t(`periods.${id}`)}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
 
       {!data.complete && (
