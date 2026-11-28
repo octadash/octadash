@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isNewer, isRelease } from './updates'
+import { isNewer, isRelease, versionLabel } from './updates'
 
 describe('update check', () => {
   it('compares plain versions number by number', () => {
@@ -14,5 +14,12 @@ describe('update check', () => {
     expect(isNewer('1.0.0', 'edge')).toBe(false)
     expect(isRelease('edge')).toBe(false)
     expect(isRelease('1.4.0')).toBe(true)
+  })
+
+  it('labels the running version', () => {
+    expect(versionLabel('1.4.0', 'abc')).toBe('v1.4.0')
+    expect(versionLabel('v1.4.0', '')).toBe('v1.4.0')
+    expect(versionLabel('edge', '4752944ee6551b9cfae3482869be6172f481bed0')).toBe('edge · 4752944')
+    expect(versionLabel('0.0.0-dev', '')).toBe('0.0.0-dev')
   })
 })

@@ -3309,6 +3309,7 @@
   "update": {
     "label": "Atualização disponível",
     "release": "A versão {version} saiu. Veja o que mudou.",
-    "edge": "{count, plural, one {1 mudança} other {# mudanças}} no main desde esta versão."
+    "edge": "{count, plural, one {1 mudança} other {# mudanças}} no main desde esta versão.",
+    "version": "Rodando o Octadash {version}, commit {commit}"
   }
 }

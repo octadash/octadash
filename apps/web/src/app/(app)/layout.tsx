@@ -1,3 +1,4 @@
+import { OCTADASH_COMMIT, OCTADASH_VERSION } from '@octadash/core'
 import { listGroups, listOrgMonitors, listProjects } from '@octadash/db'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
@@ -11,7 +12,7 @@ import { ProductPicker } from '@/components/product-picker'
 import { UserMenu } from '@/components/user-menu'
 import { AREA_ITEMS } from '@/lib/areas'
 import { worstStatus } from '@/lib/monitors'
-import { CHANGELOG_URL } from '@/lib/updates'
+import { CHANGELOG_URL, versionLabel } from '@/lib/updates'
 import { services } from '@/server/context'
 import { loadStrip } from '@/server/emergency-strip'
 import { canManage, requireOrg } from '@/server/session'
@@ -56,6 +57,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             overview: t('areas.overview.name'),
             settings: t('nav.settings'),
             areas: areaLabels,
+          }}
+          version={{
+            label: versionLabel(OCTADASH_VERSION, OCTADASH_COMMIT),
+            title: t('version', {
+              version: OCTADASH_VERSION,
+              commit: OCTADASH_COMMIT.slice(0, 7) || '–',
+            }),
           }}
           update={
             update && {

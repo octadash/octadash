@@ -28,9 +28,12 @@ export interface SidebarUpdate {
 export function AppSidebar({
   labels,
   update,
+  version,
 }: {
   labels: SidebarLabels
   update?: SidebarUpdate | null
+  /** The running version, as `versionLabel` writes it: "v1.4.0", "edge · 4752944". */
+  version: { label: string; title: string }
 }) {
   const pathname = usePathname()
   const scope = scopeOf(pathname)
@@ -49,7 +52,14 @@ export function AppSidebar({
     <aside className="border-b border-border bg-card md:sticky md:top-0 md:flex md:h-dvh md:w-56 md:shrink-0 md:flex-col md:border-r md:border-b-0">
       <Link href="/all" className="hidden items-center gap-2.5 px-5 pt-5 pb-4 md:flex">
         <Logo size={26} />
-        <span className="font-display text-xl font-semibold tracking-tight">Octadash</span>
+        <span className="flex min-w-0 flex-col">
+          <span className="font-display text-xl leading-tight font-semibold tracking-tight">
+            Octadash
+          </span>
+          <span title={version.title} className="truncate text-xs text-muted-foreground">
+            {version.label}
+          </span>
+        </span>
       </Link>
       <nav
         aria-label={labels.nav}
