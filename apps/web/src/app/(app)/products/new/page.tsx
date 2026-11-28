@@ -7,21 +7,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 
 export default async function NewProductPage() {
-  const t = await getTranslations('projects')
+  const t = await getTranslations()
   return (
     <Card className="max-w-lg">
       <CardHeader>
         <CardTitle>
-          <h1 className="font-display text-xl font-semibold">{t('newTitle')}</h1>
+          <h1 className="font-display text-xl font-semibold">{t('newProduct.title')}</h1>
         </CardTitle>
-        <CardDescription>{t('newIntro')}</CardDescription>
+        <CardDescription>{t('newProduct.intro')}</CardDescription>
       </CardHeader>
       <CardContent>
         <ActionForm action={createProjectAction}>
-          <Field label={t('name')}>
-            <Input name="name" maxLength={80} required autoFocus />
+          <Field label={t('projects.name')}>
+            <Input
+              name="name"
+              maxLength={80}
+              required
+              autoFocus
+              placeholder={t('newProduct.placeholder')}
+            />
           </Field>
-          <SubmitButton className="self-start">{t('create')}</SubmitButton>
+          <SubmitButton className="self-start">{t('projects.create')}</SubmitButton>
         </ActionForm>
       </CardContent>
     </Card>

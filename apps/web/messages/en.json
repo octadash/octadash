@@ -7,11 +7,8 @@
     "signOut": "Sign out",
     "members": "Members",
     "settings": "Settings",
-    "allProducts": "All",
-    "newProduct": "New product",
     "language": "Language",
     "organization": "Organization",
-    "comingSoon": "Coming soon",
     "account": "Account"
   },
   "auth": {
@@ -39,16 +36,11 @@
     "haveAccount": "Already have an account? Sign in first."
   },
   "projects": {
-    "newTitle": "New product",
-    "newIntro": "Each product gets its own tab, its own keys and its own numbers.",
     "name": "Name",
     "create": "Create product",
-    "allTitle": "All products",
     "emptyTitle": "No products yet",
     "emptyBody": "Add your first product to start watching it.",
     "open": "Open",
-    "modulesTitle": "What Octadash watches",
-    "modulesIntro": "Each module turns on for this product when its data starts arriving.",
     "keysTitle": "Ingest keys",
     "keysIntro": "Use these when connecting SDKs. They identify the product and are safe to put in a browser.",
     "publicKey": "Public key",
@@ -59,40 +51,6 @@
     "dangerBody": "Deletes the product, its keys and all its data. This cannot be undone.",
     "deleteDialogTitle": "Delete {name}?",
     "delete": "Delete product"
-  },
-  "modules": {
-    "diagnosis": {
-      "name": "Diagnosis",
-      "body": "What the site has and what is missing, with the next step."
-    },
-    "uptime": {
-      "name": "Uptime",
-      "body": "Is it up? Checks without waking your database."
-    },
-    "web": {
-      "name": "Web analytics",
-      "body": "Visits, sources and pages, without cookies."
-    },
-    "errors": {
-      "name": "Errors",
-      "body": "What broke and for how many people."
-    },
-    "product": {
-      "name": "Product",
-      "body": "Sign-ups, logins, key actions, funnel and retention."
-    },
-    "revenue": {
-      "name": "Revenue",
-      "body": "MRR, new customers, churn and refunds."
-    },
-    "ai": {
-      "name": "AI cost",
-      "body": "Cost, tokens and errors per model and provider."
-    },
-    "logs": {
-      "name": "Logs",
-      "body": "What the server did at that moment."
-    }
   },
   "members": {
     "title": "Members",
@@ -119,5 +77,78 @@
     "nameRequired": "Give the product a name.",
     "notFound": "Not found.",
     "confirmDelete": "Confirm the deletion first."
+  },
+  "areas": {
+    "overview": {
+      "name": "Overview"
+    },
+    "uptime": {
+      "name": "Uptime",
+      "body": "Whether the site and the API answer, how fast, and when the certificate expires.",
+      "how": "Nothing to install: Octadash checks from outside."
+    },
+    "traffic": {
+      "name": "Traffic",
+      "body": "Who visits, where they come from and which pages they read.",
+      "how": "One Octadash script on the site."
+    },
+    "usage": {
+      "name": "Usage",
+      "body": "Sign-ups, logins, key actions, funnel and retention.",
+      "how": "The Octadash package in the browser and on the server."
+    },
+    "errors": {
+      "name": "Errors",
+      "body": "Browser and server errors, grouped, with how many people each one hit and since when.",
+      "how": "The Octadash package for the browser and Node, or any Sentry SDK."
+    },
+    "money": {
+      "name": "Money",
+      "body": "Revenue, MRR, churn and refunds for this product, with contracted, paid and net kept apart.",
+      "how": "Connects to Stripe, Asaas or Paddle. Nothing to install in the product."
+    },
+    "costs": {
+      "name": "Costs",
+      "body": "What this product spends on AI and infrastructure, and how much of the revenue is left.",
+      "how": "AI through the Octadash package for Node or OpenTelemetry. Infra through the provider API or a typed amount."
+    },
+    "logs": {
+      "name": "Logs",
+      "body": "What the server did at each moment, to investigate an error or an outage.",
+      "how": "OpenTelemetry (OTLP) from any language."
+    }
+  },
+  "nav": {
+    "label": "Areas",
+    "settings": "Settings"
+  },
+  "picker": {
+    "all": "All products",
+    "search": "Search product",
+    "none": "No product found",
+    "new": "New product",
+    "label": "Product"
+  },
+  "newProduct": {
+    "title": "New product",
+    "intro": "Just the name. Where it runs and how the data gets in you choose later, in each area.",
+    "placeholder": "e.g. Tribunal de Ideias"
+  },
+  "productPage": {
+    "summary": "{toSetUp, plural, =0 {Every area is set up or put aside.} one {# area to set up.} other {# areas to set up.}}",
+    "keysAndSettings": "Keys and settings",
+    "setUp": "Set up",
+    "wontUse": "I won't use this",
+    "alsoAvailable": "Also available for this product",
+    "useAgain": "Use again",
+    "example": "Example · real data appears with the first event"
+  },
+  "areaPage": {
+    "soon": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows how to set it up for this product.",
+    "soonAll": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows it for every product at once.",
+    "back": "Back to {name}"
+  },
+  "overview": {
+    "count": "{count, plural, one {# product} other {# products}}."
   }
 }

@@ -1,3 +1,4 @@
+export * from './areas'
 export * from './clickhouse'
 export * from './client'
 export * from './lock'
