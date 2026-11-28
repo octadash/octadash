@@ -59,7 +59,7 @@ describe('ingest app', () => {
 
   it('allows cross-origin calls from SDKs', async () => {
     const res = await setup().app.request('/health', {
-      headers: { origin: 'https://postato.com.br' },
+      headers: { origin: 'https://pagebird.com.br' },
     })
     expect(res.headers.get('access-control-allow-origin')).toBe('*')
   })
@@ -143,7 +143,7 @@ describe('POST /o/v1/events', () => {
     const { sink, post } = setup()
     const browser = {
       'x-octadash-key': KEY,
-      origin: 'https://www.postato.com.br',
+      origin: 'https://www.pagebird.com.br',
       'x-forwarded-for': '203.0.113.7, 10.0.0.1',
       'cf-ipcountry': 'br',
       'user-agent':
@@ -152,7 +152,7 @@ describe('POST /o/v1/events', () => {
     const pageview = {
       event: '$pageview',
       properties: {
-        $current_url: 'https://www.postato.com.br/precos?utm_source=Instagram&utm_medium=social',
+        $current_url: 'https://www.pagebird.com.br/precos?utm_source=Instagram&utm_medium=social',
         $referrer: 'https://l.instagram.com/',
       },
     }
@@ -163,7 +163,7 @@ describe('POST /o/v1/events', () => {
     const rows = sink.batches.map((batch) => batch.rows[0] as Record<string, unknown>)
     expect(rows[0]).toMatchObject({
       path: '/precos',
-      host: 'postato.com.br',
+      host: 'pagebird.com.br',
       referrer_host: 'l.instagram.com',
       utm_source: 'instagram',
       utm_medium: 'social',
@@ -182,12 +182,12 @@ describe('POST /o/v1/events', () => {
 
   it('counts a returning visitor by the browser id only where the source allows it', async () => {
     const { sink, post } = setup()
-    const browser = { origin: 'https://postato.com.br', 'user-agent': 'Mozilla/5.0 Firefox/140.0' }
+    const browser = { origin: 'https://pagebird.com.br', 'user-agent': 'Mozilla/5.0 Firefox/140.0' }
     const pageview = (id: string) => ({
       events: [
         {
           event: '$pageview',
-          properties: { $visitor_id: id, $current_url: 'https://postato.com.br/' },
+          properties: { $visitor_id: id, $current_url: 'https://pagebird.com.br/' },
         },
       ],
     })

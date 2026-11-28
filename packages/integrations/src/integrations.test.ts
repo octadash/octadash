@@ -18,9 +18,9 @@ import type { AlertMessage } from './types'
 
 const message: AlertMessage = {
   severity: 'critical',
-  title: 'postato.com.br is down',
+  title: 'pagebird.com.br is down',
   body: '3 failed checks in a row <timeout>',
-  project: { id: 'p1', name: 'Postato' },
+  project: { id: 'p1', name: 'Pagebird' },
   url: 'https://octadash.example.com/p/p1',
   occurredAt: new Date('2026-11-27T12:00:00Z'),
 }
@@ -69,7 +69,7 @@ describe('webhook', () => {
     expect(headers['x-octadash-signature']).toBe(signBody(init.body as string, 'a'.repeat(16)))
     expect(JSON.parse(init.body as string)).toMatchObject({
       severity: 'critical',
-      project: { name: 'Postato' },
+      project: { name: 'Pagebird' },
     })
   })
 
@@ -115,7 +115,7 @@ describe('telegram', () => {
     const body = JSON.parse(init.body as string)
     expect(body.chat_id).toBe('42')
     expect(body.text).toContain('&lt;timeout&gt;')
-    expect(body.text).toContain('<b>postato.com.br is down</b>')
+    expect(body.text).toContain('<b>pagebird.com.br is down</b>')
   })
 
   it('finds the chats that wrote to the bot, newest first, with topics', async () => {
@@ -163,7 +163,7 @@ describe('email', () => {
         secure: false,
       },
     )
-    expect(emailSubject(message)).toBe('[Octadash] Postato: postato.com.br is down')
+    expect(emailSubject(message)).toBe('[Octadash] Pagebird: pagebird.com.br is down')
   })
 
   it('sends through the Resend API', async () => {

@@ -3,8 +3,8 @@ import { generatePublicKey, normalizeUrl, slugify } from './text'
 
 describe('slugify', () => {
   it('handles accents and spaces', () => {
-    expect(slugify('Tribunal de Ideias')).toBe('tribunal-de-ideias')
-    expect(slugify('  Recuidado São Paulo! ')).toBe('recuidado-sao-paulo')
+    expect(slugify('Orbita de Ideias')).toBe('orbita-de-ideias')
+    expect(slugify('  Fieldnote São Paulo! ')).toBe('fieldnote-sao-paulo')
   })
   it('never returns an empty slug', () => {
     expect(slugify('***')).toBe('product')
@@ -19,12 +19,12 @@ describe('generatePublicKey', () => {
 
 describe('normalizeUrl', () => {
   it('adds https and drops the trailing slash', () => {
-    expect(normalizeUrl('postato.com.br/')).toBe('https://postato.com.br')
+    expect(normalizeUrl('pagebird.com.br/')).toBe('https://pagebird.com.br')
     expect(normalizeUrl('http://localhost:3000')).toBe('http://localhost:3000')
   })
   it('rejects things that are not addresses', () => {
     expect(normalizeUrl('')).toBeNull()
     expect(normalizeUrl('not a url')).toBeNull()
-    expect(normalizeUrl('postato')).toBeNull()
+    expect(normalizeUrl('pagebird')).toBeNull()
   })
 })
