@@ -29,9 +29,16 @@ export interface Database {
 
 type CreatedAt = ColumnType<Date, Date | undefined, never>
 
+export type WatcherStatus = 'unknown' | 'ok' | 'failing'
+
 export interface OctadashInstanceTable {
   id: Generated<string>
   created_at: CreatedAt
+  /** Encrypted ping URL of the outside watcher (Healthchecks.io or similar). */
+  watcher_url: ColumnType<string | null, string | null | undefined, string | null>
+  watcher_status: ColumnType<WatcherStatus, WatcherStatus | undefined, WatcherStatus>
+  watcher_checked_at: ColumnType<Date | null, Date | null | undefined, Date | null>
+  watcher_error: ColumnType<string | null, string | null | undefined, string | null>
 }
 
 export interface ProjectTable {

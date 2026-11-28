@@ -107,6 +107,23 @@ Open the panel. The first visit shows a setup form that creates the owner
 account and the organization. After that, sign-up is closed: the owner invites
 people from **Members**, which generates a link to send them.
 
+## Outside watcher
+
+If the server running Octadash goes down, no alert goes out. Set up an outside
+watcher so someone is told:
+
+1. Create a free account on [Healthchecks.io](https://healthchecks.io) (or run
+   your own Healthchecks).
+2. Create a check with a 1 minute period and a 5 minute grace time, and choose
+   where it alerts you (email, Telegram) on a channel that does not depend on
+   this server.
+3. In Octadash, **Settings** > **Outside watcher**, paste the check's ping URL.
+   Octadash pings it once to test it and then every minute from the worker.
+
+Until this is done, every settings page shows a warning, in red when a monitor
+runs on the same server as Octadash. Any URL that answers 2xx to a GET works,
+so other heartbeat services do too.
+
 ## Health checks
 
 `GET /api/health` (web), `GET /health` (ingest) and `GET :4100/health` (worker)
