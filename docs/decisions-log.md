@@ -252,3 +252,22 @@ and why; anything here can be reversed.
   looks back at most an hour, so the quiet spell is capped at 60 minutes.
 - **Errors now keep the trace id** (ClickHouse migration 0007), for "1 error
   in Errors" on a log line.
+
+### Logs screens (2026-11-28)
+
+- **The search lives in the address.** `?q=` and `?period=` make any search a
+  link to share; Live, Load older and the saved searches only add to that.
+- **Live asks every 3 seconds for lines newer than the newest on screen**, the
+  same polling the other areas use, and stops while the person scrolls down,
+  as the canvas says. The list keeps at most 1,000 lines in the browser.
+- **Anyone saves a search; only owners and admins turn Alert on or off or
+  delete a search with Alert on**, since that is a rule that tells everyone.
+- **Counts inside labels are written as "New lines: 3"** instead of plurals
+  inside a client string, so the browser needs no message formatter.
+- **Set up Logs reuses a source that already sends errors** ("Use for Logs",
+  same key), like Product usage does with the Traffic script. The service
+  name in the snippets starts as the product's address and is meant to be
+  changed per service.
+- **The disk estimate on step 2 comes from the last 24 hours** times the
+  table's real compression, and says "at today's rate"; before any line it
+  says nothing instead of guessing.
