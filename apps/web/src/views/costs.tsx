@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { COST_PERIODS, type CostsState, costsHref } from '@/lib/costs'
+import { COST_PERIODS, type CostPeriodId, costsHref } from '@/lib/costs'
 import { digitsOf, formatMoney, pointsBetween } from '@/lib/money'
 import { percentChange } from '@/lib/period'
 import { cn } from '@/lib/utils'
@@ -36,7 +36,7 @@ export async function CostsView({
   projectIds: string[] | null
   /** "/all/costs", "/g/<slug>/costs", "/p/<slug>/costs". */
   path: string
-  state: CostsState
+  state: { period: CostPeriodId }
   group?: string
   product?: { name: string; slug: string }
 }) {

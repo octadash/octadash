@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { digitsOf, formatMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import type { HourState, Overview, OverviewRow } from '@/server/overview'
 import { formatUptime } from '@/server/uptime-view'
@@ -53,7 +54,7 @@ export async function OverviewView({
     getTranslations(),
     getLocale(),
   ])
-  const { period, timeZone, rows, uptime, traffic, errors } = overview
+  const { period, timeZone, rows, uptime, traffic, errors, signups, money, costs } = overview
   const periodName = t(`periods.${period.id}`)
   const format = formats(locale, timeZone, period.id)
   const { number, elapsed } = format
@@ -65,6 +66,8 @@ export async function OverviewView({
     return d ? { ...d, up: d.down, down: d.up } : null
   }
   const quiet = rows.length - overview.timeline.length
+  const moneyOf = (minor: number, currency: string) => formatMoney(minor, currency, locale, true)
+  const percent = (value: number | null) => percentOf(value, locale)
 
   return (
     <>
@@ -90,7 +93,7 @@ export async function OverviewView({
         </p>
       )}
 
-      {(uptime || traffic || errors) && (
+      {(uptime || traffic || errors || signups || money || costs) && (
         <Tiles label={t('totals')}>
           {uptime && (
             <Tile
@@ -128,10 +131,11 @@ export async function OverviewView({
               spark={errors.series.map((p) => p.events)}
             />
           )}
+          <AreaTiles overview={overview} base={base} t={t} tRoot={tRoot} locale={locale} />
         </Tiles>
       )}
 
-      {(traffic || errors) && (
+      {(traffic || errors || signups || money) && (
         <MetricChart
           metrics={[
             ...(traffic
@@ -166,6 +170,7 @@ export async function OverviewView({
                   },
                 ]
               : []),
+            ...areaMetrics(overview, t),
           ]}
           marks={overview.marks.map((m) => ({
             at: m.at.toISOString(),
@@ -195,6 +200,9 @@ export async function OverviewView({
                   {uptime && <TableHead>{t('table.uptime', { period: periodName })}</TableHead>}
                   {traffic && <TableHead className="text-right">{t('table.visitors')}</TableHead>}
                   {errors && <TableHead className="text-right">{t('table.errors')}</TableHead>}
+                  {signups && <TableHead className="text-right">{t('table.signups')}</TableHead>}
+                  {money && <TableHead className="text-right">{t('table.revenue')}</TableHead>}
+                  {costs && <TableHead className="text-right">{t('table.margin')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -205,6 +213,43 @@ export async function OverviewView({
                     showUptime={Boolean(uptime)}
                     showTraffic={Boolean(traffic)}
                     showErrors={Boolean(errors)}
+                    extra={[
+                      ...(signups
+                        ? [
+                            row.signups
+                              ? {
+                                  value: number.format(row.signups.count),
+                                  note: delta(row.signups.count, row.signups.previous)?.text ?? '',
+                                }
+                              : null,
+                          ]
+                        : []),
+                      ...(money
+                        ? [
+                            row.money
+                              ? {
+                                  value: moneyOf(row.money.revenue, money.currency),
+                                  note: t('table.mrr', {
+                                    mrr: moneyOf(row.money.mrr, money.currency),
+                                  }),
+                                }
+                              : null,
+                          ]
+                        : []),
+                      ...(costs
+                        ? [
+                            row.costs
+                              ? {
+                                  value: percent(row.costs.margin),
+                                  note: t('table.cost', {
+                                    cost: moneyOf(row.costs.cost, costs.currency),
+                                  }),
+                                  bad: row.costs.margin !== null && row.costs.margin < 0,
+                                }
+                              : null,
+                          ]
+                        : []),
+                    ]}
                     errorsDelta={
                       row.errors ? errorDelta(row.errors.events, row.errors.previous) : null
                     }
@@ -257,6 +302,123 @@ export async function OverviewView({
   )
 }
 
+type Translator = (key: string, values?: Record<string, string | number>) => string
+
+const percentOf = (value: number | null, locale: string) =>
+  value === null
+    ? '–'
+    : `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value)}%`
+
+/** Sign-ups, Revenue and Costs tiles, where some product uses those areas. */
+export function AreaTiles({
+  overview,
+  base,
+  t,
+  tRoot,
+  locale,
+}: {
+  overview: Overview
+  base: string
+  t: Translator
+  tRoot: Translator
+  locale: string
+}) {
+  const { period, signups, money, costs } = overview
+  const periodName = t(`periods.${period.id}`)
+  const number = new Intl.NumberFormat(locale)
+  const delta = (current: number, previous: number) => deltaOf(t, current, previous)
+  const errorDelta = (current: number, previous: number) => {
+    const d = deltaOf(t, current, previous)
+    return d ? { ...d, up: d.down, down: d.up } : null
+  }
+  const moneyOf = (minor: number, currency: string) => formatMoney(minor, currency, locale, true)
+  const percent = (value: number | null) => percentOf(value, locale)
+  return (
+    <>
+      {signups && (
+        <Tile
+          href={`${base}/usage`}
+          label={t('tiles.signups')}
+          area={tRoot('areas.usage.name')}
+          value={number.format(signups.count)}
+          delta={delta(signups.count, signups.previous)}
+          sub={t('tiles.signupsSub', { period: periodName })}
+          spark={signups.series.map((p) => p.count)}
+        />
+      )}
+      {money && (
+        <Tile
+          href={`${base}/money`}
+          label={t('tiles.revenue')}
+          area={tRoot('areas.money.name')}
+          value={moneyOf(money.revenue, money.currency)}
+          delta={delta(money.revenue, money.previous)}
+          sub={t('tiles.mrr', { mrr: moneyOf(money.mrr, money.currency) })}
+          spark={money.series.map((p) => p.revenue)}
+        />
+      )}
+      {costs && (
+        <Tile
+          href={`${base}/costs`}
+          label={t(period.id === '24h' ? 'tiles.costsToday' : 'tiles.costs')}
+          area={tRoot('areas.costs.name')}
+          value={moneyOf(costs.spend, costs.currency)}
+          delta={errorDelta(costs.spend, costs.previous)}
+          sub={t('tiles.margin', { margin: percent(costs.margin) })}
+          spark={[]}
+        />
+      )}
+    </>
+  )
+}
+
+/** Sign-ups and Revenue for the big chart, where some product uses those areas. */
+export function areaMetrics(overview: Overview, t: Translator) {
+  const { signups, money } = overview
+  const major = (minor: number, currency: string) => minor / 10 ** digitsOf(currency)
+  return [
+    ...(signups
+      ? [
+          {
+            id: 'signups',
+            label: t('chart.signups'),
+            unit: 'count' as const,
+            points: signups.series.map((p, i) => ({
+              at: p.at.toISOString(),
+              current: p.count,
+              previous: previousAt(
+                signups.previousSeries.map((q) => ({ visitors: q.count })),
+                signups.series.length,
+                i,
+              ),
+            })),
+          },
+        ]
+      : []),
+    ...(money
+      ? [
+          {
+            id: 'revenue',
+            label: t('chart.revenue'),
+            unit: 'count' as const,
+            currency: money.currency,
+            points: money.series.map((p, i) => ({
+              at: p.at.toISOString(),
+              current: major(p.revenue, money.currency),
+              previous: previousAt(
+                money.previousSeries.map((q) => ({
+                  visitors: major(q.revenue, money.currency),
+                })),
+                money.series.length,
+                i,
+              ),
+            })),
+          },
+        ]
+      : []),
+  ]
+}
+
 export function chartLabels(
   t: (key: string, values?: Record<string, string | number>) => string,
   period: string,
@@ -281,6 +443,7 @@ function ProductRow({
   showUptime,
   showTraffic,
   showErrors,
+  extra,
   errorsDelta,
   issuesLabel,
   labels,
@@ -291,6 +454,8 @@ function ProductRow({
   showUptime: boolean
   showTraffic: boolean
   showErrors: boolean
+  /** Sign-ups, Revenue · MRR and Margin, in order, when shown; null for "—". */
+  extra: ({ value: string; note: string; bad?: boolean } | null)[]
   errorsDelta: Delta | null
   issuesLabel: string
   labels: {
@@ -396,6 +561,23 @@ function ProductRow({
           )}
         </TableCell>
       )}
+      {extra.map((cell, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: the columns are fixed and in order
+        <TableCell key={i} className="text-right">
+          {cell ? (
+            <span className="inline-flex flex-col items-end">
+              <span className={cn('tabular-nums', cell.bad && 'font-semibold text-error')}>
+                {cell.value}
+              </span>
+              {cell.note && (
+                <span className="text-xs text-muted-foreground tabular-nums">{cell.note}</span>
+              )}
+            </span>
+          ) : (
+            dash
+          )}
+        </TableCell>
+      ))}
     </TableRow>
   )
 }

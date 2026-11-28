@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AREA_ITEMS } from '@/lib/areas'
 import { issueTitle } from '@/lib/errors'
+import { formatMoney } from '@/lib/money'
 import { parsePeriod } from '@/lib/period'
 import { cn } from '@/lib/utils'
 import { services } from '@/server/context'
@@ -25,7 +26,7 @@ import {
 } from '@/server/product-page'
 import { canManage, requireOrg } from '@/server/session'
 import { formatUptime } from '@/server/uptime-view'
-import { chartLabels, previousAt } from '@/views/overview'
+import { AreaTiles, areaMetrics, chartLabels, previousAt } from '@/views/overview'
 import {
   deltaOf,
   formats,
@@ -76,7 +77,10 @@ export default async function ProductPage({
     (area) =>
       (area.id === 'uptime' && monitors.length > 0) ||
       (area.id === 'traffic' && traffic) ||
-      (area.id === 'errors' && errors && errors.series.some((p) => p.events > 0)),
+      (area.id === 'errors' && errors && errors.series.some((p) => p.events > 0)) ||
+      (area.id === 'usage' && row?.signups) ||
+      (area.id === 'money' && row?.money) ||
+      (area.id === 'costs' && row?.costs),
   ).length
   const waiting = inUse.filter((area) => states.get(area.id) === 'set_up').length - receiving
   const toSetUp = inUse.filter((area) => !states.has(area.id)).length
@@ -118,6 +122,7 @@ export default async function ProductPage({
       })),
     })
   }
+  metrics.push(...areaMetrics(overview, tOverview))
   if (response && response.current.length > 0) {
     const offset = response.previous.length - response.current.length
     metrics.push({
@@ -162,7 +167,7 @@ export default async function ProductPage({
         </p>
       )}
 
-      {(uptime || traffic || errors) && (
+      {(uptime || traffic || errors || overview.signups || overview.money || overview.costs) && (
         <Tiles label={tOverview('totals')}>
           {uptime && row && (
             <Tile
@@ -206,6 +211,7 @@ export default async function ProductPage({
               spark={errors.series.map((p) => p.events)}
             />
           )}
+          <AreaTiles overview={overview} base={base} t={tOverview} tRoot={t} locale={locale} />
         </Tiles>
       )}
 
@@ -278,6 +284,63 @@ export default async function ProductPage({
                 sources={data.sources.filter((s) => s.areas.includes('traffic'))}
                 number={format.number}
                 t={t}
+              />
+            ) : area.id === 'usage' && row?.signups ? (
+              <NumbersCard
+                key={area.id}
+                area={area}
+                href={`${base}/usage`}
+                t={t}
+                numbers={[
+                  {
+                    label: tOverview('tiles.signups'),
+                    value: format.number.format(row.signups.count),
+                    note: t('productPage.numbers.before', {
+                      value: format.number.format(row.signups.previous),
+                    }),
+                  },
+                ]}
+              />
+            ) : area.id === 'money' && row?.money && overview.money ? (
+              <NumbersCard
+                key={area.id}
+                area={area}
+                href={`${base}/money`}
+                t={t}
+                numbers={[
+                  {
+                    label: tOverview('tiles.revenue'),
+                    value: formatMoney(row.money.revenue, overview.money.currency, locale, true),
+                    note: periodName,
+                  },
+                  {
+                    label: 'MRR',
+                    value: formatMoney(row.money.mrr, overview.money.currency, locale, true),
+                  },
+                ]}
+              />
+            ) : area.id === 'costs' && row?.costs && overview.costs ? (
+              <NumbersCard
+                key={area.id}
+                area={area}
+                href={`${base}/costs`}
+                t={t}
+                numbers={[
+                  {
+                    label: tOverview(period.id === '24h' ? 'tiles.costsToday' : 'tiles.costs'),
+                    value: formatMoney(row.costs.cost, overview.costs.currency, locale, true),
+                  },
+                  {
+                    label: tOverview('table.margin'),
+                    value:
+                      row.costs.margin === null
+                        ? '–'
+                        : `${format.number.format(Math.round(row.costs.margin))}%`,
+                    note:
+                      row.costs.margin === null ? t('productPage.numbers.noRevenue') : undefined,
+                    bad: row.costs.margin !== null && row.costs.margin < 0,
+                  },
+                ]}
               />
             ) : (
               <AreaCard
@@ -569,6 +632,53 @@ function ErrorsCard({
       </div>
       <Link href={`${base}/errors`} className="self-start text-sm text-brand hover:underline">
         {t('productPage.open', { area: t('areas.errors.name') })}
+        <ArrowRightIcon aria-hidden className="ml-1 inline size-3.5" />
+      </Link>
+    </section>
+  )
+}
+
+/** A set-up area's few numbers, for areas whose page has the detail. */
+function NumbersCard({
+  area,
+  href,
+  numbers,
+  t,
+}: {
+  area: AreaItem
+  href: string
+  numbers: { label: string; value: string; note?: string; bad?: boolean }[]
+  t: Translate
+}) {
+  return (
+    <section
+      aria-labelledby={`card-${area.id}`}
+      className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5"
+    >
+      <header className="flex items-center gap-2.5">
+        <area.icon aria-hidden className="size-4 text-muted-foreground" />
+        <h3 id={`card-${area.id}`} className="font-display text-lg font-semibold">
+          {t(`areas.${area.id}.name`)}
+        </h3>
+      </header>
+      <dl className="grid grid-cols-2 gap-4">
+        {numbers.map((n) => (
+          <div key={n.label} className="flex flex-col gap-0.5">
+            <dt className="text-sm text-muted-foreground">{n.label}</dt>
+            <dd
+              className={cn(
+                'font-display text-2xl font-semibold tabular-nums',
+                n.bad && 'text-error',
+              )}
+            >
+              {n.value}
+            </dd>
+            {n.note && <dd className="text-xs text-muted-foreground">{n.note}</dd>}
+          </div>
+        ))}
+      </dl>
+      <Link href={href} className="mt-auto self-start text-sm text-brand hover:underline">
+        {t('productPage.open', { area: t(`areas.${area.id}.name`) })}
         <ArrowRightIcon aria-hidden className="ml-1 inline size-3.5" />
       </Link>
     </section>

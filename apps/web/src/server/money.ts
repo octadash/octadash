@@ -29,6 +29,8 @@ export interface ProductMoney {
   project: { id: string; name: string; slug: string }
   /** In the organization's currency, minor units. */
   mrr: number
+  /** Paid in the period, in the organization's currency. */
+  revenue: number
   /** MRR change against 30 days ago, in percent. */
   mrrChange: number | null
   today: number
@@ -241,6 +243,7 @@ export async function loadMoney(
     const mrrBefore = mrrSum(mrrNow, monthAgo, p.id)
     return {
       project: { id: p.id, name: p.name, slug: p.slug },
+      revenue: revenueOf(current, p.id),
       mrr,
       mrrChange: mrrBefore > 0 ? Math.round(((mrr - mrrBefore) / mrrBefore) * 100) : null,
       today: revenueOf(

@@ -8,17 +8,20 @@ export const COST_PERIODS = ['month', '7d', '30d'] as const
 export type CostPeriodId = (typeof COST_PERIODS)[number]
 
 export interface CostsState {
-  period: CostPeriodId
+  /** `today` is for the Overview's 24 hours: costs come by the day. */
+  period: CostPeriodId | 'today'
 }
 
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 
-export function parseCostsState(search: Record<string, string | string[] | undefined>): CostsState {
+export function parseCostsState(search: Record<string, string | string[] | undefined>): {
+  period: CostPeriodId
+} {
   const period = one(search.period)
   return { period: COST_PERIODS.find((p) => p === period) ?? 'month' }
 }
 
-export function costsHref(path: string, state: CostsState): string {
+export function costsHref(path: string, state: { period: CostPeriodId }): string {
   return state.period === 'month' ? path : `${path}?period=${state.period}`
 }
 
@@ -39,9 +42,13 @@ export function daysBetween(from: string, to: string): string[] {
  * month compares with the same days of last month.
  */
 export function costPeriod(
-  id: CostPeriodId,
+  id: CostsState['period'],
   today: string,
 ): { from: string; to: string; previous: { from: string; to: string } } {
+  if (id === 'today') {
+    const yesterday = iso(ms(today) - DAY)
+    return { from: today, to: today, previous: { from: yesterday, to: yesterday } }
+  }
   if (id === 'month') {
     const [y, m, d] = today.split('-').map(Number) as [number, number, number]
     const from = `${today.slice(0, 7)}-01`

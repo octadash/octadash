@@ -226,7 +226,11 @@
     "errorSources": "{count, plural, one {# origem envia erros} other {# origens enviam erros}}",
     "noIssues": "Nenhuma issue aberta foi atingida neste período.",
     "issueNumbers": "{events, plural, one {# evento} other {# eventos}} · {people, plural, one {# pessoa} other {# pessoas}}",
-    "errorDays": "Erros por dia, últimos 14 dias: {total} no total"
+    "errorDays": "Erros por dia, últimos 14 dias: {total} no total",
+    "numbers": {
+      "before": "{value} no período anterior",
+      "noRevenue": "Sem receita em Dinheiro neste período"
+    }
   },
   "areaPage": {
     "soon": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra como configurar neste produto.",
@@ -260,7 +264,14 @@
       "visitors": "Visitantes",
       "uptimeRatio": "{ratio} em {period}",
       "errors": "Erros",
-      "newIssues": "{count, plural, =0 {nenhuma issue nova} one {# issue nova} other {# issues novas}}"
+      "newIssues": "{count, plural, =0 {nenhuma issue nova} one {# issue nova} other {# issues novas}}",
+      "signups": "Cadastros",
+      "signupsSub": "em {period}",
+      "revenue": "Receita",
+      "mrr": "MRR {mrr}",
+      "costs": "Custos",
+      "costsToday": "Custos hoje",
+      "margin": "margem {margin}"
     },
     "chart": {
       "visitors": "Visitantes",
@@ -269,7 +280,9 @@
       "asTable": "Ver como tabela",
       "time": "Horário",
       "response": "Tempo de resposta",
-      "errors": "Erros"
+      "errors": "Erros",
+      "signups": "Cadastros",
+      "revenue": "Receita"
     },
     "table": {
       "title": "Produtos",
@@ -286,7 +299,12 @@
       "footnote": "“—” quer dizer que o produto não usa aquela área. Clique em uma linha para abrir o produto.",
       "shown": "{count, plural, one {# produto} other {# produtos}}",
       "errors": "Erros",
-      "issues": "{count, plural, =0 {} one {# issue} other {# issues}}"
+      "issues": "{count, plural, =0 {} one {# issue} other {# issues}}",
+      "signups": "Cadastros",
+      "revenue": "Receita · MRR",
+      "mrr": "MRR {mrr}",
+      "margin": "Margem",
+      "cost": "custo {cost}"
     },
     "timeline": {
       "title": "O que aconteceu · {period}",

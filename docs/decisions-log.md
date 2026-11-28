@@ -376,3 +376,21 @@ and why; anything here can be reversed.
   product has is refused with its name. The rest can be shared.
 - **No marks on the chart yet**: Cost runaway marks need the incident list in
   this loader; the emergency still shows in the strip and the timeline.
+
+### Overview and product page: Sign-ups, Revenue and Costs (2026-11-28)
+
+- **The Overview gets the Sign-ups, Revenue and Costs tiles and the Sign-ups,
+  Revenue · MRR and Margin columns** of the panel canvas, each only where some
+  product uses the area (set up, or with sign-ups, a gateway or a cost), as
+  the other areas do. The chart gets Sign-ups and Revenue tabs.
+- **Costs are by whole days**, so with 24 hours the tile reads "Costs today"
+  and compares with yesterday; it has no chart tab, since a day per point
+  does not fit the hourly chart.
+- **Margin per product is the Costs page's margin**: revenue from Money less
+  costs, over the same days.
+- **The product page shows real numbers for Usage, Money and Costs** once
+  they receive data, instead of the "Example" card: sign-ups against the
+  period before; revenue and MRR; cost and margin. Logs keeps the example
+  card until it has a summary of its own.
+- **Money's "Margin is in Costs" is now a link** to the Costs page of the
+  same scope.
