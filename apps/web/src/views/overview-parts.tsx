@@ -1,9 +1,12 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
+import { duration } from '@/lib/duration'
 import { PERIODS, type Period, type PeriodId, percentChange } from '@/lib/period'
 import { cn } from '@/lib/utils'
 import type { HourState, TimelineItem } from '@/server/overview'
+
+export { duration }
 
 /**
  * The pieces the Overview and the product page share, so both read the same:
@@ -46,19 +49,6 @@ export function deltaOf(t: Translate, current: number, previous: number): Delta 
 }
 
 /** "14 min", "2 h 5 min", "3 d". */
-export function duration(locale: string, ms: number) {
-  const minutes = Math.max(1, Math.round(ms / 60_000))
-  const unit = (value: number, u: 'minute' | 'hour' | 'day') =>
-    new Intl.NumberFormat(locale, { style: 'unit', unit: u, unitDisplay: 'short' }).format(value)
-  if (minutes < 60) return unit(minutes, 'minute')
-  const hours = Math.floor(minutes / 60)
-  if (hours < 48) {
-    const rest = minutes % 60
-    return rest > 0 ? `${unit(hours, 'hour')} ${unit(rest, 'minute')}` : unit(hours, 'hour')
-  }
-  return unit(Math.round(hours / 24), 'day')
-}
-
 /** Title, subtitle and, on the right, the period, the comparison and who is online. */
 export function PageHeader({
   title,

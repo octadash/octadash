@@ -1011,5 +1011,92 @@
       "cert_expiring": "{product} · certificado estava perto de vencer",
       "other": "{product} · {name}"
     }
+  },
+  "strip": {
+    "label": "Emergências",
+    "title": {
+      "monitor_down": "{product} está fora do ar",
+      "heartbeat_missed": "{product}: “{name}” não rodou",
+      "cert_expiring": "{product}: certificado vence em {days, plural, one {# dia} other {# dias}}",
+      "other": "{product}: {name}"
+    },
+    "short": {
+      "monitor_down": "{product} fora do ar",
+      "heartbeat_missed": "{product} sem heartbeat",
+      "cert_expiring": "{product} certificado vencendo",
+      "other": "{product} {name}"
+    },
+    "detail": {
+      "monitor_down": "Monitor “{name}”: {reason}",
+      "heartbeat_missed": "“{name}”: {reason}",
+      "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
+      "other": "{name}: {reason}"
+    },
+    "detailNoReason": {
+      "monitor_down": "Monitor “{name}” não responde",
+      "heartbeat_missed": "“{name}” não chamou no horário",
+      "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
+      "other": "{name}"
+    },
+    "kind": {
+      "monitor_down": "Fora do ar",
+      "heartbeat_missed": "Heartbeat perdido",
+      "cert_expiring": "Certificado vencendo",
+      "other": "Emergência"
+    },
+    "count": "{count, plural, one {# emergência} other {# emergências}}",
+    "countProducts": "{count} emergências em {products} produtos",
+    "together": "Começaram com até {minutes} min de diferença",
+    "shared": "{count} no mesmo servidor {ip}",
+    "oldest": "a mais antiga há {duration}",
+    "see": "Ver",
+    "seeAll": "Ver as {count}",
+    "seeAllShort": "Ver todas",
+    "imOnIt": "Estou cuidando",
+    "onIt": "{name} está cuidando · {duration}",
+    "onItYou": "Você está cuidando · {duration}",
+    "nobody": "Ninguém cuidando ainda",
+    "onSome": "{name} cuida de {count} de {total}",
+    "onSomeYou": "Você cuida de {count} de {total}",
+    "onSomeSeveral": "{count} de {total} assumidas",
+    "back": "{product} voltou",
+    "renewed": "{product}: certificado renovado",
+    "closedBy": "{product}: encerrada por {name}",
+    "backDetail": "Durou {duration}",
+    "backDetailTaker": "Durou {duration} · {name} estava cuidando",
+    "seeWhat": "Ver o que aconteceu",
+    "newOne": "Nova emergência: {title}",
+    "newMany": "{count, plural, one {# nova emergência} other {# novas emergências}}",
+    "watcherTitle": "O Octadash não alcança o vigia externo",
+    "watcherBody": "Se este servidor cair, ninguém será avisado. As checagens daqui continuam rodando.",
+    "list": {
+      "intro": "Primeiro as sem ninguém cuidando, depois as mais antigas. Atualiza ao vivo.",
+      "hint": "Dica: {count} delas estão no mesmo servidor {ip}",
+      "hintTogether": "Dica: {count} delas começaram com até {minutes} min de diferença e estão no mesmo servidor {ip}",
+      "reached": "O Octadash checou: {targets} respondem daqui, então a rede desta instalação está bem.",
+      "failed": "O Octadash checou: {targets} não responderam daqui, então a rede desta instalação pode ser o problema.",
+      "decide": "Pode ser um problema só; você decide. Marque as que vai resolver e aperte “Estou cuidando destas”.",
+      "filterLabel": "Mostrar",
+      "all": "Todas · {count}",
+      "nobody": "Ninguém cuidando · {count}",
+      "mine": "Minhas · {count}",
+      "sort": "Ordem",
+      "sortNobody": "Sem ninguém cuidando primeiro",
+      "sortOldest": "Mais antigas primeiro",
+      "sortNewest": "Mais novas primeiro",
+      "select": "Selecionar {product}: {kind}",
+      "open": "Abrir {product}: {kind}",
+      "taker": "{name} · {duration}",
+      "takerYou": "Você · {duration}",
+      "more": "Mais {count}",
+      "showAll": "Mostrar todas",
+      "selected": "{count, plural, one {# selecionada} other {# selecionadas}}",
+      "selectShared": "Selecionar as {count} em {ip}",
+      "clear": "Limpar",
+      "submit": "Estou cuidando destas {count}",
+      "empty": "Nada aqui. Mude o que a lista mostra acima.",
+      "and": "{first} e {last}",
+      "submitNone": "Estou cuidando destas"
+    }
   }
 }

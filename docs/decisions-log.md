@@ -38,3 +38,17 @@ and why; anything here can be reversed.
   and pressing "I'm on these too" takes them all at once.
 - **CI runs the migrations before the tests.** Tests in several packages read
   the auth tables, and the order of parallel runs decided whether they existed.
+- **The emergency strip shows an emergency once its rule's wait is over**
+  (2 minutes for a site down by default), the same moment the message goes
+  out. A blip shorter than that never reaches the strip, and never turns it
+  green.
+- **"Octadash can't reach its outside watcher"** is a second strip line, shown
+  only to owners and admins: it is about the install, not a product, and a
+  member cannot fix it.
+- **The strip names up to 3 emergencies**; from 4 on it counts them, says when
+  they started together and which server most of them share. "See all" lists
+  every one; nothing is grouped.
+- **Ended by hand turns the strip green too**, saying "closed by Ana" instead of
+  "is back", so nobody reads a closed emergency as a recovery.
+- **Link-style buttons use the brand accent** (`--brand`) instead of the
+  primary magenta: the primary failed contrast on the dark theme.
