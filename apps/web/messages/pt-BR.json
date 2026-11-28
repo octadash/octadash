@@ -613,7 +613,11 @@
     "areas": {
       "uptime": "No ar",
       "errors": "Erros",
-      "usage": "Uso do produto"
+      "usage": "Uso do produto",
+      "traffic": "Tráfego",
+      "money": "Dinheiro",
+      "costs": "Custos",
+      "logs": "Logs"
     },
     "future": {
       "errors": {
@@ -632,10 +636,60 @@
           "body": "Cadastros longe do que esta hora e este dia da semana costumam ter.",
           "wait": "Precisa de 4 semanas de dados para aprender o normal.",
           "params": "30% abaixo do esperado, no mínimo 10 eventos"
+        },
+        "keyEventStopped": {
+          "title": "Evento importante parou",
+          "body": "Um evento que você marca como importante (checkout, cadastro) para em uma hora em que costuma acontecer.",
+          "wait": "Precisa de 4 semanas de dados para aprender quando costuma acontecer.",
+          "params": "Nenhum em 1 h quando 10 ou mais são esperados"
+        }
+      },
+      "uptime": {
+        "domainExpiring": {
+          "title": "Domínio vencendo",
+          "body": "O registro do domínio de um monitor vence em breve.",
+          "wait": "Precisa de uma consulta ao registro que o Octadash ainda não faz.",
+          "params": "30 dias antes"
+        }
+      },
+      "traffic": {
+        "starts": "Começa quando Tráfego estiver configurado em um produto",
+        "trafficStopped": {
+          "title": "Tráfego parou",
+          "body": "As visualizações caem a zero com o site no ar: o script foi removido ou quebrou.",
+          "wait": "Precisa de alguns dias de tráfego para saber o que esperar.",
+          "params": "Nenhuma em 30 min quando 20 ou mais são esperadas"
+        }
+      },
+      "money": {
+        "starts": "Começa quando Dinheiro estiver configurado em um produto",
+        "paymentsFailing": {
+          "title": "Pagamentos falhando",
+          "body": "Cobranças recusadas no gateway bem acima do normal.",
+          "wait": "Nenhum gateway conectado ainda.",
+          "params": "20% recusadas em 15 min, no mínimo 10 cobranças"
+        }
+      },
+      "costs": {
+        "starts": "Começa quando Custos estiver configurado em um produto",
+        "costRunaway": {
+          "title": "Custo disparado",
+          "body": "Gasto por hora bem acima do normal (tokens de IA, nuvem).",
+          "wait": "Nenhuma fonte de custo conectada ainda.",
+          "params": "3× o normal por 1 h"
+        }
+      },
+      "logs": {
+        "starts": "Começa quando Logs estiver configurado em um produto",
+        "logAlert": {
+          "title": "Alerta de log",
+          "body": "Uma busca que você salva encontra algo, como level=fatal.",
+          "wait": "Nenhum produto envia logs ainda.",
+          "params": "Você define a busca"
         }
       }
     },
-    "moreAreas": "Cada área traz suas regras quando chegar (Dinheiro: pagamentos falhando; Custos: gasto acima do normal). Elas aparecem aqui já configuradas, para ninguém escrever do zero."
+    "moreAreas": "Cada área traz suas regras já configuradas quando chegar, para ninguém escrever do zero. Todo tipo usa a mesma faixa, a mesma página de emergência e os mesmos canais."
   },
   "groups": {
     "newTitle": "Novo grupo",

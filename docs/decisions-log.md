@@ -52,3 +52,8 @@ and why; anything here can be reversed.
   "is back", so nobody reads a closed emergency as a recovery.
 - **Link-style buttons use the brand accent** (`--brand`) instead of the
   primary magenta: the primary failed contrast on the dark theme.
+- **The 11 kinds of emergency**: the rules list shows the 8 not built yet,
+  dimmed and already set, each in its area (domain expiring sits under Uptime
+  as coming later). "Octadash itself" stays the outside watcher for now; the
+  queue and disk checks come with the install health page, since the worker
+  cannot see the database disks from its container.

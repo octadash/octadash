@@ -613,7 +613,11 @@
     "areas": {
       "uptime": "Uptime",
       "errors": "Errors",
-      "usage": "Product usage"
+      "usage": "Product usage",
+      "traffic": "Traffic",
+      "money": "Money",
+      "costs": "Costs",
+      "logs": "Logs"
     },
     "future": {
       "errors": {
@@ -632,10 +636,60 @@
           "body": "Sign-ups away from what this hour and weekday usually have.",
           "wait": "Needs 4 weeks of data to learn what is normal.",
           "params": "30% below expected, at least 10 events"
+        },
+        "keyEventStopped": {
+          "title": "Key event stopped",
+          "body": "An event you mark as key (checkout, sign-up) stops at an hour it usually happens.",
+          "wait": "Needs 4 weeks of data to learn when it usually happens.",
+          "params": "None in 1 h when 10 or more are expected"
+        }
+      },
+      "uptime": {
+        "domainExpiring": {
+          "title": "Domain expiring",
+          "body": "The domain registration of a monitor expires soon.",
+          "wait": "Needs a registry lookup Octadash does not do yet.",
+          "params": "30 days ahead"
+        }
+      },
+      "traffic": {
+        "starts": "Starts when Traffic is set up on a product",
+        "trafficStopped": {
+          "title": "Traffic stopped",
+          "body": "Pageviews drop to zero while the site is up: the script was removed or broke.",
+          "wait": "Needs a few days of traffic to know what to expect.",
+          "params": "None in 30 min when 20 or more are expected"
+        }
+      },
+      "money": {
+        "starts": "Starts when Money is set up on a product",
+        "paymentsFailing": {
+          "title": "Payments failing",
+          "body": "Failed charges at the gateway well above normal.",
+          "wait": "No gateway is connected yet.",
+          "params": "20% failed in 15 min, at least 10 charges"
+        }
+      },
+      "costs": {
+        "starts": "Starts when Costs is set up on a product",
+        "costRunaway": {
+          "title": "Cost runaway",
+          "body": "Spend per hour well above normal (AI tokens, cloud).",
+          "wait": "No cost source is connected yet.",
+          "params": "3× normal for 1 h"
+        }
+      },
+      "logs": {
+        "starts": "Starts when Logs is set up on a product",
+        "logAlert": {
+          "title": "Log alert",
+          "body": "A search you save matches, such as level=fatal.",
+          "wait": "No product sends logs yet.",
+          "params": "You set the search"
         }
       }
     },
-    "moreAreas": "Each area brings its own rules when it ships (Money: payments failing; Costs: spend above normal). They appear here already set, so nothing needs to be written from zero."
+    "moreAreas": "Each area brings its rules already set when it ships, so nothing needs to be written from zero. Every kind uses the same strip, emergency page and channels."
   },
   "groups": {
     "newTitle": "New group",
