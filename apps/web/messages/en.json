@@ -155,7 +155,7 @@
     "errors": {
       "name": "Errors",
       "body": "Browser and server errors, grouped, with how many people each one hit and since when.",
-      "how": "The Octadash package for the browser and Node, or any Sentry SDK."
+      "how": "The Octadash script for the browser, or any Sentry SDK by changing only the DSN."
     },
     "money": {
       "name": "Money",
@@ -222,7 +222,11 @@
       "page": "Unknown page",
       "country": "Unknown country",
       "device": "Unknown device"
-    }
+    },
+    "errorSources": "{count, plural, one {# source sends errors} other {# sources send errors}}",
+    "noIssues": "No unresolved issue was hit in this period.",
+    "issueNumbers": "{events, plural, one {# event} other {# events}} · {people, plural, one {# person} other {# people}}",
+    "errorDays": "Errors per day, last 14 days: {total} in all"
   },
   "areaPage": {
     "soon": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows how to set it up for this product.",
@@ -254,7 +258,9 @@
       "upNow": "{up} of {total}",
       "uptimeSub": "up now · {ratio} in {period}",
       "visitors": "Visitors",
-      "uptimeRatio": "{ratio} in {period}"
+      "uptimeRatio": "{ratio} in {period}",
+      "errors": "Errors",
+      "newIssues": "{count, plural, =0 {no new issues} one {# new issue} other {# new issues}}"
     },
     "chart": {
       "visitors": "Visitors",
@@ -262,7 +268,8 @@
       "emergency": "Emergency",
       "asTable": "Show as a table",
       "time": "Time",
-      "response": "Response time"
+      "response": "Response time",
+      "errors": "Errors"
     },
     "table": {
       "title": "Products",
@@ -277,7 +284,9 @@
       "noChecks": "No checks yet",
       "hoursSummary": "Down in {down} of {total} intervals",
       "footnote": "“—” means the product doesn't use that area. Click a row to open the product.",
-      "shown": "{count, plural, one {# product} other {# products}}"
+      "shown": "{count, plural, one {# product} other {# products}}",
+      "errors": "Errors",
+      "issues": "{count, plural, =0 {} one {# issue} other {# issues}}"
     },
     "timeline": {
       "title": "What happened · {period}",

@@ -4,6 +4,7 @@ import {
   type ErrorRow,
   errorRates,
   errorSeries,
+  errorsByProduct,
   errorTotals,
   insertErrors,
   issueEvent,
@@ -224,6 +225,7 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
     const one = { ...scope, from: later(-1), to: later(24) }
     expect(await errorTotals(client, one)).toEqual({ events: 2, issues: 1, people: 1 })
     expect(await errorTotals(client, scope)).toEqual({ events: 6, issues: 2, people: 3 })
+    expect((await errorsByProduct(client, scope)).get(project)).toEqual({ events: 6, issues: 2 })
     const series = await errorSeries(client, scope, 'hour')
     expect(series.map((p) => [p.events, p.people])).toEqual([
       [5, 3],

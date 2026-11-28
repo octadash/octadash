@@ -53,12 +53,17 @@ export async function OverviewView({
     getTranslations(),
     getLocale(),
   ])
-  const { period, timeZone, rows, uptime, traffic } = overview
+  const { period, timeZone, rows, uptime, traffic, errors } = overview
   const periodName = t(`periods.${period.id}`)
   const format = formats(locale, timeZone, period.id)
   const { number, elapsed } = format
   const now = period.to
   const delta = (current: number, previous: number) => deltaOf(t, current, previous)
+  /** For errors fewer is better: a drop reads as good, a rise does not. */
+  const errorDelta = (current: number, previous: number) => {
+    const d = deltaOf(t, current, previous)
+    return d ? { ...d, up: d.down, down: d.up } : null
+  }
   const quiet = rows.length - overview.timeline.length
 
   return (
@@ -85,7 +90,7 @@ export async function OverviewView({
         </p>
       )}
 
-      {(uptime || traffic) && (
+      {(uptime || traffic || errors) && (
         <Tiles label={t('totals')}>
           {uptime && (
             <Tile
@@ -112,22 +117,55 @@ export async function OverviewView({
               spark={traffic.series.map((p) => p.visitors)}
             />
           )}
+          {errors && (
+            <Tile
+              href={`${base}/errors`}
+              label={t('tiles.errors')}
+              area={tRoot('areas.errors.name')}
+              value={number.format(errors.events)}
+              delta={errorDelta(errors.events, errors.previous)}
+              sub={t('tiles.newIssues', { count: errors.newIssues })}
+              spark={errors.series.map((p) => p.events)}
+            />
+          )}
         </Tiles>
       )}
 
-      {traffic && (
+      {(traffic || errors) && (
         <MetricChart
           metrics={[
-            {
-              id: 'visitors',
-              label: t('chart.visitors'),
-              unit: 'count',
-              points: traffic.series.map((p, i) => ({
-                at: p.at.toISOString(),
-                current: p.visitors,
-                previous: previousAt(traffic.previousSeries, traffic.series.length, i),
-              })),
-            },
+            ...(traffic
+              ? [
+                  {
+                    id: 'visitors',
+                    label: t('chart.visitors'),
+                    unit: 'count' as const,
+                    points: traffic.series.map((p, i) => ({
+                      at: p.at.toISOString(),
+                      current: p.visitors,
+                      previous: previousAt(traffic.previousSeries, traffic.series.length, i),
+                    })),
+                  },
+                ]
+              : []),
+            ...(errors
+              ? [
+                  {
+                    id: 'errors',
+                    label: t('chart.errors'),
+                    unit: 'count' as const,
+                    points: errors.series.map((p, i) => ({
+                      at: p.at.toISOString(),
+                      current: p.events,
+                      previous: previousAt(
+                        errors.previousSeries.map((q) => ({ visitors: q.events })),
+                        errors.series.length,
+                        i,
+                      ),
+                    })),
+                  },
+                ]
+              : []),
           ]}
           marks={overview.marks.map((m) => ({
             at: m.at.toISOString(),
@@ -156,6 +194,7 @@ export async function OverviewView({
                   <TableHead className="px-4">{t('table.product')}</TableHead>
                   {uptime && <TableHead>{t('table.uptime', { period: periodName })}</TableHead>}
                   {traffic && <TableHead className="text-right">{t('table.visitors')}</TableHead>}
+                  {errors && <TableHead className="text-right">{t('table.errors')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -165,6 +204,11 @@ export async function OverviewView({
                     row={row}
                     showUptime={Boolean(uptime)}
                     showTraffic={Boolean(traffic)}
+                    showErrors={Boolean(errors)}
+                    errorsDelta={
+                      row.errors ? errorDelta(row.errors.events, row.errors.previous) : null
+                    }
+                    issuesLabel={row.errors ? t('table.issues', { count: row.errors.issues }) : ''}
                     labels={{
                       down: row.emergency
                         ? t('table.downFor', { duration: elapsed(row.emergency.since, now) })
@@ -236,6 +280,9 @@ function ProductRow({
   row,
   showUptime,
   showTraffic,
+  showErrors,
+  errorsDelta,
+  issuesLabel,
   labels,
   number,
   delta,
@@ -243,6 +290,9 @@ function ProductRow({
   row: OverviewRow
   showUptime: boolean
   showTraffic: boolean
+  showErrors: boolean
+  errorsDelta: Delta | null
+  issuesLabel: string
   labels: {
     down: string
     takenBy: string
@@ -320,6 +370,26 @@ function ProductRow({
                   {delta.text}
                 </span>
               )}
+            </span>
+          ) : (
+            dash
+          )}
+        </TableCell>
+      )}
+      {showErrors && (
+        <TableCell className="text-right">
+          {row.errors ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{issuesLabel}</span>
+              <span className="tabular-nums">{number.format(row.errors.events)}</span>
+              <span
+                className={cn(
+                  'w-12 text-xs tabular-nums',
+                  errorsDelta?.up ? 'text-ok' : 'text-muted-foreground',
+                )}
+              >
+                {errorsDelta?.text}
+              </span>
             </span>
           ) : (
             dash

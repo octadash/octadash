@@ -1,5 +1,8 @@
 import {
   type AreaId,
+  errorSeries,
+  issueStats,
+  listIssues,
   listMonitors,
   listProjectAreas,
   listSources,
@@ -41,6 +44,19 @@ export interface ProductPage {
     previous: { at: Date; medianMs: number | null }[]
   } | null
   sources: { name: string; platform: string; areas: string[] }[]
+  /** The Errors card: the issues hit most in the period and events per day, 14 days. */
+  errors: {
+    issues: {
+      id: string
+      type: string
+      value: string
+      culprit: string
+      events: number
+      people: number
+      isNew: boolean
+    }[]
+    days: { at: Date; events: number }[]
+  } | null
   /** Top values for the Traffic card, by visitors. */
   traffic: Record<'source' | 'page' | 'country' | 'device', TrafficRow[]> | null
 }
@@ -88,11 +104,41 @@ export async function loadProductPage(
     usesTraffic ? quiet(trafficBreakdown(clickhouse, scope, 'device', 5), []) : [],
   ])
 
+  const usesErrors = overview.errors !== null
+  const fortnight = { ...scope, from: new Date(now.getTime() - 14 * DAY), to: now }
+  const [unresolved, issueNumbers, errorDays] = usesErrors
+    ? await Promise.all([
+        listIssues(db, orgId, {
+          projectIds: [product.id],
+          tab: 'unresolved',
+          since: period.from,
+          userId: '',
+          limit: 50,
+        }),
+        quiet(issueStats(clickhouse, scope, 1), new Map()),
+        quiet(errorSeries(clickhouse, fortnight, 'day'), []),
+      ])
+    : [[], new Map(), []]
+  const topIssues = unresolved
+    .map((issue) => ({
+      id: issue.id,
+      type: issue.type,
+      value: issue.value,
+      culprit: issue.culprit,
+      events: issueNumbers.get(issue.id)?.events ?? 0,
+      people: issueNumbers.get(issue.id)?.people ?? 0,
+      isNew: issue.first_seen >= period.from,
+    }))
+    .filter((issue) => issue.events > 0)
+    .sort((a, b) => b.events - a.events)
+    .slice(0, 3)
+
   // Uptime is set up when it has monitors, whatever was stored before.
   const states = new Map(areaStates)
   if (monitors.length > 0) states.set('uptime', 'set_up')
   else if (states.get('uptime') === 'set_up') states.delete('uptime')
   if (usesTraffic && !states.has('traffic')) states.set('traffic', 'set_up')
+  if (usesErrors && !states.has('errors')) states.set('errors', 'set_up')
 
   return {
     overview,
@@ -117,5 +163,8 @@ export async function loadProductPage(
     response: monitors.length > 0 ? { current, previous } : null,
     sources: sources.map((s) => ({ name: s.name, platform: s.platform, areas: s.areas })),
     traffic: usesTraffic ? { source, page, country, device } : null,
+    errors: usesErrors
+      ? { issues: topIssues, days: errorDays.map((d) => ({ at: d.at, events: d.events })) }
+      : null,
   }
 }

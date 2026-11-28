@@ -160,3 +160,8 @@ and why; anything here can be reversed.
   rest), "Send test error" from the browser and a live wait for the first one.
   The snippets say plainly which SDKs were tested (so far `@sentry/node` 9).
   "Set up" on a product's Errors and Traffic cards now opens their setup page.
+- **Errors joins the Overview and the product page**: an Errors number (fewer
+  reads as good, so a drop is green), an Errors tab on the chart, an Errors
+  column in the products table (events and issues hit) and, on the product
+  page, an Errors card with the 3 unresolved issues hit most and errors per day
+  over 14 days. Deploy marks and "out of normal" signals wait for their engine.

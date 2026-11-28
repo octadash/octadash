@@ -470,3 +470,22 @@ export async function lastError(
       }
     : null
 }
+
+/** Errors and issues hit per product in the scope, for the Overview table. */
+export async function errorsByProduct(
+  client: ClickHouseClient,
+  scope: ErrorScope,
+): Promise<Map<string, { events: number; issues: number }>> {
+  if (scope.projectIds.length === 0) return new Map()
+  const result = await client.query({
+    query: `SELECT toString(project_id) AS project, count() AS events, uniq(issue_id) AS issues
+      FROM errors WHERE ${IN_SCOPE}
+      GROUP BY project_id`,
+    query_params: scopeParams(scope),
+    format: 'JSONEachRow',
+  })
+  const rows = await result.json<{ project: string; events: string; issues: string }>()
+  return new Map(
+    rows.map((row) => [row.project, { events: Number(row.events), issues: Number(row.issues) }]),
+  )
+}

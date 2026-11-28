@@ -155,7 +155,7 @@
     "errors": {
       "name": "Erros",
       "body": "Erros do navegador e do servidor, agrupados, com quantas pessoas cada um atingiu e desde quando acontece.",
-      "how": "O pacote do Octadash para navegador e Node, ou qualquer SDK do Sentry."
+      "how": "O script do Octadash para o navegador, ou qualquer SDK do Sentry trocando só o DSN."
     },
     "money": {
       "name": "Dinheiro",
@@ -222,7 +222,11 @@
       "page": "Página desconhecida",
       "country": "País desconhecido",
       "device": "Aparelho desconhecido"
-    }
+    },
+    "errorSources": "{count, plural, one {# origem envia erros} other {# origens enviam erros}}",
+    "noIssues": "Nenhuma issue aberta foi atingida neste período.",
+    "issueNumbers": "{events, plural, one {# evento} other {# eventos}} · {people, plural, one {# pessoa} other {# pessoas}}",
+    "errorDays": "Erros por dia, últimos 14 dias: {total} no total"
   },
   "areaPage": {
     "soon": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra como configurar neste produto.",
@@ -254,7 +258,9 @@
       "upNow": "{up} de {total}",
       "uptimeSub": "no ar agora · {ratio} em {period}",
       "visitors": "Visitantes",
-      "uptimeRatio": "{ratio} em {period}"
+      "uptimeRatio": "{ratio} em {period}",
+      "errors": "Erros",
+      "newIssues": "{count, plural, =0 {nenhuma issue nova} one {# issue nova} other {# issues novas}}"
     },
     "chart": {
       "visitors": "Visitantes",
@@ -262,7 +268,8 @@
       "emergency": "Emergência",
       "asTable": "Ver como tabela",
       "time": "Horário",
-      "response": "Tempo de resposta"
+      "response": "Tempo de resposta",
+      "errors": "Erros"
     },
     "table": {
       "title": "Produtos",
@@ -277,7 +284,9 @@
       "noChecks": "Ainda sem checagens",
       "hoursSummary": "Fora do ar em {down} de {total} intervalos",
       "footnote": "“—” quer dizer que o produto não usa aquela área. Clique em uma linha para abrir o produto.",
-      "shown": "{count, plural, one {# produto} other {# produtos}}"
+      "shown": "{count, plural, one {# produto} other {# produtos}}",
+      "errors": "Erros",
+      "issues": "{count, plural, =0 {} one {# issue} other {# issues}}"
     },
     "timeline": {
       "title": "O que aconteceu · {period}",
