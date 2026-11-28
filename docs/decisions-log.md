@@ -303,3 +303,28 @@ and why; anything here can be reversed.
 - **Tested against the gateways' documented shapes, not live accounts.** A
   fake Asaas key reached the real Asaas sandbox and came back with its error
   message, which confirms the address and header; the rest needs a real key.
+
+### Money screens (2026-11-28)
+
+- **The key is checked before saving.** "Connect and import" reads the
+  gateway with the key first and refuses a wrong one with the gateway's own
+  message, instead of saving and failing at the first import. A fake Stripe
+  key reached the real Stripe API and came back with "Invalid API Key".
+- **The webhook URL exists before the connection.** The page makes the token,
+  so the URL can be added at the gateway while filling the form. For Asaas,
+  which has no signing secret, the page also makes the access token Asaas
+  sends with each webhook; it is shown once and stored encrypted.
+- **One account, several products: only one product can take "All of this
+  account".** A second one must pick products or metadata, and then the "All"
+  one keeps what nobody else claims. The more specific rule wins.
+- **Changing a rule or a product leaving reads the account again from the
+  start**, after clearing what was stored from it, so no payment keeps an old
+  product. The numbers of the products it serves fill again in a few minutes.
+  A product joining reads again without clearing. The last product to leave
+  deletes the connection and its data; the gateway is not touched.
+- **"Update keys" keeps an empty field's old value**, and a new key makes a
+  failing connection try again in the next minute.
+- **Margin is not on the Money table yet**: it needs Costs. The table says
+  "Margin is in Costs", as the canvas does.
+- **"Custom" period is not built**: Money uses the same periods as Traffic
+  (Today, 24h, 7d, 30d), like the other areas.

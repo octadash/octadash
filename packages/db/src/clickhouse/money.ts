@@ -92,9 +92,11 @@ const scopeParams = (scope: MoneyScope) => ({
   to: toClickHouseTime(scope.to),
 })
 
-/** Per product, local day and currency: what came in, went back and failed. */
+/** Per product, local hour or day, and currency: what came in, went back and failed. */
 export interface PaymentDay {
   projectId: string
+  /** Start of the bucket (local hour or day) the row covers. */
+  at: Date
   /** "2026-11-28" in the organization's time zone. */
   day: string
   currency: string
@@ -110,12 +112,14 @@ export async function paymentDays(
   client: ClickHouseClient,
   scope: MoneyScope,
   timeZone: string,
+  bucket: 'hour' | 'day' = 'day',
 ): Promise<PaymentDay[]> {
   if (scope.projectIds.length === 0) return []
   const result = await client.query({
     query: `
       SELECT
         project_id,
+        ${bucket === 'hour' ? 'toStartOfHour' : 'toStartOfDay'}(at, {tz:String}) AS start,
         toString(toDate(at, {tz:String})) AS day,
         currency,
         sumIf(amount, status IN ('paid', 'refunded')) AS paid,
@@ -126,13 +130,15 @@ export async function paymentDays(
       FROM payments FINAL
       WHERE ${IN_SCOPE}
         AND at >= {from:DateTime64(3, 'UTC')} AND at < {to:DateTime64(3, 'UTC')}
-      GROUP BY project_id, day, currency
-      ORDER BY day`,
+      GROUP BY project_id, start, day, currency
+      ORDER BY start`,
     query_params: { ...scopeParams(scope), tz: timeZone },
+    clickhouse_settings: ISO_TIMES,
     format: 'JSONEachRow',
   })
   const rows = await result.json<{
     project_id: string
+    start: string
     day: string
     currency: string
     paid: string
@@ -143,6 +149,7 @@ export async function paymentDays(
   }>()
   return rows.map((r) => ({
     projectId: r.project_id,
+    at: iso(r.start),
     day: r.day,
     currency: r.currency,
     paid: Number(r.paid),
