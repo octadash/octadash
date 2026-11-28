@@ -6,6 +6,9 @@ import {
   closeStaleMonitorIncidents,
   type createClickHouse,
   type Db,
+  errorRates,
+  ignoredIssueIds,
+  issueHeads,
   latestCertDays,
   listActiveMonitors,
   listEnabledChannels,
@@ -13,6 +16,7 @@ import {
   markNotified,
   openIncident,
   type PendingIncident,
+  recentErrorProducts,
   recordNotification,
   resolveIncident,
   ruleFor,
@@ -28,7 +32,17 @@ export const ALERT_QUEUES = {
   notify: 'alerts-notify',
   /** Reads certificate expiry from the last checks. */
   certs: 'alerts-certs',
+  /** Compares each product's errors with its normal. */
+  errors: 'alerts-errors',
 } as const
+
+/** The Error spike rule looks at this many minutes. */
+export const SPIKE_WINDOW_MINUTES = 15
+
+/** A spike: at least `events` errors and `times` the normal. */
+export function isSpike(count: number, normal: number, params: Record<string, number>) {
+  return count >= (params.events ?? 20) && count >= (params.times ?? 5) * normal
+}
 
 const SEND_TIMEOUT_MS = 15_000
 
@@ -255,7 +269,72 @@ export function createAlerts(deps: AlertsDeps) {
     })
   }
 
-  return { onTransition, notify, checkCerts }
+  /**
+   * Opens an Error spike for each product whose errors in the last 15 minutes
+   * reach its rule, and closes the ones back under it. Only products with a
+   * recent error, or an open spike, are read.
+   */
+  async function checkErrorSpikes() {
+    const at = now()
+    const windowMs = SPIKE_WINDOW_MINUTES * 60_000
+    const open = await listOpenIncidentKeys(deps.db, 'error_spike')
+    const recent = await recentErrorProducts(deps.db, new Date(at.getTime() - windowMs))
+    const products = new Map(recent.map((p) => [p.projectId, p]))
+    for (const row of open) {
+      products.set(row.project_id, { orgId: row.org_id, projectId: row.project_id })
+    }
+    if (products.size === 0) return
+    const list = [...products.values()]
+    const skip = await ignoredIssueIds(
+      deps.db,
+      list.map((p) => p.projectId),
+    )
+    const rates = await errorRates(deps.clickhouse, list, at, SPIKE_WINDOW_MINUTES, skip)
+    const openKeys = new Set(open.map((row) => row.dedupe_key))
+    const changed = new Set<string>()
+    for (const rate of rates) {
+      const key = `errors:${rate.projectId}:spike`
+      const rule = await ruleFor(deps.db, rate.orgId, rate.projectId, 'error_spike')
+      const spike = rule.level !== 'off' && isSpike(rate.count, rate.normal, rule.params)
+      if (spike && !openKeys.has(key)) {
+        const heads = await issueHeads(
+          deps.db,
+          rate.top.map((t) => t.issueId),
+        )
+        const incident = await openIncident(deps.db, {
+          orgId: rate.orgId,
+          projectId: rate.projectId,
+          kind: 'error_spike',
+          dedupeKey: key,
+          data: {
+            count: rate.count,
+            normal: Math.round(rate.normal * 10) / 10,
+            minutes: SPIKE_WINDOW_MINUTES,
+            issues: rate.top.map((t) => {
+              const head = heads.find((h) => h.id === t.issueId)
+              return {
+                id: t.issueId,
+                count: t.count,
+                type: head?.type ?? '',
+                value: head?.value ?? '',
+                culprit: head?.culprit ?? '',
+              }
+            }),
+          },
+          at,
+        })
+        if (incident) changed.add(rate.orgId)
+      } else if (!spike && openKeys.has(key)) {
+        if (await resolveIncident(deps.db, key, at)) changed.add(rate.orgId)
+      }
+    }
+    if (changed.size > 0) {
+      await wake()
+      await tell(changed, 'incidents')
+    }
+  }
+
+  return { onTransition, notify, checkCerts, checkErrorSpikes }
 }
 
 export type Alerts = ReturnType<typeof createAlerts>
@@ -270,5 +349,10 @@ export async function registerAlertJobs(boss: PgBoss, alerts: Alerts, log: Logge
   await boss.schedule(ALERT_QUEUES.certs, '41 * * * *')
   await boss.work(ALERT_QUEUES.certs, async () => {
     await alerts.checkCerts().catch((err) => log.warn({ err }, 'certificate check failed'))
+  })
+  await boss.createQueue(ALERT_QUEUES.errors)
+  await boss.schedule(ALERT_QUEUES.errors, '* * * * *')
+  await boss.work(ALERT_QUEUES.errors, async () => {
+    await alerts.checkErrorSpikes().catch((err) => log.warn({ err }, 'error spike check failed'))
   })
 }

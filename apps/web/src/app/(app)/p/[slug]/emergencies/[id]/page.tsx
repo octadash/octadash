@@ -8,6 +8,7 @@ import { EmergencyChart } from '@/components/emergency-chart'
 import { CloseDialog, NoteForm, SameTimeForm, TakeButton } from '@/components/emergency-controls'
 import { InfoTip } from '@/components/info-tip'
 import { Badge } from '@/components/ui/badge'
+import { issueTitle } from '@/lib/errors'
 import { describeFailure } from '@/lib/monitors'
 import { statusCodeOf } from '@/lib/uptime-board'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,18 @@ import { services } from '@/server/context'
 import { loadEmergency, type TimelineEntry } from '@/server/emergency'
 import { requireOrg } from '@/server/session'
 import { duration } from '@/views/overview-parts'
+
+const KINDS = ['monitor_down', 'heartbeat_missed', 'cert_expiring', 'error_spike'] as const
+type Kind = (typeof KINDS)[number]
+
+/** An issue named on an Error spike, as the worker saved it. */
+interface SpikeIssue {
+  id: string
+  count: number
+  type: string
+  value: string
+  culprit: string
+}
 
 /**
  * One emergency, as closed in the Uptime canvas (frame 4). On top: what, since
@@ -55,9 +68,13 @@ export default async function EmergencyPage({
       : describeFailure(r, (key, values) => tu(`failure.${key}`, values))
   const lasted = duration(locale, (incident.resolved_at ?? now).getTime() - +incident.started_at)
   const mine = incident.acknowledged_by === user.id
-  const kind = ['monitor_down', 'heartbeat_missed', 'cert_expiring'].includes(incident.kind)
-    ? (incident.kind as 'monitor_down' | 'heartbeat_missed' | 'cert_expiring')
-    : 'other'
+  const kind = KINDS.includes(incident.kind as Kind) ? (incident.kind as Kind) : 'other'
+  const spike = {
+    count: typeof data.count === 'number' ? data.count : 0,
+    minutes: typeof data.minutes === 'number' ? data.minutes : 15,
+    normal: Math.round(typeof data.normal === 'number' ? data.normal : 0),
+    issues: Array.isArray(data.issues) ? (data.issues as SpikeIssue[]) : [],
+  }
   const title = t(open ? `titles.${kind}` : `titlesOver.${kind}`, {
     product: incident.project_name,
     name,
@@ -75,7 +92,13 @@ export default async function EmergencyPage({
         })
       : kind === 'heartbeat_missed'
         ? t('summary.heartbeat', { reason: reason ? readable(reason) : '' })
-        : t('summary.other')
+        : kind === 'error_spike'
+          ? t(spike.normal > 0 ? 'summary.spike' : 'summary.spikeNone', {
+              count: spike.count,
+              minutes: spike.minutes,
+              normal: spike.normal,
+            })
+          : t('summary.other')
 
   return (
     <div className="flex flex-col gap-6">
@@ -100,7 +123,9 @@ export default async function EmergencyPage({
                   {t(`level.${incident.level}`)} · {open ? t('ongoing') : t('over')}
                 </Badge>
                 <Badge variant="secondary">
-                  {t(`area.${kind === 'other' ? 'other' : 'uptime'}`)}
+                  {t(
+                    `area.${kind === 'other' ? 'other' : kind === 'error_spike' ? 'errors' : 'uptime'}`,
+                  )}
                 </Badge>
                 <span className="text-muted-foreground">
                   {t('started', { time: time.format(incident.started_at), duration: lasted })}
@@ -190,6 +215,43 @@ export default async function EmergencyPage({
                 noChecks: emergency.complete ? t('chart.noChecks') : t('chart.unavailable'),
               }}
             />
+          )}
+
+          {kind === 'error_spike' && spike.issues.length > 0 && (
+            <section
+              aria-labelledby="spike-title"
+              className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4"
+            >
+              <h2 id="spike-title" className="font-semibold">
+                {t('spike.title')}
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {spike.issues.map((issue) => (
+                  <li key={issue.id} className="flex flex-col gap-0.5 text-sm">
+                    <Link
+                      href={`/p/${slug}/errors/${issue.id}`}
+                      className="font-medium break-words text-brand underline underline-offset-4"
+                    >
+                      {issueTitle(issue)}
+                    </Link>
+                    <span className="text-muted-foreground">
+                      {[
+                        issue.culprit,
+                        t('spike.events', { count: issue.count, minutes: spike.minutes }),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href={`/p/${slug}/errors`}
+                className="text-sm text-brand underline underline-offset-4"
+              >
+                {t('spike.all', { product: incident.project_name })}
+              </Link>
+            </section>
           )}
 
           <section
@@ -302,7 +364,7 @@ export default async function EmergencyPage({
               className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4"
             >
               <h2 id="same-title" className="font-semibold">
-                {t('sameTime.title')}
+                {t(kind === 'error_spike' ? 'sameTime.titleOther' : 'sameTime.title')}
               </h2>
               {emergency.sameTime.some((s) => s.sameIp) && (
                 <p className="text-sm text-muted-foreground">
@@ -315,7 +377,10 @@ export default async function EmergencyPage({
                   name: `${s.product} · ${s.name}`,
                   who: s.takenBy ? t('sameTime.onIt', { name: s.takenBy }) : t('sameTime.nobody'),
                 }))}
-                labels={{ legend: t('sameTime.title'), submit: t('sameTime.submit') }}
+                labels={{
+                  legend: t(kind === 'error_spike' ? 'sameTime.titleOther' : 'sameTime.title'),
+                  submit: t('sameTime.submit'),
+                }}
               />
             </section>
           )}

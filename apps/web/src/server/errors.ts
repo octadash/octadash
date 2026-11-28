@@ -15,6 +15,7 @@ import {
   issueFacets,
   issueStats,
   listIssues,
+  listOpenIncidents,
   listOrgSources,
   listProjects,
   type Share,
@@ -32,6 +33,8 @@ export interface IssueRow extends IssueRecord {
   people: number
   /** Events per hour of the last 24 hours. */
   spark: number[]
+  /** Behind an open Error spike. */
+  spike: boolean
 }
 
 export interface ErrorsData {
@@ -52,6 +55,18 @@ export interface ErrorsData {
   complete: boolean
 }
 
+/** Issues named on an open Error spike of the organization. */
+export async function spikingIssues(orgId: string): Promise<Set<string>> {
+  const open = await listOpenIncidents(services().db, orgId)
+  const ids = new Set<string>()
+  for (const incident of open) {
+    if (incident.kind !== 'error_spike') continue
+    const issues = (incident.data as { issues?: { id?: unknown }[] } | null)?.issues ?? []
+    for (const issue of issues) if (typeof issue.id === 'string') ids.add(issue.id)
+  }
+  return ids
+}
+
 const EMPTY: ErrorTotals = { events: 0, issues: 0, people: 0 }
 
 /** Everything the Errors list shows, for every product (null), a group or one product. */
@@ -63,10 +78,11 @@ export async function loadErrors(
   now = new Date(),
 ): Promise<ErrorsData> {
   const { db, clickhouse } = services()
-  const [settings, allProjects, sources] = await Promise.all([
+  const [settings, allProjects, sources, spiking] = await Promise.all([
     getOrganizationSettings(db, orgId),
     listProjects(db, orgId),
     listOrgSources(db, orgId),
+    spikingIssues(orgId),
   ])
   const timeZone = settings.timeZone
   const period = trafficPeriod(state.period, now, timeZone)
@@ -111,6 +127,7 @@ export async function loadErrors(
       events: s?.events ?? 0,
       people: s?.people ?? 0,
       spark: sparks.get(issue.id)?.spark ?? Array(24).fill(0),
+      spike: spiking.has(issue.id),
     }
   })
   const sorted = sortIssues(rows, state.sort)
@@ -145,6 +162,8 @@ export interface IssueData {
   series: ErrorPoint[]
   facets: Record<IssueFacet, Share[]>
   timeZone: string
+  /** Behind an open Error spike. */
+  spike: boolean
   complete: boolean
 }
 
@@ -158,10 +177,11 @@ export async function loadIssue(
   const { db, clickhouse } = services()
   const issue = await getIssue(db, orgId, issueId)
   if (!issue) return null
-  const [settings, projects, sources] = await Promise.all([
+  const [settings, projects, sources, spiking] = await Promise.all([
     getOrganizationSettings(db, orgId),
     listProjects(db, orgId),
     listOrgSources(db, orgId),
+    spikingIssues(orgId),
   ])
   const product = projects.find((p) => p.id === issue.project_id)
   if (!product) return null
@@ -201,6 +221,7 @@ export async function loadIssue(
     series,
     facets,
     timeZone,
+    spike: spiking.has(issue.id),
     complete,
   }
 }

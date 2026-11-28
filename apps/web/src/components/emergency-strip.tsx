@@ -3,6 +3,7 @@
 import {
   ActivityIcon,
   ArrowRightIcon,
+  BugIcon,
   CheckIcon,
   ClockIcon,
   InfoIcon,
@@ -64,6 +65,7 @@ const KIND_ICON: Record<StripKind, typeof ActivityIcon> = {
   monitor_down: ActivityIcon,
   heartbeat_missed: ClockIcon,
   cert_expiring: ShieldAlertIcon,
+  error_spike: BugIcon,
   other: TriangleAlertIcon,
 }
 

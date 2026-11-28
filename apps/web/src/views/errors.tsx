@@ -411,6 +411,7 @@ export async function ErrorsView({
                           </Link>
                           {isNew && <Badge variant="brand">{t('badges.new')}</Badge>}
                           {regressed && <Badge variant="warn">{t('badges.regressed')}</Badge>}
+                          {issue.spike && <Badge variant="destructive">{t('spike')}</Badge>}
                         </div>
                         <p className="truncate text-xs text-muted-foreground">
                           {issue.culprit && <span className="font-mono">{issue.culprit}</span>}

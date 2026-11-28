@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createClickHouse } from './clickhouse/client'
 import {
   type ErrorRow,
+  errorRates,
   errorSeries,
   errorTotals,
   insertErrors,
@@ -18,6 +19,7 @@ import {
   getIssue,
   type IssueHit,
   listIssues,
+  recentErrorProducts,
   recordIssueHits,
   updateIssue,
 } from './errors'
@@ -149,6 +151,7 @@ describe.skipIf(!url)('error issues (needs DATABASE_URL)', () => {
     expect(counts.regressed).toBeGreaterThan(0)
     expect(await countNewIssues(db, org, [product], T0, later(1))).toBe(4)
     expect(await listIssues(db, org, { ...base, projectIds: [], tab: 'new' })).toEqual([])
+    expect(await recentErrorProducts(db, T0)).toContainEqual({ orgId: org, projectId: product })
   })
 })
 
@@ -156,11 +159,18 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
   const client = createClickHouse(chUrl ?? '')
   const project = '00000000-0000-4000-8000-0000000001e2'
   const issue = '00000000-0000-4000-8000-0000000001e3'
-  const row = (minutes: number, person: string, browser: string, n: number): ErrorRow => ({
+  const other = '00000000-0000-4000-8000-0000000001e4'
+  const row = (
+    minutes: number,
+    person: string,
+    browser: string,
+    n: number,
+    issueId = issue,
+  ): ErrorRow => ({
     org_id: org,
     project_id: project,
     source_id: '00000000-0000-0000-0000-000000000000',
-    issue_id: issue,
+    issue_id: issueId,
     event_id: n.toString(16).padStart(32, '0'),
     fingerprint: 'fp',
     timestamp: later(minutes).toISOString().replace('T', ' ').replace('Z', ''),
@@ -195,6 +205,10 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
         row(2, 'u1', 'Safari', 2),
         row(30, 'u2', 'Chrome', 3),
         row(90, '', 'Safari', 4),
+        // Another issue: once the day before at the same time, twice now.
+        row(31 - 1440, 'u3', 'Safari', 5, other),
+        row(25, 'u3', 'Safari', 6, other),
+        row(26, 'u3', 'Safari', 7, other),
         // A new token each run: the table drops a block it has already seen.
       ],
       crypto.randomUUID(),
@@ -207,10 +221,12 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
   const scope = { orgId: org, projectIds: [project], from: T0, to: later(120) }
 
   it('counts events, issues and people, and draws the series', async () => {
-    expect(await errorTotals(client, scope)).toEqual({ events: 4, issues: 1, people: 2 })
+    const one = { ...scope, from: later(-1), to: later(24) }
+    expect(await errorTotals(client, one)).toEqual({ events: 2, issues: 1, people: 1 })
+    expect(await errorTotals(client, scope)).toEqual({ events: 6, issues: 2, people: 3 })
     const series = await errorSeries(client, scope, 'hour')
     expect(series.map((p) => [p.events, p.people])).toEqual([
-      [3, 2],
+      [5, 3],
       [1, 0],
     ])
     expect(await issuePeople(client, issue, later(10))).toBe(1)
@@ -232,5 +248,20 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
     expect(newest?.tags).toEqual({ a: 'b' })
     const named = await issueEvent(client, org, issue, (1).toString(16).padStart(32, '0'))
     expect(named?.previous).toBeNull()
+  })
+
+  it('reads the error rate against the same time on the days before', async () => {
+    const products = [{ orgId: org, projectId: project }]
+    const [rate] = await errorRates(client, products, later(31), 15)
+    expect(rate).toMatchObject({
+      count: 3,
+      top: [
+        { issueId: other, count: 2 },
+        { issueId: issue, count: 1 },
+      ],
+    })
+    expect(rate?.normal).toBeCloseTo(1 / 7 / 4)
+    const [skipped] = await errorRates(client, products, later(31), 15, [other])
+    expect(skipped).toMatchObject({ count: 1, normal: 0, top: [{ issueId: issue, count: 1 }] })
   })
 })

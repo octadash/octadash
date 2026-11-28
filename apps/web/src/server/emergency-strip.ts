@@ -6,7 +6,7 @@ import { describeFailure } from '@/lib/monitors'
 import { statusCodeOf } from '@/lib/uptime-board'
 import { services } from './context'
 
-const KINDS: StripKind[] = ['monitor_down', 'heartbeat_missed', 'cert_expiring']
+const KINDS: StripKind[] = ['monitor_down', 'heartbeat_missed', 'cert_expiring', 'error_spike']
 
 /**
  * Every open emergency of the organization, whatever the product picker
@@ -49,7 +49,15 @@ export async function loadStrip(
       const name = typeof data.name === 'string' ? data.name : ''
       const reason = typeof data.reason === 'string' && data.reason ? readable(data.reason) : ''
       const days = typeof data.days === 'number' ? data.days : 0
-      const values = { product: incident.project_name, name, days, reason }
+      const values = {
+        product: incident.project_name,
+        name,
+        days,
+        reason,
+        count: typeof data.count === 'number' ? data.count : 0,
+        minutes: typeof data.minutes === 'number' ? data.minutes : 15,
+        normal: Math.round(typeof data.normal === 'number' ? data.normal : 0),
+      }
       const checked = data.checked as { controls?: { target: string; ms: number | null }[] }
       return {
         id: incident.id,
@@ -87,10 +95,17 @@ export async function loadStrip(
         href: `/p/${incident.project_slug}/emergencies/${incident.id}`,
         title: closer
           ? t('closedBy', { product: incident.project_name, name: closer })
-          : t(incident.kind === 'cert_expiring' ? 'renewed' : 'back', {
-              product: incident.project_name,
-              name: typeof data.name === 'string' ? data.name : '',
-            }),
+          : t(
+              incident.kind === 'cert_expiring'
+                ? 'renewed'
+                : incident.kind === 'error_spike'
+                  ? 'spikeOver'
+                  : 'back',
+              {
+                product: incident.project_name,
+                name: typeof data.name === 'string' ? data.name : '',
+              },
+            ),
         lastedMs: resolvedAt - incident.started_at.getTime(),
         taker: nameOf(incident.acknowledged_by),
         resolvedAt,

@@ -354,3 +354,91 @@ export async function issueEvent(
     previous: before?.event_id ?? null,
   }
 }
+
+/** How many errors a product had in the last window, against its normal for this hour. */
+export interface ErrorRate {
+  orgId: string
+  projectId: string
+  /** Events in the window that ends now. */
+  count: number
+  /**
+   * Events in a window of the same length at this time of day, averaged over
+   * the last 7 days (the hour around now on each day, scaled to the window).
+   */
+  normal: number
+  /** The issues with the most events in the window, most first. */
+  top: { issueId: string; count: number }[]
+}
+
+const DAY_S = 86_400
+const HALF_HOUR_S = 1_800
+
+/**
+ * The error rate of each product, for the Error spike rule. Events of the
+ * issues in `skip` (ignored ones) never count. Reads only the products asked
+ * for, by the table's sort key.
+ */
+export async function errorRates(
+  client: ClickHouseClient,
+  products: { orgId: string; projectId: string }[],
+  at: Date,
+  windowMinutes: number,
+  skip: string[] = [],
+): Promise<ErrorRate[]> {
+  if (products.length === 0) return []
+  const params = {
+    orgs: [...new Set(products.map((p) => p.orgId))],
+    projects: [...new Set(products.map((p) => p.projectId))],
+    skip,
+    at: toClickHouseTime(at),
+    from: toClickHouseTime(new Date(at.getTime() - windowMinutes * 60_000)),
+    since: toClickHouseTime(new Date(at.getTime() - (7 * DAY_S + HALF_HOUR_S) * 1000)),
+    until: toClickHouseTime(new Date(at.getTime() - (DAY_S - HALF_HOUR_S) * 1000)),
+  }
+  const where = `org_id IN {orgs:Array(UUID)} AND project_id IN {projects:Array(UUID)}
+    AND NOT has({skip:Array(UUID)}, issue_id)`
+  // Seconds from the event to the same time of day as now, on its own day.
+  const offset = `(toUnixTimestamp({at:DateTime64(3, 'UTC')}) - toUnixTimestamp(timestamp)) % ${DAY_S}`
+  const before = `timestamp >= {since:DateTime64(3, 'UTC')} AND timestamp < {until:DateTime64(3, 'UTC')}
+    AND (${offset} <= ${HALF_HOUR_S} OR ${offset} >= ${DAY_S - HALF_HOUR_S})`
+  const [rates, top] = await Promise.all([
+    client
+      .query({
+        query: `SELECT toString(org_id) AS org, toString(project_id) AS project,
+            countIf(timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp <= {at:DateTime64(3, 'UTC')}) AS count,
+            countIf(${before}) AS before
+          FROM errors
+          WHERE ${where} AND timestamp >= {since:DateTime64(3, 'UTC')}
+          GROUP BY org_id, project_id`,
+        query_params: params,
+        format: 'JSONEachRow',
+      })
+      .then((r) => r.json<{ org: string; project: string; count: string; before: string }>()),
+    client
+      .query({
+        query: `SELECT toString(project_id) AS project, toString(issue_id) AS issue, count() AS count
+          FROM errors
+          WHERE ${where} AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp <= {at:DateTime64(3, 'UTC')}
+          GROUP BY project_id, issue_id
+          ORDER BY count DESC
+          LIMIT 3 BY project_id`,
+        query_params: params,
+        format: 'JSONEachRow',
+      })
+      .then((r) => r.json<{ project: string; issue: string; count: string }>()),
+  ])
+  return products.map((p) => {
+    const row = rates.find((r) => r.org === p.orgId && r.project === p.projectId)
+    // 7 hours of history (one per day) scaled to the window.
+    const normal = (Number(row?.before ?? 0) / 7) * (windowMinutes / 60)
+    return {
+      orgId: p.orgId,
+      projectId: p.projectId,
+      count: Number(row?.count ?? 0),
+      normal,
+      top: top
+        .filter((t) => t.project === p.projectId)
+        .map((t) => ({ issueId: t.issue, count: Number(t.count) })),
+    }
+  })
+}

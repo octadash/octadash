@@ -289,7 +289,8 @@
         "monitor_down": "“{name}” fora do ar",
         "heartbeat_missed": "Heartbeat “{name}” não chegou",
         "cert_expiring": "Certificado de “{name}” perto de vencer",
-        "other": "Emergência"
+        "other": "Emergência",
+        "error_spike": "Pico de erros"
       },
       "more": "{count, plural, one {Mais # na página do produto} other {Mais # na página do produto}}"
     }
@@ -578,7 +579,11 @@
       "minutes": "Esperar",
       "minutesUnit": "min antes de avisar",
       "days": "Avisar com",
-      "daysUnit": "dias de antecedência"
+      "daysUnit": "dias de antecedência",
+      "times": "Vezes o normal",
+      "timesUnit": "× o normal",
+      "events": "Pelo menos",
+      "eventsUnit": "erros em 15 min"
     },
     "allChannels": "Todos os canais",
     "noChannels": "Nenhum canal ainda. Sem canal, a emergência aparece só no painel.",
@@ -601,6 +606,11 @@
         "title": "Certificado vencendo",
         "body": "O certificado HTTPS de um monitor vence em breve.",
         "info": "O Octadash lê o certificado em toda checagem. A maioria renova sozinha uns 30 dias antes de vencer; se um continua velho tão perto do fim, a renovação falhou."
+      },
+      "error_spike": {
+        "title": "Pico de erros",
+        "body": "Os erros de um produto nos últimos 15 minutos chegam a um múltiplo do normal para o horário, com um mínimo para um produto quieto não disparar com 3 erros.",
+        "info": "O normal é a mesma hora em cada um dos últimos 7 dias. Erros de issues ignoradas nunca contam. Fecha sozinha quando os últimos 15 minutos voltam para baixo da regra. Um produto sem histórico dispara só pelo mínimo."
       }
     },
     "legend": "Níveis",
@@ -965,21 +975,25 @@
     "over": "encerrada",
     "area": {
       "uptime": "No ar",
-      "other": "Octadash"
+      "other": "Octadash",
+      "errors": "Erros"
     },
     "started": "Começou às {time} · {duration}",
     "titles": {
       "monitor_down": "{product} · {name} fora do ar",
       "heartbeat_missed": "{product} · {name} não rodou",
       "cert_expiring": "{product} · certificado vence em {days} dias",
-      "other": "{product} · {name}"
+      "other": "{product} · {name}",
+      "error_spike": "{product} · pico de erros"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
       "down": "{reason} {count, plural, one {na última checagem} other {nas últimas # checagens}}. Fecha sozinha quando uma checagem passar de novo.",
       "heartbeat": "{reason}. Fecha sozinha quando o job chamar de novo.",
       "other": "Fecha sozinha quando a checagem passar de novo.",
-      "closed": "Encerrada às {time}, depois de {duration}."
+      "closed": "Encerrada às {time}, depois de {duration}.",
+      "spike": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando o normal neste horário é cerca de {normal}. Fecha sozinha quando os erros voltarem para baixo da regra.",
+      "spikeNone": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando este horário normalmente não tem nenhum. Fecha sozinha quando os erros voltarem para baixo da regra."
     },
     "onIt": "{name} está cuidando · desde {time}",
     "nobody": "Ninguém cuidando ainda",
@@ -1052,7 +1066,8 @@
       "sameIp": "Mesmo IP ({ip}) que algumas delas. Podem ser o mesmo problema ou não; você decide. Cada emergência continua separada.",
       "onIt": "{name} cuidando",
       "nobody": "ninguém cuidando",
-      "submit": "Também estou cuidando destas"
+      "submit": "Também estou cuidando destas",
+      "titleOther": "Abertas ao mesmo tempo"
     },
     "last": {
       "title": "Última vez",
@@ -1065,7 +1080,13 @@
       "monitor_down": "{product} · {name} ficou fora do ar",
       "heartbeat_missed": "{product} · {name} não rodou",
       "cert_expiring": "{product} · certificado estava perto de vencer",
-      "other": "{product} · {name}"
+      "other": "{product} · {name}",
+      "error_spike": "{product} · pico de erros"
+    },
+    "spike": {
+      "title": "Issues por trás do pico",
+      "events": "{count, plural, one {# evento} other {# eventos}} em {minutes} min",
+      "all": "Ver todos os erros de {product}"
     }
   },
   "strip": {
@@ -1074,31 +1095,36 @@
       "monitor_down": "{product} está fora do ar",
       "heartbeat_missed": "{product}: “{name}” não rodou",
       "cert_expiring": "{product}: certificado vence em {days, plural, one {# dia} other {# dias}}",
-      "other": "{product}: {name}"
+      "other": "{product}: {name}",
+      "error_spike": "{product}: pico de erros"
     },
     "short": {
       "monitor_down": "{product} fora do ar",
       "heartbeat_missed": "{product} sem heartbeat",
       "cert_expiring": "{product} certificado vencendo",
-      "other": "{product} {name}"
+      "other": "{product} {name}",
+      "error_spike": "{product} pico de erros"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
       "heartbeat_missed": "“{name}”: {reason}",
       "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
-      "other": "{name}: {reason}"
+      "other": "{name}: {reason}",
+      "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” não responde",
       "heartbeat_missed": "“{name}” não chamou no horário",
       "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
-      "other": "{name}"
+      "other": "{name}",
+      "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min"
     },
     "kind": {
       "monitor_down": "Fora do ar",
       "heartbeat_missed": "Heartbeat perdido",
       "cert_expiring": "Certificado vencendo",
-      "other": "Emergência"
+      "other": "Emergência",
+      "error_spike": "Pico de erros"
     },
     "count": "{count, plural, one {# emergência} other {# emergências}}",
     "countProducts": "{count} emergências em {products} produtos",
@@ -1153,7 +1179,8 @@
       "empty": "Nada aqui. Mude o que a lista mostra acima.",
       "and": "{first} e {last}",
       "submitNone": "Estou cuidando destas"
-    }
+    },
+    "spikeOver": "{product}: erros voltaram ao normal"
   },
   "traffic": {
     "title": "Tráfego",
@@ -1769,6 +1796,7 @@
       "received": "Recebido",
       "previous": "← Evento anterior",
       "newest": "Evento mais recente"
-    }
+    },
+    "spike": "Pico"
   }
 }
