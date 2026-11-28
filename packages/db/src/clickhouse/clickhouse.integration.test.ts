@@ -5,8 +5,11 @@ import { insertEvents, toClickHouseTime } from './events'
 import { migrateClickHouse } from './migrate'
 import {
   fillSeries,
+  lastPageview,
   onlineNow,
   trafficBreakdown,
+  trafficDistinct,
+  trafficReturning,
   trafficSeries,
   trafficSeriesByProduct,
   trafficSummary,
@@ -209,6 +212,107 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     const minuteAfter = new Date(day.getTime() + 3 * 3_600_000 + 60_000)
     expect(await onlineNow(client, { orgId: org, projectIds: null }, minuteAfter)).toBe(1)
     expect(await onlineNow(client, { orgId: org, projectIds: [a] }, minuteAfter)).toBe(0)
+  })
+
+  it('filters, groups by channel and entry page, and counts returning visitors', async () => {
+    const shop = crypto.randomUUID()
+    const persistent = crypto.randomUUID()
+    const daily = crypto.randomUUID()
+    const day = new Date('2026-10-10T00:00:00Z')
+    const at = (hours: number) => toClickHouseTime(new Date(day.getTime() + hours * 3_600_000))
+    const view = (hours: number, extra: Record<string, unknown>) => ({
+      org_id: org,
+      project_id: shop,
+      source_id: persistent,
+      uuid: crypto.randomUUID(),
+      received_at: at(0),
+      timestamp: at(hours),
+      distinct_id: '',
+      session_id: '',
+      properties: '{"$screen_width":390}',
+      event: '$pageview',
+      is_bot: 0,
+      ...extra,
+    })
+    await insertEvents(client, [
+      // p1 came the day before the period: returning.
+      view(-20, { visitor_id: 'p1', path: '/' }),
+      view(2, { visitor_id: 'p1', path: '/blog', referrer_host: 'www.google.com' }),
+      view(2.5, { visitor_id: 'p1', path: '/pricing' }),
+      view(3, { visitor_id: 'p2', path: '/', referrer_host: 'chatgpt.com' }),
+      view(4, {
+        visitor_id: 'p3',
+        path: '/pricing',
+        utm_source: 'newsletter',
+        utm_medium: 'email',
+      }),
+      view(5, { visitor_id: 'p4', path: '/', referrer_host: 'l.instagram.com' }),
+      view(6, {
+        visitor_id: 'd1',
+        path: '/',
+        source_id: daily,
+        properties: '{"$screen_width":1600}',
+      }),
+    ])
+    const scope = {
+      orgId: org,
+      projectIds: [shop],
+      from: day,
+      to: new Date(day.getTime() + 86_400_000),
+    }
+    const channels = await trafficBreakdown(client, scope, 'channel')
+    expect(Object.fromEntries(channels.map((c) => [c.value, c.visitors]))).toEqual({
+      search: 1,
+      ai: 1,
+      email: 1,
+      social: 1,
+      direct: 1,
+    })
+    expect(
+      await trafficSummary(client, {
+        ...scope,
+        filters: [{ dimension: 'channel', value: 'search' }],
+      }),
+    ).toMatchObject({ pageviews: 2, visitors: 1 })
+
+    const entries = await trafficBreakdown(client, scope, 'entry')
+    expect(entries.map((e) => [e.value, e.visitors])).toEqual([
+      ['/', 3],
+      ['/blog', 1],
+      ['/pricing', 1],
+    ])
+    // Whoever entered on /blog: all their pages of that day.
+    expect(
+      await trafficSummary(client, { ...scope, filters: [{ dimension: 'entry', value: '/blog' }] }),
+    ).toMatchObject({ pageviews: 2, visitors: 1 })
+    expect(await trafficBreakdown(client, scope, 'page', { search: 'PRIC' })).toEqual([
+      { value: '/pricing', pageviews: 2, visitors: 2 },
+    ])
+    expect(await trafficBreakdown(client, scope, 'page', { limit: 1, offset: 1 })).toHaveLength(1)
+    const pages = await trafficBreakdown(client, { ...scope, projectIds: null }, 'page', {
+      byProduct: true,
+      search: '/blog',
+    })
+    expect(pages[0]).toMatchObject({ value: '/blog', product: shop })
+    expect(await trafficDistinct(client, scope, 'page')).toBe(3)
+    expect(
+      Object.fromEntries(
+        (await trafficBreakdown(client, scope, 'screen')).map((r) => [r.value, r.visitors]),
+      ),
+    ).toEqual({ phone: 4, desktop: 1 })
+
+    expect(await trafficReturning(client, scope, [persistent])).toEqual({
+      visitors: 4,
+      returning: 1,
+    })
+    expect(await trafficReturning(client, scope, [])).toBeNull()
+
+    const nextDay = new Date(day.getTime() + 86_400_000)
+    expect(await lastPageview(client, org, persistent, nextDay)).toEqual({
+      at: new Date(day.getTime() + 5 * 3_600_000),
+      path: '/',
+    })
+    expect(await lastPageview(client, org, crypto.randomUUID(), nextDay)).toBeNull()
   })
 
   it('cuts days at local midnight, daylight saving time included', async () => {

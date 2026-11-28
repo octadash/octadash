@@ -201,3 +201,14 @@ export async function rotateSourceKey(
     return key.public_key
   })
 }
+
+/** Every source of the organization that feeds Traffic, for the Traffic page of any scope. */
+export function listTrafficSources(db: Db, orgId: string) {
+  return db
+    .selectFrom('source')
+    .select(['id', 'project_id', 'name', 'platform', 'visitor_mode'])
+    .where('org_id', '=', orgId)
+    .where(sql<boolean>`'traffic' = any(areas)`)
+    .orderBy('created_at')
+    .execute()
+}

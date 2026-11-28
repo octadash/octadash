@@ -28,9 +28,12 @@ export function CodeTabs({
   if (!first) return null
   return (
     <Tabs defaultValue={first.id} className="gap-2">
-      <TabsList aria-label={label} className="h-auto flex-wrap">
+      <TabsList
+        aria-label={label}
+        className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto"
+      >
         {tabs.map((tab) => (
-          <TabsTrigger key={tab.id} value={tab.id}>
+          <TabsTrigger key={tab.id} value={tab.id} className="h-8 flex-none px-2.5">
             {tab.label}
           </TabsTrigger>
         ))}

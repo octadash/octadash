@@ -21,7 +21,7 @@ export function CopyField({
   return (
     <div className={multiline ? 'flex flex-col items-start gap-2' : 'flex items-center gap-2'}>
       {multiline ? (
-        <p className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap select-all">
+        <p className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed whitespace-pre-wrap wrap-anywhere select-all">
           {value}
         </p>
       ) : (

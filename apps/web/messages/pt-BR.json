@@ -1152,5 +1152,232 @@
       "and": "{first} e {last}",
       "submitNone": "Estou cuidando destas"
     }
+  },
+  "traffic": {
+    "title": "Tráfego",
+    "intro": "Visitantes e de onde vêm, de todos os produtos. Sem cookies; bots são contados à parte.",
+    "introGroup": "Visitantes e de onde vêm, dos produtos de {group}. Sem cookies; bots são contados à parte.",
+    "introOne": "{product} · {count, plural, =0 {nenhuma origem envia visualizações ainda} one {# origem: {sources}} other {# origens: {sources}}}",
+    "online": "{count} online agora",
+    "periodLabel": "Período",
+    "periods": {
+      "today": "Hoje",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "periodNames": {
+      "today": "ontem até esta hora",
+      "24h": "as 24 horas anteriores",
+      "7d": "os 7 dias anteriores",
+      "30d": "os 30 dias anteriores"
+    },
+    "compared": "Comparado com {period}",
+    "bots": "{count, plural, one {# visita de bot deixada de fora} other {# visitas de bots deixadas de fora}}",
+    "filtersLabel": "Filtros",
+    "filterHint": "Clique em qualquer linha abaixo para filtrar a página toda por ela.",
+    "removeFilter": "Remover filtro {name}",
+    "clear": "Limpar",
+    "tiles": {
+      "label": "Totais. Escolha um para mostrar no gráfico.",
+      "visitors": "Visitantes",
+      "pageviews": "Visualizações",
+      "perVisitor": "Páginas por visitante",
+      "returning": "Voltaram"
+    },
+    "returningSome": "{count} de {total} origens contam",
+    "returningNone": "Não contado nestas origens",
+    "returningInfo": "Um visitante conta como quem voltou quando o navegador guarda um id aleatório, o que vem desligado por privacidade. Ligue “Contar visitantes que voltam” em uma origem para ver.",
+    "returningInfoLabel": "Sobre visitantes que voltam",
+    "change": "{change}% vs antes",
+    "noChange": "nada para comparar",
+    "chartOf": "{metric}",
+    "dimensions": {
+      "product": "Produto",
+      "channel": "Canal",
+      "source": "Origem",
+      "campaign": "Campanha",
+      "page": "Página",
+      "entry": "Página de entrada",
+      "country": "País",
+      "device": "Dispositivo",
+      "browser": "Navegador",
+      "os": "Sistema",
+      "screen": "Tamanho de tela"
+    },
+    "tabs": {
+      "channel": "Canais",
+      "source": "Origens",
+      "campaign": "Campanhas",
+      "page": "Mais vistas",
+      "entry": "De entrada",
+      "country": "Países",
+      "device": "Dispositivos",
+      "browser": "Navegadores",
+      "os": "Sistemas",
+      "screen": "Telas"
+    },
+    "cards": {
+      "sources": "De onde vêm",
+      "pages": "Páginas",
+      "places": "Países",
+      "devices": "Dispositivos"
+    },
+    "products": "Produtos",
+    "productsFoot": "{shown} de {total} produtos",
+    "productsWithout": "{count, plural, one {# não usa Tráfego} other {# não usam Tráfego}}",
+    "visitors": "Visitantes",
+    "pageviews": "Visualizações",
+    "share": "{share}%",
+    "values": {
+      "direct": "Direto / nenhuma",
+      "none": "(nenhuma)",
+      "unknown": "Desconhecido",
+      "channel": {
+        "search": "Busca",
+        "social": "Redes sociais",
+        "ai": "Assistentes de IA",
+        "email": "E-mail",
+        "paid": "Pago",
+        "direct": "Direto",
+        "referral": "Outros sites"
+      },
+      "device": {
+        "mobile": "Celular",
+        "desktop": "Computador",
+        "tablet": "Tablet",
+        "bot": "Bot"
+      },
+      "screen": {
+        "phone": "Celular (menos de 576 px)",
+        "tablet": "Tablet (576 a 991 px)",
+        "laptop": "Notebook (992 a 1439 px)",
+        "desktop": "Monitor (1440 px ou mais)"
+      }
+    },
+    "count": {
+      "product": "{count, plural, one {# produto} other {# produtos}}",
+      "channel": "{count, plural, one {# canal} other {# canais}}",
+      "source": "{count, plural, one {# origem} other {# origens}}",
+      "campaign": "{count, plural, one {# campanha} other {# campanhas}}",
+      "page": "{count, plural, one {# página} other {# páginas}}",
+      "entry": "{count, plural, one {# página de entrada} other {# páginas de entrada}}",
+      "country": "{count, plural, one {# país} other {# países}}",
+      "device": "{count, plural, one {# tipo de dispositivo} other {# tipos de dispositivo}}",
+      "browser": "{count, plural, one {# navegador} other {# navegadores}}",
+      "os": "{count, plural, one {# sistema} other {# sistemas}}",
+      "screen": "{count, plural, one {# tamanho de tela} other {# tamanhos de tela}}"
+    },
+    "empty": "Nenhuma visita neste período.",
+    "emptyFiltered": "Nenhuma visita com estes filtros.",
+    "details": "Detalhes",
+    "detailsTitle": "{dimension}",
+    "detailsIntro": "Mesmo período e filtros da página.",
+    "search": "Buscar {dimension}",
+    "loadMore": "Carregar mais",
+    "exportCsv": "Exportar CSV",
+    "showing": "{count, plural, one {# linha} other {# linhas}}",
+    "loading": "Carregando…",
+    "loadFailed": "Não foi possível carregar. Tente de novo.",
+    "close": "Fechar",
+    "filterBy": "Filtrar por {dimension}: {value}",
+    "events": {
+      "title": "Eventos do mesmo script",
+      "body": "O script também envia eventos como cadastro ou compra com <code>octadash.track()</code>. Eles aparecem em Uso do produto, onde ficam funis e retenção.",
+      "open": "Abrir Uso do produto"
+    },
+    "none": {
+      "title": "Tráfego ainda não está configurado",
+      "body": "Coloque o script do Octadash no site de um produto e os visitantes aparecem aqui, com de onde vieram e as páginas que leram.",
+      "all": "Escolha um produto para configurar",
+      "setUp": "Configurar Tráfego"
+    },
+    "setUpLink": "Origens e configuração",
+    "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu.",
+    "chart": {
+      "current": "Este período",
+      "previous": "Período anterior",
+      "emergency": "Emergência",
+      "asTable": "Mostrar como tabela",
+      "time": "Hora"
+    }
+  },
+  "trafficSetup": {
+    "title": "Configurar Tráfego",
+    "intro": "Visitantes, páginas, de onde vêm e o país, com um script pequeno. Sem cookies e, por padrão, sem banner de consentimento.",
+    "sources": "Origens",
+    "sourcesHint": "Este produto já tem uma origem. Use-a, e a mesma chave passa a enviar visualizações também; ou adicione uma nova abaixo.",
+    "platforms": {
+      "html": "HTML",
+      "nextjs": "Next.js",
+      "react": "React / Vite",
+      "wordpress": "WordPress",
+      "gtm": "Google Tag Manager",
+      "other": "Outro"
+    },
+    "status": {
+      "receiving": "envia visualizações · última {time}",
+      "waiting": "para Tráfego · esperando a primeira visualização",
+      "other": "envia {areas} · ainda não envia visualizações",
+      "nothing": "adicionada · nada recebido ainda"
+    },
+    "areaNames": {
+      "errors": "erros",
+      "usage": "eventos",
+      "logs": "logs",
+      "traffic": "visualizações",
+      "money": "pagamentos",
+      "costs": "custos",
+      "uptime": "checagens"
+    },
+    "useForTraffic": "Usar para Tráfego",
+    "show": "Ver código",
+    "addSource": "Adicionar origem",
+    "addAnother": "Adicionar outra origem",
+    "name": "Nome",
+    "namePlaceholder": "Landing pages",
+    "nameHint": "Para você reconhecer depois.",
+    "platform": "Onde roda?",
+    "create": "Adicionar origem",
+    "key": "Chave da origem",
+    "keyHint": "Já está no código abaixo. Pode aparecer em páginas públicas.",
+    "step1": {
+      "html": "Cole no <head> de todas as páginas",
+      "nextjs": "Adicione ao layout raiz",
+      "react": "Cole no <head> do index.html",
+      "wordpress": "Adicione ao functions.php do tema",
+      "gtm": "Crie uma tag de HTML personalizado que dispara em Todas as páginas",
+      "other": "Cole no <head> de todas as páginas"
+    },
+    "step1Note": "Menos de 2,5 KB. Acompanha a navegação no navegador (apps de página única). Visitas de localhost são ignoradas.",
+    "codeLabel": "Plataforma",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "step2": "Opções",
+    "returning": "Contar visitantes que voltam",
+    "returningBody": "Desligado: cada visitante conta uma vez por dia, nada fica guardado no navegador. Ligado: um id aleatório fica no navegador, e você vê quem voltou. Adiciona data-visitor=\"persistent\" ao código.",
+    "returningInfo": "Desligado é o padrão privado: sem cookie, nada guardado, a mesma pessoa em dois dias conta duas vezes. Ligado guarda um id aleatório no navegador (localStorage). Ele não identifica ninguém pelo nome, mas leis de privacidade como LGPD e GDPR podem pedir o consentimento dos visitantes antes de guardar. Você pode ligar em uma origem e deixar as outras desligadas.",
+    "returningInfoLabel": "Sobre contar visitantes que voltam",
+    "local": "Contar visitas de localhost",
+    "localBody": "Para testar na sua máquina. Adiciona data-local.",
+    "readOnly": "Só donos e administradores mudam estas opções.",
+    "step3": "Abra seu site para conferir",
+    "waitingBody": "Esperando a primeira visualização. Abra qualquer página do site em outra aba; ela aparece aqui em segundos.",
+    "arrived": "As visualizações estão chegando. A última foi {path}, {time}.",
+    "openTraffic": "Abrir Tráfego",
+    "back": "Voltar para {name}",
+    "wontUse": "Não vou usar Tráfego neste produto",
+    "example": "Como vai ficar",
+    "exampleBadge": "Exemplo",
+    "exampleVisitors": "Visitantes",
+    "examplePageviews": "Visualizações",
+    "private": "Privado por padrão",
+    "privateItems": [
+      "Sem cookies e nada guardado no navegador.",
+      "O IP serve para achar o país e depois é descartado.",
+      "Um visitante é um hash que muda todo dia.",
+      "Bots são reconhecidos e contados à parte."
+    ],
+    "noSource": "Ainda não há origem para Tráfego. Adicione uma para ver o código."
   }
 }

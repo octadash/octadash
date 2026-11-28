@@ -1152,5 +1152,232 @@
       "and": "{first} and {last}",
       "submitNone": "I'm on these"
     }
+  },
+  "traffic": {
+    "title": "Traffic",
+    "intro": "Visitors and where they come from, for every product. No cookies; bots are counted apart.",
+    "introGroup": "Visitors and where they come from, for the products of {group}. No cookies; bots are counted apart.",
+    "introOne": "{product} · {count, plural, =0 {no source sends page views yet} one {# source: {sources}} other {# sources: {sources}}}",
+    "online": "{count} online now",
+    "periodLabel": "Period",
+    "periods": {
+      "today": "Today",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "periodNames": {
+      "today": "today",
+      "24h": "the 24 hours before",
+      "7d": "the 7 days before",
+      "30d": "the 30 days before"
+    },
+    "compared": "Compared with {period}",
+    "bots": "{count, plural, one {# bot visit} other {# bot visits}} left out",
+    "filtersLabel": "Filters",
+    "filterHint": "Click any row below to filter the whole page by it.",
+    "removeFilter": "Remove filter {name}",
+    "clear": "Clear",
+    "tiles": {
+      "label": "Totals. Choose one to show it on the chart.",
+      "visitors": "Visitors",
+      "pageviews": "Pageviews",
+      "perVisitor": "Pages per visitor",
+      "returning": "Returning"
+    },
+    "returningSome": "{count} of {total} sources count it",
+    "returningNone": "Not counted on these sources",
+    "returningInfo": "A visitor counts as returning when their browser keeps a random id, which is off by default for privacy. Turn on “Count returning visitors” on a source to see it.",
+    "returningInfoLabel": "About returning visitors",
+    "change": "{change}% vs before",
+    "noChange": "nothing to compare",
+    "chartOf": "{metric}",
+    "dimensions": {
+      "product": "Product",
+      "channel": "Channel",
+      "source": "Source",
+      "campaign": "Campaign",
+      "page": "Page",
+      "entry": "Entry page",
+      "country": "Country",
+      "device": "Device",
+      "browser": "Browser",
+      "os": "System",
+      "screen": "Screen size"
+    },
+    "tabs": {
+      "channel": "Channels",
+      "source": "Sources",
+      "campaign": "Campaigns",
+      "page": "Top pages",
+      "entry": "Entry pages",
+      "country": "Countries",
+      "device": "Devices",
+      "browser": "Browsers",
+      "os": "Systems",
+      "screen": "Screen sizes"
+    },
+    "cards": {
+      "sources": "Where they come from",
+      "pages": "Pages",
+      "places": "Countries",
+      "devices": "Devices"
+    },
+    "products": "Products",
+    "productsFoot": "{shown} of {total} products",
+    "productsWithout": "{count, plural, one {# doesn't use Traffic} other {# don't use Traffic}}",
+    "visitors": "Visitors",
+    "pageviews": "Pageviews",
+    "share": "{share}%",
+    "values": {
+      "direct": "Direct / none",
+      "none": "(none)",
+      "unknown": "Unknown",
+      "channel": {
+        "search": "Search",
+        "social": "Social",
+        "ai": "AI assistants",
+        "email": "Email",
+        "paid": "Paid",
+        "direct": "Direct",
+        "referral": "Other sites"
+      },
+      "device": {
+        "mobile": "Mobile",
+        "desktop": "Desktop",
+        "tablet": "Tablet",
+        "bot": "Bot"
+      },
+      "screen": {
+        "phone": "Phone (under 576 px)",
+        "tablet": "Tablet (576 to 991 px)",
+        "laptop": "Laptop (992 to 1439 px)",
+        "desktop": "Desktop (1440 px and up)"
+      }
+    },
+    "count": {
+      "product": "{count, plural, one {# product} other {# products}}",
+      "channel": "{count, plural, one {# channel} other {# channels}}",
+      "source": "{count, plural, one {# source} other {# sources}}",
+      "campaign": "{count, plural, one {# campaign} other {# campaigns}}",
+      "page": "{count, plural, one {# page} other {# pages}}",
+      "entry": "{count, plural, one {# entry page} other {# entry pages}}",
+      "country": "{count, plural, one {# country} other {# countries}}",
+      "device": "{count, plural, one {# device type} other {# device types}}",
+      "browser": "{count, plural, one {# browser} other {# browsers}}",
+      "os": "{count, plural, one {# system} other {# systems}}",
+      "screen": "{count, plural, one {# screen size} other {# screen sizes}}"
+    },
+    "empty": "No visits in this period.",
+    "emptyFiltered": "No visits match these filters.",
+    "details": "Details",
+    "detailsTitle": "{dimension}",
+    "detailsIntro": "Same period and filters as the page.",
+    "search": "Search {dimension}",
+    "loadMore": "Load more",
+    "exportCsv": "Export CSV",
+    "showing": "Showing {count, plural, one {# row} other {# rows}}",
+    "loading": "Loading…",
+    "loadFailed": "Could not load. Try again.",
+    "close": "Close",
+    "filterBy": "Filter by {dimension}: {value}",
+    "events": {
+      "title": "Events from the same script",
+      "body": "The script also sends events like sign-up or purchase with <code>octadash.track()</code>. They show in Product usage, where funnels and retention live.",
+      "open": "Open Product usage"
+    },
+    "none": {
+      "title": "Traffic is not set up yet",
+      "body": "Add the Octadash script to a product's site and its visitors show here, with where they came from and the pages they read.",
+      "all": "Choose a product to set it up",
+      "setUp": "Set up Traffic"
+    },
+    "setUpLink": "Sources and setup",
+    "incomplete": "Some numbers are missing because the events database did not answer.",
+    "chart": {
+      "current": "This period",
+      "previous": "Previous period",
+      "emergency": "Emergency",
+      "asTable": "Show as a table",
+      "time": "Time"
+    }
+  },
+  "trafficSetup": {
+    "title": "Set up Traffic",
+    "intro": "Visitors, pages, where they come from and their country, from a small script. No cookies, no consent banner needed by default.",
+    "sources": "Sources",
+    "sourcesHint": "This product already has a source. Use it, and the same key also sends page views; or add a new one below.",
+    "platforms": {
+      "html": "HTML",
+      "nextjs": "Next.js",
+      "react": "React / Vite",
+      "wordpress": "WordPress",
+      "gtm": "Google Tag Manager",
+      "other": "Other"
+    },
+    "status": {
+      "receiving": "sends page views · last {time}",
+      "waiting": "for Traffic · waiting for the first page view",
+      "other": "sends {areas} · not page views yet",
+      "nothing": "added · nothing received yet"
+    },
+    "areaNames": {
+      "errors": "errors",
+      "usage": "events",
+      "logs": "logs",
+      "traffic": "page views",
+      "money": "payments",
+      "costs": "costs",
+      "uptime": "checks"
+    },
+    "useForTraffic": "Use for Traffic",
+    "show": "Show code",
+    "addSource": "Add source",
+    "addAnother": "Add another source",
+    "name": "Name",
+    "namePlaceholder": "Landing pages",
+    "nameHint": "So you recognize it later.",
+    "platform": "Where does it run?",
+    "create": "Add source",
+    "key": "Source key",
+    "keyHint": "Already in the code below. Safe to show in public pages.",
+    "step1": {
+      "html": "Paste in the <head> of every page",
+      "nextjs": "Add to the root layout",
+      "react": "Paste in the <head> of index.html",
+      "wordpress": "Add to your theme's functions.php",
+      "gtm": "Add a Custom HTML tag that fires on All Pages",
+      "other": "Paste in the <head> of every page"
+    },
+    "step1Note": "Under 2.5 KB. Follows client-side navigation (single-page apps). Visits from localhost are skipped.",
+    "codeLabel": "Platform",
+    "copy": "Copy",
+    "copied": "Copied",
+    "step2": "Options",
+    "returning": "Count returning visitors",
+    "returningBody": "Off: a visitor is counted once per day, nothing is stored in the browser. On: a random id stays in the browser, so you see who came back. Adds data-visitor=\"persistent\" to the code.",
+    "returningInfo": "Off is the private default: no cookie, nothing stored, the same person on two days counts twice. On stores a random id in the browser (localStorage). It identifies no one by name, but privacy laws such as GDPR and LGPD may ask for your visitors' consent before storing it. You can turn it on for one source and leave the others off.",
+    "returningInfoLabel": "About counting returning visitors",
+    "local": "Count visits from localhost",
+    "localBody": "For testing on your machine. Adds data-local.",
+    "readOnly": "Only owners and admins change these options.",
+    "step3": "Open your site to check",
+    "waitingBody": "Waiting for the first page view. Open any page of the site in another tab; it shows here in seconds.",
+    "arrived": "Page views are arriving. The last one was {path}, {time}.",
+    "openTraffic": "Open Traffic",
+    "back": "Back to {name}",
+    "wontUse": "I won't use Traffic in this product",
+    "example": "What it will look like",
+    "exampleBadge": "Example",
+    "exampleVisitors": "Visitors",
+    "examplePageviews": "Pageviews",
+    "private": "Private by default",
+    "privateItems": [
+      "No cookies and nothing stored in the browser.",
+      "The IP is used to find the country and then thrown away.",
+      "A visitor is a hash that changes every day.",
+      "Bots are recognized and counted apart."
+    ],
+    "noSource": "No source for Traffic yet. Add one to get its code."
   }
 }
