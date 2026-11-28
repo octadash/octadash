@@ -3,14 +3,24 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { parsePeriod } from '@/lib/period'
 import { services } from '@/server/context'
+import { loadOverview } from '@/server/overview'
 import { requireOrg } from '@/server/session'
-import { ProductsOverview } from '@/views/products-overview'
+import { OverviewView } from '@/views/overview'
 
 /** Overview of every product. */
-export default async function AllPage() {
+export default async function AllPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string | string[] }>
+}) {
   const { org } = await requireOrg()
-  const [projects, t] = await Promise.all([listProjects(services().db, org.id), getTranslations()])
+  const [projects, t, { period }] = await Promise.all([
+    listProjects(services().db, org.id),
+    getTranslations(),
+    searchParams,
+  ])
 
   if (projects.length === 0) {
     return (
@@ -30,11 +40,6 @@ export default async function AllPage() {
     )
   }
 
-  return (
-    <ProductsOverview
-      title={t('areas.overview.name')}
-      subtitle={t('overview.count', { count: projects.length })}
-      projects={projects}
-    />
-  )
+  const overview = await loadOverview(org.id, projects, parsePeriod(period))
+  return <OverviewView title={t('areas.overview.name')} base="/all" overview={overview} />
 }
