@@ -57,6 +57,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             overview: t('areas.overview.name'),
             productSettings: t('nav.productSettings'),
             groupSettings: t('nav.groupSettings'),
+            octadashSettings: t('nav.octadashSettings'),
             areas: areaLabels,
           }}
           version={{

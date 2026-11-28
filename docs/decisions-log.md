@@ -570,3 +570,12 @@ The maintainer reviewed the night's decisions that change the product or its ris
   Agent Skills format (a folder with `SKILL.md`) installs in Claude Code,
   Codex, Cursor and others with `npx skills add octadash/skills`, and the same
   repository is a Claude Code plugin marketplace. MIT, like `@octadash/node`.
+
+## Octadash settings back in the menu (2026-11-28)
+
+- **Three settings, each with its own place in the sidebar** (corrected by the
+  owner). "Octadash settings" sits at the bottom of the menu at all times. With
+  a product or a group chosen, a line and "Product settings" or "Group
+  settings" follow the areas. All products shows only the bottom one. The
+  account menu keeps its shortcut too. Replaces the entry above that moved
+  Octadash's own settings to the account menu only.

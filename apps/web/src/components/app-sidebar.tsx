@@ -1,18 +1,21 @@
 'use client'
 
-import { ArrowUpCircleIcon, SlidersVerticalIcon } from 'lucide-react'
+import { ArrowUpCircleIcon, SettingsIcon, SlidersVerticalIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AREA_ITEMS, OverviewIcon, scopeOf } from '@/lib/areas'
 import { cn } from '@/lib/utils'
 import { Logo } from './logo'
+import { Separator } from './ui/separator'
 
 export interface SidebarLabels {
   nav: string
   overview: string
-  /** "Product settings" and "Group settings": the item follows the picker. */
+  /** "Product settings" and "Group settings": below the areas, follows the picker. */
   productSettings: string
   groupSettings: string
+  /** "Octadash settings": always at the bottom of the menu. */
+  octadashSettings: string
   areas: Record<(typeof AREA_ITEMS)[number]['id'], string>
 }
 
@@ -39,8 +42,8 @@ export function AppSidebar({
 }) {
   const pathname = usePathname()
   const scope = scopeOf(pathname)
-  // Settings follow the picker: the product's, the group's, none for every
-  // product. Octadash's own settings are in the account menu.
+  // Three settings: Octadash's own, always at the bottom; the product's or the
+  // group's below the areas, following the picker (none for every product).
   const settings =
     scope.kind === 'all'
       ? null
@@ -59,7 +62,7 @@ export function AppSidebar({
   ]
 
   return (
-    <aside className="border-b border-border bg-card md:sticky md:top-0 md:flex md:h-dvh md:w-56 md:shrink-0 md:flex-col md:border-r md:border-b-0">
+    <aside className="border-b border-border bg-card md:sticky md:top-0 md:flex md:h-dvh md:w-68 md:shrink-0 md:flex-col md:border-r md:border-b-0">
       <Link href="/all" className="hidden items-center gap-2.5 px-5 pt-5 pb-4 md:flex">
         <Logo size={26} />
         <span className="flex min-w-0 flex-col">
@@ -84,6 +87,18 @@ export function AppSidebar({
             active={item.exact ? pathname === item.href : isWithin(pathname, item.href)}
           />
         ))}
+        {settings && (
+          <>
+            <Separator orientation="vertical" className="mx-1 h-6 self-center md:hidden" />
+            <Separator className="my-2 hidden md:block" />
+            <SidebarLink
+              href={settings.href}
+              label={settings.label}
+              icon={SlidersVerticalIcon}
+              active={isWithin(pathname, settings.href)}
+            />
+          </>
+        )}
         <div className="hidden md:block md:flex-1" />
         {update && (
           <a
@@ -99,17 +114,13 @@ export function AppSidebar({
             <span className="text-xs text-muted-foreground">{update.detail}</span>
           </a>
         )}
-        {settings ? (
-          <SidebarLink
-            href={settings.href}
-            label={settings.label}
-            icon={SlidersVerticalIcon}
-            active={isWithin(pathname, settings.href)}
-            className="md:mb-4"
-          />
-        ) : (
-          <div className="hidden md:mb-4 md:block" />
-        )}
+        <SidebarLink
+          href="/settings/general"
+          label={labels.octadashSettings}
+          icon={SettingsIcon}
+          active={isWithin(pathname, '/settings')}
+          className="md:mb-4"
+        />
       </nav>
     </aside>
   )
@@ -144,8 +155,8 @@ function SidebarLink({
         className,
       )}
     >
-      <Icon className={cn('size-4', active && 'text-brand')} />
-      {label}
+      <Icon className={cn('size-4 shrink-0', active && 'text-brand')} />
+      <span className="truncate">{label}</span>
     </Link>
   )
 }
