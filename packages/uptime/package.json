@@ -14,5 +14,8 @@
   },
   "devDependencies": {
     "vitest": "^5.1.2"
+  },
+  "dependencies": {
+    "croner": "^9.1.0"
   }
 }

@@ -1,11 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
-import { CopyField } from './copy-field'
+import { type CodeTab, CodeTabs } from './code-tabs'
 
 /** Ready /health endpoints that answer without touching the database. */
-const SNIPPETS = [
+const SNIPPETS: CodeTab[] = [
   {
     id: 'next',
     label: 'Next.js',
@@ -13,67 +11,128 @@ const SNIPPETS = [
     code: `export const dynamic = 'force-dynamic'
 
 export function GET() {
-  return Response.json({ status: 'ok' })
+  return Response.json({ ok: true })
 }`,
   },
   {
-    id: 'node',
-    label: 'Node (Express, Hono)',
+    id: 'express',
+    label: 'Express',
     file: 'server.ts',
-    code: `// Express
-app.get('/health', (_req, res) => res.json({ status: 'ok' }))
-
-// Hono
-app.get('/health', (c) => c.json({ status: 'ok' }))`,
+    code: `app.get('/health', (_req, res) => res.json({ ok: true }))`,
+  },
+  {
+    id: 'nest',
+    label: 'NestJS',
+    file: 'health.controller.ts',
+    code: `@Controller('health')
+export class HealthController {
+  @Get()
+  check() {
+    return { ok: true }
+  }
+}`,
   },
   {
     id: 'dotnet',
     label: '.NET',
     file: 'Program.cs',
-    code: `app.MapGet("/health", () => Results.Ok(new { status = "ok" }));`,
+    code: `app.MapGet("/health", () => Results.Ok(new { ok = true }));`,
   },
   {
-    id: 'python',
-    label: 'Python (FastAPI)',
-    file: 'main.py',
-    code: `@app.get("/health")
-def health():
-    return {"status": "ok"}`,
-  },
-  {
-    id: 'php',
-    label: 'PHP (Laravel)',
+    id: 'laravel',
+    label: 'Laravel',
     file: 'routes/web.php',
-    code: `Route::get('/health', fn () => response()->json(['status' => 'ok']));`,
+    code: `Route::get('/health', fn () => response()->json(['ok' => true]));`,
   },
-] as const
+  {
+    id: 'other',
+    label: 'Other',
+    code: `GET /health
+200 OK
+Content-Type: application/json
 
-export function HealthSnippets({ copy, copied }: { copy: string; copied: string }) {
-  const [active, setActive] = useState<string>(SNIPPETS[0].id)
-  const snippet = SNIPPETS.find((s) => s.id === active) ?? SNIPPETS[0]
+{"ok": true}
+
+Answer without querying the database, so a check never wakes it.`,
+  },
+]
+
+export function HealthSnippets({
+  copy,
+  copied,
+  label,
+  other,
+}: {
+  copy: string
+  copied: string
+  label: string
+  /** The "Other" tab's name in the reader's language. */
+  other: string
+}) {
   return (
-    <div className="flex flex-col gap-3">
-      <div role="tablist" className="flex flex-wrap gap-1">
-        {SNIPPETS.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            role="tab"
-            aria-selected={s.id === active}
-            onClick={() => setActive(s.id)}
-            className={cn(
-              'h-8 rounded-lg px-3 text-sm transition-colors',
-              s.id === active
-                ? 'bg-secondary font-medium text-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
-      <p className="font-mono text-xs text-muted-foreground">{snippet.file}</p>
-      <CopyField value={snippet.code} copyLabel={copy} copiedLabel={copied} multiline />
-    </div>
+    <CodeTabs
+      tabs={SNIPPETS.map((s) => (s.id === 'other' ? { ...s, label: other } : s))}
+      label={label}
+      copy={copy}
+      copied={copied}
+    />
   )
+}
+
+/** What a job runs when it finishes, per runner. `url` is the heartbeat address. */
+export function heartbeatSnippets(url: string, other: string): CodeTab[] {
+  return [
+    {
+      id: 'cron',
+      label: 'cron',
+      file: 'crontab -e',
+      code: `0 3 * * * /opt/backup.sh && curl -fsS -m 10 --retry 3 ${url} || curl -fsS -m 10 ${url}/fail`,
+    },
+    {
+      id: 'node',
+      label: 'Node',
+      code: `try {
+  await runJob()
+  await fetch('${url}', { method: 'POST' })
+} catch (error) {
+  await fetch('${url}/fail', { method: 'POST' })
+  throw error
+}`,
+    },
+    {
+      id: 'github',
+      label: 'GitHub Actions',
+      file: '.github/workflows/nightly.yml',
+      code: `      - name: Tell Octadash
+        if: always()
+        run: curl -fsS -m 10 --retry 3 "${url}\${{ job.status != 'success' && '/fail' || '' }}"`,
+    },
+    {
+      id: 'coolify',
+      label: 'Coolify',
+      file: 'Scheduled task command',
+      code: `/app/backup.sh && curl -fsS -m 10 ${url} || curl -fsS -m 10 ${url}/fail`,
+    },
+    {
+      id: 'dotnet',
+      label: '.NET',
+      code: `using var http = new HttpClient();
+try
+{
+    await RunJobAsync();
+    await http.PostAsync("${url}", null);
+}
+catch
+{
+    await http.PostAsync("${url}/fail", null);
+    throw;
+}`,
+    },
+    {
+      id: 'other',
+      label: other,
+      code: `GET or POST ${url}
+GET or POST ${url}/fail   (when the job fails)`,
+    },
+  ]
 }

@@ -124,7 +124,8 @@
     "typeName": "Digite o nome exatamente como ele é para confirmar.",
     "wrongPassword": "A senha atual não está certa.",
     "lastOwner": "A organização precisa de pelo menos um dono. Torne outra pessoa dona antes.",
-    "notYourself": "Você não pode se tirar por aqui."
+    "notYourself": "Você não pode se tirar por aqui.",
+    "invalidCron": "Cinco campos: minuto, hora, dia do mês, mês, dia da semana. Por exemplo, 0 3 * * * é todo dia às 3:00."
   },
   "areas": {
     "overview": {
@@ -730,6 +731,103 @@
         "title": "Convidar pessoas",
         "text": "Admins e membros. Opcional."
       }
+    }
+  },
+  "monitorForm": {
+    "addTitle": "Adicionar monitor",
+    "editTitle": "Editar {name}",
+    "intro": "Algo que o Octadash checa a cada minuto. Comece pelo site; depois adicione a API e as tarefas agendadas.",
+    "what": "O que checar",
+    "kinds": {
+      "site": {
+        "label": "Site",
+        "hint": "Abre uma página. Espera 2xx."
+      },
+      "health": {
+        "label": "API ou /health",
+        "hint": "Chama um endpoint. Espera 2xx e não HTML."
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "hint": "Espera uma chamada de uma tarefa. O silêncio é a falha."
+      },
+      "tcp": {
+        "label": "Porta TCP",
+        "hint": "Checa se uma porta responde."
+      }
+    },
+    "later": "Depois",
+    "name": "Nome",
+    "nameHint": "Aparece nos alertas: “{product} · {name} fora do ar”.",
+    "url": "Endereço",
+    "urlHint": {
+      "site": "A página a abrir. Redirecionamentos são seguidos, até 5.",
+      "health": "O endpoint a chamar. Redirecionamentos são seguidos, até 5."
+    },
+    "homeTitle": "Esta é a sua página inicial. Ela lê o banco de dados?",
+    "homeBody": "Se ler, cada checagem acorda o banco, uma vez por minuto, o dia todo. No Neon e em outros bancos serverless isso mantém a cobrança ligada o tempo todo. Melhor: um endpoint /health que responde sem o banco. Adicione abaixo e cheque ele, ou cheque a página inicial a cada 5 minutos.",
+    "snippetsTitle": "Um /health que não acorda o banco",
+    "framework": "Framework",
+    "runner": "Onde a tarefa roda",
+    "other": "Outro",
+    "every": "Checar a cada",
+    "timeout": "Tempo limite",
+    "timeoutValue": "{count} segundos",
+    "checkNow": "Checar agora",
+    "checkOk": "{status} em {ms} ms",
+    "checkFailed": "Falhou: {reason}",
+    "certValid": "certificado válido por {days, plural, one {# dia} other {# dias}}",
+    "certUntrusted": "certificado não confiável",
+    "httpsRedirect": "http redireciona para https",
+    "noHttpsRedirect": "http não redireciona para https",
+    "expected": "Esperado",
+    "expectedHint": "A cada N minutos, todo dia em um horário, ou uma expressão cron.",
+    "expectModes": {
+      "interval": "A cada…",
+      "daily": "Todo dia às",
+      "cron": "Expressão cron"
+    },
+    "at": "Horário",
+    "cron": "Expressão cron",
+    "cronHint": "Lida no fuso {zone}.",
+    "grace": "Tolerância",
+    "graceHint": "Quanto pode atrasar antes de contar como perdida.",
+    "graceInfoLabel": "Sobre a tolerância",
+    "graceInfo": "Uma tarefa que costuma levar 10 minutos pode atrasar em uma noite lenta. A tolerância é quanto o Octadash espera depois do horário esperado antes de dar como perdida. Curta demais gera alarme falso; longa demais, você sabe tarde. 30 minutos servem para a maioria dos backups.",
+    "callTitle": "Chame este endereço quando a tarefa terminar",
+    "failHint": "Acrescente /fail no fim quando a tarefa falhar, para saber na hora em vez de depois da tolerância.",
+    "waitingNew": "Depois de adicionar, rode a tarefa uma vez ou chame o endereço à mão para ver a primeira chamada chegar aqui.",
+    "waiting": "Esperando a primeira chamada. Rode a tarefa uma vez, ou chame o endereço à mão, para ver chegar.",
+    "lastCall": "Última chamada {when}.",
+    "lastFail": "A tarefa informou uma falha {when}.",
+    "added": "Monitor adicionado.",
+    "submitAdd": "Adicionar monitor",
+    "submitSave": "Salvar",
+    "preview": {
+      "title": "Como vai ficar",
+      "example": "Exemplo",
+      "site": "Site",
+      "api": "API /health",
+      "backup": "Backup noturno",
+      "siteLine": "99,98% · 182 ms",
+      "apiLine": "100% · 64 ms",
+      "backupLine": "perdido às 3:00",
+      "up": "No ar",
+      "missed": "Perdido",
+      "note": "Cada barra é um dia. Passe o mouse ou o foco em uma barra para ler o dia; os mesmos números ficam em uma tabela abaixo das barras para leitores de tela."
+    },
+    "how": {
+      "title": "Como funciona",
+      "every": "Checa a cada minuto a partir deste servidor do Octadash.",
+      "three": "Três falhas seguidas abrem uma emergência; a regra de alerta decide quanto esperar antes de avisar alguém (hoje {minutes} min).",
+      "rules": "Regras de alerta",
+      "extras": "O certificado, o redirecionamento de http para https e o tempo de resposta vêm em toda checagem.",
+      "database": "As checagens nunca tocam o seu banco, a não ser que a página toque. É para isso que o /health existe."
+    },
+    "why": {
+      "title": "Por que heartbeats",
+      "body": "Um backup que para de rodar falha em silêncio: nada cai, nada dá erro, e você descobre no dia em que precisa dele. O heartbeat transforma o silêncio em emergência.",
+      "good": "Bom para backups, crons, workers de fila, renovação de certificado e importações noturnas."
     }
   }
 }

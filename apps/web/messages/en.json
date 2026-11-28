@@ -124,7 +124,8 @@
     "typeName": "Type the name exactly as it is to confirm.",
     "wrongPassword": "The current password is not right.",
     "lastOwner": "The organization needs at least one owner. Make someone else owner first.",
-    "notYourself": "You can’t remove yourself here."
+    "notYourself": "You can’t remove yourself here.",
+    "invalidCron": "Five fields: minute, hour, day of month, month, weekday. For example 0 3 * * * is every day at 3:00."
   },
   "areas": {
     "overview": {
@@ -730,6 +731,103 @@
         "title": "Invite people",
         "text": "Admins and members. Optional."
       }
+    }
+  },
+  "monitorForm": {
+    "addTitle": "Add monitor",
+    "editTitle": "Edit {name}",
+    "intro": "Something Octadash checks every minute. Start with the site; add the API and any scheduled job after.",
+    "what": "What to check",
+    "kinds": {
+      "site": {
+        "label": "Site",
+        "hint": "Opens a page. Expects 2xx."
+      },
+      "health": {
+        "label": "API or /health",
+        "hint": "Calls an endpoint. Expects 2xx and not HTML."
+      },
+      "heartbeat": {
+        "label": "Heartbeat",
+        "hint": "Waits for a call from a job. Silence is the failure."
+      },
+      "tcp": {
+        "label": "TCP port",
+        "hint": "Checks that a port answers."
+      }
+    },
+    "later": "Later",
+    "name": "Name",
+    "nameHint": "Shown in alerts: “{product} · {name} is down”.",
+    "url": "Address",
+    "urlHint": {
+      "site": "The page to open. Redirects are followed, up to 5.",
+      "health": "The endpoint to call. Redirects are followed, up to 5."
+    },
+    "homeTitle": "This is your home page. Does it read the database?",
+    "homeBody": "If it does, every check wakes the database, once a minute, all day. On Neon and other serverless databases that keeps it billed all the time. Better: a /health endpoint that answers without the database. Add it below and check that instead, or check the home page every 5 minutes.",
+    "snippetsTitle": "A /health that does not wake the database",
+    "framework": "Framework",
+    "runner": "Where the job runs",
+    "other": "Other",
+    "every": "Check every",
+    "timeout": "Timeout",
+    "timeoutValue": "{count} seconds",
+    "checkNow": "Check now",
+    "checkOk": "{status} in {ms} ms",
+    "checkFailed": "Failed: {reason}",
+    "certValid": "certificate valid for {days, plural, one {# day} other {# days}}",
+    "certUntrusted": "certificate not trusted",
+    "httpsRedirect": "http redirects to https",
+    "noHttpsRedirect": "http does not redirect to https",
+    "expected": "Expected",
+    "expectedHint": "Every N minutes, every day at a time, or a cron expression.",
+    "expectModes": {
+      "interval": "Every…",
+      "daily": "Every day at",
+      "cron": "Cron expression"
+    },
+    "at": "Time",
+    "cron": "Cron expression",
+    "cronHint": "Read in {zone}.",
+    "grace": "Grace",
+    "graceHint": "How late it can be before it counts as missed.",
+    "graceInfoLabel": "About grace",
+    "graceInfo": "A job that usually takes 10 minutes can run late on a slow night. Grace is how long Octadash waits after the expected time before calling it missed. Too short and you get false alarms; too long and you hear late. 30 minutes fits most backups.",
+    "callTitle": "Call this address when the job finishes",
+    "failHint": "Add /fail at the end when the job fails, so you hear at once instead of after the grace.",
+    "waitingNew": "Once added, run the job once or call the address by hand to see the first call arrive here.",
+    "waiting": "Waiting for the first call. Run the job once, or call the address by hand, to see it arrive.",
+    "lastCall": "Last call {when}.",
+    "lastFail": "The job reported a failure {when}.",
+    "added": "Monitor added.",
+    "submitAdd": "Add monitor",
+    "submitSave": "Save",
+    "preview": {
+      "title": "What it will look like",
+      "example": "Example",
+      "site": "Site",
+      "api": "API /health",
+      "backup": "Nightly backup",
+      "siteLine": "99.98% · 182 ms",
+      "apiLine": "100% · 64 ms",
+      "backupLine": "missed 3:00 AM",
+      "up": "Up",
+      "missed": "Missed",
+      "note": "Each bar is a day. Hover or focus a bar to read the day; the same numbers are in a table below the bars for screen readers."
+    },
+    "how": {
+      "title": "How it works",
+      "every": "Checks every minute from this Octadash server.",
+      "three": "Three failures in a row open an emergency; the alert rule decides how long to wait before telling anyone (now {minutes} min).",
+      "rules": "Alert rules",
+      "extras": "The certificate, the http to https redirect and the response time come with every check.",
+      "database": "Checks never touch your database unless the page does. That is why /health exists."
+    },
+    "why": {
+      "title": "Why heartbeats",
+      "body": "A backup that stops running fails in silence: nothing is down, nothing errors, and you find out the day you need it. A heartbeat turns silence into an emergency.",
+      "good": "Good for backups, cron jobs, queue workers, certificate renewals and nightly imports."
     }
   }
 }

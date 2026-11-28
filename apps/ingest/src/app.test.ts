@@ -71,6 +71,14 @@ describe('ingest app', () => {
     expect(pings.pings.size).toBe(1)
   })
 
+  it('records a failure reported on /fail, under both addresses', async () => {
+    const { app, pings } = setup()
+    expect((await app.request(`/o/v1/hb/${TOKEN}`)).status).toBe(200)
+    expect((await app.request(`/o/v1/hb/${TOKEN}/fail`, { method: 'POST' })).status).toBe(200)
+    expect(pings.failures.get(MONITOR)).toBe(1_795_000_000_000)
+    expect((await app.request(`/hb/${'U'.repeat(32)}/fail`)).status).toBe(404)
+  })
+
   it('returns JSON 404 for unknown routes', async () => {
     const res = await setup().app.request('/nope')
     expect(res.status).toBe(404)

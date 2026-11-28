@@ -32,6 +32,11 @@ export const webEnvSchema = baseEnvSchema
       .transform((value) => value === 'true'),
     /** Live updates: the worker publishes changes here and the panel forwards them to open screens. */
     VALKEY_URL: valkeyUrl,
+    /** "Check now" may reach private addresses, like the worker. Only for development. */
+    OCTADASH_UPTIME_ALLOW_PRIVATE: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
   })
   .extend(clickhouseEnvSchema.shape)
 

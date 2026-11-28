@@ -78,6 +78,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      # Database tests share one schema, auth tables included; create it once before they run in parallel.
+      - run: pnpm db:migrate
       - run: pnpm test
       - run: pnpm build
 

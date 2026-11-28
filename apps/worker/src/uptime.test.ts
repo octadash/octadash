@@ -17,6 +17,9 @@ function monitor(overrides: Partial<ActiveMonitor> = {}): ActiveMonitor {
     interval_seconds: 60,
     grace_seconds: 0,
     heartbeat_token: null,
+    schedule: null,
+    timeout_seconds: 10,
+    time_zone: 'UTC',
     status: 'unknown',
     status_since: null,
     updated_at: new Date(T0 - 3_600_000),
@@ -45,6 +48,7 @@ function setup(monitors: ActiveMonitor[], answers: boolean[] = [], online = { va
   const transitions: Transition[] = []
   const statuses = new Map<string, MonitorStatus>(monitors.map((m) => [m.id, m.status]))
   const pings = new Map<string, number>()
+  const failures = new Map<string, number>()
   const checks: { deep?: boolean }[] = []
   const scheduler = new UptimeScheduler({
     loadMonitors: async () => monitors,
@@ -57,6 +61,10 @@ function setup(monitors: ActiveMonitor[], answers: boolean[] = [], online = { va
     },
     readPings: async (ids) =>
       new Map(ids.flatMap((id) => (pings.has(id) ? [[id, pings.get(id) as number] as const] : []))),
+    readFailures: async (ids) =>
+      new Map(
+        ids.flatMap((id) => (failures.has(id) ? [[id, failures.get(id) as number] as const] : [])),
+      ),
     writeRows: async (batch) => {
       rows.push(...batch)
     },
@@ -88,6 +96,7 @@ function setup(monitors: ActiveMonitor[], answers: boolean[] = [], online = { va
     transitions,
     statuses,
     pings,
+    failures,
     checks,
     advance,
     setNow: (t: number) => (now = t),
@@ -187,6 +196,52 @@ describe('UptimeScheduler', () => {
     expect(t.transitions.map((x) => `${x.from}>${x.to} ${x.reason}`)).toEqual([
       'unknown>down no ping yet',
     ])
+  })
+
+  it('calls a heartbeat down at once when its job reports failure, and up on the next good call', async () => {
+    const beat = monitor({
+      id: 'hb',
+      kind: 'heartbeat',
+      url: null,
+      interval_seconds: 86_400,
+      grace_seconds: 1800,
+      status: 'up',
+    })
+    const t = setup([beat])
+    t.pings.set('hb', T0 - 60_000)
+    await t.scheduler.reload()
+    await t.advance(20_000)
+    t.failures.set('hb', T0 + 20_000)
+    await t.advance(20_000)
+    expect(t.transitions.map((x) => `${x.from}>${x.to} ${x.reason}`)).toEqual([
+      'up>down job reported failure',
+    ])
+    expect(t.rows.filter((r) => r.error === 'job reported failure')).toHaveLength(1)
+    t.pings.set('hb', T0 + 60_000)
+    await t.advance(20_000)
+    expect(t.transitions.map((x) => `${x.from}>${x.to}`)).toEqual(['up>down', 'down>up'])
+  })
+
+  it('reads a heartbeat cron schedule in the organization time zone', async () => {
+    // Every day at 9:00 AM São Paulo = 12:00 UTC; the call came at 9:05 yesterday.
+    const beat = monitor({
+      id: 'hb',
+      kind: 'heartbeat',
+      url: null,
+      interval_seconds: 86_400,
+      grace_seconds: 600,
+      schedule: '0 9 * * *',
+      time_zone: 'America/Sao_Paulo',
+      status: 'up',
+      updated_at: new Date(T0 - 3 * 86_400_000),
+    })
+    const t = setup([beat])
+    t.pings.set('hb', T0 - 86_400_000 + 300_000)
+    await t.scheduler.reload()
+    await t.advance(590_000)
+    expect(t.transitions).toEqual([])
+    await t.advance(30_000)
+    expect(t.transitions.map((x) => `${x.from}>${x.to}`)).toEqual(['up>down'])
   })
 
   it('drops deleted monitors and rechecks edited ones at once', async () => {

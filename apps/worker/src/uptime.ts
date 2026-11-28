@@ -1,7 +1,7 @@
 import type { Logger } from '@octadash/core'
 import type { ActiveMonitor, MonitorStatus, UptimeCheckRow } from '@octadash/db'
 import { toClickHouseTime } from '@octadash/db'
-import type { CheckOptions, CheckResult } from '@octadash/uptime'
+import { type CheckOptions, type CheckResult, judgeHeartbeat } from '@octadash/uptime'
 
 /** Failed checks in a row before a site or health monitor is down. */
 export const FAILURES_TO_DOWN = 3
@@ -26,6 +26,8 @@ export interface UptimeDeps {
   loadMonitors(): Promise<ActiveMonitor[]>
   check(url: string, options: CheckOptions): Promise<CheckResult>
   readPings(monitorIds: string[]): Promise<Map<string, number>>
+  /** When each heartbeat's job last called /fail. */
+  readFailures?(monitorIds: string[]): Promise<Map<string, number>>
   writeRows(rows: UptimeCheckRow[]): Promise<void>
   /** Saves a state change; false when the monitor changed meanwhile. */
   setStatus(monitorId: string, from: MonitorStatus, to: MonitorStatus, at: Date): Promise<boolean>
@@ -49,6 +51,7 @@ interface Slot {
   running: boolean
   lastDeepAt: number
   lastPing: number | null
+  lastFail: number | null
 }
 
 /**
@@ -88,6 +91,7 @@ export class UptimeScheduler {
           running: false,
           lastDeepAt: 0,
           lastPing: null,
+          lastFail: null,
         })
         continue
       }
@@ -162,7 +166,11 @@ export class UptimeScheduler {
         kind: monitor.kind === 'health' ? 'health' : 'site',
         deep,
         allowPrivate: this.deps.allowPrivate,
-        timeoutMs: Math.min(15_000, monitor.interval_seconds * 500),
+        timeoutMs: Math.min(
+          (monitor.timeout_seconds ?? 10) * 1000,
+          30_000,
+          monitor.interval_seconds * 500,
+        ),
       })
       if (deep) slot.lastDeepAt = started
       const at = new Date(this.deps.now())
@@ -202,9 +210,14 @@ export class UptimeScheduler {
   }
 
   private async checkHeartbeats(slots: Slot[]) {
+    const ids = slots.map((slot) => slot.monitor.id)
     let pings: Map<string, number>
+    let failures: Map<string, number>
     try {
-      pings = await this.deps.readPings(slots.map((slot) => slot.monitor.id))
+      ;[pings, failures] = await Promise.all([
+        this.deps.readPings(ids),
+        this.deps.readFailures?.(ids) ?? new Map<string, number>(),
+      ])
     } catch (err) {
       // Without Valkey nothing can be said about heartbeats; do not call them down.
       this.deps.log.warn({ err }, 'heartbeat pings not readable')
@@ -214,17 +227,38 @@ export class UptimeScheduler {
     for (const slot of slots) {
       const { monitor } = slot
       const ping = pings.get(monitor.id) ?? null
+      const fail = failures.get(monitor.id) ?? null
       if (ping !== null && ping !== slot.lastPing) {
         slot.lastPing = ping
         this.rows.push(this.heartbeatRow(monitor, new Date(ping), true, ''))
       }
-      const allowedMs = (monitor.interval_seconds + monitor.grace_seconds) * 1000
-      // Until the first ping, the clock starts when the monitor was created or edited.
-      const since = Math.max(ping ?? 0, monitor.updated_at.getTime())
-      if (ping !== null && now - ping <= allowedMs) {
+      if (fail !== null && fail !== slot.lastFail) {
+        slot.lastFail = fail
+        if (fail > (ping ?? 0)) {
+          this.rows.push(this.heartbeatRow(monitor, new Date(fail), false, 'job reported failure'))
+        }
+      }
+      const judged = judgeHeartbeat(
+        {
+          intervalSeconds: monitor.interval_seconds,
+          schedule: monitor.schedule ?? null,
+          graceSeconds: monitor.grace_seconds,
+          timeZone: monitor.time_zone ?? 'UTC',
+        },
+        {
+          lastCall: ping === null ? null : new Date(ping),
+          lastFail: fail === null ? null : new Date(fail),
+          // Until the first ping, the clock starts when the monitor was created or edited.
+          since: monitor.updated_at,
+        },
+        new Date(now),
+      )
+      if (judged.state === 'up' && ping !== null) {
         await this.transition(slot, 'up', new Date(ping), null)
-      } else if (now - since > allowedMs && slot.status !== 'down') {
-        const minutes = Math.round((now - since) / 60_000)
+      } else if (judged.state === 'failed') {
+        await this.transition(slot, 'down', judged.at, 'job reported failure')
+      } else if (judged.state === 'late' && slot.status !== 'down') {
+        const minutes = Math.round((now - (ping ?? monitor.updated_at.getTime())) / 60_000)
         const reason = ping === null ? 'no ping yet' : `no ping for ${minutes} min`
         this.rows.push(this.heartbeatRow(monitor, new Date(now), false, reason))
         await this.transition(slot, 'down', new Date(now), reason)
