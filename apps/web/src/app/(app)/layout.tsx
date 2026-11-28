@@ -60,7 +60,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           }}
           version={{
             label: versionLabel(OCTADASH_VERSION, OCTADASH_COMMIT),
-            title: t('version', {
+            title: t('update.version', {
               version: OCTADASH_VERSION,
               commit: OCTADASH_COMMIT.slice(0, 7) || '–',
             }),

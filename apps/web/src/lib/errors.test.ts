@@ -10,12 +10,20 @@ describe('errors list state', () => {
       sort: 'people',
       metric: 'events',
       show: 100,
+      source: null,
     })
     expect(errorsHref('/all/errors', state, { tab: 'unresolved', show: 50 })).toBe('/all/errors')
     expect(errorsHref('/all/errors', state, { period: '7d' })).toBe(
       '/all/errors?period=7d&tab=mine&show=100',
     )
     expect(parseErrorsState({ show: '-3' }).show).toBe(50)
+    const one = parseErrorsState({ source: '0b6f3c1e-9a2d-4c7b-8e5f-1d2a3b4c5d6e' })
+    expect(one.source).toBe('0b6f3c1e-9a2d-4c7b-8e5f-1d2a3b4c5d6e')
+    expect(errorsHref('/all/errors', one, {})).toBe(
+      '/all/errors?source=0b6f3c1e-9a2d-4c7b-8e5f-1d2a3b4c5d6e',
+    )
+    expect(errorsHref('/all/errors', one, { source: null })).toBe('/all/errors')
+    expect(parseErrorsState({ source: "x' OR 1=1" }).source).toBeNull()
   })
 
   it('sorts by people, then events', () => {

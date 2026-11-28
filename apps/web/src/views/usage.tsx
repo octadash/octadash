@@ -13,6 +13,7 @@ import { AddSourceAction } from '@/components/add-source-action'
 import { FunnelDialog } from '@/components/funnel-dialog'
 import { InfoTip } from '@/components/info-tip'
 import { MetricChart } from '@/components/metric-chart'
+import { SourceFilter } from '@/components/source-filter'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -216,6 +217,16 @@ export async function UsageView({
               </Link>
             ))}
           </nav>
+          <SourceFilter
+            label={t('source')}
+            all={t('allSources')}
+            allHref={usageHref(path, state, { source: null })}
+            current={data.source?.id ?? null}
+            options={data.sources.map((s) => ({
+              ...s,
+              href: usageHref(path, state, { source: s.id }),
+            }))}
+          />
           <AddSourceAction
             area="usage"
             products={data.projects.map((p) => ({ slug: p.slug, name: p.name }))}
@@ -357,6 +368,7 @@ export async function UsageView({
               <TableRow>
                 <TableHead>{t('table.event')}</TableHead>
                 {several && <TableHead>{t('table.product')}</TableHead>}
+                <TableHead>{t('source')}</TableHead>
                 <TableHead className="text-right">{t(`table.count.${state.period}`)}</TableHead>
                 <TableHead className="text-right">{t('table.vsBefore')}</TableHead>
                 <TableHead className="text-right">{t('table.people')}</TableHead>
@@ -389,6 +401,9 @@ export async function UsageView({
                         </Link>
                       </TableCell>
                     )}
+                    <TableCell className="text-sm text-muted-foreground">
+                      {e.sourceNames.join(', ') || '–'}
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {number.format(e.count)}
                     </TableCell>

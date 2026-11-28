@@ -5,7 +5,7 @@ import { tabOf, usageSnippet } from './usage-setup'
 describe('usage page state', () => {
   it('reads the address and keeps defaults out of links', () => {
     const state = parseUsageState({ period: '30d', metric: 'nope', q: '  pay ', show: '999' })
-    expect(state).toEqual({ period: '30d', metric: 'active', q: 'pay', show: 200 })
+    expect(state).toEqual({ period: '30d', metric: 'active', q: 'pay', show: 200, source: null })
     expect(usageHref('/all/usage', state, { period: '7d', q: '', show: 25 })).toBe('/all/usage')
     expect(usageHref('/all/usage', state, { metric: 'signups' })).toBe(
       '/all/usage?period=30d&metric=signups&q=pay&show=200',

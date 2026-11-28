@@ -5,6 +5,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server'
 import { AddSourceAction } from '@/components/add-source-action'
 import { IssueButton, IssueMenu } from '@/components/issue-actions'
 import { MetricChart } from '@/components/metric-chart'
+import { SourceFilter } from '@/components/source-filter'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -244,6 +245,16 @@ export async function ErrorsView({
               </Link>
             ))}
           </nav>
+          <SourceFilter
+            label={t('source')}
+            all={t('allSources')}
+            allHref={errorsHref(path, state, { source: null, show: ISSUES_PAGE })}
+            current={data.source?.id ?? null}
+            options={data.sources.map((s) => ({
+              ...s,
+              href: errorsHref(path, state, { source: s.id, show: ISSUES_PAGE }),
+            }))}
+          />
           <AddSourceAction
             area="errors"
             products={data.projects.map((p) => ({ slug: p.slug, name: p.name }))}
@@ -368,7 +379,7 @@ export async function ErrorsView({
                 )}
               >
                 {t(`tabs.${tab}`)}
-                {data.counts[tab] > 0 && (
+                {!data.source && data.counts[tab] > 0 && (
                   <span className="text-xs tabular-nums text-muted-foreground">
                     {number.format(data.counts[tab])}
                   </span>
@@ -439,14 +450,15 @@ export async function ErrorsView({
                           {isNew && <Badge variant="brand">{t('badges.new')}</Badge>}
                           {regressed && <Badge variant="warn">{t('badges.regressed')}</Badge>}
                           {issue.spike && <Badge variant="destructive">{t('spike')}</Badge>}
+                          {issue.source && (
+                            <Badge variant="outline" title={t('source')}>
+                              {issue.source}
+                            </Badge>
+                          )}
                         </div>
                         <p className="truncate text-xs text-muted-foreground">
                           {issue.culprit && <span className="font-mono">{issue.culprit}</span>}
-                          {[
-                            several || !product ? issue.product.name : null,
-                            issue.source,
-                            when(issue),
-                          ]
+                          {[several || !product ? issue.product.name : null, when(issue)]
                             .filter(Boolean)
                             .map((part) => ` · ${part}`)
                             .join('')}

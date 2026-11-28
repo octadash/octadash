@@ -13,6 +13,7 @@ import { getFormatter, getTranslations } from 'next-intl/server'
 import { ErrorsInstall } from '@/components/errors-install'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { canFeed } from '@/lib/area-setup'
 import { type ErrorsState, errorsHref, issueTitle } from '@/lib/errors'
 import { isErrorPlatform } from '@/lib/errors-setup'
 import { services } from '@/server/context'
@@ -86,6 +87,9 @@ export async function ErrorsStartView({
         errorsHref={errorsPath}
         scriptOn={hasPageScript(source.platform, source.areas)}
         sourceName={source.name}
+        addServerHref={
+          canFeed('logs', source.platform) ? undefined : `/p/${product.slug}/errors/setup?add=1`
+        }
       />
     ),
   })

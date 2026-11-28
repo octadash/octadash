@@ -25,6 +25,7 @@ import {
 import { SETUP_ORDER } from '@/lib/area-setup'
 import { type ErrorsState, sortIssues } from '@/lib/errors'
 import { type ErrorsSetup, errorsSetup } from '@/lib/errors-setup'
+import { type ScopeSource, scopeSources } from '@/lib/source-scope'
 import { type TrafficPeriod, trafficPeriod } from '@/lib/traffic'
 import { services } from './context'
 
@@ -67,6 +68,10 @@ export interface ErrorsData {
   complete: boolean
   /** Where each product in scope stands on Errors, the quickest to finish first. */
   setup: ProductSetup[]
+  /** Sources of the products in scope, for the source filter. */
+  sources: ScopeSource[]
+  /** The source the list is filtered to, when it belongs to the scope. */
+  source: ScopeSource | null
 }
 
 /** Issues named on an open Error spike of the organization. */
@@ -103,7 +108,16 @@ export async function loadErrors(
   const period = trafficPeriod(state.period, now, timeZone)
   const projects = allProjects.filter((p) => projectIds === null || projectIds.includes(p.id))
   const ids = projects.map((p) => p.id)
-  const scope = { orgId, projectIds: ids, from: period.from, to: period.to, timeZone }
+  const byId = new Map(projects.map((p) => [p.id, p]))
+  const { sources: inScope, source } = scopeSources(sources, projects, state.source)
+  const scope = {
+    orgId,
+    projectIds: ids,
+    sourceIds: source ? [source.id] : [],
+    from: period.from,
+    to: period.to,
+    timeZone,
+  }
   const previousScope = { ...scope, ...period.previous }
   const day = { ...scope, from: new Date(now.getTime() - 86_400_000), to: now }
 
@@ -131,7 +145,6 @@ export async function loadErrors(
     safe(() => issueStats(clickhouse, day, 24), new Map()),
   ])
 
-  const byId = new Map(projects.map((p) => [p.id, p]))
   const sourceName = new Map(sources.map((s) => [s.id, s.name]))
   const rows: IssueRow[] = records.map((issue) => {
     const s = stats.get(issue.id)
@@ -146,7 +159,8 @@ export async function loadErrors(
       spike: spiking.has(issue.id),
     }
   })
-  const sorted = sortIssues(rows, state.sort)
+  // One source: the issues it sent in the period (issues belong to the product).
+  const sorted = sortIssues(source ? rows.filter((issue) => stats.has(issue.id)) : rows, state.sort)
   const sendingIds = new Set(
     sources.filter((s) => s.areas.includes('errors')).map((s) => s.project_id),
   )
@@ -171,8 +185,12 @@ export async function loadErrors(
     timeZone,
     projects,
     sending: projects.filter((p) => sendingIds.has(p.id)).length,
-    totals: { ...totals, newIssues: newNow },
-    previous: { ...before, newIssues: newBefore },
+    // New issues are counted per product; for one source, those it sent first seen in the period.
+    totals: {
+      ...totals,
+      newIssues: source ? sorted.filter((i) => i.first_seen >= period.from).length : newNow,
+    },
+    previous: { ...before, newIssues: source ? 0 : newBefore },
     series,
     previousSeries,
     counts,
@@ -180,6 +198,8 @@ export async function loadErrors(
     total: sorted.length,
     complete,
     setup,
+    sources: inScope,
+    source,
   }
 }
 

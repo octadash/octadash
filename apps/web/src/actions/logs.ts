@@ -18,6 +18,7 @@ import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import type { FormState } from '@/components/action-form'
+import { canFeed } from '@/lib/area-setup'
 import { LOG_SOURCE_PLATFORMS } from '@/lib/logs-setup'
 import { services } from '@/server/context'
 import { canManage, requireManager, requireOrg } from '@/server/session'
@@ -64,7 +65,9 @@ export async function addLogsToSourceAction(formData: FormData) {
   const id = String(formData.get('source') ?? '')
   const { db } = services()
   const sources = await listSources(db, found.org.id, found.project.id)
-  if (!sources.some((s) => s.id === id)) return
+  const source = sources.find((s) => s.id === id)
+  // A page script cannot send log lines.
+  if (!source || !canFeed('logs', source.platform)) return
   await addSourceArea(db, found.org.id, id, 'logs')
   await setProjectArea(db, found.org.id, found.project.id, 'logs', 'set_up')
   revalidatePath(`/p/${found.project.slug}`, 'layout')

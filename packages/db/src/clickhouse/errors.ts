@@ -91,6 +91,8 @@ const PERSON = `nullIf(person, '')`
 export interface ErrorScope {
   orgId: string
   projectIds: string[]
+  /** Only these sources; empty or left out, every source. */
+  sourceIds?: string[]
   from: Date
   to: Date
   timeZone?: string
@@ -100,13 +102,15 @@ function scopeParams(scope: ErrorScope) {
   return {
     org: scope.orgId,
     projects: scope.projectIds,
+    sources: scope.sourceIds ?? [],
     from: toClickHouseTime(scope.from),
     to: toClickHouseTime(scope.to),
     tz: scope.timeZone ?? 'UTC',
   }
 }
 
-const IN_SCOPE = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+const IN_SOURCES = `(empty({sources:Array(UUID)}) OR source_id IN {sources:Array(UUID)})`
+const IN_SCOPE = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
   AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp < {to:DateTime64(3, 'UTC')}`
 
 /** People an issue hit since a time; "ignore until N more people" reads it. */

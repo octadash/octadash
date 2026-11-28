@@ -1,5 +1,6 @@
-import { getOrganizationSettings, listProjects } from '@octadash/db'
+import { getOrganizationSettings, listOrgSources, listProjects } from '@octadash/db'
 import { parseLogsState } from '@/lib/logs'
+import { scopeSources } from '@/lib/source-scope'
 import { trafficPeriod } from '@/lib/traffic'
 import { services } from '@/server/context'
 import { loadLines, scopeProjects } from '@/server/logs'
@@ -31,10 +32,12 @@ export async function GET(request: Request) {
   }
   const state = parseLogsState(Object.fromEntries(params))
   const { db } = services()
-  const [settings, all] = await Promise.all([
+  const [settings, all, orgSources] = await Promise.all([
     getOrganizationSettings(db, org.id),
     listProjects(db, org.id),
+    listOrgSources(db, org.id),
   ])
+  const { source } = scopeSources(orgSources, projects, state.source)
   const now = new Date()
   const period = trafficPeriod(state.period, now, settings.timeZone)
   try {
@@ -45,6 +48,8 @@ export async function GET(request: Request) {
       state.q,
       { from: period.from, to: new Date(now.getTime() + 60_000) },
       { before, after },
+      orgSources,
+      source ? [source.id] : [],
     )
     return Response.json({ lines }, { headers: { 'cache-control': 'no-store' } })
   } catch {

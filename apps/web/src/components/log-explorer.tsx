@@ -46,6 +46,7 @@ export interface LogExplorerLabels {
   level: string
   service: string
   product: string
+  source: string
   message: string
 }
 
@@ -66,6 +67,7 @@ export function LogExplorer({
   scope,
   q,
   period,
+  source,
   path,
   liveDefault,
   several,
@@ -81,6 +83,8 @@ export function LogExplorer({
   scope: string
   q: string
   period: string
+  /** The source the page is filtered to, or null for every source. */
+  source: string | null
   /** The page's own address, for links that change the search. */
   path: string
   liveDefault: boolean
@@ -112,13 +116,19 @@ export function LogExplorer({
 
   const query = useCallback(
     (cursor: Record<string, string>) => {
-      const params = new URLSearchParams({ scope, q, period, ...cursor })
+      const params = new URLSearchParams({
+        scope,
+        q,
+        period,
+        ...(source ? { source } : {}),
+        ...cursor,
+      })
       return fetch(`/api/logs?${params}`, { cache: 'no-store' }).then(async (response) => {
         if (!response.ok) throw new Error(String(response.status))
         return ((await response.json()) as { lines: ShownLine[] }).lines
       })
     },
-    [scope, q, period],
+    [scope, q, period, source],
   )
 
   useEffect(() => {
@@ -185,6 +195,7 @@ export function LogExplorer({
     const params = new URLSearchParams()
     if (period !== '24h') params.set('period', period)
     params.set('q', [q, extra].filter(Boolean).join(' '))
+    if (source) params.set('source', source)
     return `${path}?${params}`
   }
   const toggle = (key: string) =>
@@ -202,6 +213,7 @@ export function LogExplorer({
           <form action={path} className="flex flex-1 gap-2">
             {period !== '24h' && <input type="hidden" name="period" value={period} />}
             {!live && <input type="hidden" name="live" value="0" />}
+            {source && <input type="hidden" name="source" value={source} />}
             <div className="relative flex-1">
               <SearchIcon
                 aria-hidden
@@ -268,7 +280,7 @@ export function LogExplorer({
                       {line.service || '–'}
                     </span>
                     <span className="hidden truncate font-sans text-muted-foreground sm:block">
-                      {several ? line.product.name : ''}
+                      {[several ? line.product.name : '', line.source].filter(Boolean).join(' · ')}
                     </span>
                     <span className="col-span-3 truncate sm:col-span-1">{line.body}</span>
                   </button>
@@ -280,6 +292,7 @@ export function LogExplorer({
                       <dl className="grid grid-cols-[minmax(7rem,max-content)_minmax(0,1fr)] gap-x-6 gap-y-1">
                         <Row name={labels.service} value={line.service} />
                         {several && <Row name={labels.product} value={line.product.name} />}
+                        {line.source && <Row name={labels.source} value={line.source} />}
                         {line.traceId && (
                           <>
                             <dt className="text-muted-foreground">{labels.trace}</dt>

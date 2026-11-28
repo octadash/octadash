@@ -11,9 +11,11 @@ import { ErrorSourceForm } from '@/components/error-source-form'
 import { ErrorsInstall } from '@/components/errors-install'
 import { InfoTip } from '@/components/info-tip'
 import { RouteDialog, RouteSheet } from '@/components/route-overlay'
+import { SourceTag } from '@/components/source-tag'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { canFeed } from '@/lib/area-setup'
 import { isErrorPlatform } from '@/lib/errors-setup'
 import { services } from '@/server/context'
 import { canManage, requireOrg } from '@/server/session'
@@ -195,6 +197,13 @@ export default async function ErrorsSetupPage({
               description={t('codeHint')}
               closeLabel={t('close')}
             >
+              <SourceTag
+                name={current.name}
+                platform={
+                  current.platform && tp.has(current.platform) ? tp(current.platform) : undefined
+                }
+                publicKey={current.public_key}
+              />
               <div className="flex flex-col gap-1.5">
                 <span className="flex items-center gap-1 text-sm font-medium">
                   {t('dsn')}
@@ -223,6 +232,11 @@ export default async function ErrorsSetupPage({
                 errorsHref={`/p/${project.slug}/errors`}
                 scriptOn={hasPageScript(current.platform ?? '', current.areas)}
                 sourceName={current.name}
+                addServerHref={
+                  canFeed('logs', current.platform ?? '')
+                    ? undefined
+                    : `/p/${project.slug}/errors/setup?add=1`
+                }
               />
             </RouteSheet>
           )}

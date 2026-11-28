@@ -1448,7 +1448,9 @@
       "asTable": "Mostrar como tabela",
       "time": "Hora"
     },
-    "addSourceTo": "Adicionar origem em"
+    "addSourceTo": "Adicionar origem em",
+    "source": "Origem",
+    "allSources": "Todas as origens"
   },
   "trafficSetup": {
     "title": "Configurar Tráfego",
@@ -1937,7 +1939,9 @@
       "silentMore": "{count, plural, one {E mais #.} other {E mais #.}}",
       "openSource": "Ver {source}"
     },
-    "addSourceTo": "Adicionar origem em"
+    "addSourceTo": "Adicionar origem em",
+    "source": "Origem",
+    "allSources": "Todas as origens"
   },
   "errorsSetup": {
     "title": "Configurar Erros",
@@ -2026,7 +2030,9 @@
     "scriptOnTitle": "Erros do navegador: já ligados",
     "scriptOnBody": "{source} já tem o script do Octadash (do Tráfego). Ele registra sozinho os erros não tratados e as promises rejeitadas: nada a instalar, nenhum deploy novo.",
     "serverToo": "Erros do servidor também",
-    "serverTooBody": "O script só enxerga o navegador. Para erros na sua API ou no código do servidor, adicione o SDK do Sentry lá com o DSN desta origem."
+    "serverTooBody": "O script só enxerga o navegador. Para erros na sua API ou no código do servidor, adicione o SDK do Sentry lá com o DSN desta origem.",
+    "serverSource": "Erros de servidor (API, worker) vêm de uma origem de servidor, com chave e DSN próprios, não deste site.",
+    "addServerSource": "Adicionar origem de servidor"
   },
   "usageArea": {
     "title": "Uso do produto",
@@ -2140,7 +2146,9 @@
       "week": "Semana {n}",
       "weekOf": "Semana de {date}"
     },
-    "addSourceTo": "Adicionar origem em"
+    "addSourceTo": "Adicionar origem em",
+    "source": "Origem",
+    "allSources": "Todas as origens"
   },
   "usageSetup": {
     "title": "Configurar Uso do produto",
@@ -2298,7 +2306,9 @@
       "product": "Produto",
       "message": "Mensagem"
     },
-    "addSourceTo": "Adicionar origem em"
+    "addSourceTo": "Adicionar origem em",
+    "source": "Origem",
+    "allSources": "Todas as origens"
   },
   "logsSetup": {
     "title": "Configurar Logs",
@@ -2306,12 +2316,13 @@
     "trail": "Onde você está",
     "logs": "Logs",
     "sources": "Fontes",
-    "sourcesHint": "Uma fonte que envia erros pode enviar linhas de log com a mesma chave: clique em “Usar para Logs”.",
+    "sourcesHint": "Linhas de log vêm de código que roda em um servidor (API, worker, Next.js). Uma origem que roda só no navegador, como um site com o script, não envia logs: adicione uma origem de servidor.",
     "status": {
       "receiving": "envia linhas de log · última {time}",
       "waiting": "para Logs · esperando a primeira linha",
       "other": "envia {areas} · nenhuma linha de log ainda",
-      "nothing": "adicionada · nada recebido ainda"
+      "nothing": "adicionada · nada recebido ainda",
+      "browser": "roda no navegador · não envia linhas de log"
     },
     "useForLogs": "Usar para Logs",
     "show": "Mostrar código",
@@ -3102,7 +3113,8 @@
         "productsTitle": "Nenhum produto envia logs ainda",
         "productsBody": "Quando enviarem, esta página busca as linhas de todos de uma vez. Comece pelo produto que mais quebra.",
         "more": "{count, plural, one {Mais # produto pode enviar logs} other {Mais # produtos podem enviar logs}}",
-        "options": "Adicionar outra origem, outras plataformas e opções"
+        "options": "Adicionar outra origem, outras plataformas e opções",
+        "browserOnly": "{sources} {count, plural, one {roda} other {rodam}} no navegador e não {count, plural, one {envia} other {enviam}} linhas de log. Linhas de log vêm de um servidor: adicione uma origem de servidor (API, worker, Next.js)."
       },
       "money": {
         "name": "Dinheiro",
@@ -3308,7 +3320,9 @@
         "more": "{count, plural, one {Mais # produto sem monitor} other {Mais # produtos sem monitor}}"
       }
     },
-    "orNewAccount": "Ou conecte outra conta:"
+    "orNewAccount": "Ou conecte outra conta:",
+    "tagSource": "Origem",
+    "tagKey": "Chave"
   },
   "update": {
     "label": "Atualização disponível",

@@ -31,9 +31,14 @@ O que mudou está no [changelog](https://octadash.com/changelog/).
 Só isso. No redeploy, o Coolify busca o arquivo compose mais recente do
 repositório, baixa as imagens de todos os serviços (inclusive a `edge`, mesmo
 com a mesma tag), para os containers antigos e sobe os novos. Nenhuma variável
-de ambiente precisa mudar, a não ser que o changelog diga. O painel e o ingest
-ficam fora do ar por alguns segundos enquanto os containers reiniciam; os SDKs
-e o script tentam de novo o que falhar no envio.
+de ambiente precisa mudar, a não ser que o changelog diga.
+
+O Coolify não faz rolling update em aplicações Docker Compose
+([documentação dele](https://coolify.io/docs/applications/deployments/rolling-updates)):
+ele para os containers antigos antes de os novos responderem. Por alguns
+segundos o painel mostra "no available server" e o ingest também fica fora. O
+script do Octadash não reenvia, então uma visita ou um erro enviado nessa janela
+se perde. Faça o redeploy em um horário de pouco tráfego.
 
 ## Docker Compose
 

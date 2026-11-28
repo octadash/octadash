@@ -7,6 +7,7 @@ import { dismissAreaAction } from '@/actions/areas'
 import { addTrafficToSourceAction } from '@/actions/traffic'
 import { CopyField } from '@/components/copy-field'
 import { RouteDialog, RouteSheet } from '@/components/route-overlay'
+import { SourceTag } from '@/components/source-tag'
 import { TrafficInstall } from '@/components/traffic-install'
 import { TrafficSourceForm } from '@/components/traffic-source-form'
 import { Badge } from '@/components/ui/badge'
@@ -180,6 +181,13 @@ export default async function TrafficSetupPage({
               description={t('codeHint')}
               closeLabel={t('close')}
             >
+              <SourceTag
+                name={current.name}
+                platform={
+                  current.platform && tp.has(current.platform) ? tp(current.platform) : undefined
+                }
+                publicKey={current.public_key}
+              />
               {current.public_key && (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-sm font-medium">{t('key')}</span>
