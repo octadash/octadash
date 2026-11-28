@@ -12,6 +12,7 @@ import {
   getProjectBySlug,
   listCostShares,
   markConnection,
+  recordCostSplit,
   removeCostShare,
   saveFixedCost,
   setConnectionSplit,
@@ -159,6 +160,7 @@ export async function connectCostAction(_: FormState, formData: FormData): Promi
   }
   await setConnectionSplit(db, found.org.id, connectionId, split)
   await setCostShare(db, found.org.id, connectionId, found.project.id, share)
+  await recordCostSplit(db, found.org.id, connectionId)
   await setProjectArea(db, found.org.id, found.project.id, 'costs', 'set_up')
   revalidatePath(`/p/${found.project.slug}`, 'layout')
   redirect(`/p/${found.project.slug}/costs/setup`)
@@ -168,7 +170,7 @@ export async function connectCostAction(_: FormState, formData: FormData): Promi
  * "Use it here too" and "Save" on a connection's part: which tags are this
  * product's, whether it shares the rest, and how the rest is split. The
  * split is the connection's, so it changes for every product it serves.
- * Costs are divided when read, so the change shows at once.
+ * The change holds from today on; past days keep the division they had.
  */
 export async function shareCostAction(_: FormState, formData: FormData): Promise<FormState> {
   const t = await getTranslations('costsSetup')
@@ -194,6 +196,7 @@ export async function shareCostAction(_: FormState, formData: FormData): Promise
   }
   await setConnectionSplit(db, found.org.id, connection.id, split)
   await setCostShare(db, found.org.id, connection.id, found.project.id, share)
+  await recordCostSplit(db, found.org.id, connection.id)
   await setProjectArea(db, found.org.id, found.project.id, 'costs', 'set_up')
   revalidatePath(`/p/${found.project.slug}`, 'layout')
   if (formData.get('intent') === 'reuse') redirect(`/p/${found.project.slug}/costs/setup`)
@@ -254,6 +257,7 @@ export async function stopCostAction(_: FormState, formData: FormData): Promise<
   const shares = await listCostShares(db, found.org.id)
   if (!shares.some((s) => s.connectionId === connection.id))
     await deleteConnection(db, found.org.id, connection.id)
+  else await recordCostSplit(db, found.org.id, connection.id)
   if (!shares.some((s) => s.projectId === found.project.id))
     await setProjectArea(db, found.org.id, found.project.id, 'costs', null)
   revalidatePath(`/p/${found.project.slug}`, 'layout')

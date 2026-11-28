@@ -2288,7 +2288,7 @@
     "none": {
       "title": "No payment gateway connected",
       "body": "Connect Stripe, Asaas or Paddle and this page shows revenue, MRR, new subscriptions, churn and failed payments, with each product apart.",
-      "readOnly": "Octadash only reads your payments with a read-only key. It never charges, refunds or changes anything.",
+      "readOnly": "Octadash only reads your payments. It never charges, refunds or changes anything.",
       "connect": "Connect a payment gateway",
       "all": "Connect a gateway in a product:"
     },
@@ -2364,7 +2364,7 @@
     "money": "Money",
     "steps": {
       "gateway": "Gateway",
-      "key": "Read-only key",
+      "key": "Key",
       "rule": "Which payments are {product}’s",
       "webhook": "Live updates",
       "history": "History"
@@ -2376,6 +2376,20 @@
     "key": "{gateway} key",
     "keyHint": "Checked when you save.",
     "keyInfoLabel": "Which permissions the key needs",
+    "keyNote": {
+      "stripe": {
+        "title": "Only a restricted key is accepted",
+        "body": "A secret key (sk_…) can charge and refund, so Octadash refuses it. Use a restricted key (rk_…) with Read only: with it, nobody can charge, refund or change anything, not even Octadash."
+      },
+      "paddle": {
+        "title": "Give the key Read only",
+        "body": "Paddle keys have only the permissions you pick. With Read on transactions, subscriptions and products and nothing else, nobody can charge or change anything with it."
+      },
+      "asaas": {
+        "title": "An Asaas key can also charge",
+        "body": "Asaas has no read-only keys: any key can create charges and do everything the Asaas API allows. Octadash only reads with it (GET requests), but anyone who gets the key could charge. Create a key just for Octadash and delete it in Asaas › Integrations to cut access at once."
+      }
+    },
     "test": "Test key",
     "testing": "Testing…",
     "testOk": "The key works.",
@@ -2459,13 +2473,13 @@
       "sharedBody": "Connect an account once. Each product picks its payments by the gateway’s product or by metadata, so a shared account shows the right revenue in each product and nothing counted twice.",
       "emergencyTitle": "Emergency that starts here",
       "emergencyBody": "Payments failing: 20% of charges fail in 15 min, with at least 10 charges. Changeable in the product’s alert rules.",
-      "keyTitle": "Read-only key",
-      "keyBody": "Octadash only reads payments, subscriptions and products. It can’t charge, refund or change anything. The key is stored encrypted and never comes back to the browser. The “i” next to the key says which permissions to give it."
+      "keyTitle": "What the key can do",
+      "keyBody": "Octadash only reads payments, subscriptions and products, and never charges, refunds or changes anything. Stripe and Paddle keys can be limited to reading; Asaas keys cannot, as step 2 says. The key is stored encrypted and never comes back to the browser."
     },
     "errors": {
       "notFound": "This product or connection no longer exists. Reload the page.",
       "gateway": "Pick a gateway.",
-      "noKey": "Paste the read-only key.",
+      "noKey": "Paste the key.",
       "key": "The key did not work: {message}",
       "rule": "Pick at least one product or value.",
       "allTaken": "{product} already takes every payment of this account. Pick products or metadata here, or change {product} first.",
@@ -2597,7 +2611,7 @@
       "restHint": "The rest: costs of no {tag}, or of one no product takes.",
       "split": "How the rest is split",
       "splitInfoLabel": "How a shared cost is split",
-      "splitInfo": "One server or one AI account often serves several products. Split it so each product’s margin is honest: equally, by each product’s visitors that day (from Traffic), or by a fixed percent. The split is the connection’s, the same for every product sharing it, and applies to past days too.",
+      "splitInfo": "One server or one AI account often serves several products. Split it so each product’s margin is honest: equally, by each product’s visitors that day (from Traffic), or by a fixed percent. The split is the connection’s, the same for every product sharing it. A change holds from today on: past months keep the split they had.",
       "splits": {
         "equal": "Equally",
         "traffic": "By traffic",
@@ -2650,7 +2664,7 @@
       },
       "alsoServes": "Shared with"
     },
-    "shareNote": "Costs are divided when they are shown, so the change shows at once, past days included.",
+    "shareNote": "The change holds from today on. Past days keep the split they had, so past margins do not move.",
     "saveShare": "Save",
     "saved": "Saved.",
     "updateKey": "Update key",

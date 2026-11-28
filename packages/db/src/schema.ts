@@ -23,6 +23,7 @@ export interface Database {
   connection_project: ConnectionProjectTable
   fx_rate: FxRateTable
   cost_share: CostShareTable
+  cost_split_history: CostSplitHistoryTable
   fixed_cost: FixedCostTable
   cost_day: CostDayTable
   cost_hour: CostHourTable
@@ -183,6 +184,16 @@ export interface CostShareTable {
   rest: Generated<boolean>
   percent: number | null
   created_at: CreatedAt
+}
+
+/** A connection's whole division from a day on, kept at every change. */
+export interface CostSplitHistoryTable {
+  connection_id: string
+  org_id: string
+  /** "2026-11-28", in the organization's time zone. */
+  valid_from: ColumnType<string, string, string>
+  split: string
+  shares: ColumnType<unknown, string, string>
 }
 
 /** A fixed bill: amount in minor units every month or year. */

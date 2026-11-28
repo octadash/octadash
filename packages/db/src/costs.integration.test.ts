@@ -7,9 +7,13 @@ import {
   listCostDays,
   listCostHours,
   listCostShares,
+  listCostSplitHistory,
+  recordCostSplit,
   saveCostDays,
   saveCostHours,
+  setConnectionSplit,
   setCostShare,
+  splitOn,
 } from './costs'
 import { migrateToLatest } from './migrate'
 import { createConnection } from './money'
@@ -32,6 +36,19 @@ describe('fixedCostDays', () => {
       '2026-03-01',
     )
     expect(year).toEqual([{ day: '2026-03-01', amount: 100 }])
+  })
+})
+
+describe('splitOn', () => {
+  const versions = [{ validFrom: '2026-10-01' }, { validFrom: '2026-12-01' }]
+  it('takes the last version from that day or before', () => {
+    expect(splitOn(versions, '2026-11-15')?.validFrom).toBe('2026-10-01')
+    expect(splitOn(versions, '2026-12-01')?.validFrom).toBe('2026-12-01')
+    expect(splitOn(versions, '2027-01-01')?.validFrom).toBe('2026-12-01')
+  })
+  it('uses the first version for days before it', () => {
+    expect(splitOn(versions, '2026-09-01')?.validFrom).toBe('2026-10-01')
+    expect(splitOn([], '2026-09-01')).toBeUndefined()
   })
 })
 
@@ -120,5 +137,26 @@ describe.skipIf(!url)('costs in Postgres', () => {
       'set',
     )
     expect((await listCostHours(db, orgId, hour))[0]?.amount).toBe(7)
+  })
+
+  it('keeps the division from the day it changed, one version a day', async () => {
+    const other = randomUUID()
+    await setCostShare(db, orgId, connectionId, other, { tags: [], rest: true, percent: null })
+    await recordCostSplit(db, orgId, connectionId, '2026-10-01')
+    await setConnectionSplit(db, orgId, connectionId, 'percent')
+    await setCostShare(db, orgId, connectionId, other, { tags: [], rest: true, percent: 20 })
+    await recordCostSplit(db, orgId, connectionId, '2026-12-01')
+    await setCostShare(db, orgId, connectionId, other, { tags: [], rest: true, percent: 30 })
+    await recordCostSplit(db, orgId, connectionId, '2026-12-01')
+    const history = await listCostSplitHistory(db, orgId)
+    expect(history.map((v) => [v.validFrom, v.split])).toEqual([
+      ['2026-10-01', 'equal'],
+      ['2026-12-01', 'percent'],
+    ])
+    expect(history[0]?.shares.find((s) => s.projectId === other)?.percent).toBeNull()
+    expect(history[1]?.shares.find((s) => s.projectId === other)?.percent).toBe(30)
+    expect(history[1]?.shares).toHaveLength(2)
+    await recordCostSplit(db, orgId, connectionId)
+    expect((await listCostSplitHistory(db, orgId)).length).toBe(3)
   })
 })

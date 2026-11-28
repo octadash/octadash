@@ -2288,7 +2288,7 @@
     "none": {
       "title": "Nenhum gateway de pagamento conectado",
       "body": "Conecte Stripe, Asaas ou Paddle e esta página mostra receita, MRR, novas assinaturas, churn e pagamentos com falha, com cada produto separado.",
-      "readOnly": "O Octadash só lê seus pagamentos com uma chave de leitura. Ele nunca cobra, estorna ou muda nada.",
+      "readOnly": "O Octadash só lê seus pagamentos. Ele nunca cobra, estorna ou muda nada.",
       "connect": "Conectar um gateway de pagamento",
       "all": "Conecte um gateway em um produto:"
     },
@@ -2364,7 +2364,7 @@
     "money": "Dinheiro",
     "steps": {
       "gateway": "Gateway",
-      "key": "Chave de leitura",
+      "key": "Chave",
       "rule": "Quais pagamentos são de {product}",
       "webhook": "Atualização ao vivo",
       "history": "Histórico"
@@ -2376,6 +2376,20 @@
     "key": "Chave do {gateway}",
     "keyHint": "Conferida ao salvar.",
     "keyInfoLabel": "Quais permissões a chave precisa",
+    "keyNote": {
+      "stripe": {
+        "title": "Só chave restrita é aceita",
+        "body": "A chave secreta (sk_…) pode cobrar e estornar, então o Octadash recusa. Use uma chave restrita (rk_…) só com Leitura: com ela, ninguém consegue cobrar, estornar ou mudar nada, nem o Octadash."
+      },
+      "paddle": {
+        "title": "Dê à chave só Leitura",
+        "body": "As chaves do Paddle têm só as permissões que você escolher. Com Leitura em transações, assinaturas e produtos e mais nada, ninguém consegue cobrar ou mudar nada com ela."
+      },
+      "asaas": {
+        "title": "A chave do Asaas também pode cobrar",
+        "body": "O Asaas não tem chave só de leitura: qualquer chave pode criar cobranças e fazer tudo o que a API do Asaas permite. O Octadash só faz leituras com ela (GET), mas quem conseguir a chave poderia cobrar. Crie uma chave só para o Octadash e apague-a em Asaas › Integrações para cortar o acesso na hora."
+      }
+    },
     "test": "Testar chave",
     "testing": "Testando…",
     "testOk": "A chave funciona.",
@@ -2459,13 +2473,13 @@
       "sharedBody": "Conecte a conta uma vez. Cada produto escolhe seus pagamentos pelo produto do gateway ou por metadata, assim uma conta compartilhada mostra a receita certa em cada produto, sem contar nada duas vezes.",
       "emergencyTitle": "Emergência que começa aqui",
       "emergencyBody": "Pagamentos falhando: 20% das cobranças falham em 15 min, com pelo menos 10 cobranças. Dá para mudar nas regras de alerta do produto.",
-      "keyTitle": "Chave de leitura",
-      "keyBody": "O Octadash só lê pagamentos, assinaturas e produtos. Ele não cobra, não estorna e não muda nada. A chave fica guardada criptografada e nunca volta para o navegador. O “i” ao lado da chave diz quais permissões dar a ela."
+      "keyTitle": "O que a chave pode fazer",
+      "keyBody": "O Octadash só lê pagamentos, assinaturas e produtos, e nunca cobra, estorna ou muda nada. As chaves da Stripe e do Paddle podem ser limitadas à leitura; as do Asaas não, como diz o passo 2. A chave fica guardada criptografada e nunca volta para o navegador."
     },
     "errors": {
       "notFound": "Este produto ou conexão não existe mais. Recarregue a página.",
       "gateway": "Escolha um gateway.",
-      "noKey": "Cole a chave de leitura.",
+      "noKey": "Cole a chave.",
       "key": "A chave não funcionou: {message}",
       "rule": "Escolha pelo menos um produto ou valor.",
       "allTaken": "{product} já fica com todos os pagamentos desta conta. Escolha produtos ou metadata aqui, ou mude {product} antes.",
@@ -2597,7 +2611,7 @@
       "restHint": "O resto: custos sem {tag}, ou de um que nenhum produto pegou.",
       "split": "Como o resto é dividido",
       "splitInfoLabel": "Como um custo compartilhado é dividido",
-      "splitInfo": "Um servidor ou uma conta de IA muitas vezes serve vários produtos. Divida para que a margem de cada produto seja honesta: igual, pelos visitantes de cada produto no dia (de Tráfego), ou por uma porcentagem fixa. A divisão é da conexão, a mesma para todos os produtos que a dividem, e vale também para os dias passados.",
+      "splitInfo": "Um servidor ou uma conta de IA muitas vezes serve vários produtos. Divida para que a margem de cada produto seja honesta: igual, pelos visitantes de cada produto no dia (de Tráfego), ou por uma porcentagem fixa. A divisão é da conexão, a mesma para todos os produtos que a dividem. Uma mudança vale de hoje em diante: os meses passados mantêm a divisão que tinham.",
       "splits": {
         "equal": "Igual",
         "traffic": "Por tráfego",
@@ -2650,7 +2664,7 @@
       },
       "alsoServes": "Dividido com"
     },
-    "shareNote": "Os custos são divididos na hora de mostrar, então a mudança aparece já, inclusive nos dias passados.",
+    "shareNote": "A mudança vale de hoje em diante. Os dias passados mantêm a divisão que tinham, então as margens passadas não mudam.",
     "saveShare": "Salvar",
     "saved": "Salvo.",
     "updateKey": "Atualizar chave",

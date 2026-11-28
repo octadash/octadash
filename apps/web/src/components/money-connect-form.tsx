@@ -1,6 +1,6 @@
 'use client'
 
-import { CircleCheckIcon, TriangleAlertIcon } from 'lucide-react'
+import { CircleCheckIcon, ShieldCheckIcon, TriangleAlertIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { type ReactNode, useState, useTransition } from 'react'
 import { connectMoneyAction, type KeyTest, testMoneyKeyAction } from '@/actions/money'
@@ -36,6 +36,29 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
         {children}
       </section>
     </li>
+  )
+}
+
+/**
+ * What the gateway's key can do, said before it is pasted. An Asaas key can
+ * also charge (Asaas has no read-only keys), so its note is a warning.
+ */
+function KeyNote({ risky, title, body }: { risky: boolean; title: string; body: string }) {
+  const Icon = risky ? TriangleAlertIcon : ShieldCheckIcon
+  return (
+    <div
+      className={
+        risky
+          ? 'flex gap-3 rounded-lg border border-warn/40 bg-warn/10 p-4 text-sm'
+          : 'flex gap-3 rounded-lg border bg-muted/40 p-4 text-sm'
+      }
+    >
+      <Icon className={`mt-0.5 size-4 shrink-0 ${risky ? 'text-warn' : 'text-ok'}`} aria-hidden />
+      <div className="flex flex-col gap-1">
+        <p className="font-medium">{title}</p>
+        <p className="text-muted-foreground">{body}</p>
+      </div>
+    </div>
   )
 }
 
@@ -116,6 +139,11 @@ export function MoneyConnectForm({
         </Step>
 
         <Step n={2} title={t('steps.key')}>
+          <KeyNote
+            risky={gateway.id === 'asaas'}
+            title={t(`keyNote.${gateway.id}.title`)}
+            body={t(`keyNote.${gateway.id}.body`)}
+          />
           <Field
             label={t('key', { gateway: gateway.name })}
             hint={t('keyHint')}
