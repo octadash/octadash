@@ -13,6 +13,7 @@ export interface Database {
   octadash_instance: OctadashInstanceTable
   project: ProjectTable
   project_key: ProjectKeyTable
+  project_area: ProjectAreaTable
   auth_user: AuthUserTable
   auth_organization: AuthOrganizationTable
   auth_member: AuthMemberTable
@@ -46,6 +47,16 @@ export interface ProjectKeyTable {
   label: Generated<string>
   created_at: CreatedAt
   revoked_at: Date | null
+}
+
+export type ProjectAreaState = 'set_up' | 'dismissed'
+
+export interface ProjectAreaTable {
+  org_id: string
+  project_id: string
+  area: string
+  state: ProjectAreaState
+  updated_at: ColumnType<Date, Date | undefined, Date>
 }
 
 export interface AuthUserTable {

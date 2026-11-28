@@ -1,65 +1,80 @@
 import { listProjects } from '@octadash/db'
-import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
+import { AppSidebar } from '@/components/app-sidebar'
 import { LocaleSwitcher } from '@/components/locale-switcher'
-import { Logo } from '@/components/logo'
-import { NavTabs } from '@/components/nav-tabs'
 import { OrgSwitcher } from '@/components/org-switcher'
+import { ProductPicker } from '@/components/product-picker'
 import { UserMenu } from '@/components/user-menu'
+import { AREA_ITEMS } from '@/lib/areas'
 import { services } from '@/server/context'
-import { requireOrg } from '@/server/session'
+import { canManage, requireOrg } from '@/server/session'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const { org, orgs, user } = await requireOrg()
-  const [projects, t] = await Promise.all([
-    listProjects(services().db, org.id),
-    getTranslations('common'),
-  ])
-  const tabs = [
-    { href: '/all', label: t('allProducts') },
-    ...projects.map((p) => ({ href: `/p/${p.slug}`, label: p.name })),
-  ]
+  const [projects, t] = await Promise.all([listProjects(services().db, org.id), getTranslations()])
+  const areaLabels = Object.fromEntries(
+    AREA_ITEMS.map((area) => [area.id, t(`areas.${area.id}.name`)]),
+  ) as Record<(typeof AREA_ITEMS)[number]['id'], string>
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-3">
-          <Link href="/all" className="flex items-center gap-2">
-            <Logo size={24} />
-            <span className="font-display text-lg font-semibold tracking-tight">Octadash</span>
-          </Link>
-          <span className="text-muted-foreground/50" aria-hidden>
-            /
-          </span>
-          {orgs.length > 1 ? (
-            <OrgSwitcher
-              key={org.id}
-              current={{ id: org.id, name: org.name }}
-              orgs={orgs.map((o) => ({ id: o.id, name: o.name }))}
-              label={t('organization')}
-            />
-          ) : (
-            <span className="text-sm text-muted-foreground">{org.name}</span>
-          )}
+    <div className="flex min-h-dvh flex-col md:flex-row">
+      <AppSidebar
+        labels={{
+          nav: t('nav.label'),
+          overview: t('areas.overview.name'),
+          settings: t('nav.settings'),
+          areas: areaLabels,
+        }}
+      />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 md:px-8">
+          <ProductPicker
+            products={projects.map((p) => ({ slug: p.slug, name: p.name }))}
+            canCreate={canManage(org.role)}
+            labels={{
+              label: t('picker.label'),
+              all: t('picker.all'),
+              search: t('picker.search'),
+              none: t('picker.none'),
+              new: t('picker.new'),
+            }}
+            newProductLabels={{
+              title: t('newProduct.title'),
+              intro: t('newProduct.intro'),
+              name: t('projects.name'),
+              placeholder: t('newProduct.placeholder'),
+              cancel: t('common.cancel'),
+              create: t('projects.create'),
+            }}
+          />
           <div className="ml-auto flex items-center gap-2">
+            {orgs.length > 1 && (
+              <OrgSwitcher
+                key={org.id}
+                current={{ id: org.id, name: org.name }}
+                orgs={orgs.map((o) => ({ id: o.id, name: o.name }))}
+                label={t('common.organization')}
+              />
+            )}
             <LocaleSwitcher />
             <UserMenu
               name={user.name}
               email={user.email}
-              labels={{ account: t('account'), members: t('members'), signOut: t('signOut') }}
+              labels={{
+                account: t('common.account'),
+                members: t('common.members'),
+                signOut: t('common.signOut'),
+              }}
             />
           </div>
-        </div>
-        <div className="mx-auto w-full max-w-6xl px-4">
-          <NavTabs tabs={tabs} newLabel={t('newProduct')} />
-        </div>
-      </header>
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8">
-        {children}
-      </main>
+        </header>
+        <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-8 md:px-8">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

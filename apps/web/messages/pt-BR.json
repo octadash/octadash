@@ -7,11 +7,8 @@
     "signOut": "Sair",
     "members": "Membros",
     "settings": "Configurações",
-    "allProducts": "Todos",
-    "newProduct": "Novo produto",
     "language": "Idioma",
     "organization": "Organização",
-    "comingSoon": "Em breve",
     "account": "Conta"
   },
   "auth": {
@@ -39,16 +36,11 @@
     "haveAccount": "Já tem conta? Entre primeiro."
   },
   "projects": {
-    "newTitle": "Novo produto",
-    "newIntro": "Cada produto ganha a sua aba, as suas chaves e os seus números.",
     "name": "Nome",
     "create": "Criar produto",
-    "allTitle": "Todos os produtos",
     "emptyTitle": "Nenhum produto ainda",
     "emptyBody": "Adicione o primeiro produto para começar a acompanhar.",
     "open": "Abrir",
-    "modulesTitle": "O que o Octadash acompanha",
-    "modulesIntro": "Cada módulo liga para este produto quando os dados dele começam a chegar.",
     "keysTitle": "Chaves de coleta",
     "keysIntro": "Use estas chaves ao conectar os SDKs. Elas identificam o produto e podem ficar no navegador.",
     "publicKey": "Chave pública",
@@ -59,40 +51,6 @@
     "dangerBody": "Exclui o produto, as chaves e todos os dados dele. Não dá para desfazer.",
     "deleteDialogTitle": "Excluir {name}?",
     "delete": "Excluir produto"
-  },
-  "modules": {
-    "diagnosis": {
-      "name": "Diagnóstico",
-      "body": "O que o site tem e o que falta, com o próximo passo."
-    },
-    "uptime": {
-      "name": "Uptime",
-      "body": "Está no ar? Checa sem acordar o seu banco."
-    },
-    "web": {
-      "name": "Web",
-      "body": "Visitas, origens e páginas, sem cookie."
-    },
-    "errors": {
-      "name": "Erros",
-      "body": "O que quebrou e para quantas pessoas."
-    },
-    "product": {
-      "name": "Produto",
-      "body": "Cadastros, logins, ações chave, funil e retenção."
-    },
-    "revenue": {
-      "name": "Dinheiro",
-      "body": "MRR, novos clientes, cancelamentos e reembolsos."
-    },
-    "ai": {
-      "name": "Custo de IA",
-      "body": "Custo, tokens e erros por modelo e provedor."
-    },
-    "logs": {
-      "name": "Logs",
-      "body": "O que o servidor fez naquele momento."
-    }
   },
   "members": {
     "title": "Membros",
@@ -119,5 +77,78 @@
     "nameRequired": "Dê um nome ao produto.",
     "notFound": "Não encontrado.",
     "confirmDelete": "Confirme a exclusão antes."
+  },
+  "areas": {
+    "overview": {
+      "name": "Visão geral"
+    },
+    "uptime": {
+      "name": "No ar",
+      "body": "Se o site e a API estão respondendo, quanto demoram e quando o certificado vence.",
+      "how": "Nada para instalar: o Octadash verifica de fora."
+    },
+    "traffic": {
+      "name": "Tráfego",
+      "body": "Quem visita, de onde vem e quais páginas lê.",
+      "how": "Um script do Octadash no site."
+    },
+    "usage": {
+      "name": "Uso",
+      "body": "Cadastros, logins, ações principais, funil e retenção.",
+      "how": "O pacote do Octadash no navegador e no servidor."
+    },
+    "errors": {
+      "name": "Erros",
+      "body": "Erros do navegador e do servidor, agrupados, com quantas pessoas cada um atingiu e desde quando acontece.",
+      "how": "O pacote do Octadash para navegador e Node, ou qualquer SDK do Sentry."
+    },
+    "money": {
+      "name": "Dinheiro",
+      "body": "Receita, MRR, cancelamentos e reembolsos deste produto, separados entre contratado, pago e líquido.",
+      "how": "Conecta no Stripe, Asaas ou Paddle. Nada para instalar no produto."
+    },
+    "costs": {
+      "name": "Custos",
+      "body": "Quanto este produto gasta com IA e infraestrutura, e quanto sobra da receita.",
+      "how": "IA pelo pacote do Octadash para Node ou por OpenTelemetry. Infra pela API do provedor ou por valor digitado."
+    },
+    "logs": {
+      "name": "Logs",
+      "body": "O que o servidor fez em cada momento, para investigar um erro ou uma queda.",
+      "how": "OpenTelemetry (OTLP), de qualquer linguagem."
+    }
+  },
+  "nav": {
+    "label": "Áreas",
+    "settings": "Configurações"
+  },
+  "picker": {
+    "all": "Todos os produtos",
+    "search": "Buscar produto",
+    "none": "Nenhum produto encontrado",
+    "new": "Novo produto",
+    "label": "Produto"
+  },
+  "newProduct": {
+    "title": "Novo produto",
+    "intro": "Só o nome. Onde ele roda e como os dados chegam você escolhe depois, em cada área.",
+    "placeholder": "Ex.: Tribunal de Ideias"
+  },
+  "productPage": {
+    "summary": "{toSetUp, plural, =0 {Todas as áreas estão configuradas ou deixadas de lado.} one {# área para configurar.} other {# áreas para configurar.}}",
+    "keysAndSettings": "Chaves e configurações",
+    "setUp": "Configurar",
+    "wontUse": "Não vou usar",
+    "alsoAvailable": "Também disponível neste produto",
+    "useAgain": "Voltar a usar",
+    "example": "Exemplo · os dados reais entram no primeiro evento"
+  },
+  "areaPage": {
+    "soon": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra como configurar neste produto.",
+    "soonAll": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra a área para todos os produtos de uma vez.",
+    "back": "Voltar para {name}"
+  },
+  "overview": {
+    "count": "{count, plural, one {# produto} other {# produtos}}."
   }
 }

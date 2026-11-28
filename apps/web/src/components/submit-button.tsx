@@ -8,11 +8,13 @@ import { Button } from './ui/button'
 export function SubmitButton({
   children,
   variant,
+  size,
   className,
   disabled,
 }: {
   children: ReactNode
   variant?: ComponentProps<typeof Button>['variant']
+  size?: ComponentProps<typeof Button>['size']
   className?: string
   disabled?: boolean
 }) {
@@ -22,6 +24,7 @@ export function SubmitButton({
     <Button
       type="submit"
       variant={variant}
+      size={size}
       className={className}
       disabled={disabled || inActionForm || pending}
     >
