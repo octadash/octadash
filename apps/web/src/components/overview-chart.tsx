@@ -11,7 +11,7 @@ import {
 export interface ChartPoint {
   /** ISO time of the bucket start. */
   at: string
-  current: number
+  current: number | null
   previous: number | null
 }
 
@@ -87,7 +87,9 @@ export function OverviewChart({
       const i = index.get(x) ?? 0
       const labelled = i - lastLabelled >= gap
       if (labelled) lastLabelled = i
-      return [x, labelled ? [...names].join(', ') : ''] as const
+      // Near the right edge the label goes to the left of its line.
+      const side = i > points.length * 0.7 ? 'insideTopRight' : 'insideTopLeft'
+      return [x, labelled ? [...names].join(', ') : '', side] as const
     })
 
   return (
@@ -129,7 +131,7 @@ export function OverviewChart({
           strokeWidth={1.5}
           isAnimationActive={false}
         />
-        {grouped.map(([x, label]) => (
+        {grouped.map(([x, label, side]) => (
           <ReferenceLine
             key={x}
             x={x}
@@ -137,7 +139,7 @@ export function OverviewChart({
             strokeDasharray="3 3"
             label={{
               value: label,
-              position: 'insideTopLeft',
+              position: side,
               fill: 'var(--color-error)',
               fontSize: 12,
             }}

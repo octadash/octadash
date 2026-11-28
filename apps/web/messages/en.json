@@ -140,13 +140,31 @@
     "placeholder": "e.g. Tribunal de Ideias"
   },
   "productPage": {
-    "summary": "{toSetUp, plural, =0 {Every area is set up or put aside.} one {# area to set up.} other {# areas to set up.}}",
-    "keysAndSettings": "Keys and settings",
     "setUp": "Set up",
     "wontUse": "I won't use this",
     "alsoAvailable": "Also available for this product",
     "useAgain": "Use again",
-    "example": "Example · real data appears with the first event"
+    "example": "Example · real data appears with the first event",
+    "status": "{receiving, plural, =0 {Nothing receiving yet} one {# area receiving} other {# areas receiving}}{waiting, plural, =0 {} one {, # waiting for its first event} other {, # waiting for their first event}}{toSetUp, plural, =0 {} one {, # to set up} other {, # to set up}}.",
+    "settings": "Product settings",
+    "areas": "Areas",
+    "areasHint": "Each card opens its area filtered to {name}",
+    "monitors30": "{count, plural, one {# monitor} other {# monitors}} · 30 days",
+    "certSoon": "{count, plural, one {A certificate expires in # day} other {A certificate expires in # days}}",
+    "open": "Open {area}",
+    "trafficTabs": {
+      "source": "Where from",
+      "page": "Pages",
+      "country": "Countries",
+      "device": "Devices"
+    },
+    "noVisits": "No visits in this period.",
+    "unknown": {
+      "source": "Direct or unknown",
+      "page": "Unknown page",
+      "country": "Unknown country",
+      "device": "Unknown device"
+    }
   },
   "areaPage": {
     "soon": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows how to set it up for this product.",
@@ -177,14 +195,16 @@
       "uptime": "Uptime",
       "upNow": "{up} of {total}",
       "uptimeSub": "up now · {ratio} in {period}",
-      "visitors": "Visitors"
+      "visitors": "Visitors",
+      "uptimeRatio": "{ratio} in {period}"
     },
     "chart": {
       "visitors": "Visitors",
       "previous": "Previous period",
       "emergency": "Emergency",
       "asTable": "Show as a table",
-      "time": "Time"
+      "time": "Time",
+      "response": "Response time"
     },
     "table": {
       "title": "Products",
@@ -203,8 +223,8 @@
     },
     "timeline": {
       "title": "What happened · {period}",
-      "nothing": "Nothing happened in these {period}: no outage, no emergency.",
-      "quiet": "The other {count, plural, one {product} other {# products}} had nothing in these {period}.",
+      "nothing": "Nothing happened in this period: no outage, no emergency.",
+      "quiet": "The other {count, plural, one {product} other {# products}} had nothing in this period.",
       "open": "{what} since {from}, {duration} so far",
       "closed": "{what} from {from} to {to}, {duration}",
       "kinds": {

@@ -140,13 +140,31 @@
     "placeholder": "Ex.: Tribunal de Ideias"
   },
   "productPage": {
-    "summary": "{toSetUp, plural, =0 {Todas as áreas estão configuradas ou deixadas de lado.} one {# área para configurar.} other {# áreas para configurar.}}",
-    "keysAndSettings": "Chaves e configurações",
     "setUp": "Configurar",
     "wontUse": "Não vou usar",
     "alsoAvailable": "Também disponível neste produto",
     "useAgain": "Voltar a usar",
-    "example": "Exemplo · os dados reais entram no primeiro evento"
+    "example": "Exemplo · os dados reais entram no primeiro evento",
+    "status": "{receiving, plural, =0 {Nada recebendo ainda} one {# área recebendo} other {# áreas recebendo}}{waiting, plural, =0 {} one {, # esperando o primeiro evento} other {, # esperando o primeiro evento}}{toSetUp, plural, =0 {} one {, # para configurar} other {, # para configurar}}.",
+    "settings": "Configurações do produto",
+    "areas": "Áreas",
+    "areasHint": "Cada card abre a sua área filtrada para {name}",
+    "monitors30": "{count, plural, one {# monitor} other {# monitores}} · 30 dias",
+    "certSoon": "{count, plural, one {Um certificado vence em # dia} other {Um certificado vence em # dias}}",
+    "open": "Abrir {area}",
+    "trafficTabs": {
+      "source": "De onde vêm",
+      "page": "Páginas",
+      "country": "Países",
+      "device": "Aparelhos"
+    },
+    "noVisits": "Nenhuma visita neste período.",
+    "unknown": {
+      "source": "Direto ou desconhecido",
+      "page": "Página desconhecida",
+      "country": "País desconhecido",
+      "device": "Aparelho desconhecido"
+    }
   },
   "areaPage": {
     "soon": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra como configurar neste produto.",
@@ -177,14 +195,16 @@
       "uptime": "No ar",
       "upNow": "{up} de {total}",
       "uptimeSub": "no ar agora · {ratio} em {period}",
-      "visitors": "Visitantes"
+      "visitors": "Visitantes",
+      "uptimeRatio": "{ratio} em {period}"
     },
     "chart": {
       "visitors": "Visitantes",
       "previous": "Período anterior",
       "emergency": "Emergência",
       "asTable": "Ver como tabela",
-      "time": "Horário"
+      "time": "Horário",
+      "response": "Tempo de resposta"
     },
     "table": {
       "title": "Produtos",

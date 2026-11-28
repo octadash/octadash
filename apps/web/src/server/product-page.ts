@@ -1,0 +1,121 @@
+import {
+  type AreaId,
+  listMonitors,
+  listProjectAreas,
+  listSources,
+  type ProjectAreaState,
+  responseSeries,
+  type TrafficRow,
+  trafficBreakdown,
+  uptimeHistory,
+} from '@octadash/db'
+import type { PeriodId } from '@/lib/period'
+import { services } from './context'
+import { type HourState, loadOverview, type Overview, type OverviewProduct } from './overview'
+import { safeMonitorStats } from './uptime-view'
+
+/**
+ * The product page: the Overview's pattern for one product (numbers, chart,
+ * timeline by monitor), then one card per area with that area's short summary.
+ */
+
+export interface MonitorLine {
+  id: string
+  name: string
+  status: 'up' | 'down' | 'unknown'
+  paused: boolean
+  uptime: number | null
+  medianMs: number | null
+  certDays: number | null
+  /** One cell per day of the last 30. */
+  days: HourState[]
+}
+
+export interface ProductPage {
+  overview: Overview
+  states: Map<AreaId, ProjectAreaState>
+  monitors: MonitorLine[]
+  /** Response time per chart bucket, now and before. */
+  response: {
+    current: { at: Date; medianMs: number | null }[]
+    previous: { at: Date; medianMs: number | null }[]
+  } | null
+  sources: { name: string; platform: string; areas: string[] }[]
+  /** Top values for the Traffic card, by visitors. */
+  traffic: Record<'source' | 'page' | 'country' | 'device', TrafficRow[]> | null
+}
+
+const DAY = 86_400_000
+
+export async function loadProductPage(
+  orgId: string,
+  product: OverviewProduct,
+  periodId: PeriodId,
+  now = new Date(),
+): Promise<ProductPage> {
+  const { db, clickhouse } = services()
+  const overview = await loadOverview(orgId, [product], periodId, now)
+  const { period, timeZone } = overview
+  const scope = {
+    orgId,
+    projectIds: [product.id],
+    from: period.from,
+    to: period.to,
+    timeZone,
+  }
+  const [areaStates, monitors, sources] = await Promise.all([
+    listProjectAreas(db, orgId, product.id),
+    listMonitors(db, orgId, product.id),
+    listSources(db, orgId, product.id),
+  ])
+  const quiet = <T>(work: Promise<T>, fallback: T) => work.catch(() => fallback)
+  const month = { ...scope, from: new Date(now.getTime() - 30 * DAY), to: now }
+  const usesTraffic = overview.traffic !== null
+  const [stats, history, current, previous, source, page, country, device] = await Promise.all([
+    safeMonitorStats(
+      clickhouse,
+      orgId,
+      monitors.map((m) => m.id),
+    ),
+    quiet(uptimeHistory(clickhouse, month, 'day', 'monitor'), new Map()),
+    monitors.length > 0 ? quiet(responseSeries(clickhouse, scope, period.chart), []) : [],
+    monitors.length > 0
+      ? quiet(responseSeries(clickhouse, { ...scope, ...period.previous }, period.chart), [])
+      : [],
+    usesTraffic ? quiet(trafficBreakdown(clickhouse, scope, 'source', 5), []) : [],
+    usesTraffic ? quiet(trafficBreakdown(clickhouse, scope, 'page', 5), []) : [],
+    usesTraffic ? quiet(trafficBreakdown(clickhouse, scope, 'country', 5), []) : [],
+    usesTraffic ? quiet(trafficBreakdown(clickhouse, scope, 'device', 5), []) : [],
+  ])
+
+  // Uptime is set up when it has monitors, whatever was stored before.
+  const states = new Map(areaStates)
+  if (monitors.length > 0) states.set('uptime', 'set_up')
+  else if (states.get('uptime') === 'set_up') states.delete('uptime')
+  if (usesTraffic && !states.has('traffic')) states.set('traffic', 'set_up')
+
+  return {
+    overview,
+    states,
+    monitors: monitors.map((m) => {
+      const s = stats.get(m.id)
+      const past = history.get(m.id)
+      return {
+        id: m.id,
+        name: m.name,
+        status: m.status,
+        paused: m.paused,
+        uptime: s?.uptime ?? null,
+        medianMs: s?.medianMs ?? null,
+        certDays: s?.certDays ?? null,
+        days: (past?.buckets ?? Array.from({ length: 30 }, () => ({ checks: 0, downs: 0 }))).map(
+          (b: { checks: number; downs: number }) =>
+            b.checks === 0 ? 'none' : b.downs > 0 ? 'down' : 'up',
+        ),
+      }
+    }),
+    response: monitors.length > 0 ? { current, previous } : null,
+    sources: sources.map((s) => ({ name: s.name, platform: s.platform, areas: s.areas })),
+    traffic: usesTraffic ? { source, page, country, device } : null,
+  }
+}

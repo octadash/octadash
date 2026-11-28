@@ -11,7 +11,7 @@ import {
   trafficSeriesByProduct,
   trafficSummary,
 } from './traffic'
-import { insertUptimeChecks, monitorStats, uptimeHistory } from './uptime'
+import { insertUptimeChecks, monitorStats, responseSeries, uptimeHistory } from './uptime'
 
 const url = process.env.CLICKHOUSE_URL
 
@@ -247,5 +247,11 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     expect(ofA?.buckets[1]).toMatchObject({ checks: 0, downs: 0 })
     expect(ofA?.buckets[5]).toMatchObject({ checks: 1, downs: 0 })
     expect(await uptimeHistory(client, { ...scope, projectIds: [] }, 'hour')).toEqual(new Map())
+    const byMonitor = await uptimeHistory(client, { ...scope, projectIds: [a] }, 'day', 'monitor')
+    expect(byMonitor.size).toBe(3)
+    const response = await responseSeries(client, { ...scope, projectIds: [a] }, 'hour')
+    expect(response).toHaveLength(24)
+    expect(response[0]?.medianMs).toBe(100)
+    expect(response[1]?.medianMs).toBeNull()
   })
 })
