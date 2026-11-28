@@ -1447,7 +1447,8 @@
       "emergency": "Emergência",
       "asTable": "Mostrar como tabela",
       "time": "Hora"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "trafficSetup": {
     "title": "Configurar Tráfego",
@@ -1935,7 +1936,8 @@
       "silentBody": "{sources} não {count, plural, one {enviou} other {enviaram}} nada {period}. Zero erro {count, plural, one {dela} other {delas}} pode ser só silêncio: confira se o SDK ou o script continua ligado depois do último deploy.",
       "silentMore": "{count, plural, one {E mais #.} other {E mais #.}}",
       "openSource": "Ver {source}"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "errorsSetup": {
     "title": "Configurar Erros",
@@ -2133,7 +2135,8 @@
       "people": "Pessoas",
       "week": "Semana {n}",
       "weekOf": "Semana de {date}"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "usageSetup": {
     "title": "Configurar Uso do produto",
@@ -2290,7 +2293,8 @@
       "service": "Serviço",
       "product": "Produto",
       "message": "Mensagem"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "logsSetup": {
     "title": "Configurar Logs",

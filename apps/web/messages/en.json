@@ -1447,7 +1447,8 @@
       "emergency": "Emergency",
       "asTable": "Show as a table",
       "time": "Time"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "trafficSetup": {
     "title": "Set up Traffic",
@@ -1935,7 +1936,8 @@
       "silentBody": "{sources} sent nothing {period}. {count, plural, one {Its zero errors may be only silence} other {Their zero errors may be only silence}}: check that the SDK or the script is still on after the last deploy.",
       "silentMore": "{count, plural, one {And # more.} other {And # more.}}",
       "openSource": "See {source}"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "errorsSetup": {
     "title": "Set up Errors",
@@ -2133,7 +2135,8 @@
       "people": "People",
       "week": "Week {n}",
       "weekOf": "Week of {date}"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "usageSetup": {
     "title": "Set up Product usage",
@@ -2290,7 +2293,8 @@
       "service": "Service",
       "product": "Product",
       "message": "Message"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "logsSetup": {
     "title": "Set up Logs",

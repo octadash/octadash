@@ -1,7 +1,8 @@
 import type { TrafficDimension, TrafficFilter } from '@octadash/db'
-import { ArrowRightIcon, FilterIcon, PlusIcon, XIcon } from 'lucide-react'
+import { ArrowRightIcon, FilterIcon, XIcon } from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { AddSourceAction } from '@/components/add-source-action'
 import { InfoTip } from '@/components/info-tip'
 import { MetricChart } from '@/components/metric-chart'
 import { TrafficCard, type TrafficContext } from '@/components/traffic-lists'
@@ -175,14 +176,6 @@ export async function TrafficView({
             {t('online', { count: data.online })}
           </span>
           {product && (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/p/${product.slug}/traffic/setup?add=1`}>
-                <PlusIcon data-icon="inline-start" aria-hidden />
-                {t('addSource')}
-              </Link>
-            </Button>
-          )}
-          {product && (
             <Link
               href={`/p/${product.slug}/traffic/setup`}
               className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
@@ -190,6 +183,12 @@ export async function TrafficView({
               {t('setUpLink')}
             </Link>
           )}
+          <AddSourceAction
+            area="traffic"
+            products={data.projects.map((p) => ({ slug: p.slug, name: p.name }))}
+            label={t('addSource')}
+            pick={t('addSourceTo')}
+          />
         </div>
       </div>
 

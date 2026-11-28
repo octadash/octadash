@@ -1,6 +1,7 @@
-import { BellRingIcon, PlusIcon } from 'lucide-react'
+import { BellRingIcon } from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { AddSourceAction } from '@/components/add-source-action'
 import { LogExplorer } from '@/components/log-explorer'
 import { LogHistogram } from '@/components/log-histogram'
 import { LogSearchDialog } from '@/components/log-search-dialog'
@@ -115,17 +116,9 @@ export async function LogsView({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {product && (
-            <>
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/p/${product.slug}/logs/setup?add=1`}>
-                  <PlusIcon data-icon="inline-start" aria-hidden />
-                  {t('addSource')}
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/p/${product.slug}/logs/setup`}>{t('setUp')}</Link>
-              </Button>
-            </>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/p/${product.slug}/logs/setup`}>{t('setUp')}</Link>
+            </Button>
           )}
           <nav aria-label={t('periodLabel')} className="flex rounded-lg border border-border p-0.5">
             {LOG_PERIODS.map((id) => (
@@ -142,6 +135,12 @@ export async function LogsView({
               </Link>
             ))}
           </nav>
+          <AddSourceAction
+            area="logs"
+            products={data.projects.map((p) => ({ slug: p.slug, name: p.name }))}
+            label={t('addSource')}
+            pick={t('addSourceTo')}
+          />
         </div>
       </div>
 
