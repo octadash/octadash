@@ -18,7 +18,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { migrateAll } from './migrate'
 
 const url = process.env.DATABASE_URL
-const org = '00000000-0000-4000-8000-0000000000e7'
+const org = '00000000-0000-4000-8000-0000000000e8'
 
 describe.skipIf(!url)('one emergency (needs DATABASE_URL)', () => {
   const { db, pool } = createDb(url ?? '', { max: 2 })

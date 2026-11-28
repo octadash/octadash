@@ -1,4 +1,6 @@
 import {
+  type AiModelUse,
+  aiModelUse,
   convertMinor,
   fixedCostDays,
   fxRates,
@@ -17,6 +19,7 @@ import {
 } from '@octadash/db'
 import { type CostShare, costProvider, type SplitMode, splitCost } from '@octadash/integrations'
 import { type CostsState, costPeriod, daysBetween, forecastMonth, marginOf } from '@/lib/costs'
+import { startOfDay } from '@/lib/traffic'
 import { services } from './context'
 
 type Project = Awaited<ReturnType<typeof listProjects>>[number]
@@ -49,6 +52,16 @@ export interface ProviderCost {
   every: 'hour' | 'day' | 'month' | 'year'
   status: string
   syncedAt: Date | null
+}
+
+/** Model calls the products reported themselves (OpenTelemetry `gen_ai`, PostHog AI events). */
+export interface AiCallsData {
+  rows: (AiModelUse & { product: { name: string; slug: string } })[]
+  /** US dollars at list price, or what the app sent. */
+  cost: number
+  calls: number
+  /** Calls of models the price list does not have. */
+  unpriced: number
 }
 
 export interface CostsData {
@@ -84,6 +97,7 @@ export interface CostsData {
   previousSeries: { day: string; spend: number }[]
   byProduct: ProductCost[]
   byProvider: ProviderCost[]
+  aiCalls: AiCallsData
   unconverted: string[]
   complete: boolean
 }
@@ -167,7 +181,7 @@ export async function loadCosts(
     from: new Date(`${a}T00:00:00Z`),
     to: new Date(Date.parse(`${b}T00:00:00Z`) + DAY),
   })
-  const [rates, days, traffic, revenueNow, revenueBefore] = await Promise.all([
+  const [rates, days, traffic, revenueNow, revenueBefore, aiUse] = await Promise.all([
     fxRates(db, from, today),
     listCostDays(db, orgId, from, today),
     usesTraffic
@@ -195,6 +209,16 @@ export async function loadCosts(
       () =>
         paymentDays(clickhouse, periodDates(period.previous.from, period.previous.to), timeZone),
       [] as PaymentDay[],
+    ),
+    safe(
+      () =>
+        aiModelUse(clickhouse, {
+          orgId,
+          projectIds: ids,
+          from: startOfDay(new Date(`${period.from}T12:00:00Z`), timeZone),
+          to: now,
+        }),
+      [] as AiModelUse[],
     ),
   ])
 
@@ -396,6 +420,15 @@ export async function loadCosts(
     previousSeries: series(period.previous.from, period.previous.to),
     byProduct,
     byProvider,
+    aiCalls: {
+      rows: aiUse.map((row) => {
+        const p = projects.find((x) => x.id === row.projectId)
+        return { ...row, product: { name: p?.name ?? '', slug: p?.slug ?? '' } }
+      }),
+      cost: aiUse.reduce((n, r) => n + r.cost, 0),
+      calls: aiUse.reduce((n, r) => n + r.calls, 0),
+      unpriced: aiUse.reduce((n, r) => n + r.unpriced, 0),
+    },
     unconverted: [...unconverted],
     complete,
   }

@@ -2,6 +2,7 @@ import { anthropic } from './anthropic'
 import { openai } from './openai'
 import type { CostProvider } from './types'
 
+export * from './ai-prices'
 export { anthropicCosts } from './anthropic'
 export { openaiCosts } from './openai'
 export * from './split'

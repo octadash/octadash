@@ -1,3 +1,4 @@
+import { AI_PRICES_DATE } from '@octadash/integrations'
 import { TriangleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server'
@@ -54,9 +55,15 @@ export async function CostsView({
       ? '–'
       : `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value)}%`
   const several = data.projects.length > 1
+  const usd = (dollars: number) =>
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: dollars < 10 ? 4 : 2,
+    }).format(dollars)
   const setupOf = (slug: string) => `/p/${slug}/costs/setup`
 
-  if (data.connected === 0) {
+  if (data.connected === 0 && data.aiCalls.calls === 0) {
     const setup = await loadConnectionSetup(orgId, data.projects, 'costs')
     const [first] = setup
     if (product && first) return <CostsStartView orgId={orgId} product={product} setup={first} />
@@ -410,6 +417,95 @@ export async function CostsView({
           </CardContent>
         </Card>
       </div>
+
+      {data.aiCalls.calls > 0 && (
+        <Card className="min-w-0">
+          <CardHeader className="flex flex-wrap items-baseline justify-between gap-2">
+            <CardTitle>
+              <h2 className="flex items-center gap-1 text-base font-semibold">
+                {t('aiCalls.title')}
+                <InfoTip label={t('aiCalls.infoLabel')} title={t('aiCalls.title')}>
+                  {t('aiCalls.info', {
+                    date: format.dateTime(new Date(AI_PRICES_DATE), { dateStyle: 'medium' }),
+                  })}
+                </InfoTip>
+              </h2>
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {t('aiCalls.total', {
+                calls: data.aiCalls.calls,
+                cost: usd(data.aiCalls.cost),
+              })}
+            </p>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <Table scrollLabel={t('aiCalls.title')}>
+              <TableHeader>
+                <TableRow>
+                  {several && <TableHead>{t('aiCalls.product')}</TableHead>}
+                  <TableHead>{t('aiCalls.model')}</TableHead>
+                  <TableHead className="text-right">{t('aiCalls.calls')}</TableHead>
+                  <TableHead className="text-right">{t('aiCalls.input')}</TableHead>
+                  <TableHead className="text-right">{t('aiCalls.output')}</TableHead>
+                  <TableHead className="text-right">{t('aiCalls.cost')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.aiCalls.rows.map((row) => (
+                  <TableRow key={`${row.projectId}:${row.provider}:${row.model}`}>
+                    {several && (
+                      <TableCell>
+                        <Link
+                          href={`/p/${row.product.slug}/costs`}
+                          className="font-medium hover:underline"
+                        >
+                          {row.product.name}
+                        </Link>
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <span className="flex flex-col">
+                        <span className="font-medium">{row.model}</span>
+                        {row.provider && (
+                          <span className="text-xs text-muted-foreground">{row.provider}</span>
+                        )}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {format.number(row.calls)}
+                      {row.errors > 0 && (
+                        <span className="block text-xs text-error">
+                          {t('aiCalls.errors', { count: row.errors })}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {format.number(row.inputTokens, { notation: 'compact' })}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {format.number(row.outputTokens, { notation: 'compact' })}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {row.unpriced === row.calls ? (
+                        <span className="text-xs text-muted-foreground">
+                          {t('aiCalls.noPrice')}
+                        </span>
+                      ) : (
+                        usd(row.cost)
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {data.aiCalls.unpriced > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t('aiCalls.unpriced', { count: data.aiCalls.unpriced })}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

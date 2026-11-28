@@ -25,16 +25,26 @@ export const ROUTES: Record<string, string> = {
   'GET /o/v1/hb/:token/fail': 'heartbeat failure (Valkey), then a row in uptime_checks',
   'POST /o/v1/hb/:token/fail': 'heartbeat failure (Valkey), then a row in uptime_checks',
   'POST /o/v1/events': 'events',
-  'POST /e': 'events; $exception to errors; other PostHog events to received',
-  'POST /e/': 'events; $exception to errors; other PostHog events to received',
-  'POST /i/v0/e': 'events; $exception to errors; other PostHog events to received',
-  'POST /i/v0/e/': 'events; $exception to errors; other PostHog events to received',
-  'POST /batch': 'events; $exception to errors; other PostHog events to received',
-  'POST /batch/': 'events; $exception to errors; other PostHog events to received',
-  'POST /capture': 'events; $exception to errors; other PostHog events to received',
-  'POST /capture/': 'events; $exception to errors; other PostHog events to received',
-  'POST /track': 'events; $exception to errors; other PostHog events to received',
-  'POST /track/': 'events; $exception to errors; other PostHog events to received',
+  'POST /e':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /e/':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /i/v0/e':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /i/v0/e/':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /batch':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /batch/':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /capture':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /capture/':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /track':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
+  'POST /track/':
+    'events ($ai_generation also to ai_calls); $exception to errors; other PostHog events to received',
   'POST /engage': 'received (person updates, masked)',
   'POST /engage/': 'received (person updates, masked)',
   'GET /flags': 'no data: answers the flags request',
@@ -57,8 +67,8 @@ export const ROUTES: Record<string, string> = {
   'POST /o/v1/errors': 'errors',
   'POST /v1/logs': 'logs',
   'POST /otlp/v1/logs': 'logs',
-  'POST /v1/traces': 'spans',
-  'POST /otlp/v1/traces': 'spans',
+  'POST /v1/traces': 'spans; gen_ai model calls also to ai_calls',
+  'POST /otlp/v1/traces': 'spans; gen_ai model calls also to ai_calls',
   'POST /v1/metrics': 'metrics',
   'POST /otlp/v1/metrics': 'metrics',
 }

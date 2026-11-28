@@ -1,4 +1,5 @@
 import {
+  aiModelUse,
   allows,
   compileLogQuery,
   createProject,
@@ -29,6 +30,7 @@ import {
   usageEvents,
   usageTotals,
 } from '@octadash/db'
+import { AI_PRICES_DATE } from '@octadash/integrations'
 import {
   errorSnippet,
   isErrorPlatform,
@@ -627,6 +629,55 @@ export const MCP_TOOLS: Tool[] = [
         })),
         ...(data.unconverted.length > 0 ? { leftOutNoRate: data.unconverted } : {}),
         ...(data.complete ? {} : { partial: true }),
+      }
+    },
+  },
+  {
+    name: 'ai_usage',
+    needs: [['costs', 'read']],
+    title: 'AI calls',
+    description:
+      'Model calls the products reported themselves (OpenTelemetry gen_ai spans, PostHog AI events) over the last days: per product and model, the calls, failures, input, output and cached tokens, and the cost in US dollars at list price unless the app sent its own. Apart from the bills of connected AI accounts, which the costs tool reads.',
+    input: z.object({
+      product,
+      days: z
+        .number()
+        .int()
+        .min(1)
+        .max(90)
+        .default(7)
+        .describe('How many days back, 7 by default.'),
+    }),
+    async run(input, { orgId }) {
+      const { clickhouse } = services()
+      const { all, scope: chosen } = await productsOf(orgId, input.product as string | undefined)
+      const days = Number(input.days)
+      const to = new Date()
+      const from = new Date(to.getTime() - days * 86_400_000)
+      const rows = await aiModelUse(clickhouse, {
+        orgId,
+        projectIds: chosen.map((p) => p.id),
+        from,
+        to,
+      })
+      const usd = (value: number) => Math.round(value * 10_000) / 10_000
+      return {
+        period: { from, to, days },
+        pricesFrom: `LiteLLM price list of ${AI_PRICES_DATE}`,
+        calls: rows.reduce((n, r) => n + r.calls, 0),
+        costUsd: usd(rows.reduce((n, r) => n + r.cost, 0)),
+        models: rows.map((r) => ({
+          product: slugOf(all, r.projectId),
+          provider: r.provider,
+          model: r.model,
+          calls: r.calls,
+          failed: r.errors,
+          inputTokens: r.inputTokens,
+          outputTokens: r.outputTokens,
+          cachedInputTokens: r.cacheReadTokens,
+          costUsd: usd(r.cost),
+          callsWithoutPrice: r.unpriced,
+        })),
       }
     },
   },

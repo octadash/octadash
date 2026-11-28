@@ -50,6 +50,14 @@ tinham, então margens passadas não mudam.
 Os valores aparecem na moeda da organização; outras moedas são convertidas pela
 cotação do dia.
 
+## Chamadas de IA dos seus apps
+
+Apps que informam as chamadas de modelo (spans `gen_ai` do OpenTelemetry,
+eventos de IA do PostHog) ganham mais uma tabela: chamadas, tokens e custo por
+produto e modelo, com preço de tabela. É assim que uma conta de IA
+compartilhada mostra qual produto e modelo gastou. Veja
+[Chamadas de IA](/pt/send-data/ai).
+
 ## Pergunte à sua IA
 
 Com um token que lê Custos, o [servidor MCP](/pt/use/mcp) responde `costs`:
