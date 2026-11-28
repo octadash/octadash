@@ -16,6 +16,8 @@ import {
   toEventRows,
 } from './events'
 import type { HeartbeatResolver, KeyResolver } from './keys'
+import { MAX_LOGS_PER_REQUEST, toLogRows } from './logs'
+import { decodeLogsJson, decodeLogsProtobuf, exportAnswer, type OtlpLog } from './otlp'
 import {
   POSTHOG_ASSETS,
   POSTHOG_FLAGS,
@@ -55,7 +57,8 @@ export interface IngestDeps {
  *   - Octadash script/SDK   /o/v1/events                       (step 1)
  *   - Sentry envelopes      /api/:projectId/envelope/          (errors step)
  *   - PostHog capture       /e/, /i/v0/e/, /batch/, /capture/, /flags/
- *   - OpenTelemetry (OTLP)  /v1/logs, /v1/traces               (later steps)
+ *   - OpenTelemetry (OTLP)  /v1/logs (also under /otlp/); traces and metrics
+ *                           are answered and not kept yet
  * Heartbeat monitors ping /hb/<token> (GET or POST) from cron jobs and backups.
  * The health check touches nothing, so uptime probes never wake a database.
  */
@@ -343,6 +346,66 @@ export function createApp(deps: IngestDeps) {
     app.post(path, errorLimit(MAX_BODY_BYTES), errors('store'))
   }
   app.post('/o/v1/errors', errorLimit(MAX_BODY_BYTES), errors('octadash'))
+
+  /**
+   * OpenTelemetry over HTTP, protobuf or JSON. The key comes in a header
+   * (`x-octadash-key` or `Authorization: Bearer`). Logs are masked and queued;
+   * traces and metrics are answered with a warning so a Collector sending all
+   * three does not retry them, until their areas keep them.
+   */
+  const otlp = (kind: 'logs' | 'spans' | 'dataPoints') => async (c: Context) => {
+    const encoding = (c.req.header('content-type') ?? '').includes('json') ? 'json' : 'protobuf'
+    const answer = (rejected: number, message: string) => {
+      const out = exportAnswer(rejected, message, encoding, kind)
+      return c.body(out.body as never, 200, { 'content-type': out.contentType })
+    }
+    if (kind === 'logs' && deps.sink.isFull('logs')) return queueFull(c)
+    let scope: Awaited<ReturnType<KeyResolver['resolve']>>
+    try {
+      scope = await deps.keys.resolve(keyFrom(c) ?? '')
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503)
+    }
+    if (!scope) return c.json({ error: 'invalid_key' }, 401)
+    if (kind !== 'logs') return answer(0, 'Octadash keeps logs only for now; this was not stored.')
+
+    let logs: OtlpLog[]
+    try {
+      const body = inflate(
+        new Uint8Array(await c.req.arrayBuffer()),
+        c.req.header('content-encoding'),
+      )
+      logs =
+        encoding === 'json'
+          ? decodeLogsJson(JSON.parse(new TextDecoder().decode(body)))
+          : decodeLogsProtobuf(body)
+    } catch {
+      return c.json({ error: 'invalid_body' }, 400)
+    }
+    if (logs.length === 0) return answer(0, '')
+    const rows = toLogRows(scope, logs, new Date(now()))
+    try {
+      // Large batches go in pieces, so one stream entry stays small.
+      for (let i = 0; i < rows.length; i += 1000) {
+        await deps.sink.write('logs', rows.slice(i, i + 1000))
+      }
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
+    }
+    const rejected = logs.length - rows.length
+    return answer(
+      rejected,
+      rejected > 0 ? `At most ${MAX_LOGS_PER_REQUEST} log records per request.` : '',
+    )
+  }
+  const otlpLimit = errorLimit(MAX_ENVELOPE_BYTES)
+  for (const prefix of ['', '/otlp']) {
+    app.post(`${prefix}/v1/logs`, otlpLimit, otlp('logs'))
+    app.post(`${prefix}/v1/traces`, otlpLimit, otlp('spans'))
+    app.post(`${prefix}/v1/metrics`, otlpLimit, otlp('dataPoints'))
+  }
 
   app.notFound((c) => c.json({ error: 'not_found' }, 404))
 

@@ -316,6 +316,7 @@ function kindKey(kind: string) {
     'cert_expiring',
     'error_spike',
     'key_event_stopped',
+    'log_alert',
   ].includes(kind)
     ? kind
     : 'other'

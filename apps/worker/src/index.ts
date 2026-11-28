@@ -13,10 +13,12 @@ import {
   createDb,
   getWatcher,
   insertErrors,
+  insertLogs,
   insertUptimeChecks,
   issuePeople,
   listActiveMonitors,
   listDismissedAreas,
+  logRetention,
   recordDiscarded,
   recordIssueHits,
   recordWatcherPing,
@@ -95,6 +97,10 @@ const writers = startWriters(
         await live.publish(orgId, 'errors').catch(() => {})
       }
     },
+  },
+  {
+    loadRetention: (projectIds) => logRetention(db, projectIds),
+    insert: (rows, token) => insertLogs(clickhouse, rows, token),
   },
   log,
 )

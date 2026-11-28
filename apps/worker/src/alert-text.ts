@@ -29,6 +29,10 @@ interface Words {
   stoppedFor: (duration: string, normal: number) => string
   stoppedBack: (product: string, event: string) => string
   stoppedLasted: (duration: string) => string
+  logAlert: (product: string, search: string) => string
+  logAlertLines: (count: number, minutes: number) => string
+  logAlertOver: (product: string, search: string) => string
+  logAlertQuiet: (minutes: number) => string
   downFor: (duration: string) => string
   wasDownFor: (duration: string) => string
   manyDown: (count: number) => string
@@ -60,6 +64,10 @@ const words: Record<AlertLocale, Words> = {
     stoppedFor: (d, n) => `None for ${d}; normal for this time is about ${n} an hour.`,
     stoppedBack: (p, e) => `${e} is arriving again on ${p}`,
     stoppedLasted: (d) => `It was missing for ${d}.`,
+    logAlert: (p, s) => `Log alert on ${p}: ${s}`,
+    logAlertLines: (n, m) => `${n} matching ${n === 1 ? 'line' : 'lines'} in the last ${m} min.`,
+    logAlertOver: (p, s) => `${s} is quiet again on ${p}`,
+    logAlertQuiet: (m) => `No matching line for ${m} min.`,
     downFor: (d) => `Down for ${d}.`,
     wasDownFor: (d) => `It was down for ${d}.`,
     manyDown: (n) => `${n} monitors are down`,
@@ -100,6 +108,11 @@ const words: Record<AlertLocale, Words> = {
     stoppedFor: (d, n) => `Nenhum há ${d}; o normal para este horário é cerca de ${n} por hora.`,
     stoppedBack: (p, e) => `${e} voltou a chegar em ${p}`,
     stoppedLasted: (d) => `Ficou sem chegar por ${d}.`,
+    logAlert: (p, s) => `Alerta de log em ${p}: ${s}`,
+    logAlertLines: (n, m) =>
+      `${n} ${n === 1 ? 'linha encontrada' : 'linhas encontradas'} nos últimos ${m} min.`,
+    logAlertOver: (p, s) => `${s} voltou ao silêncio em ${p}`,
+    logAlertQuiet: (m) => `Nenhuma linha encontrada há ${m} min.`,
     downFor: (d) => `Fora do ar há ${d}.`,
     wasDownFor: (d) => `Ficou fora do ar por ${d}.`,
     manyDown: (n) => `${n} monitores fora do ar`,
@@ -148,6 +161,9 @@ interface IncidentData {
   /** Key event stopped: the event, when it last came and its normal per hour. */
   event?: string
   last?: string
+  /** Log alert: the saved search's name and the minutes its count covers. */
+  search?: string
+  window?: number
 }
 
 export type AlertEvent = 'open' | 'resolve'
@@ -198,6 +214,18 @@ function describe(incident: PendingIncident, event: AlertEvent, now: Date, local
       ),
     }
   }
+  if (incident.kind === 'log_alert') {
+    const search = data.search ?? ''
+    return event === 'resolve'
+      ? {
+          title: w.logAlertOver(incident.project_name, search),
+          detail: w.logAlertQuiet(data.minutes ?? 15),
+        }
+      : {
+          title: w.logAlert(incident.project_name, search),
+          detail: w.logAlertLines(data.count ?? 1, data.window ?? 60),
+        }
+  }
   if (incident.kind === 'cert_expiring') {
     return event === 'open'
       ? { title: w.cert(name, data.days ?? 0), detail: data.url ?? '' }
@@ -241,7 +269,9 @@ export function alertMessage(
       body: line.detail,
       project: { id: first.project_id, name: first.project_name },
       url:
-        first.kind === 'error_spike' || first.kind === 'key_event_stopped'
+        first.kind === 'error_spike' ||
+        first.kind === 'key_event_stopped' ||
+        first.kind === 'log_alert'
           ? `${base}/p/${first.project_slug}/emergencies/${first.id}`
           : `${base}/p/${first.project_slug}/uptime`,
       occurredAt: now,
@@ -261,7 +291,9 @@ export function alertMessage(
   const lines = incidents.map((incident) => {
     const line = describe(incident, event, now, locale)
     const title =
-      incident.kind === 'error_spike' || incident.kind === 'key_event_stopped'
+      incident.kind === 'error_spike' ||
+      incident.kind === 'key_event_stopped' ||
+      incident.kind === 'log_alert'
         ? line.title
         : `${incident.project_name}: ${line.title}`
     return `• ${title}. ${line.detail}`.trim()

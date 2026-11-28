@@ -31,6 +31,7 @@ function error(project: string, fingerprint: string, at: string, release = ''): 
     exception: '[]',
     breadcrumbs: '[]',
     tags: '{}',
+    trace_id: '',
   }
 }
 

@@ -66,6 +66,8 @@ export interface ErrorRow {
   breadcrumbs: string
   /** JSON object of string tags. */
   tags: string
+  /** The trace it happened in, lowercase hex; empty when the SDK sent none. */
+  trace_id: string
 }
 
 /** What the ingest queues: a row before the worker knows its issue. */

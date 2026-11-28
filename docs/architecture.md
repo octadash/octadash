@@ -240,6 +240,38 @@ versions and passwords generated at install. Each has one job.
   day) never fires. It closes with the next event, not when the hour turns
   quiet; unmarking the key event closes it without a message.
 
+### Logs
+
+- Lines arrive over OpenTelemetry's OTLP/HTTP at `/v1/logs` (also
+  `/otlp/v1/logs`), protobuf or JSON, gzip or not, with the source key in
+  `x-octadash-key` or `Authorization: Bearer`. Protobuf is read by a small
+  wire-format decoder (`apps/ingest/src/otlp.ts`), so the bundle needs no
+  generated code. Tested with the OpenTelemetry JS exporters (proto and http).
+  `/v1/traces` and `/v1/metrics` answer with a partial success that says they
+  are not kept yet, so a Collector sending all three does not retry them.
+- Masking at the door: e-mails, card numbers (Luhn), CPF, CNPJ, SSN, bearer
+  tokens, JWTs, private keys, well-known API key shapes, `password=` and
+  `user:password@` are replaced in the message and in every attribute, and
+  attributes named like a secret (password, token, authorization, cookie...)
+  are masked whole. Each line keeps how many values were masked.
+- ClickHouse `logs` keeps the message, the level (from the severity number,
+  else the word Serilog, Python or pino send), `service.name`, trace and span
+  ids, the line's attributes and the resource's. Each line carries its
+  product's retention (`project_area.retention_days`, 14 days by default) and
+  parts are cut by retention and day, so the TTL drops whole parts. Choosing a
+  shorter retention deletes older lines at once.
+- Search (`clickhouse/log-query.ts`), Seq-style: words and phrases search the
+  message; `field:value`, `field>n`, `level>=warn`, `product:slug`,
+  `trace:<id>`, `-` to negate, `*` as a wildcard. Every value travels as a
+  query parameter.
+- Errors keep the trace id Sentry SDKs send (`contexts.trace.trace_id`), so a
+  log line finds its error and the other way round.
+- Log alert (`log_alert`): a saved search (`log_search`) with Alert on runs
+  every minute over the lines since it was turned on, at most the last hour.
+  Each product with a match gets its own emergency; it closes after `silence`
+  minutes (15) without a match. Deleting the search or turning Alert off
+  closes it without a message.
+
 ### Integrations are plugins
 
 Alert channels and data sources share one contract (`packages/integrations`):
@@ -299,7 +331,7 @@ changing one URL:
 - PostHog capture (`/e/`, `/i/v0/e/`, `/batch/`, `/capture/`) for events;
   `$ai_generation` and the newer `/i/v1/...` endpoints come with their areas.
 - OTLP over HTTP (`/v1/logs`, `/v1/traces`, `/v1/metrics`) for logs, traces and
-  `gen_ai` spans.
+  `gen_ai` spans. Logs are kept now; traces and metrics come with their areas.
 
 Octadash writes its own SDKs only where it adds something: one browser script
 (traffic, errors and events) and a Node.js and Next.js package. Every other

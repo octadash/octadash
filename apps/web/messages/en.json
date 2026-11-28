@@ -300,7 +300,8 @@
         "cert_expiring": "Certificate of “{name}” about to expire",
         "other": "Emergency",
         "error_spike": "Error spike",
-        "key_event_stopped": "“{name}” stopped"
+        "key_event_stopped": "“{name}” stopped",
+        "log_alert": "Log alert “{name}”"
       },
       "more": "{count, plural, one {# more on the product page} other {# more on the product page}}"
     }
@@ -630,6 +631,11 @@
         "title": "Key event stopped",
         "body": "An event you marked as key (a sign-up, a payment) stops arriving at an hour it usually comes.",
         "info": "Octadash waits for the time the expected number of events normally takes at this hour (the same hour of the last 7 days), and never less than the minimum silence. Quiet hours wait longer on their own, and an event too rare at this hour (under 5 a day) never fires. It closes when the next event arrives. Mark key events in Set up Product usage."
+      },
+      "log_alert": {
+        "title": "Log alert",
+        "body": "A saved Logs search with Alert on matches a line. Each product with a match gets its own emergency.",
+        "info": "Turn Alert on for a saved search on the Logs page. Octadash runs it every minute over the lines since it was turned on. It closes after the minutes you set pass without a match (at most 60). Only lines that arrive after Alert is on can fire it."
       }
     },
     "legend": "Levels",
@@ -702,15 +708,6 @@
           "body": "Spend per hour well above normal (AI tokens, cloud).",
           "wait": "No cost source is connected yet.",
           "params": "3× normal for 1 h"
-        }
-      },
-      "logs": {
-        "starts": "Starts when Logs is set up on a product",
-        "logAlert": {
-          "title": "Log alert",
-          "body": "A search you save matches, such as level=fatal.",
-          "wait": "No product sends logs yet.",
-          "params": "You set the search"
         }
       }
     },
@@ -990,7 +987,8 @@
       "uptime": "Uptime",
       "other": "Octadash",
       "errors": "Errors",
-      "usage": "Product usage"
+      "usage": "Product usage",
+      "logs": "Logs"
     },
     "started": "Started {time} · {duration}",
     "titles": {
@@ -999,7 +997,8 @@
       "cert_expiring": "{product} · certificate expires in {days} days",
       "other": "{product} · {name}",
       "error_spike": "{product} · error spike",
-      "key_event_stopped": "{product} · {event} stopped"
+      "key_event_stopped": "{product} · {event} stopped",
+      "log_alert": "{product} · log alert “{search}”"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1009,7 +1008,8 @@
       "closed": "Over at {time}, after {duration}.",
       "spike": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where about {normal} is normal at this time. It closes on its own when errors fall back under the rule.",
       "spikeNone": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where this time of day usually has none. It closes on its own when errors fall back under the rule.",
-      "keyEvent": "No {event} since {time}, where about {normal} an hour is normal at this time. It closes on its own when the next one arrives."
+      "keyEvent": "No {event} since {time}, where about {normal} an hour is normal at this time. It closes on its own when the next one arrives.",
+      "logAlert": "The saved search “{search}” ({query}) matched a line. It closes on its own after {minutes} min without a match."
     },
     "onIt": "{name} is on it · since {time}",
     "nobody": "Nobody on it yet",
@@ -1098,7 +1098,8 @@
       "cert_expiring": "{product} · certificate was close to expiring",
       "other": "{product} · {name}",
       "error_spike": "{product} · error spike",
-      "key_event_stopped": "{product} · {event} stopped"
+      "key_event_stopped": "{product} · {event} stopped",
+      "log_alert": "{product} · log alert “{search}”"
     },
     "spike": {
       "title": "Issues behind the spike",
@@ -1114,7 +1115,8 @@
       "cert_expiring": "{product}: certificate expires in {days, plural, one {# day} other {# days}}",
       "other": "{product}: {name}",
       "error_spike": "{product}: error spike",
-      "key_event_stopped": "{product}: {event} stopped"
+      "key_event_stopped": "{product}: {event} stopped",
+      "log_alert": "{product}: log alert “{search}”"
     },
     "short": {
       "monitor_down": "{product} down",
@@ -1122,7 +1124,8 @@
       "cert_expiring": "{product} certificate expiring",
       "other": "{product} {name}",
       "error_spike": "{product} error spike",
-      "key_event_stopped": "{product} {event} stopped"
+      "key_event_stopped": "{product} {event} stopped",
+      "log_alert": "{product} log alert"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
@@ -1130,7 +1133,8 @@
       "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
       "other": "{name}: {reason}",
       "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min",
-      "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour"
+      "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour",
+      "log_alert": "{count, plural, one {# matching line} other {# matching lines}}"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” is not answering",
@@ -1138,7 +1142,8 @@
       "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
       "other": "{name}",
       "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min",
-      "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour"
+      "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour",
+      "log_alert": "{count, plural, one {# matching line} other {# matching lines}}"
     },
     "kind": {
       "monitor_down": "Down",
@@ -1146,7 +1151,8 @@
       "cert_expiring": "Certificate expiring",
       "other": "Emergency",
       "error_spike": "Error spike",
-      "key_event_stopped": "Key event stopped"
+      "key_event_stopped": "Key event stopped",
+      "log_alert": "Log alert"
     },
     "count": "{count, plural, one {# emergency} other {# emergencies}}",
     "countProducts": "{count} emergencies on {products} products",
@@ -1203,7 +1209,8 @@
       "submitNone": "I'm on these"
     },
     "spikeOver": "{product}: errors back to normal",
-    "keyBack": "{product}: {event} is arriving again"
+    "keyBack": "{product}: {event} is arriving again",
+    "logQuiet": "{product}: “{search}” is quiet again"
   },
   "traffic": {
     "title": "Traffic",

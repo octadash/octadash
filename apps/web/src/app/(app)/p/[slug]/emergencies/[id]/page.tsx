@@ -23,6 +23,7 @@ const KINDS = [
   'cert_expiring',
   'error_spike',
   'key_event_stopped',
+  'log_alert',
 ] as const
 
 const AREA_OF: Record<Kind | 'other', string> = {
@@ -31,6 +32,7 @@ const AREA_OF: Record<Kind | 'other', string> = {
   cert_expiring: 'uptime',
   error_spike: 'errors',
   key_event_stopped: 'usage',
+  log_alert: 'logs',
   other: 'other',
 }
 type Kind = (typeof KINDS)[number]
@@ -95,6 +97,7 @@ export default async function EmergencyPage({
     name,
     days: typeof data.days === 'number' ? data.days : 0,
     event: typeof data.event === 'string' ? data.event : '',
+    search: typeof data.search === 'string' ? data.search : '',
   })
   const words = { ok: t('checked.ok'), fail: t('checked.fail') }
   const failureAt = emergency.timeline.find((e) => e.kind === 'firstFailure')?.at ?? null
@@ -122,7 +125,13 @@ export default async function EmergencyPage({
                 ),
                 normal: typeof data.normal === 'number' ? Math.round(data.normal * 10) / 10 : 0,
               })
-            : t('summary.other')
+            : kind === 'log_alert'
+              ? t('summary.logAlert', {
+                  search: typeof data.search === 'string' ? data.search : '',
+                  query: typeof data.query === 'string' ? data.query : '',
+                  minutes: typeof data.minutes === 'number' ? data.minutes : 15,
+                })
+              : t('summary.other')
 
   return (
     <div className="flex flex-col gap-6">

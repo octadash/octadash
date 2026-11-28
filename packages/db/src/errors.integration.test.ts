@@ -194,6 +194,7 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
     exception: JSON.stringify([{ type: 'TypeError', value: 'boom', frames: [] }]),
     breadcrumbs: '[]',
     tags: '{"a":"b"}',
+    trace_id: '',
   })
 
   beforeAll(async () => {

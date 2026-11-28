@@ -18,6 +18,7 @@ export interface Database {
   error_issue: ErrorIssueTable
   key_event: KeyEventTable
   funnel: FunnelTable
+  log_search: LogSearchTable
   source: SourceTable
   source_key: SourceKeyTable
   project_area: ProjectAreaTable
@@ -114,6 +115,20 @@ export interface FunnelTable {
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
 
+/** A saved Logs search; with `alert` on it is a "Log alert" rule. */
+export interface LogSearchTable {
+  id: string
+  org_id: string
+  name: string
+  query: string
+  alert: ColumnType<boolean, boolean | undefined, boolean>
+  /** When the alert was turned on: lines before it never fire. */
+  alert_since: Date | null
+  created_by: string | null
+  created_at: CreatedAt
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
 /** A private TV link; only the token's hash is stored. */
 export interface TvLinkTable {
   id: string
@@ -202,6 +217,8 @@ export interface ProjectAreaTable {
   /** Events not stored because the area is dismissed. */
   discarded_events: ColumnType<string, never, string | number>
   discarded_at: ColumnType<Date | null, never, Date | null>
+  /** Days the area keeps its data in this product; null is the area's default. */
+  retention_days: ColumnType<number | null, number | null | undefined, number | null>
 }
 
 export type MonitorKind = 'site' | 'health' | 'heartbeat'

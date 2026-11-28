@@ -10,6 +10,7 @@ export type StripKind =
   | 'cert_expiring'
   | 'error_spike'
   | 'key_event_stopped'
+  | 'log_alert'
   | 'other'
 
 export interface StripItem {

@@ -4,6 +4,7 @@ import {
   type ChannelRow,
   claimPendingIncidents,
   closeStaleMonitorIncidents,
+  compileLogQuery,
   type createClickHouse,
   type Db,
   errorRates,
@@ -14,10 +15,14 @@ import {
   listActiveMonitors,
   listEnabledChannels,
   listKeyEvents,
+  listLogSearches,
   listOpenIncidentKeys,
+  listProjects,
+  logMatches,
   markNotified,
   openIncident,
   type PendingIncident,
+  parseLogQuery,
   recentErrorProducts,
   recordNotification,
   resolveIncident,
@@ -38,7 +43,12 @@ export const ALERT_QUEUES = {
   errors: 'alerts-errors',
   /** Looks for key events that stopped arriving. */
   usage: 'alerts-usage',
+  /** Runs the saved Logs searches that have Alert on. */
+  logs: 'alerts-logs',
 } as const
+
+/** The longest quiet spell a Log alert waits for before it closes, in minutes. */
+const LONGEST_LOG_SILENCE = 60
 
 /** The Error spike rule looks at this many minutes. */
 export const SPIKE_WINDOW_MINUTES = 15
@@ -410,7 +420,89 @@ export function createAlerts(deps: AlertsDeps) {
     }
   }
 
-  return { onTransition, notify, checkCerts, checkErrorSpikes, checkKeyEvents }
+  /**
+   * Log alert: each saved search with Alert on runs over the lines since it was
+   * turned on (at most the last hour). A product with a match in the quiet
+   * spell (`silence` minutes) gets an emergency; it closes once the spell
+   * passes with no match. A search deleted or switched off closes its
+   * emergencies without a message.
+   */
+  async function checkLogAlerts() {
+    const at = now()
+    const [searches, open] = await Promise.all([
+      listLogSearches(deps.db, null),
+      listOpenIncidentKeys(deps.db, 'log_alert'),
+    ])
+    const keyOf = (searchId: string, projectId: string) => `logs:${searchId}:${projectId}`
+    const live = new Set(searches.map((s) => s.id))
+    const changed = new Set<string>()
+    for (const row of open) {
+      const searchId = row.dedupe_key.split(':')[1] ?? ''
+      if (!live.has(searchId)) await resolveIncident(deps.db, row.dedupe_key, at, { silent: true })
+    }
+    const openKeys = new Set(open.map((row) => row.dedupe_key))
+    const projectsByOrg = new Map<string, { id: string; slug: string }[]>()
+    for (const search of searches) {
+      let projects = projectsByOrg.get(search.orgId)
+      if (!projects) {
+        projects = (await listProjects(deps.db, search.orgId)).map((p) => ({
+          id: p.id,
+          slug: p.slug,
+        }))
+        projectsByOrg.set(search.orgId, projects)
+      }
+      const query = compileLogQuery(
+        parseLogQuery(search.query),
+        new Map(projects.map((p) => [p.slug, p.id])),
+      )
+      const hourAgo = new Date(at.getTime() - LONGEST_LOG_SILENCE * 60_000)
+      const since = search.alertSince && search.alertSince > hourAgo ? search.alertSince : hourAgo
+      const matches = await logMatches(
+        deps.clickhouse,
+        search.orgId,
+        projects.map((p) => p.id),
+        query,
+        since,
+        at,
+      )
+      const byProject = new Map(matches.map((m) => [m.projectId, m]))
+      for (const project of projects) {
+        const key = keyOf(search.id, project.id)
+        const match = byProject.get(project.id)
+        const rule = await ruleFor(deps.db, search.orgId, project.id, 'log_alert')
+        const silence = Math.min(LONGEST_LOG_SILENCE, Math.max(1, rule.params.silence ?? 15))
+        const recent = match && at.getTime() - match.last.getTime() < silence * 60_000
+        if (openKeys.has(key)) {
+          if (!recent && (await resolveIncident(deps.db, key, at))) changed.add(search.orgId)
+          continue
+        }
+        if (!recent || rule.level === 'off') continue
+        const opened = await openIncident(deps.db, {
+          orgId: search.orgId,
+          projectId: project.id,
+          kind: 'log_alert',
+          dedupeKey: key,
+          data: {
+            search: search.name,
+            searchId: search.id,
+            query: search.query,
+            count: match.count,
+            window: Math.max(1, Math.round((at.getTime() - since.getTime()) / 60_000)),
+            minutes: silence,
+            last: match.last.toISOString(),
+          },
+          at,
+        })
+        if (opened) changed.add(search.orgId)
+      }
+    }
+    if (changed.size > 0) {
+      await wake()
+      await tell(changed, 'incidents')
+    }
+  }
+
+  return { onTransition, notify, checkCerts, checkErrorSpikes, checkKeyEvents, checkLogAlerts }
 }
 
 export type Alerts = ReturnType<typeof createAlerts>
@@ -435,5 +527,10 @@ export async function registerAlertJobs(boss: PgBoss, alerts: Alerts, log: Logge
   await boss.schedule(ALERT_QUEUES.usage, '* * * * *')
   await boss.work(ALERT_QUEUES.usage, async () => {
     await alerts.checkKeyEvents().catch((err) => log.warn({ err }, 'key event check failed'))
+  })
+  await boss.createQueue(ALERT_QUEUES.logs)
+  await boss.schedule(ALERT_QUEUES.logs, '* * * * *')
+  await boss.work(ALERT_QUEUES.logs, async () => {
+    await alerts.checkLogAlerts().catch((err) => log.warn({ err }, 'log alert check failed'))
   })
 }
