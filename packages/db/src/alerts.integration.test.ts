@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   acknowledgeIncidents,
   claimPendingIncidents,
+  closeNotices,
   closeStaleMonitorIncidents,
   listIncidentsBetween,
   listOpenIncidents,
@@ -183,6 +184,44 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
         at: T0,
       }),
     ).toBeNull()
+  })
+
+  it('keeps a new issue notice off every list of emergencies and closes it once sent', async () => {
+    const project = await createProject(db, org, { name: 'Notices' })
+    const input = {
+      orgId: org,
+      projectId: project.id,
+      kind: 'new_issue' as const,
+      dedupeKey: `errors:issue:${project.id}:new`,
+      data: { type: 'TypeError' },
+      at: T0,
+    }
+    expect(await openIncident(db, input)).toBeNull()
+    await saveRule(db, org, project.id, 'new_issue', {
+      level: 'emergency',
+      params: {},
+      channelIds: null,
+    })
+    const notice = await openIncident(db, input)
+    expect(notice).not.toBeNull()
+    expect((await listOpenIncidents(db, org)).some((i) => i.id === notice?.id)).toBe(false)
+    expect(
+      (await listIncidentsBetween(db, org, [project.id], T0, new Date(T0.getTime() + 60_000)))
+        .length,
+    ).toBe(0)
+    const sent = new Date(T0.getTime() + 60_000)
+    await db.transaction().execute(async (trx) => {
+      const pending = await claimPendingIncidents(trx, sent)
+      expect(pending.some((i) => i.id === notice?.id)).toBe(true)
+      await markNotified(trx, [notice?.id ?? ''], 'open', sent)
+      await closeNotices(trx, [notice?.id ?? ''], sent)
+    })
+    await db.transaction().execute(async (trx) => {
+      expect((await claimPendingIncidents(trx, sent)).some((i) => i.id === notice?.id)).toBe(false)
+    })
+    expect(await listResolvedSince(db, org, T0)).not.toContainEqual(
+      expect.objectContaining({ id: notice?.id }),
+    )
   })
 
   it('stores channels per organization', async () => {

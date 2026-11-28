@@ -416,3 +416,11 @@ Luciano reviewed the night's decisions that change the product or his risk.
   storage (S3 or MinIO), masking and retention.
 - **A new issue can send a message, as an optional rule off by default.** The
   error spike stays the emergency.
+- **"New issue" is a notice, not an emergency.** Its rule is "Send a
+  message" or "Off" (no signal) and starts off. Each new issue is kept as an
+  incident so channels, grouping and the message record work as for
+  emergencies, but notices are left out of the strip, the timeline and every
+  list of emergencies, and close themselves once sent. New issues in the same
+  minute go out as one message per channel, never mixed with an emergency.
+- **A rule set to Off is no longer faded**: the faded text failed AA contrast,
+  and the level toggle already says Off.

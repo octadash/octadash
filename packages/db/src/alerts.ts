@@ -43,10 +43,24 @@ export const RULE_DEFAULTS = {
    * average) and at least `dollars` US dollars. Ends when an hour falls back under.
    */
   cost_runaway: { level: 'emergency', params: { times: 3, dollars: 5 } },
+  /**
+   * A notice, not an emergency: a message for each issue seen for the first
+   * time, off by default. It never reaches the strip or the timeline; it
+   * closes itself, silently, once its message went out. Several new issues in
+   * the same minute go out as one message per channel.
+   */
+  new_issue: { level: 'off', params: {} },
 } as const satisfies Record<string, { level: AlertLevel | 'off'; params: Record<string, number> }>
 
 export type IncidentKind = keyof typeof RULE_DEFAULTS
 export const INCIDENT_KINDS = Object.keys(RULE_DEFAULTS) as IncidentKind[]
+
+/**
+ * Kinds that only send a message: kept as incidents so the message, its
+ * channels and its record work as for emergencies, but left out of every
+ * list of emergencies, and closed once sent.
+ */
+export const NOTICE_KINDS: IncidentKind[] = ['new_issue']
 
 export interface Rule {
   kind: string
@@ -250,6 +264,7 @@ export function listOpenIncidents(db: Db, orgId: string) {
     ])
     .where('incident.org_id', '=', orgId)
     .where('incident.resolved_at', 'is', null)
+    .where('incident.kind', 'not in', NOTICE_KINDS)
     .orderBy('incident.started_at', 'desc')
     .execute()
 }
@@ -284,6 +299,7 @@ export function listResolvedSince(db: Db, orgId: string, since: Date) {
     ])
     .where('incident.org_id', '=', orgId)
     .where('incident.level', '=', 'emergency')
+    .where('incident.kind', 'not in', NOTICE_KINDS)
     .where('incident.resolved_at', '>=', since)
     .orderBy('incident.resolved_at', 'desc')
     .limit(20)
@@ -319,6 +335,7 @@ export async function listIncidentsBetween(
       'acknowledged_by',
     ])
     .where('org_id', '=', orgId)
+    .where('kind', 'not in', NOTICE_KINDS)
     .where('started_at', '<', to)
     .where((eb) => eb.or([eb('resolved_at', 'is', null), eb('resolved_at', '>=', from)]))
   if (projectIds) query = query.where('project_id', 'in', projectIds)
@@ -410,6 +427,18 @@ export async function markNotified(trx: Db, ids: string[], event: 'open' | 'reso
     .updateTable('incident')
     .set(event === 'open' ? { notified_open_at: at } : { notified_resolve_at: at })
     .where('id', 'in', ids)
+    .execute()
+}
+
+/** Closes notices once their message went out, without a "resolved" message. */
+export async function closeNotices(trx: Db, ids: string[], at: Date) {
+  if (ids.length === 0) return
+  await trx
+    .updateTable('incident')
+    .set({ resolved_at: at, notified_resolve_at: at })
+    .where('id', 'in', ids)
+    .where('kind', 'in', NOTICE_KINDS)
+    .where('resolved_at', 'is', null)
     .execute()
 }
 
@@ -522,6 +551,7 @@ export async function listHappenings(
     .innerJoin('project', 'project.id', 'incident.project_id')
     .where('incident.org_id', '=', orgId)
     .where('incident.parent_id', 'is', null)
+    .where('incident.kind', 'not in', NOTICE_KINDS)
     .where('incident.notify_after', '<=', now)
   const [started, ended, took] = await Promise.all([
     base

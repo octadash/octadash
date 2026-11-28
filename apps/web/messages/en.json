@@ -605,7 +605,8 @@
     "levels": {
       "emergency": "Emergency",
       "signal": "Signal",
-      "off": "Off"
+      "off": "Off",
+      "message": "Send a message"
     },
     "levelHint": {
       "emergency": "Needs action now. Message to the channels and the red strip on every screen until resolved.",
@@ -678,6 +679,12 @@
         "title": "Cost runaway",
         "body": "Spend in one hour well above a normal hour (AI tokens today; cloud when it arrives). Each product gets its own emergency.",
         "info": "Octadash compares each product’s latest hour of spend with its average hour over the last 7 days. It opens when the hour reaches the times you set and at least the dollars you set, so a few cents never wake anyone. Shared accounts count only the product’s part. It closes when an hour falls back under, or after 6 hours without spend."
+      },
+      "new_issue": {
+        "title": "New issue",
+        "body": "A message each time an error is seen for the first time. Off by default: the Error spike already tells when errors climb, and a busy product makes new issues every day.",
+        "info": "It sends only a message: it never opens an emergency or turns the strip red. New issues in the same minute go out as one message per channel. An issue that comes back after being resolved shows under Regressed in Errors.",
+        "note": "Several new issues in the same minute come as one message."
       }
     },
     "legend": "Levels",

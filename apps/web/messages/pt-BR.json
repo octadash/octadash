@@ -605,7 +605,8 @@
     "levels": {
       "emergency": "Emergência",
       "signal": "Sinal",
-      "off": "Desligado"
+      "off": "Desligado",
+      "message": "Enviar mensagem"
     },
     "levelHint": {
       "emergency": "Precisa de ação agora. Mensagem para os canais e faixa vermelha em todas as telas até resolver.",
@@ -678,6 +679,12 @@
         "title": "Custo disparado",
         "body": "Gasto em uma hora bem acima de uma hora normal (tokens de IA hoje; nuvem quando chegar). Cada produto tem a sua emergência.",
         "info": "O Octadash compara a última hora de gasto de cada produto com a hora média dos últimos 7 dias. Abre quando a hora chega às vezes que você definiu e a pelo menos os dólares que você definiu, assim centavos nunca acordam ninguém. Contas compartilhadas contam só a parte do produto. Fecha quando uma hora volta para baixo, ou depois de 6 horas sem gasto."
+      },
+      "new_issue": {
+        "title": "Issue nova",
+        "body": "Uma mensagem cada vez que um erro aparece pela primeira vez. Desligada por padrão: o Pico de erros já avisa quando os erros sobem, e um produto movimentado cria issues novas todo dia.",
+        "info": "Ela só manda mensagem: nunca abre uma emergência nem deixa a faixa vermelha. Issues novas no mesmo minuto vão juntas, uma mensagem por canal. Uma issue que volta depois de resolvida aparece em Voltaram, na área de Erros.",
+        "note": "Várias issues novas no mesmo minuto chegam em uma mensagem só."
       }
     },
     "legend": "Níveis",

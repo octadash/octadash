@@ -140,6 +140,33 @@ describe('alert text', () => {
     expect(over.body).toBe('O pico durou 7 min.')
   })
 
+  it('says a new issue as a notice, and several as one message', () => {
+    const fresh = incident({
+      kind: 'new_issue',
+      data: { issueId: 'iss1', type: 'TypeError', value: 'x is undefined', culprit: 'app/cart.ts' },
+    })
+    const one = alertMessage([fresh], 'open', { now: NOW, locale: 'en', panelUrl: 'https://x.dev' })
+    expect(one.severity).toBe('info')
+    expect(one.title).toBe('New issue on Tribunal de Ideias')
+    expect(one.body).toBe('TypeError: x is undefined In app/cart.ts.')
+    expect(one.url).toBe('https://x.dev/p/tribunal/errors/iss1')
+    const many = alertMessage(
+      [fresh, { ...fresh, id: 'i2', data: { type: 'RangeError' } }],
+      'open',
+      {
+        now: NOW,
+        locale: 'pt-BR',
+        panelUrl: 'https://x.dev',
+      },
+    )
+    expect(many.title).toBe('2 issues novas')
+    expect(many.body.split('\n')).toEqual([
+      '• Issue nova em Tribunal de Ideias. TypeError: x is undefined Em app/cart.ts.',
+      '• Issue nova em Tribunal de Ideias. RangeError',
+    ])
+    expect(many.url).toBe('https://x.dev/all/errors')
+  })
+
   it('needs both the minimum and the multiple of normal for a spike', () => {
     const rule = { times: 5, events: 20 }
     expect(isSpike(19, 0, rule)).toBe(false)
@@ -223,6 +250,14 @@ describe('deliveries', () => {
       ['c2', 'open'],
       ['c2', 'resolve'],
     ])
+  })
+
+  it('never puts a notice in the same message as an emergency', () => {
+    const deliveries = planDeliveries(
+      [incident(), incident({ id: 'i2', kind: 'new_issue' })],
+      [channel()],
+    )
+    expect(deliveries.map((d) => d.incidents.map((i) => i.id))).toEqual([['i1'], ['i2']])
   })
 
   it('decrypts the channel secrets into its settings', () => {

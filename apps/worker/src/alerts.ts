@@ -3,12 +3,14 @@ import {
   type ActiveMonitor,
   type ChannelRow,
   claimPendingIncidents,
+  closeNotices,
   closeStaleMonitorIncidents,
   compileLogQuery,
   costTotalsByTag,
   type createClickHouse,
   type Db,
   errorRates,
+  type IncidentKind,
   ignoredIssueIds,
   issueHeads,
   keyEventRates,
@@ -24,6 +26,7 @@ import {
   listProjects,
   logMatches,
   markNotified,
+  NOTICE_KINDS,
   openIncident,
   type PendingIncident,
   parseLogQuery,
@@ -106,7 +109,7 @@ export interface Delivery {
  * Who gets what: each incident goes to the channels its rule names, or to every
  * enabled channel of its organization when the rule names none. Incidents for
  * the same channel and event become one delivery, so an outage that takes ten
- * products down is one message per channel.
+ * products down is one message per channel. Notices go apart from emergencies.
  */
 export function planDeliveries(incidents: PendingIncident[], channels: ChannelRow[]): Delivery[] {
   const byKey = new Map<string, Delivery>()
@@ -118,7 +121,8 @@ export function planDeliveries(incidents: PendingIncident[], channels: ChannelRo
         (incident.channel_ids === null || incident.channel_ids.includes(channel.id)),
     )
     for (const channel of targets) {
-      const key = `${channel.id}:${event}`
+      // A notice (a new issue) never shares a message with an emergency.
+      const key = `${channel.id}:${event}:${NOTICE_KINDS.includes(incident.kind as IncidentKind)}`
       const delivery = byKey.get(key) ?? { channel, event, incidents: [] }
       delivery.incidents.push(incident)
       byKey.set(key, delivery)
@@ -134,6 +138,16 @@ export function channelConfig(channel: ChannelRow, secret: string): Record<strin
     config[key] = decryptSecret(value, secret)
   }
   return config
+}
+
+/** An issue the errors writer just created. */
+export interface NewIssue {
+  orgId: string
+  projectId: string
+  issueId: string
+  type: string
+  value: string
+  culprit: string
 }
 
 export interface AlertsDeps {
@@ -234,6 +248,7 @@ export function createAlerts(deps: AlertsDeps) {
       const resolved = pending.filter((i) => i.resolved_at).map((i) => i.id)
       await markNotified(trx, opened, 'open', at)
       await markNotified(trx, resolved, 'resolve', at)
+      await closeNotices(trx, opened, at)
     })
     // After the commit, so a screen that reloads sees what changed.
     await tell(changed, 'incidents')
@@ -376,6 +391,41 @@ export function createAlerts(deps: AlertsDeps) {
       await wake()
       await tell(changed, 'incidents')
     }
+  }
+
+  /**
+   * "New issue": one notice per issue seen for the first time, for products
+   * whose rule sends it (off by default). The notice goes out with the next
+   * message run and closes itself.
+   */
+  async function onNewIssues(issues: NewIssue[]) {
+    const at = now()
+    const sends = new Map<string, boolean>()
+    let opened = false
+    for (const issue of issues) {
+      let on = sends.get(issue.projectId)
+      if (on === undefined) {
+        const rule = await ruleFor(deps.db, issue.orgId, issue.projectId, 'new_issue')
+        on = rule.level === 'emergency'
+        sends.set(issue.projectId, on)
+      }
+      if (!on) continue
+      const incident = await openIncident(deps.db, {
+        orgId: issue.orgId,
+        projectId: issue.projectId,
+        kind: 'new_issue',
+        dedupeKey: `errors:issue:${issue.issueId}:new`,
+        data: {
+          issueId: issue.issueId,
+          type: issue.type.slice(0, 200),
+          value: issue.value.slice(0, 300),
+          culprit: issue.culprit.slice(0, 200),
+        },
+        at,
+      })
+      if (incident) opened = true
+    }
+    if (opened) await wake()
   }
 
   /**
@@ -675,6 +725,7 @@ export function createAlerts(deps: AlertsDeps) {
   return {
     onTransition,
     notify,
+    onNewIssues,
     checkCerts,
     checkErrorSpikes,
     checkKeyEvents,
