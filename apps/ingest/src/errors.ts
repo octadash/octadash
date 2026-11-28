@@ -73,8 +73,11 @@ function frameOf(value: unknown): ErrorFrame | null {
   if (!frame) return null
   const filename = cleanFilename(str(frame.filename, 500) || str(frame.abs_path, 500))
   const module = str(frame.module, 300)
-  // SDKs write "?" or "<anonymous>" for a function without a name.
-  const fn = str(frame.function, 300).replace(/^(\?|<anonymous>)$/, '')
+  // SDKs write "?" or "<anonymous>" for a function without a name, alone or
+  // after its object ("Object.?").
+  const fn = str(frame.function, 300)
+    .replace(/\.(\?|<anonymous>)$/, '')
+    .replace(/^(\?|<anonymous>)$/, '')
   if (!filename && !module && !fn) return null
   const lines = (v: unknown) =>
     Array.isArray(v) ? v.slice(-5).map((line) => str(line, 300)) : undefined
