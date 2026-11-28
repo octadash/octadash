@@ -1,0 +1,31 @@
+---
+title: Armazenamento de arquivos
+description: Onde ficam anexos, replays e profiles, e como usar o seu próprio bucket.
+---
+
+Anexos, replays, profiles e qualquer coisa acima de 1 MB são guardados como
+arquivos. O compose roda o Garage para isso, com a chave e o bucket criados a
+partir do `.env` na primeira inicialização. **Configurações** >
+**Armazenamento de arquivos** mostra se ele responde e quanto espaço usa.
+
+| Variável | Padrão | O que faz |
+| --- | --- | --- |
+| `OCTADASH_STORAGE_LIMIT_GB` | `20` | Espaço máximo dos arquivos. Passando disso, o dia mais antigo é removido primeiro. `0`: sem limite |
+| `STORAGE_ENDPOINT` | `http://garage:3900` | Endereço S3 do bucket |
+| `STORAGE_BUCKET` | `octadash` | Nome do bucket |
+| `STORAGE_REGION` | `garage` | `auto` para R2, a região do bucket para S3 |
+| `STORAGE_ACCESS_KEY_ID` | gerado | Id da chave (`GK...` no Garage que vem junto) |
+| `STORAGE_SECRET_ACCESS_KEY` | gerado | Chave secreta |
+| `GARAGE_RPC_SECRET` | gerado | Segredo interno do Garage que vem junto |
+
+Os arquivos ficam guardados por `OCTADASH_RECEIVED_RETENTION_DAYS` (30 dias por
+padrão).
+
+**Bucket de fora.** Para guardar os arquivos em S3, R2 ou outro serviço
+compatível com S3, crie um bucket e uma chave que possa ler, gravar, listar e
+apagar nele, e preencha os cinco valores `STORAGE_*` no `.env` (para R2:
+`STORAGE_ENDPOINT=https://<account id>.r2.cloudflarestorage.com`,
+`STORAGE_REGION=auto`). Reinicie. Os arquivos que já estão no Garage continuam
+lá; copie com `rclone` se precisar deles. Depois você pode tirar o serviço
+`garage` do seu compose. No Coolify, preencha os mesmos valores no ambiente do
+`ingest` e do `worker`.

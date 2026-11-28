@@ -1,0 +1,54 @@
+---
+title: Before you install
+description: What runs, what it needs, and how data flows.
+---
+
+Octadash is one Docker image with three roles (`web`, `ingest`, `worker`) and
+four stores it installs and manages: Postgres (records), Valkey (the queue
+between ingest and worker), ClickHouse (events and charts) and Garage (files:
+attachments, replays, profiles). Octadash creates their databases and bucket,
+runs their migrations and sets their retention; you never open ClickHouse,
+Valkey or Garage. Pick the path that fits you.
+
+Until the first release, use the `edge` image tag (built from `main`).
+
+## Requirements
+
+- **Memory:** 4 GB is the target for a small install (all four stores and the
+  three roles on one machine). This is an estimate; the load test before the
+  first release replaces it with measured numbers.
+- **CPU:** on x86 servers, ClickHouse's official image needs the **x86-64-v3**
+  level (AVX2, BMI2, FMA: practically every Intel and AMD CPU since 2015). arm64
+  servers work. Check before installing:
+
+  ```bash
+  grep -o -m1 avx2 /proc/cpuinfo || echo "no AVX2: ClickHouse will not start on this CPU"
+  ```
+
+  Without it the `clickhouse` container restarts in a loop, and `web` and
+  `worker` log "ClickHouse did not answer ... its CPU probably lacks AVX2". Some
+  cheap VPS plans expose an older virtual CPU model even on new hardware; the
+  provider can usually switch it to "host" CPU.
+- **Disk:** ClickHouse compresses events well, but plan for growth and keep at
+  least a few GB free. Files (attachments, replays, profiles) use at most
+  `OCTADASH_STORAGE_LIMIT_GB`, 20 GB by default; past it the oldest day goes
+  first. Leave room for both, or point files to an [external bucket](/self-hosting/file-storage).
+
+## How data flows
+
+The ingest checks the key, appends the batch to a Valkey stream and answers
+`202` at once; it never waits on ClickHouse. The worker reads the streams, writes
+to ClickHouse in batches and deletes an entry only after the write. So:
+
+- ClickHouse down or slow: the ingest keeps accepting, Valkey holds the data and
+  the worker catches up when ClickHouse is back. Charts are late, nothing is lost.
+- Worker far behind (more than `OCTADASH_INGEST_QUEUE_MAX` entries waiting): the
+  ingest answers `429` with `Retry-After`, and SDKs retry later, instead of
+  filling the disk.
+- Valkey down: the ingest answers `503` and SDKs retry.
+
+## Health checks
+
+`GET /api/health` (web), `GET /health` (ingest) and `GET :4100/health` (worker)
+answer without touching the database, so probes never keep a serverless
+Postgres awake.

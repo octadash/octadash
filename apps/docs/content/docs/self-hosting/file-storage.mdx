@@ -1,0 +1,30 @@
+---
+title: File storage
+description: Where attachments, replays and profiles are kept, and how to use your own bucket.
+---
+
+Attachments, replays, profiles and anything over 1 MB are kept as files. The
+compose runs Garage for them, with its key and bucket made from `.env` on the
+first start. **Settings** > **File storage** shows whether it answers and how
+much space it uses.
+
+| Variable                    | Default              | What it does                                                                     |
+| --------------------------- | -------------------- | -------------------------------------------------------------------------------- |
+| `OCTADASH_STORAGE_LIMIT_GB` | `20`                 | Most space files may use. Past it the oldest day is removed first. `0`: no limit |
+| `STORAGE_ENDPOINT`          | `http://garage:3900` | The bucket's S3 address                                                          |
+| `STORAGE_BUCKET`            | `octadash`           | Bucket name                                                                      |
+| `STORAGE_REGION`            | `garage`             | `auto` for R2, the bucket's region for S3                                        |
+| `STORAGE_ACCESS_KEY_ID`     | generated            | Key id (`GK...` for the bundled Garage)                                          |
+| `STORAGE_SECRET_ACCESS_KEY` | generated            | Secret key                                                                       |
+| `GARAGE_RPC_SECRET`         | generated            | Internal secret of the bundled Garage                                            |
+
+Files are kept as long as `OCTADASH_RECEIVED_RETENTION_DAYS` (30 days by
+default).
+
+**External bucket.** To keep files in S3, R2 or another S3-compatible store,
+create a bucket and a key that can read, write, list and delete in it, and set
+the five `STORAGE_*` values in `.env` (for R2: `STORAGE_ENDPOINT=https://<account
+id>.r2.cloudflarestorage.com`, `STORAGE_REGION=auto`). Restart. Files already in
+Garage stay there; copy them over with `rclone` if you need them. You may then
+remove the `garage` service from your compose. On Coolify, set the same values
+in the `ingest` and `worker` environment.

@@ -1,0 +1,47 @@
+---
+title: What Octadash is
+description: One dashboard for all your products. Self-hosted and open source.
+---
+
+Octadash shows which of your products need you, why, since when, and what to do
+next. Uptime, traffic, product usage, errors, money, costs and logs, for every
+product you run, on one screen you host yourself.
+
+<Callout type="warn">
+  Octadash is in early development and not ready for production yet. Use the
+  `edge` image (built from `main`) until the first release.
+</Callout>
+
+## What you get
+
+- **All products at once.** Every area works for all products, for a group of
+  products or for one product, on the same screen.
+- **A product with only its name.** Its page shows every area with what it is
+  for and how to set it up on your platform. Each card becomes that area's
+  summary once data arrives.
+- **Change one URL.** Point a Sentry SDK, a PostHog SDK or an OpenTelemetry
+  exporter at Octadash and it works. See [Coming from Sentry, PostHog or OpenTelemetry](/send-data/migrate).
+- **Uptime that never wakes your database.** Checks hit an endpoint that answers
+  without a query, and alerts go out after 3 failures in a row.
+- **Everything in the box.** One image plus the stores it installs and manages.
+  You never open a database console.
+
+## Areas
+
+| Area          | Answers                                           | Needs                   |
+| ------------- | ------------------------------------------------- | ----------------------- |
+| Overview      | what needs my attention, and the day in numbers   | nothing: built from the others |
+| Uptime        | is it up, is the certificate valid, did a job run | nothing to install      |
+| Traffic       | who comes and from where                          | a script on the site    |
+| Product usage | sign-ups, logins, key actions, funnel, retention  | browser or server code  |
+| Errors        | what broke and for how many people                | any Sentry SDK          |
+| Money         | revenue, MRR, churn, refunds                      | a Stripe, Asaas or Paddle key |
+| Costs         | AI cost, infra cost, margin                       | provider keys or fixed bills |
+| Logs          | what the server did at that moment                | any OpenTelemetry SDK   |
+
+## Next
+
+<Cards>
+  <Card title="Install" href="/install" description="Docker Compose or Coolify, in a few minutes." />
+  <Card title="Create your first product" href="/first-product" description="From a name to the first data." />
+</Cards>

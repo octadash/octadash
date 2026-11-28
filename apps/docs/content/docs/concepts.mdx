@@ -1,0 +1,43 @@
+---
+title: Concepts
+description: The names the panel, the docs and the API use.
+---
+
+The panel, these docs and the API use these names, always as written here.
+
+| Name | What it is |
+| --- | --- |
+| Organization | Who owns products and invites members. One install can hold several. |
+| Product | Something you run: a site, an app, a SaaS. Created with a name only. |
+| All products | The first option of the product picker: every product of the organization. |
+| Group | A saved set of products, such as "Main" or "Clients". Opens the same pages as All products, filtered. A product can be in several. |
+| Area | One entry of the menu: Overview, Uptime, Traffic, Product usage, Errors, Money, Costs, Logs. Every area works for all products, a group or one product. |
+| Source | One part of a product that sends data: "Site, Next.js", "API, .NET", "Worker, Node". Has its own key and can feed several areas. |
+| Source key | Tells the ingest which product and source sent the data, also inside a Sentry DSN. Not a secret: browsers see it. |
+| Monitor | One Uptime check of a product: site, API or `/health`, heartbeat. |
+| Heartbeat | A monitor that waits for a call from a cron job, worker or backup. Silence is the failure. |
+| Connection | A link to an outside account that Money or Costs read from: Stripe, Asaas, Paddle, OpenAI, Anthropic. |
+| Channel | Where alerts go: email, Telegram, webhook. |
+| Outside watcher | An outside service Octadash pings every minute, so someone hears when Octadash itself goes down. |
+
+## Emergency, signal, data
+
+Everything Octadash shows is one of three things:
+
+- **Emergency:** needs action now. Goes to the channels and to the red strip on
+  top of every screen, whatever product is picked. **I'm on it** stops repeated
+  messages and shows everyone who is handling it.
+- **Signal:** out of normal, no message. Highlighted in its area. A product
+  with less than 4 weeks of data is still learning what is normal.
+- **Data:** everything else, shown neutral.
+
+## Source
+
+A source belongs to the product, not to one area, because the same code sends
+more than one kind of data. The browser script sends page views (Traffic) and
+events such as `signed_up` (Product usage) with one key. A Sentry SDK sends
+errors and, later, traces. The area of each piece of data comes from its kind,
+never from the key, so a site never needs two keys or two scripts.
+
+When data arrives for an area that is not set up yet, that area starts
+receiving on its own.

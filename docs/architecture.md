@@ -1,7 +1,8 @@
 # Architecture
 
 How Octadash is built and why. What it does and in which order lives in
-[product.md](product.md); how to install it, in [self-hosting.md](self-hosting.md).
+[product.md](product.md); how to install it, in the [public docs](https://docs.octadash.com/self-hosting)
+(source in `apps/docs`).
 
 Decided on 2026-11-27, revised on 2026-11-28 (storage moved from Postgres only
 to Postgres, Valkey and ClickHouse; URL diagnosis removed). Changing a decision
@@ -157,7 +158,7 @@ versions and passwords generated at install. Each has one job.
   is enough. Estimate, not measured: the load test before the first release
   replaces this sentence with numbers.
 - **Backups**: Postgres, ClickHouse and Garage (two volumes, metadata and
-  data). self-hosting.md documents each; Valkey only holds data in transit.
+  data). The self-hosting docs document each; Valkey only holds data in transit.
 - **Bring your own** Postgres keeps working (`DATABASE_URL`), and so does an
   external bucket for files (`STORAGE_*`). An external ClickHouse or Valkey
   (`CLICKHOUSE_URL`, `VALKEY_URL`) is allowed but not the default path.
@@ -417,6 +418,21 @@ Next.js (App Router, standalone output), Tailwind CSS 4, shadcn/ui, next-intl
 (English and Brazilian Portuguese), Zod, Better Auth (email and password,
 OAuth, organizations, 2FA), MCP through the official TypeScript SDK on a
 streamable HTTP endpoint.
+
+### Public docs
+
+`apps/docs` is docs.octadash.com: Fumadocs on Next.js with static output,
+served by nginx from its own image (`apps/docs/Dockerfile`, built from the
+repository root) and deployed on its own, only when its files change. The main
+image does not build it. It shares one package with the panel,
+`packages/snippets`, the code people paste to send data, so Set up and the docs
+show the same code. English pages have no prefix and Portuguese ones live under
+`/pt`; a page without its `.pt.mdx` file shows the English text with a notice.
+Search is a static index in the page, `llms.txt` and a Markdown copy of each
+page serve people who install with an AI agent. Pages are not versioned until
+1.0: a page says since which version something exists, and if an old
+self-hosted version ever needs its own docs, its tag is published on a
+subdomain.
 
 ### Install paths
 

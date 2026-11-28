@@ -1,0 +1,43 @@
+---
+title: Vindo do Sentry, PostHog ou OpenTelemetry
+description: Mantenha o seu SDK e troque um endereço.
+---
+
+O ingest aceita os formatos que as pessoas já enviam, então um app existente
+muda trocando uma URL.
+
+## Sentry
+
+Qualquer SDK do Sentry funciona. Troque o DSN pelo DSN da origem, em **Erros** >
+**Configurar**. O ingest lê envelopes em `/api/:id/envelope/`.
+
+```ts
+Sentry.init({
+  dsn: 'https://YOUR_SOURCE_KEY@ingest.example.com/1',
+})
+```
+
+## PostHog
+
+Troque o host e a chave. O ingest lê `/e/`, `/i/v0/e/`, `/batch/` e `/capture/`.
+
+```ts
+posthog.init('YOUR_SOURCE_KEY', { api_host: 'https://ingest.example.com' })
+```
+
+O formato do PostHog não tem promessa de estabilidade, e os SDKs mais novos
+dele para servidor e celular (Python 8, Node 6, Go 2, iOS 4, Android 4,
+Flutter 6) enviam só para um endereço novo. O SDK web continua funcionando.
+Nos servidores, prefira o POST do Octadash ou o OpenTelemetry.
+
+## OpenTelemetry
+
+Aponte o exportador OTLP por HTTP para `https://ingest.example.com/otlp` com o
+cabeçalho `x-octadash-key: YOUR_SOURCE_KEY`. Logs, traces e métricas são
+guardados.
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=https://ingest.example.com/otlp
+OTEL_EXPORTER_OTLP_HEADERS=x-octadash-key=YOUR_SOURCE_KEY
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+```

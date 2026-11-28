@@ -1,0 +1,24 @@
+---
+title: Product usage
+description: Sign-ups, logins, key actions, funnels and who comes back.
+---
+
+Send what people do (signed up, paid, invited someone) and Octadash shows what
+is normal for each event, funnels and who comes back. On a site that already
+has the Traffic script, add one line where something happens: no new key.
+
+## Send an event
+
+<Snippets area="usage" />
+
+## Rules
+
+- Event names in `snake_case`. Properties are optional.
+- Never send names, e-mails or documents. They are dropped anyway.
+- `signed_up` counts as a sign-up with no setting.
+- `distinct_id` is the person. Octadash keeps only a hash of it.
+
+## PostHog
+
+Your PostHog calls keep working: `capture` and `identify`. Autocapture,
+recordings and surveys stay off. See [Coming from PostHog](/send-data/migrate#posthog).

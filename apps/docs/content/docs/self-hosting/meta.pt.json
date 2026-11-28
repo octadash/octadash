@@ -1,0 +1,14 @@
+{
+  "title": "Instalação própria",
+  "pages": [
+    "index",
+    "docker-compose",
+    "coolify",
+    "own-stores",
+    "environment",
+    "file-storage",
+    "outside-watcher",
+    "backups",
+    "upgrading"
+  ]
+}

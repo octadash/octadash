@@ -1,0 +1,48 @@
+---
+title: O que é o Octadash
+description: Um painel para todos os seus produtos. Instalação própria e código aberto.
+---
+
+O Octadash mostra quais dos seus produtos precisam de você, por quê, desde
+quando e o que fazer. Disponibilidade, tráfego, uso, erros, dinheiro, custos e
+logs de todos os produtos que você mantém, em uma tela que roda no seu servidor.
+
+<Callout type="warn">
+  O Octadash está no começo do desenvolvimento e ainda não está pronto para
+  produção. Use a imagem `edge` (gerada da `main`) até a primeira versão.
+</Callout>
+
+## O que você tem
+
+- **Todos os produtos de uma vez.** Cada área funciona para todos os produtos,
+  para um grupo ou para um produto, na mesma tela.
+- **Produto criado só com o nome.** A página do produto mostra cada área, para
+  que serve e como configurar na sua plataforma. Cada card vira o resumo da
+  área quando os dados chegam.
+- **Troque uma URL.** Aponte um SDK do Sentry, um SDK do PostHog ou um
+  exportador OpenTelemetry para o Octadash e pronto. Veja
+  [Vindo do Sentry, PostHog ou OpenTelemetry](/pt/send-data/migrate).
+- **Disponibilidade que não acorda o banco.** As checagens batem em um endereço
+  que responde sem consulta, e o alerta sai depois de 3 falhas seguidas.
+- **Tudo na caixa.** Uma imagem e os bancos que ela instala e gerencia. Você
+  nunca abre um console de banco.
+
+## Áreas
+
+| Área | Responde | Precisa de |
+| --- | --- | --- |
+| Visão geral | o que precisa de atenção, e o dia em números | nada: monta a partir das outras |
+| Disponibilidade | está no ar, o certificado vale, a tarefa rodou | nada para instalar |
+| Tráfego | quem vem e de onde | um script no site |
+| Uso | cadastros, logins, ações principais, funil, retenção | código no navegador ou no servidor |
+| Erros | o que quebrou e para quantas pessoas | qualquer SDK do Sentry |
+| Dinheiro | receita, MRR, cancelamentos, reembolsos | uma chave do Stripe, Asaas ou Paddle |
+| Custos | custo de IA, de infraestrutura, margem | chaves dos fornecedores ou contas fixas |
+| Logs | o que o servidor fez naquele momento | qualquer SDK do OpenTelemetry |
+
+## Próximos passos
+
+<Cards>
+  <Card title="Instalar" href="/pt/install" description="Docker Compose ou Coolify, em poucos minutos." />
+  <Card title="Criar o primeiro produto" href="/pt/first-product" description="Do nome até o primeiro dado." />
+</Cards>

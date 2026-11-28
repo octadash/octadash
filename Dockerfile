@@ -9,7 +9,8 @@ WORKDIR /repo
 FROM base AS build
 COPY . .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-RUN pnpm turbo run build
+# The docs are their own app with their own image (apps/docs/Dockerfile).
+RUN pnpm turbo run build --filter=!@octadash/docs
 
 FROM node:24-bookworm-slim AS runtime
 ARG OCTADASH_VERSION=0.0.0-dev

@@ -1,0 +1,34 @@
+---
+title: How data gets in
+description: Sources, keys and which code each area needs.
+---
+
+Each part of a product that sends data is a [source](/concepts#source) with its
+own key. The panel fills the key into the code when you add a source; on these
+pages the code shows `YOUR_SOURCE_KEY` and `ingest.example.com` in its place.
+
+| Area | Primary path | Other languages and tools |
+| --- | --- | --- |
+| [Traffic](/send-data/traffic) | Octadash browser script | any site can add the script |
+| [Errors](/send-data/errors) | Octadash browser script, Sentry SDK on servers | every Sentry SDK |
+| [Product usage](/send-data/product-usage) | Octadash browser script, a POST from servers | PostHog SDKs |
+| [Logs](/send-data/logs) | OpenTelemetry (OTLP over HTTP) | any OpenTelemetry SDK or the Collector |
+| Uptime, Money | nothing to install | |
+
+One script on a site sends page views, errors and events with one key. Turn on
+only what you want: data for an area marked **I won't use this** is counted and
+not stored.
+
+## The ingest
+
+Everything goes to the ingest address (`OCTADASH_INGEST_URL`). It checks the
+key, queues the data and answers `202` at once, so a slow database never slows
+your app. When the worker falls far behind, the ingest answers `429` with
+`Retry-After` and SDKs retry later.
+
+## Keys
+
+A key is not a secret: browsers see it. It only lets someone send data to that
+source. A source can hold a new key and an old one with a revocation time, so
+you redeploy your app before the old key stops. Rotate keys in
+**Product settings** > **Sources**.

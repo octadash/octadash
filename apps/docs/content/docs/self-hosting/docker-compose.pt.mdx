@@ -1,0 +1,21 @@
+---
+title: Docker Compose
+description: O compose que vem no repositório, com o Octadash e os quatro bancos em uma máquina.
+---
+
+```bash
+git clone https://github.com/octadash/octadash.git
+cd octadash
+./scripts/generate-env.sh   # copia o .env.example para .env e gera todas as senhas
+docker compose up -d
+```
+
+O painel responde na porta 3000 e o ingest na porta 4000. Em produção, coloque
+um proxy reverso com HTTPS na frente dos dois (Caddy, Traefik, Nginx) e
+preencha `OCTADASH_URL` e `OCTADASH_INGEST_URL` com os endereços públicos.
+
+## Primeiro acesso
+
+Abra o painel. A primeira visita mostra um formulário que cria a conta do dono
+e a organização. Depois disso o cadastro fecha: o dono convida pessoas em
+**Membros**, que gera um link para enviar a elas.

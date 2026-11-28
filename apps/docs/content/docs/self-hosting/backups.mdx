@@ -1,0 +1,45 @@
+---
+title: Backups
+description: What to back up and the commands for each store.
+---
+
+The compose files keep data in five volumes:
+
+| Volume            | Holds                                       | Back up                                    |
+| ----------------- | ------------------------------------------- | ------------------------------------------ |
+| `postgres-data`   | accounts, products, keys, alert rules       | yes: `pg_dump` (below) or volume snapshots |
+| `clickhouse-data` | events, errors, logs, charts                | yes: `BACKUP` (below) or volume snapshots  |
+| `garage-meta`     | the list of files and where their parts are | yes, together with `garage-data` (below)   |
+| `garage-data`     | the files (attachments, replays, profiles)  | yes, together with `garage-meta` (below)   |
+| `valkey-data`     | data in transit between ingest and worker   | no: it empties itself within seconds       |
+
+Postgres, from the directory with `docker-compose.yml`:
+
+```bash
+docker compose exec -T postgres pg_dump -U octadash -Fc octadash > octadash-postgres.dump
+```
+
+ClickHouse, into `/var/lib/clickhouse/backups` inside the `clickhouse-data`
+volume (copy the file off the machine after):
+
+```bash
+set -a; . ./.env; set +a   # loads CLICKHOUSE_PASSWORD
+docker compose exec clickhouse clickhouse-client --user octadash --password "$CLICKHOUSE_PASSWORD" \
+  --query "BACKUP DATABASE octadash TO File('octadash-$(date +%F).zip')"
+```
+
+Garage: take a clean copy of its metadata, then copy both volumes (it also
+takes one by itself every 6 hours, kept in `garage-meta/snapshots`):
+
+```bash
+docker compose exec garage /garage meta snapshot
+docker run --rm -v octadash_garage-meta:/meta -v octadash_garage-data:/data -v "$PWD":/out \
+  alpine tar czf /out/octadash-garage-$(date +%F).tgz /meta /data
+```
+
+`File()` paths are relative to that folder, which the bundled config allows
+(`docker/clickhouse/octadash.xml`). On Coolify, run the
+same commands on the server with `docker exec` on each container, or snapshot
+the volumes with your provider. Restoring is the reverse: `pg_restore` and
+`RESTORE DATABASE octadash FROM File(...)` on a fresh install of the same
+version.

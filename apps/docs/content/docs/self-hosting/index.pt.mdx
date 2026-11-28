@@ -1,0 +1,56 @@
+---
+title: Antes de instalar
+description: O que roda, do que precisa e como os dados passam.
+---
+
+O Octadash é uma imagem Docker com três papéis (`web`, `ingest`, `worker`) e
+quatro bancos que ele instala e gerencia: Postgres (registros), Valkey (a fila
+entre ingest e worker), ClickHouse (eventos e gráficos) e Garage (arquivos:
+anexos, replays, profiles). O Octadash cria os bancos e o bucket, roda as
+migrações e define a retenção; você nunca abre ClickHouse, Valkey ou Garage.
+Escolha o caminho que serve para você.
+
+Até a primeira versão, use a tag de imagem `edge` (gerada da `main`).
+
+## Requisitos
+
+- **Memória:** 4 GB é a meta para uma instalação pequena (os quatro bancos e os
+  três papéis em uma máquina). É uma estimativa; o teste de carga antes da
+  primeira versão troca por números medidos.
+- **Processador:** em servidores x86, a imagem oficial do ClickHouse precisa do
+  nível **x86-64-v3** (AVX2, BMI2, FMA: na prática todo Intel e AMD desde
+  2015). Servidores arm64 funcionam. Confira antes de instalar:
+
+  ```bash
+  grep -o -m1 avx2 /proc/cpuinfo || echo "sem AVX2: o ClickHouse não vai iniciar neste processador"
+  ```
+
+  Sem isso o container `clickhouse` reinicia sem parar, e `web` e `worker`
+  registram "ClickHouse did not answer ... its CPU probably lacks AVX2". Alguns
+  planos baratos de VPS mostram um processador virtual antigo mesmo em hardware
+  novo; o fornecedor normalmente consegue trocar para "host".
+- **Disco:** o ClickHouse comprime bem os eventos, mas planeje o crescimento e
+  deixe alguns GB livres. Arquivos (anexos, replays, profiles) usam no máximo
+  `OCTADASH_STORAGE_LIMIT_GB`, 20 GB por padrão; passando disso, o dia mais
+  antigo sai primeiro. Deixe espaço para os dois, ou mande os arquivos para um
+  [bucket de fora](/pt/self-hosting/file-storage).
+
+## Como os dados passam
+
+O ingest confere a chave, adiciona o lote a um stream do Valkey e responde
+`202` na hora; ele nunca espera o ClickHouse. O worker lê os streams, grava no
+ClickHouse em lotes e apaga uma entrada só depois de gravar. Então:
+
+- ClickHouse fora do ar ou lento: o ingest continua aceitando, o Valkey segura
+  os dados e o worker alcança quando o ClickHouse voltar. Os gráficos atrasam,
+  nada se perde.
+- Worker muito atrasado (mais de `OCTADASH_INGEST_QUEUE_MAX` entradas
+  esperando): o ingest responde `429` com `Retry-After`, e os SDKs tentam de
+  novo depois, em vez de encher o disco.
+- Valkey fora do ar: o ingest responde `503` e os SDKs tentam de novo.
+
+## Health checks
+
+`GET /api/health` (web), `GET /health` (ingest) e `GET :4100/health` (worker)
+respondem sem tocar no banco, então as checagens nunca mantêm acordado um
+Postgres serverless.

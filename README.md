@@ -30,7 +30,7 @@ host yourself, and tells you what each product is missing.
 - **Plug in what you use.** Alert channels (email, Telegram, Slack, Discord,
   webhook) and data sources (Stripe, Asaas, Paddle, OpenAI, Anthropic) are
   integrations you enable per product.
-- **Everything in the box.** One image plus Postgres, Valkey and ClickHouse,
+- **Everything in the box.** One image plus Postgres, Valkey, ClickHouse and Garage,
   installed and managed by Octadash on a small VPS. You never touch ClickHouse.
 
 ## Install
@@ -43,7 +43,7 @@ docker compose up -d
 ```
 
 Coolify, a prebuilt image with your own Postgres, and running from source are
-covered in [docs/self-hosting.md](docs/self-hosting.md).
+covered in the [docs](https://docs.octadash.com/self-hosting).
 
 ## Develop
 
@@ -77,14 +77,16 @@ apps/
   web/            Next.js panel, API and MCP server
   ingest/         Hono service that receives data (Sentry, PostHog, OTLP, Octadash)
   worker/         Jobs: uptime, alerts, syncs, rollups, retention
+  docs/           Public docs (docs.octadash.com), Fumadocs, own image and deploy
 packages/
   auth/           Better Auth setup: accounts, organizations, sign-up policy
   core/           Env parsing, logger, ids
   db/             Postgres (Kysely) and ClickHouse clients and migrations
   integrations/   Plugin contract for alert channels and data sources
   queue/          Valkey streams between the ingest and the worker
+  snippets/       The code people paste to send data, shared by the panel and the docs
   uptime/         One uptime check: status, response time, redirects, HTTPS, certificate
-docs/             product.md (what and when), architecture.md (how), self-hosting.md
+docs/             product.md (what and when), architecture.md (how), decisions-log.md
 ```
 
 Why this stack: [docs/architecture.md](docs/architecture.md). What is planned: [docs/product.md](docs/product.md).
