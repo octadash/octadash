@@ -6,4 +6,5 @@ import { webhook } from './webhook'
 /** Integrations shipped with Octadash. Slack and Discord work through the webhook for now. */
 export const builtinIntegrations: Integration[] = [smtp, resend, telegram, webhook] as Integration[]
 
+export { findTelegramChats, type TelegramChat } from './telegram'
 export { resend, smtp, telegram, webhook }

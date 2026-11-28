@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { builtinIntegrations, resend, smtp, telegram, webhook } from './builtin'
+import { builtinIntegrations, findTelegramChats, resend, smtp, telegram, webhook } from './builtin'
 import { emailSubject, splitAddresses } from './builtin/email'
 import { signBody } from './builtin/webhook'
 import { formFields, splitSecrets } from './form'
@@ -85,6 +85,38 @@ describe('telegram', () => {
     expect(body.chat_id).toBe('42')
     expect(body.text).toContain('&lt;timeout&gt;')
     expect(body.text).toContain('<b>postato.com.br is down</b>')
+  })
+
+  it('finds the chats that wrote to the bot, newest first, with topics', async () => {
+    const updates = [
+      { message: { chat: { id: 7, type: 'private', first_name: 'Ana', last_name: 'Lima' } } },
+      {
+        message: {
+          chat: { id: -1001, type: 'supergroup', title: 'On call' },
+          is_topic_message: true,
+          message_thread_id: 5,
+          reply_to_message: { forum_topic_created: { name: 'Alerts' } },
+        },
+      },
+      { message: { chat: { id: 7, type: 'private', first_name: 'Ana' } } },
+    ]
+    const fetchFn = vi.fn(async () => Response.json({ ok: true, result: updates }))
+    const found = await findTelegramChats('123:abc', { fetch: fetchFn as typeof fetch })
+    expect(found).toEqual({
+      ok: true,
+      chats: [
+        { id: '7', title: 'Ana', kind: 'private', threadId: undefined, threadTitle: undefined },
+        { id: '-1001', title: 'On call', kind: 'group', threadId: '5', threadTitle: 'Alerts' },
+      ],
+    })
+    const conflict = vi.fn(async () =>
+      Response.json({ ok: false, description: 'Conflict: webhook is active' }, { status: 409 }),
+    )
+    expect(await findTelegramChats('123:abc', { fetch: conflict as typeof fetch })).toEqual({
+      ok: false,
+      message: 'Conflict: webhook is active',
+    })
+    expect((await findTelegramChats('bad', { fetch: fetchFn as typeof fetch })).ok).toBe(false)
   })
 })
 

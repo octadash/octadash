@@ -4,9 +4,11 @@ import { decryptSecret, encryptSecret } from '@octadash/core'
 import { createChannel, deleteChannel, getChannel, updateChannel } from '@octadash/db'
 import {
   builtinIntegrations,
+  findTelegramChats,
   formFields,
   type NotificationIntegration,
   splitSecrets,
+  type TelegramChat,
 } from '@octadash/integrations'
 import { revalidatePath } from 'next/cache'
 import { getTranslations } from 'next-intl/server'
@@ -42,7 +44,16 @@ function readFields(
     }
     values[field.key] = field.type === 'number' ? Number(text) : text
   }
+  // SMTP: port 465 is TLS from the first byte; 587 and the rest upgrade with STARTTLS.
+  if (integration.id === 'smtp') values.secure = Number(values.port ?? 587) === 465
   return values
+}
+
+function recipients(config: Record<string, unknown>) {
+  return String(config.to ?? '')
+    .split(',')
+    .map((address) => address.trim())
+    .filter(Boolean).length
 }
 
 export async function saveChannelAction(_: FormState, formData: FormData): Promise<FormState> {
@@ -69,6 +80,26 @@ export async function saveChannelAction(_: FormState, formData: FormData): Promi
     const keys = [...new Set(parsed.error.issues.map((issue) => String(issue.path[0] ?? '')))]
     const labels = await getTranslations(`channels.fields.${integration.id}`)
     return { error: t('fields', { fields: keys.map((key) => labels(key)).join(', ') }) }
+  }
+
+  // "Send test" tries the form as it is, before anything is saved.
+  if (formData.get('intent') === 'test') {
+    const tChannels = await getTranslations('channels')
+    const result = await integration.test(parsed.data, {
+      fetch,
+      signal: AbortSignal.timeout(15_000),
+    })
+    if (!result.ok) return { notice: { ok: false, text: result.message ?? t('checkFields') } }
+    const count = recipients(parsed.data as Record<string, unknown>)
+    return {
+      notice: {
+        ok: true,
+        text:
+          integration.id === 'smtp' || integration.id === 'resend'
+            ? tChannels('testEmailOk', { count })
+            : tChannels('testOk'),
+      },
+    }
   }
 
   const { plain, secrets } = splitSecrets(integration, parsed.data as Record<string, unknown>)
@@ -106,4 +137,45 @@ export async function testChannelAction(_: TestState, formData: FormData): Promi
   const parsed = integration.config.safeParse(config)
   if (!parsed.success) return { ok: false, message: t('checkFields') }
   return integration.test(parsed.data, { fetch, signal: AbortSignal.timeout(15_000) })
+}
+
+export type FindChatsState =
+  | { ok: true; chats: TelegramChat[] }
+  | { ok: false; message: string }
+  | undefined
+
+/**
+ * "Find it for me": the chats that wrote to the bot lately. Uses the token in
+ * the form, or the saved one when editing and the field was left blank.
+ */
+export async function findTelegramChatsAction(
+  botToken: string,
+  channelId?: string,
+): Promise<FindChatsState> {
+  const t = await getTranslations('channels.find')
+  const { org } = await requireManager()
+  const { db, env } = services()
+  let token = botToken.trim()
+  if (!token && channelId) {
+    const channel = await getChannel(db, org.id, channelId)
+    const saved = (channel?.secrets as Record<string, string> | undefined)?.botToken
+    if (saved) token = decryptSecret(saved, env.OCTADASH_SECRET)
+  }
+  if (!token) return { ok: false, message: t('noToken') }
+  try {
+    const found = await findTelegramChats(token, { fetch, signal: AbortSignal.timeout(10_000) })
+    if (!found.ok) {
+      return {
+        ok: false,
+        message:
+          found.message === 'invalid-token'
+            ? t('badToken')
+            : t('failed', { reason: found.message }),
+      }
+    }
+    if (found.chats.length === 0) return { ok: false, message: t('none') }
+    return found
+  } catch {
+    return { ok: false, message: t('failed', { reason: 'network' }) }
+  }
 }

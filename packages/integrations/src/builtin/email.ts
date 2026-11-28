@@ -56,8 +56,9 @@ export const smtp = defineNotification({
   kind: 'notification',
   name: 'E-mail (SMTP)',
   description: {
-    en: 'Sends alerts by e-mail through any SMTP server: Gmail, Zoho, Amazon SES, your own.',
-    'pt-BR': 'Envia alertas por e-mail por qualquer servidor SMTP: Gmail, Zoho, Amazon SES, o seu.',
+    en: 'SMTP works with any provider (Postmark, SendGrid, Mailgun, Amazon SES, Brevo, Gmail, your own server). A provider gets its own option when its API adds something SMTP lacks.',
+    'pt-BR':
+      'SMTP funciona com qualquer provedor (Postmark, SendGrid, Mailgun, Amazon SES, Brevo, Gmail, o seu servidor). Um provedor ganha opção própria quando a API dele traz algo que o SMTP não tem.',
   },
   config: smtpConfig,
   secretKeys: ['password'],

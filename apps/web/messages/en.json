@@ -409,16 +409,15 @@
   },
   "channels": {
     "title": "Alert channels",
-    "intro": "Where emergencies are sent: email, Telegram or a webhook of yours. Each channel has the language of its messages.",
+    "intro": "Where emergencies go. Octadash sends with your own accounts, so nothing passes through anyone else. Signals never send a message: they show in the panel and in the daily summary.",
     "emptyTitle": "No channels yet",
     "emptyBody": "Without a channel, an emergency shows only in the panel. Add at least one to know when a product goes down.",
     "add": "Add channel",
     "addTitle": "Add channel",
     "editTitle": "Edit channel",
-    "dialogIntro": "Passwords and keys are stored encrypted and never come back to the browser.",
+    "dialogIntro": "Passwords and tokens are stored encrypted and never come back to the browser.",
     "type": "Type",
     "name": "Name",
-    "namePlaceholder": "Team Telegram",
     "locale": "Message language",
     "secretSaved": "Saved. Leave blank to keep it.",
     "docs": "How to set it up",
@@ -430,7 +429,7 @@
     "deleteBody": "Rules that chose only this channel will send to every channel.",
     "test": "Test",
     "testing": "Sending...",
-    "testOk": "Message sent",
+    "testOk": "Test message sent.",
     "lastOk": "Last alert sent {when}",
     "lastFailed": "Last alert failed {when}: {error}",
     "errors": {
@@ -445,17 +444,19 @@
         "host": "SMTP server",
         "hostPlaceholder": "smtp.gmail.com",
         "port": "Port",
-        "portHint": "587 with STARTTLS (the usual) or 465 with direct TLS.",
+        "portHint": "587 or 465.",
         "secure": "Direct TLS from the start",
         "secureHint": "Check only for port 465.",
         "username": "Username",
         "password": "Password",
-        "passwordHint": "On Gmail, an app password, not the account password.",
+        "passwordHint": "On Gmail, an app password.",
         "from": "From",
         "fromPlaceholder": "alerts@yourdomain.com",
         "to": "To",
         "toHint": "Separate several with commas.",
-        "toPlaceholder": "you@yourdomain.com"
+        "toPlaceholder": "you@yourdomain.com",
+        "passwordInfoTitle": "Which password?",
+        "passwordInfo": "The password of the mailbox that sends, not your personal one. Gmail and Outlook with two-step login need an app password: create it in the account’s security page and paste it here. It is stored encrypted and never shown again."
       },
       "resend": {
         "apiKey": "API key",
@@ -472,16 +473,66 @@
         "botTokenHint": "Create the bot with @BotFather and paste its token here.",
         "botTokenPlaceholder": "123456:ABC-DEF...",
         "chatId": "Chat ID",
-        "chatIdHint": "Send the bot a message and open api.telegram.org/botTOKEN/getUpdates to see the id. Groups start with -100.",
+        "chatIdHint": "Press “Find it for me”, or paste it. Groups start with -100.",
         "threadId": "Topic ID",
-        "threadIdHint": "Only for groups with topics. Leave blank otherwise."
+        "threadIdHint": "Only for groups with topics. Leave blank otherwise.",
+        "botTokenInfoTitle": "Where the token comes from",
+        "botTokenInfo": "In Telegram, open @BotFather, send /newbot, pick a name and copy the token it answers. Then add the bot to the group that should get the alerts and send one message there."
       },
       "webhook": {
         "url": "URL",
         "urlPlaceholder": "https://yourservice.com/octadash",
         "secret": "Signing secret",
-        "secretHint": "Optional, at least 16 characters. Signs the body with HMAC SHA-256 in the X-Octadash-Signature header."
+        "secretHint": "Optional, at least 16 characters. Signs the body with HMAC SHA-256 in the X-Octadash-Signature header.",
+        "secretInfoTitle": "Why sign?",
+        "secretInfo": "With a secret, each message carries an HMAC SHA-256 of its body in the X-Octadash-Signature header. Your service computes it again with the same secret and drops anything that doesn’t match, so nobody else can post fake alerts to your URL."
       }
+    },
+    "kinds": {
+      "email": "Email",
+      "telegram": "Telegram",
+      "webhook": "Webhook",
+      "whatsapp": "WhatsApp"
+    },
+    "later": "Later",
+    "sendThrough": "Send through",
+    "sendTest": "Send test",
+    "testEmailOk": "{count, plural, one {Test email delivered to # address} other {Test email delivered to # addresses}}",
+    "about": "About {field}",
+    "count": "{count, plural, one {# channel} other {# channels}}",
+    "usedBy": "{count, plural, =0 {no alert rule sends a message} one {used by # alert rule} other {used by # alert rules}}",
+    "rulesInfoLabel": "About channels and rules",
+    "rulesInfoTitle": "Channels and rules",
+    "rulesInfo": "A channel is where a message can go. Each alert rule picks its channels; a rule with none picked uses every channel. If a channel fails, the others still get the message and this page shows the failure. The message language is per channel, so a team in Brazil and one abroad each read their own.",
+    "target": {
+      "smtp": "{to} · sent through SMTP ({host})",
+      "resend": "{to} · sent through Resend",
+      "telegram": "Chat {chat}",
+      "telegramTopic": "Chat {chat}, topic {topic}"
+    },
+    "signed": "signed",
+    "neverSent": "Nothing sent yet. Send a test to check it.",
+    "editLabel": "Edit {name}",
+    "whatsapp": "Through the official WhatsApp Cloud API or your own Evolution API. Not available yet.",
+    "find": {
+      "trigger": "Find it for me",
+      "searching": "Looking…",
+      "pick": "Pick the chat. Not listed? Send the bot a message there and try again.",
+      "topic": "topic",
+      "kinds": {
+        "private": "private chat",
+        "group": "group",
+        "channel": "channel"
+      },
+      "noToken": "Fill in the bot token first.",
+      "badToken": "That doesn’t look like a bot token.",
+      "none": "No chat wrote to this bot in the last 24 hours. Send it a message (in a group, mention it) and try again.",
+      "failed": "Telegram didn’t answer: {reason}"
+    },
+    "namePlaceholders": {
+      "email": "Team email",
+      "telegram": "On-call Telegram",
+      "webhook": "Automation"
     }
   },
   "alerts": {
