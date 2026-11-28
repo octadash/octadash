@@ -106,7 +106,7 @@
     "copyLink": "Copiar link",
     "mail": {
       "subject": "{inviter} convidou você para {org} no Octadash",
-      "body": "{inviter} convidou você para {org} no Octadash, onde o time acompanha uptime, tráfego e emergências dos produtos.\n\nAbra este link para criar sua conta e entrar:\n{link}\n\nO link vale até {date}. Se você não esperava este convite, ignore este e-mail."
+      "body": "{inviter} convidou você para {org} no Octadash, onde o time acompanha disponibilidade, tráfego e emergências dos produtos.\n\nAbra este link para criar sua conta e entrar:\n{link}\n\nO link vale até {date}. Se você não esperava este convite, ignore este e-mail."
     },
     "countOne": "# membro",
     "countOther": "# membros"
@@ -138,7 +138,7 @@
       "name": "Visão geral"
     },
     "uptime": {
-      "name": "No ar",
+      "name": "Disponibilidade",
       "body": "Se o site e a API estão respondendo, quanto demoram e quando o certificado vence.",
       "how": "Nada para instalar: o Octadash verifica de fora."
     },
@@ -195,7 +195,7 @@
     "firstTitle": "Qual é o seu primeiro produto?",
     "firstIntro": "Um site, um app ou um SaaS que você mantém. Os outros você adiciona depois pelo seletor de produtos, um por um.",
     "nextTitle": "O que vem depois",
-    "nextBody": "A página do produto abre com um card por área: No ar, Tráfego, Uso, Erros, Dinheiro, Custos. Você configura o que quiser, quando quiser. No ar leva um minuto: só o endereço."
+    "nextBody": "A página do produto abre com um card por área: Disponibilidade, Tráfego, Uso, Erros, Dinheiro, Custos. Você configura o que quiser, quando quiser. Disponibilidade leva um minuto: só o endereço."
   },
   "productPage": {
     "setUp": "Configurar",
@@ -261,10 +261,10 @@
     "vsPrevious": "contra o período anterior",
     "online": "{count} online agora",
     "change": "{change}%",
-    "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu. O estado do uptime e as emergências estão em dia.",
+    "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu. O estado da disponibilidade e as emergências estão em dia.",
     "totals": "Totais",
     "tiles": {
-      "uptime": "No ar",
+      "uptime": "Disponibilidade",
       "upNow": "{up} de {total}",
       "uptimeSub": "no ar agora · {ratio} em {period}",
       "visitors": "Visitantes",
@@ -294,7 +294,7 @@
       "title": "Produtos",
       "order": "Emergências primeiro, depois por visitantes",
       "product": "Produto",
-      "uptime": "Uptime · {period}",
+      "uptime": "Disponibilidade · {period}",
       "visitors": "Visitantes",
       "down": "Fora do ar agora",
       "downFor": "Fora do ar há {duration}",
@@ -333,7 +333,7 @@
     }
   },
   "uptime": {
-    "title": "No ar",
+    "title": "Disponibilidade",
     "intro": "O Octadash verifica cada endereço de fora, no intervalo escolhido, e avisa quando ele para de responder.",
     "add": "Adicionar monitor",
     "addFirst": "Adicionar o primeiro monitor",
@@ -697,7 +697,7 @@
     "changedOn": "Mudada em {count, plural, one {# produto} other {# produtos}}:",
     "rulesCount": "{count, plural, one {# regra} other {# regras}}",
     "areas": {
-      "uptime": "No ar",
+      "uptime": "Disponibilidade",
       "errors": "Erros",
       "usage": "Uso do produto",
       "traffic": "Tráfego",
@@ -808,7 +808,7 @@
       },
       "area": {
         "title": "Configurar uma área",
-        "text": "No ar é a mais rápida: cole o endereço e ele começa a checar."
+        "text": "Disponibilidade é a mais rápida: cole o endereço e ele começa a checar."
       },
       "alerts": {
         "title": "Escolher para onde vão os alertas",
@@ -1015,7 +1015,7 @@
     "ongoing": "em andamento",
     "over": "encerrada",
     "area": {
-      "uptime": "No ar",
+      "uptime": "Disponibilidade",
       "other": "Octadash",
       "errors": "Erros",
       "usage": "Uso do produto",
@@ -1495,7 +1495,7 @@
     "general": "Geral",
     "sources": "Origens",
     "rules": "Regras de alerta",
-    "footer": "Os monitores ficam em <uptime>No ar</uptime>. Canais, membros e as regras da organização ficam em <settings>Configurações</settings>.",
+    "footer": "Os monitores ficam em <uptime>Disponibilidade</uptime>. Canais, membros e as regras da organização ficam em <settings>Configurações</settings>.",
     "generalPage": {
       "title": "Geral",
       "intro": "Nome, áreas e o que acontece com {name}.",

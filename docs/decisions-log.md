@@ -440,3 +440,9 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - Errors, several products: before any sends, a table of products with each one's next step, quickest first. Once one sends, the issue list takes the page and the table folds into "N more products can send errors" at the end.
 - Sent before, nothing now and nothing open: "No errors in the last 24 hours", with the last error, a wider period and the resolved issues, instead of a page of zeros.
 - A zero is only real if the source is alive: each source set for Errors shows whether it sent any data (page view, event, log or error) in the period. One that sent nothing gets a warning, since its zero may be only silence.
+
+## Uptime is "Disponibilidade" in Portuguese (2026-11-28, Luciano)
+
+- "No ar" read as a status, not as an area beside Tráfego, Uso, Erros and Logs. The area is now Disponibilidade in Portuguese and stays Uptime in English, in the panel, the docs and octadash.com.
+- The status words stay: a monitor is "no ar" or "fora do ar", and the Overview tile says "9 de 10 no ar agora".
+- A tile whose label is the area's own name shows the name once.
