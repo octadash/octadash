@@ -1,0 +1,77 @@
+---
+title: SDK para Node.js
+description: Erros e eventos de um servidor Node.js, com um pacote pequeno e sem dependências.
+---
+
+O `@octadash/node` envia erros (para **Erros**) e eventos (para **Uso do produto**)
+de um servidor Node.js 18+. Ele usa os mesmos endpoints do Configurar do painel,
+então só precisa da chave de uma origem. Qualquer SDK do Sentry também funciona
+para erros; este pacote é o caminho mais curto quando você quer os dois em um
+lugar só.
+
+<Callout type="warn">
+  A primeira versão está a caminho do npm. Até o `npm install @octadash/node`
+  funcionar, use o SDK do Sentry para erros e a chamada HTTP para eventos, como o
+  Configurar mostra.
+</Callout>
+
+## Instalar
+
+```sh
+npm install @octadash/node
+```
+
+```ts
+import { Octadash } from '@octadash/node'
+
+export const octadash = new Octadash({
+  key: process.env.OCTADASH_KEY, // a chave da origem, do Configurar
+  host: 'https://ingest.example.com', // o ingest do seu Octadash
+  release: process.env.RELEASE,
+})
+```
+
+Use uma origem de **servidor**: Configurar Erros > **Adicionar origem** > **Em um servidor**.
+
+## Eventos
+
+```ts
+octadash.track('signed_up', { distinctId: user.id, properties: { plan: 'pro' } })
+```
+
+O `distinctId` é a pessoa: o Octadash guarda só um hash dele.
+
+## Erros
+
+```ts
+try {
+  await charge(order)
+} catch (err) {
+  octadash.captureException(err, { distinctId: user.id, tags: { gateway: 'stripe' } })
+}
+```
+
+Exceções não tratadas e promises rejeitadas sem tratamento são relatadas
+sozinhas, e depois o processo sai com 1, como o Node faz. `captureUncaught: false`
+desliga isso. A cadeia de `cause` de um erro é mantida.
+
+## Como envia
+
+- As chamadas nunca lançam erro e nunca esperam. Eventos vão em lotes a cada 2
+  segundos, erros vão na hora.
+- Quando o ingest não responde (um redeploy derruba ele por alguns segundos), o
+  SDK tenta de novo até 3 vezes, esperando mais a cada vez. Uma recusa, como uma
+  chave errada, não é tentada de novo.
+- No máximo 1.000 itens esperam (`maxQueue`); os mais antigos saem primeiro.
+- Sem chave, toda chamada não faz nada, então rodar local não envia nada.
+- Em um script curto, use `await octadash.shutdown()` antes de ele terminar.
+
+| Opção             | Padrão                 | O que faz                                        |
+| ----------------- | ---------------------- | ------------------------------------------------ |
+| `key`             | (obrigatória)          | A chave da origem; vazia desliga o cliente       |
+| `host`            | (obrigatório)          | O endereço público do ingest                     |
+| `release`         | nenhum                 | A versão que está rodando                        |
+| `environment`     | `NODE_ENV` ou `production` | Aparece com cada erro                        |
+| `captureUncaught` | `true`                 | Relata quedas e sai como o Node faz              |
+| `flushInterval`   | `2000`                 | Milissegundos que os eventos esperam para ir juntos |
+| `maxQueue`        | `1000`                 | Máximo de itens guardados com o ingest fora      |

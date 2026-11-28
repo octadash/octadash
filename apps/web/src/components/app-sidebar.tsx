@@ -10,7 +10,9 @@ import { Logo } from './logo'
 export interface SidebarLabels {
   nav: string
   overview: string
-  settings: string
+  /** "Product settings" and "Group settings": the item follows the picker. */
+  productSettings: string
+  groupSettings: string
   areas: Record<(typeof AREA_ITEMS)[number]['id'], string>
 }
 
@@ -37,7 +39,15 @@ export function AppSidebar({
 }) {
   const pathname = usePathname()
   const scope = scopeOf(pathname)
-  const settingsHref = scope.kind === 'all' ? '/settings/general' : `${scope.base}/settings`
+  // Settings follow the picker: the product's, the group's, none for every
+  // product. Octadash's own settings are in the account menu.
+  const settings =
+    scope.kind === 'all'
+      ? null
+      : {
+          href: `${scope.base}/settings`,
+          label: scope.kind === 'product' ? labels.productSettings : labels.groupSettings,
+        }
   const items = [
     { href: scope.base, label: labels.overview, icon: OverviewIcon, exact: true },
     ...AREA_ITEMS.map((area) => ({
@@ -89,13 +99,17 @@ export function AppSidebar({
             <span className="text-xs text-muted-foreground">{update.detail}</span>
           </a>
         )}
-        <SidebarLink
-          href={settingsHref}
-          label={labels.settings}
-          icon={SlidersVerticalIcon}
-          active={isWithin(pathname, settingsHref) || pathname.startsWith('/settings/')}
-          className="md:mb-4"
-        />
+        {settings ? (
+          <SidebarLink
+            href={settings.href}
+            label={settings.label}
+            icon={SlidersVerticalIcon}
+            active={isWithin(pathname, settings.href)}
+            className="md:mb-4"
+          />
+        ) : (
+          <div className="hidden md:mb-4 md:block" />
+        )}
       </nav>
     </aside>
   )

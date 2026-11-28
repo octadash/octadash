@@ -175,7 +175,9 @@
   },
   "nav": {
     "label": "Areas",
-    "settings": "Settings"
+    "productSettings": "Product settings",
+    "groupSettings": "Group settings",
+    "octadashSettings": "Octadash settings"
   },
   "picker": {
     "all": "All products",
@@ -1548,7 +1550,7 @@
     "general": "General",
     "sources": "Sources",
     "rules": "Alert rules",
-    "footer": "Monitors are in <uptime>Uptime</uptime>. Channels, members and the organization's rules are in <settings>Settings</settings>.",
+    "footer": "Monitors are in <uptime>Uptime</uptime>. Channels, members and the organization's rules are in <settings>Octadash settings</settings>, in the account menu at the top right.",
     "generalPage": {
       "title": "General",
       "intro": "Name, areas and what happens to {name}.",
@@ -1972,7 +1974,7 @@
     "name": "Name",
     "namePlaceholder": "API",
     "nameHint": "So you recognize it later: Site, API, Worker.",
-    "platform": "Where does the code run?",
+    "platform": "Language or framework",
     "create": "Add source",
     "dsn": "DSN",
     "dsnInfo": "The address a Sentry SDK sends to. It holds this source’s key, which is not a secret: browsers see it too. Each source has its own, so you can tell the site from the API.",
@@ -2032,7 +2034,16 @@
     "serverToo": "Server errors too",
     "serverTooBody": "The script only sees the browser. For errors in your API or server code, add the Sentry SDK there with this source’s DSN.",
     "serverSource": "Errors on a server (API, worker) come from a server source with its own key and DSN, not from this site.",
-    "addServerSource": "Add a server source"
+    "addServerSource": "Add a server source",
+    "runtime": "Where does the code run?",
+    "runtimes": {
+      "browser": "In the browser",
+      "server": "On a server"
+    },
+    "runtimeHints": {
+      "browser": "A site or a web app: errors on the visitor's page.",
+      "server": "An API, a backend or a job: errors in your code on the server. Next.js covers both."
+    }
   },
   "usageArea": {
     "title": "Product usage",

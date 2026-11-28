@@ -175,7 +175,9 @@
   },
   "nav": {
     "label": "Áreas",
-    "settings": "Configurações"
+    "productSettings": "Configurações do produto",
+    "groupSettings": "Configurações do grupo",
+    "octadashSettings": "Configurações do Octadash"
   },
   "picker": {
     "all": "Todos os produtos",
@@ -1548,7 +1550,7 @@
     "general": "Geral",
     "sources": "Origens",
     "rules": "Regras de alerta",
-    "footer": "Os monitores ficam em <uptime>Disponibilidade</uptime>. Canais, membros e as regras da organização ficam em <settings>Configurações</settings>.",
+    "footer": "Os monitores ficam em <uptime>Disponibilidade</uptime>. Canais, membros e as regras da organização ficam em <settings>Configurações do Octadash</settings>, no menu da conta, no canto superior direito.",
     "generalPage": {
       "title": "Geral",
       "intro": "Nome, áreas e o que acontece com {name}.",
@@ -1972,7 +1974,7 @@
     "name": "Nome",
     "namePlaceholder": "API",
     "nameHint": "Para você reconhecer depois: Site, API, Worker.",
-    "platform": "Onde o código roda?",
+    "platform": "Linguagem ou framework",
     "create": "Adicionar origem",
     "dsn": "DSN",
     "dsnInfo": "O endereço para onde um SDK do Sentry envia. Ele leva a chave desta origem, que não é segredo: navegadores também a veem. Cada origem tem a sua, para separar o site da API.",
@@ -2032,7 +2034,16 @@
     "serverToo": "Erros do servidor também",
     "serverTooBody": "O script só enxerga o navegador. Para erros na sua API ou no código do servidor, adicione o SDK do Sentry lá com o DSN desta origem.",
     "serverSource": "Erros de servidor (API, worker) vêm de uma origem de servidor, com chave e DSN próprios, não deste site.",
-    "addServerSource": "Adicionar origem de servidor"
+    "addServerSource": "Adicionar origem de servidor",
+    "runtime": "Onde o código roda?",
+    "runtimes": {
+      "browser": "No navegador",
+      "server": "Em um servidor"
+    },
+    "runtimeHints": {
+      "browser": "Um site ou uma aplicação web: erros na página de quem visita.",
+      "server": "Uma API, um backend ou uma tarefa: erros no seu código no servidor. O Next.js cobre os dois."
+    }
   },
   "usageArea": {
     "title": "Uso do produto",

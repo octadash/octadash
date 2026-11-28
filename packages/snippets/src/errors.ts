@@ -24,6 +24,23 @@ export function isErrorPlatform(value: string): value is ErrorPlatform {
   return (ERROR_PLATFORMS as readonly string[]).includes(value)
 }
 
+/**
+ * Set up Errors asks in two steps: where the code runs, then the language.
+ * Next.js is in both, since one SDK covers the page and the server.
+ */
+export const ERROR_RUNTIMES = ['browser', 'server'] as const
+export type ErrorRuntime = (typeof ERROR_RUNTIMES)[number]
+
+export const ERROR_PLATFORMS_BY_RUNTIME: Record<ErrorRuntime, readonly ErrorPlatform[]> = {
+  browser: ['html', 'react', 'nextjs'],
+  server: ['nextjs', 'node', 'python', 'dotnet', 'php', 'java', 'go', 'ruby', 'other'],
+}
+
+/** Where a platform's code runs, for the first step: a page script or React is the browser. */
+export function errorRuntimeOf(platform: ErrorPlatform): ErrorRuntime {
+  return ERROR_PLATFORMS_BY_RUNTIME.browser.includes(platform) ? 'browser' : 'server'
+}
+
 export interface ErrorSnippetOptions {
   /** The ingest's public address. */
   ingestUrl: string

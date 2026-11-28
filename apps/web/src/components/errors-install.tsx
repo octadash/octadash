@@ -10,14 +10,22 @@ import {
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
-import { ERROR_PLATFORMS, type ErrorPlatform, errorSnippet, testError } from '@/lib/errors-setup'
+import {
+  ERROR_PLATFORMS_BY_RUNTIME,
+  ERROR_RUNTIMES,
+  type ErrorPlatform,
+  type ErrorRuntime,
+  errorRuntimeOf,
+  errorSnippet,
+  testError,
+} from '@/lib/errors-setup'
 import { CopyField } from './copy-field'
 import { Button } from './ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 
 /** With the page script on, the platforms left are the ones that run on a server. */
-const SERVER_PLATFORMS = ERROR_PLATFORMS.filter((p) => p !== 'html' && p !== 'react')
+const SERVER_PLATFORMS = ERROR_PLATFORMS_BY_RUNTIME.server
 
 /** How often step 3 asks whether an error arrived. */
 const POLL_MS = 3000
@@ -83,6 +91,13 @@ export function ErrorsInstall({
   const locale = useLocale()
   // With the script on, the tabs are for the server: the page is covered.
   const [tab, setTab] = useState<ErrorPlatform>(scriptOn && platform === 'html' ? 'node' : platform)
+  // Two steps: where the code runs, then the language for that place.
+  const [runtime, setRuntime] = useState<ErrorRuntime>(errorRuntimeOf(platform))
+  const chooseRuntime = (next: ErrorRuntime) => {
+    setRuntime(next)
+    const list = ERROR_PLATFORMS_BY_RUNTIME[next]
+    if (!list.includes(tab)) setTab(list[0] ?? 'other')
+  }
   const [serverOpen, setServerOpen] = useState(false)
   const [test, setTest] = useState<Test>('idle')
   const [last, setLast] = useState<{
@@ -217,18 +232,32 @@ export function ErrorsInstall({
         </Step>
       ) : (
         <Step n={1} title={t('step1')}>
+          <Tabs
+            value={runtime}
+            onValueChange={(v) => chooseRuntime(v as ErrorRuntime)}
+            className="gap-3"
+          >
+            <TabsList aria-label={t('runtime')}>
+              {ERROR_RUNTIMES.map((r) => (
+                <TabsTrigger key={r} value={r} className="px-3">
+                  {t(`runtimes.${r}`)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <p className="text-xs text-muted-foreground">{t(`runtimeHints.${runtime}`)}</p>
           <Tabs value={tab} onValueChange={(v) => setTab(v as ErrorPlatform)} className="gap-2">
             <TabsList
-              aria-label={t('codeLabel')}
+              aria-label={t('platform')}
               className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto"
             >
-              {ERROR_PLATFORMS.map((p) => (
+              {ERROR_PLATFORMS_BY_RUNTIME[runtime].map((p) => (
                 <TabsTrigger key={p} value={p} className="h-8 flex-none px-2.5">
                   {tp(p)}
                 </TabsTrigger>
               ))}
             </TabsList>
-            {ERROR_PLATFORMS.map((p) => {
+            {ERROR_PLATFORMS_BY_RUNTIME[runtime].map((p) => {
               const snippet = errorSnippet(p, options)
               return (
                 <TabsContent key={p} value={p} className="flex flex-col gap-2">

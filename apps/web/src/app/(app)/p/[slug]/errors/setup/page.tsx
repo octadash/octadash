@@ -184,9 +184,12 @@ export default async function ErrorsSetupPage({
             </Card>
           )}
 
-          {manager && add === '1' && (
+          {manager && (add === '1' || add === 'server') && (
             <RouteDialog closeHref={base} title={t('addSource')} description={t('addSourceHint')}>
-              <ErrorSourceForm slug={project.slug} />
+              <ErrorSourceForm
+                slug={project.slug}
+                runtime={add === 'server' ? 'server' : 'browser'}
+              />
             </RouteDialog>
           )}
 
@@ -235,7 +238,7 @@ export default async function ErrorsSetupPage({
                 addServerHref={
                   canFeed('logs', current.platform ?? '')
                     ? undefined
-                    : `/p/${project.slug}/errors/setup?add=1`
+                    : `/p/${project.slug}/errors/setup?add=server`
                 }
               />
             </RouteSheet>

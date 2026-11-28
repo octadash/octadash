@@ -88,7 +88,9 @@ export async function ErrorsStartView({
         scriptOn={hasPageScript(source.platform, source.areas)}
         sourceName={source.name}
         addServerHref={
-          canFeed('logs', source.platform) ? undefined : `/p/${product.slug}/errors/setup?add=1`
+          canFeed('logs', source.platform)
+            ? undefined
+            : `/p/${product.slug}/errors/setup?add=server`
         }
       />
     ),
