@@ -7,7 +7,7 @@
  */
 
 /** Attribute names whose value is always a secret. */
-const SECRET_NAME =
+export const SECRET_NAME =
   /(^|[_.\-\s])(password|passwd|pwd|senha|secret|token|access_token|refresh_token|api_key|apikey|api-key|authorization|cookie|set-cookie|private_key|client_secret|credential|credentials)([_.\-\s]|$)/i
 
 /** Each pattern and what replaces it. Order matters: keys before e-mails, cards before documents. */

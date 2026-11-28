@@ -338,6 +338,8 @@ function traceIdOf(contexts: Json): string {
 
 export interface EnvelopeItem {
   type: string
+  /** The item's own header line (type, length, content_type, filename...). */
+  header: Json
   payload: Uint8Array
 }
 
@@ -370,7 +372,7 @@ export function parseEnvelope(body: Uint8Array): { header: Json; items: Envelope
     } else {
       payload = line()
     }
-    items.push({ type: str(item.type, 50), payload })
+    items.push({ type: str(item.type, 50), header: item, payload })
   }
   return { header, items }
 }

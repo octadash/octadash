@@ -1,10 +1,13 @@
 import type { Logger } from '@octadash/core'
 import {
+  areaOfReceived,
   type ClickHouseClient,
   type EventRow,
   insertEvents,
+  insertReceived,
   type QueuedError,
   type QueuedLog,
+  type QueuedReceived,
 } from '@octadash/db'
 import { type Redis, startConsumer } from '@octadash/queue'
 import { type ErrorWriterDeps, writeErrors } from './errors'
@@ -22,6 +25,7 @@ export function startWriters(
   errors: Omit<ErrorWriterDeps, 'router' | 'log'>,
   logs: Omit<LogWriterDeps, 'router' | 'log'>,
   log: Logger,
+  receivedRetentionDays: number,
 ) {
   const writeLogs = createLogWriter({ ...logs, router, log })
   const consumers = [
@@ -44,6 +48,20 @@ export function startWriters(
       { log },
     ),
     startConsumer(valkey, 'logs', (rows, token) => writeLogs(rows as QueuedLog[], token), { log }),
+    startConsumer(
+      valkey,
+      'received',
+      async (rows, token) => {
+        const kept = await router.route(rows as QueuedReceived[], (row) => areaOfReceived(row.kind))
+        await insertReceived(
+          clickhouse,
+          kept.map((row) => ({ ...row, retention_days: receivedRetentionDays })),
+          token,
+        )
+        log.debug({ rows: kept.length, discarded: rows.length - kept.length }, 'received written')
+      },
+      { log },
+    ),
   ]
   return {
     async stop() {

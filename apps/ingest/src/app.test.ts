@@ -319,7 +319,7 @@ describe('PostHog SDKs', () => {
     },
   })
 
-  it('takes posthog-js batches, gzipped, and drops what Octadash does not keep', async () => {
+  it('takes posthog-js batches, gzipped, and keeps the rest apart in received', async () => {
     const { app, sink } = setup()
     const body = gzipSync(
       JSON.stringify([
@@ -336,7 +336,9 @@ describe('PostHog SDKs', () => {
     })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ status: 1 })
-    const rows = sink.batches[0]?.rows as {
+    expect(sink.batches.map((batch) => batch.kind)).toEqual(['received', 'events'])
+    expect(sink.batches[0]?.rows[0]).toMatchObject({ kind: 'posthog.$autocapture' })
+    const rows = sink.batches[1]?.rows as {
       event: string
       distinct_id: string
       session_id: string
