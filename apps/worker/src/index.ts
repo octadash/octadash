@@ -12,6 +12,7 @@ import {
   createClickHouse,
   createDb,
   getWatcher,
+  hitKey,
   insertErrors,
   insertLogs,
   insertUptimeChecks,
@@ -95,10 +96,32 @@ const writers = startWriters(
   clickhouse,
   router,
   {
-    recordHits: (hits) =>
-      recordIssueHits(db, hits, new Date(), (issueId, since) =>
+    recordHits: async (hits) => {
+      const outcomes = await recordIssueHits(db, hits, new Date(), (issueId, since) =>
         issuePeople(clickhouse, issueId, since),
-      ),
+      )
+      const fresh = hits.flatMap((hit) => {
+        const result = outcomes.get(hitKey(hit.project_id, hit.fingerprint))
+        return result?.outcome === 'new'
+          ? [
+              {
+                orgId: hit.org_id,
+                projectId: hit.project_id,
+                issueId: result.id,
+                type: hit.type,
+                value: hit.value,
+                culprit: hit.culprit,
+              },
+            ]
+          : []
+      })
+      // A message that fails to plan must never lose the batch of errors.
+      if (fresh.length > 0)
+        await alerts.onNewIssues(fresh).catch((err: unknown) => {
+          log.warn({ err: err instanceof Error ? err.message : err }, 'new issue notice lost')
+        })
+      return outcomes
+    },
     insert: (rows, token) => insertErrors(clickhouse, rows, token),
     onChange: async (changes) => {
       for (const orgId of new Set(changes.map((change) => change.orgId))) {

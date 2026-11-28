@@ -4,6 +4,7 @@ import {
   listChannels,
   listRuleOverrides,
   listRules,
+  NOTICE_KINDS,
   RULE_DEFAULTS,
 } from '@octadash/db'
 import {
@@ -33,6 +34,7 @@ const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors' | 'usage' | 'logs' | '
     log_alert: 'logs',
     payments_failing: 'money',
     cost_runaway: 'costs',
+    new_issue: 'errors',
   }
 
 /**
@@ -169,10 +171,14 @@ export async function RulesList({
         Object.keys(RULE_DEFAULTS[kind].params).length === 0 ? t(`kinds.${kind}.note`) : undefined,
       changedOn: changed.length > 0 ? t('changedOn', { count: changed.length }) : '',
     }
+    // A notice only sends a message or not: no signal, and its words say so.
+    const notice = NOTICE_KINDS.includes(kind)
+    if (notice) labels.levels = { ...levels, emergency: t('levels.message'), off: t('levels.off') }
     return (
       <RuleForm
         key={kind}
         kind={kind}
+        notice={notice}
         slug={project?.slug}
         rule={rule}
         channels={enabled}

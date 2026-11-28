@@ -1,10 +1,9 @@
 'use client'
 
-import { ChevronDownIcon } from 'lucide-react'
+import { ChevronDownIcon, SendIcon } from 'lucide-react'
 import Link from 'next/link'
 import { use, useEffect, useId, useRef, useState } from 'react'
 import { saveRuleAction } from '@/actions/alerts'
-import { cn } from '@/lib/utils'
 import { ActionForm, FormStateContext } from './action-form'
 import { InfoTip } from './info-tip'
 import { LEVEL_ICON, type Level } from './level-icon'
@@ -20,6 +19,8 @@ import {
 } from './ui/dropdown-menu'
 import { Input } from './ui/input'
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group'
+
+const LEVELS = ['emergency', 'signal', 'off'] as const
 
 export interface RuleFormLabels {
   title: string
@@ -53,8 +54,11 @@ export function RuleForm({
   overrides,
   canEdit,
   labels,
+  notice = false,
 }: {
   kind: string
+  /** A notice only sends a message or not: "Send a message" and "Off", no signal. */
+  notice?: boolean
   /** Set on a product's page: the rule then applies to that product only. */
   slug?: string
   rule: {
@@ -139,13 +143,17 @@ export function RuleForm({
               changed()
             }}
           >
-            {(['emergency', 'signal', 'off'] as const).map((option) => (
+            {(notice ? (['emergency', 'off'] as const) : LEVELS).map((option) => (
               <ToggleGroupItem
                 key={option}
                 value={option}
                 className="gap-1.5 px-2.5 data-[state=on]:bg-secondary data-[state=on]:font-semibold"
               >
-                {LEVEL_ICON[option]}
+                {notice && option === 'emergency' ? (
+                  <SendIcon className="size-3.5 text-brand" aria-hidden />
+                ) : (
+                  LEVEL_ICON[option]
+                )}
                 {labels.levels[option]}
               </ToggleGroupItem>
             ))}
@@ -153,10 +161,9 @@ export function RuleForm({
         </div>
 
         <div
-          className={cn(
-            'flex flex-wrap items-center gap-x-5 gap-y-2 text-sm',
-            level === 'off' && 'opacity-60',
-          )}
+          // An "off" rule is not dimmed: faded text fails AA contrast, and the
+          // level toggle already says Off.
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
         >
           {paramKeys.map((key) => (
             <span key={key} className="flex items-center gap-2">

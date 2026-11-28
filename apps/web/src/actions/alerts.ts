@@ -6,6 +6,7 @@ import {
   INCIDENT_KINDS,
   type IncidentKind,
   listChannels,
+  NOTICE_KINDS,
   RULE_DEFAULTS,
   resetRule,
   saveRule,
@@ -44,6 +45,8 @@ export async function saveRuleAction(_: FormState, formData: FormData): Promise<
 
   const level = String(formData.get('level') ?? '') as (typeof LEVELS)[number]
   if (!LEVELS.includes(level)) return { error: t('checkFields') }
+  // A notice is a message or nothing: "signal" has no meaning for it.
+  if (NOTICE_KINDS.includes(kind) && level === 'signal') return { error: t('checkFields') }
 
   const params: Record<string, number> = {}
   for (const key of Object.keys(RULE_DEFAULTS[kind].params)) {

@@ -25,6 +25,9 @@ interface Words {
   spikeTop: (issue: string, count: number) => string
   spikeOver: (product: string) => string
   spikeLasted: (duration: string) => string
+  newIssue: (product: string) => string
+  newIssues: (count: number) => string
+  newIssueWhere: (culprit: string) => string
   stopped: (product: string, event: string) => string
   stoppedFor: (duration: string, normal: number) => string
   stoppedBack: (product: string, event: string) => string
@@ -68,6 +71,9 @@ const words: Record<AlertLocale, Words> = {
     spikeTop: (issue, n) => `Most: ${issue} (${n}).`,
     spikeOver: (p) => `Errors on ${p} are back to normal`,
     spikeLasted: (d) => `The spike lasted ${d}.`,
+    newIssue: (p) => `New issue on ${p}`,
+    newIssues: (n) => `${n} new issues`,
+    newIssueWhere: (c) => `In ${c}.`,
     stopped: (p, e) => `${e} stopped on ${p}`,
     stoppedFor: (d, n) => `None for ${d}; normal for this time is about ${n} an hour.`,
     stoppedBack: (p, e) => `${e} is arriving again on ${p}`,
@@ -121,6 +127,9 @@ const words: Record<AlertLocale, Words> = {
     spikeTop: (issue, n) => `Mais frequente: ${issue} (${n}).`,
     spikeOver: (p) => `Os erros de ${p} voltaram ao normal`,
     spikeLasted: (d) => `O pico durou ${d}.`,
+    newIssue: (p) => `Issue nova em ${p}`,
+    newIssues: (n) => `${n} issues novas`,
+    newIssueWhere: (c) => `Em ${c}.`,
     stopped: (p, e) => `${e} parou em ${p}`,
     stoppedFor: (d, n) => `Nenhum há ${d}; o normal para este horário é cerca de ${n} por hora.`,
     stoppedBack: (p, e) => `${e} voltou a chegar em ${p}`,
@@ -198,6 +207,11 @@ interface IncidentData {
   spent?: number
   times?: number
   hour?: string
+  /** New issue: the issue and its first event's type, message and place. */
+  issueId?: string
+  type?: string
+  value?: string
+  culprit?: string
 }
 
 export type AlertEvent = 'open' | 'resolve'
@@ -211,6 +225,13 @@ function describe(incident: PendingIncident, event: AlertEvent, now: Date, local
   const ended = incident.resolved_at ? new Date(incident.resolved_at).getTime() : now.getTime()
   const reason = data.reason ? failureText(data.reason, locale) : null
 
+  if (incident.kind === 'new_issue') {
+    const text = [data.type, data.value].filter(Boolean).join(': ').slice(0, 160)
+    return {
+      title: w.newIssue(incident.project_name),
+      detail: [text, data.culprit ? w.newIssueWhere(data.culprit) : ''].filter(Boolean).join(' '),
+    }
+  }
   if (incident.kind === 'error_spike') {
     if (event === 'resolve') {
       return {
@@ -317,7 +338,8 @@ export function alertMessage(
   const base = panelUrl.replace(/\/+$/, '')
   const [first] = incidents
   if (!first) throw new Error('alertMessage needs at least one incident')
-  const severity = event === 'open' ? 'critical' : 'resolved'
+  const notices = incidents.every((i) => i.kind === 'new_issue')
+  const severity = event === 'open' ? (notices ? 'info' : 'critical') : 'resolved'
 
   if (incidents.length === 1) {
     const line = describe(first, event, now, locale)
@@ -327,13 +349,15 @@ export function alertMessage(
       body: line.detail,
       project: { id: first.project_id, name: first.project_name },
       url:
-        first.kind === 'error_spike' ||
-        first.kind === 'key_event_stopped' ||
-        first.kind === 'log_alert' ||
-        first.kind === 'payments_failing' ||
-        first.kind === 'cost_runaway'
-          ? `${base}/p/${first.project_slug}/emergencies/${first.id}`
-          : `${base}/p/${first.project_slug}/uptime`,
+        first.kind === 'new_issue'
+          ? `${base}/p/${first.project_slug}/errors/${(first.data as IncidentData | null)?.issueId ?? ''}`
+          : first.kind === 'error_spike' ||
+              first.kind === 'key_event_stopped' ||
+              first.kind === 'log_alert' ||
+              first.kind === 'payments_failing' ||
+              first.kind === 'cost_runaway'
+            ? `${base}/p/${first.project_slug}/emergencies/${first.id}`
+            : `${base}/p/${first.project_slug}/uptime`,
       occurredAt: now,
     }
   }
@@ -341,16 +365,19 @@ export function alertMessage(
   const monitorsOnly = incidents.every(
     (i) => i.kind === 'monitor_down' || i.kind === 'heartbeat_missed',
   )
-  const title = monitorsOnly
-    ? event === 'open'
-      ? w.manyDown(incidents.length)
-      : w.manyUp(incidents.length)
-    : event === 'open'
-      ? w.many(incidents.length)
-      : w.manyResolved(incidents.length)
+  const title = notices
+    ? w.newIssues(incidents.length)
+    : monitorsOnly
+      ? event === 'open'
+        ? w.manyDown(incidents.length)
+        : w.manyUp(incidents.length)
+      : event === 'open'
+        ? w.many(incidents.length)
+        : w.manyResolved(incidents.length)
   const lines = incidents.map((incident) => {
     const line = describe(incident, event, now, locale)
     const title =
+      incident.kind === 'new_issue' ||
       incident.kind === 'error_spike' ||
       incident.kind === 'key_event_stopped' ||
       incident.kind === 'log_alert' ||
@@ -364,7 +391,7 @@ export function alertMessage(
     severity,
     title,
     body: lines.join('\n'),
-    url: monitorsOnly ? `${base}/all/uptime` : `${base}/all`,
+    url: notices ? `${base}/all/errors` : monitorsOnly ? `${base}/all/uptime` : `${base}/all`,
     occurredAt: now,
   }
 }
