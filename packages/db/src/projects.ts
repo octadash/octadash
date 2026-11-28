@@ -1,4 +1,5 @@
 import { generatePublicKey, slugify, uuidv7 } from '@octadash/core'
+import { sql } from 'kysely'
 import type { Db } from './client'
 
 /**
@@ -44,7 +45,10 @@ async function uniqueSlug(db: Db, orgId: string, name: string, exceptId?: string
   }
 }
 
-/** Creates a product with its first ingest key. */
+/**
+ * Creates a product with a product key from before sources, which the current
+ * settings page still shows. It goes away when the setup screens create sources.
+ */
 export async function createProject(db: Db, orgId: string, input: ProjectInput) {
   return db.transaction().execute(async (trx) => {
     const project = await trx
@@ -58,7 +62,7 @@ export async function createProject(db: Db, orgId: string, input: ProjectInput) 
       .returningAll()
       .executeTakeFirstOrThrow()
     await trx
-      .insertInto('project_key')
+      .insertInto('source_key')
       .values({
         id: uuidv7(),
         org_id: orgId,
@@ -94,25 +98,33 @@ export async function deleteProject(db: Db, orgId: string, projectId: string) {
   return result.numDeletedRows > 0n
 }
 
+/** The product keys from before sources (no source). */
 export function listProjectKeys(db: Db, orgId: string, projectId: string) {
   return db
-    .selectFrom('project_key')
+    .selectFrom('source_key')
     .selectAll()
     .where('org_id', '=', orgId)
     .where('project_id', '=', projectId)
+    .where('source_id', 'is', null)
     .where('revoked_at', 'is', null)
     .orderBy('created_at')
     .execute()
 }
 
-/** The product an ingest key belongs to, or undefined when the key is unknown or revoked. */
+/**
+ * The product and source an ingest key belongs to, or undefined when the key is
+ * unknown or revoked. `source_id` is null for a product key from before sources.
+ */
 export function findIngestKey(db: Db, publicKey: string) {
-  return db
-    .selectFrom('project_key')
-    .select(['org_id', 'project_id'])
-    .where('public_key', '=', publicKey)
-    .where('revoked_at', 'is', null)
-    .executeTakeFirst()
+  return (
+    db
+      .selectFrom('source_key')
+      .select(['org_id', 'project_id', 'source_id'])
+      .where('public_key', '=', publicKey)
+      // A rotated key keeps working until its revocation time.
+      .where((eb) => eb.or([eb('revoked_at', 'is', null), eb('revoked_at', '>', sql<Date>`now()`)]))
+      .executeTakeFirst()
+  )
 }
 
 /** Builds a Sentry-compatible DSN for a product: https://<public_key>@<ingest host>/<ingest_id>. */

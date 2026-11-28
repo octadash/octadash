@@ -1,7 +1,9 @@
-/** The product a public key sends data for. */
+/** The product and source a public key sends data for. */
 export interface IngestScope {
   org_id: string
   project_id: string
+  /** Null for a product key from before sources. */
+  source_id: string | null
 }
 
 export interface KeyResolver {
@@ -65,7 +67,9 @@ export function cachedResolver(
     /^[0-9a-f]{32}$/,
     async (publicKey) => {
       const found = await lookup(publicKey)
-      return found ? { org_id: found.org_id, project_id: found.project_id } : null
+      return found
+        ? { org_id: found.org_id, project_id: found.project_id, source_id: found.source_id }
+        : null
     },
     options,
   )

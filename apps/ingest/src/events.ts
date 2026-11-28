@@ -1,5 +1,5 @@
 import { uuidv7 } from '@octadash/core'
-import { type EventRow, toClickHouseTime } from '@octadash/db'
+import { type EventRow, NO_SOURCE, toClickHouseTime } from '@octadash/db'
 import { z } from 'zod'
 import type { IngestScope } from './keys'
 
@@ -58,6 +58,7 @@ export function toEventRows(
     return {
       org_id: scope.org_id,
       project_id: scope.project_id,
+      source_id: scope.source_id ?? NO_SOURCE,
       uuid: event.uuid ?? uuidv7(),
       timestamp: toClickHouseTime(eventTime(event.timestamp, received)),
       received_at: receivedAt,

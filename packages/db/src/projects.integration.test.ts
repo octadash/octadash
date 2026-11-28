@@ -48,6 +48,7 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
     expect(await findIngestKey(db, keys[0]?.public_key ?? '')).toEqual({
       org_id: orgA,
       project_id: first.id,
+      source_id: null,
     })
     expect(await findIngestKey(db, 'f'.repeat(32))).toBeUndefined()
   })

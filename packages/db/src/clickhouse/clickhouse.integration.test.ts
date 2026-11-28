@@ -47,6 +47,7 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     const row = {
       org_id: org,
       project_id: '00000000-0000-4000-8000-0000000000c2',
+      source_id: '00000000-0000-4000-8000-0000000000c3',
       uuid: crypto.randomUUID(),
       timestamp: now,
       received_at: now,

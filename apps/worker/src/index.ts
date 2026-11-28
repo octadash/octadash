@@ -7,11 +7,14 @@ import {
   workerEnvSchema,
 } from '@octadash/core'
 import {
+  addSourceAreas,
   createClickHouse,
   createDb,
   getWatcher,
   insertUptimeChecks,
   listActiveMonitors,
+  listDismissedAreas,
+  recordDiscarded,
   recordWatcherPing,
   setMonitorStatus,
 } from '@octadash/db'
@@ -20,6 +23,7 @@ import { checkUrl } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
 import { createAlerts, registerAlertJobs } from './alerts'
 import { registerJobs } from './jobs'
+import { EventRouter } from './routing'
 import { startUptime, UptimeScheduler } from './uptime'
 import { pingUrl, startWatcher, Watcher } from './watcher'
 import { startWriters } from './writers'
@@ -58,7 +62,13 @@ const alerts = createAlerts({
   log,
 })
 await registerAlertJobs(boss, alerts, log)
-const writers = startWriters(streams, clickhouse, log)
+const router = new EventRouter({
+  loadDismissed: (projectIds) => listDismissedAreas(db, projectIds),
+  recordDiscarded: (discarded, at) => recordDiscarded(db, discarded, at),
+  addSourceAreas: (pairs) => addSourceAreas(db, pairs),
+  now: Date.now,
+})
+const writers = startWriters(streams, clickhouse, router, log)
 const heartbeats = new ValkeyHeartbeats(valkey)
 const uptime = startUptime(
   new UptimeScheduler({

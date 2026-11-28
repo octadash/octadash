@@ -8,6 +8,7 @@ import * as m0006 from './0006_monitors'
 import * as m0007 from './0007_alerts'
 import * as m0008 from './0008_groups'
 import * as m0009 from './0009_watcher'
+import * as m0010 from './0010_sources'
 
 /**
  * Migrations are imported statically (not read from disk) so they survive
@@ -23,4 +24,5 @@ export const migrations: Record<string, Migration> = {
   '0007_alerts': m0007,
   '0008_groups': m0008,
   '0009_watcher': m0009,
+  '0010_sources': m0010,
 }
