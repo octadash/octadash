@@ -410,3 +410,93 @@ describe('PostHog SDKs', () => {
     expect((await app.request('/static/..%2Fx')).status).toBe(404)
   })
 })
+
+describe('OpenTelemetry logs', () => {
+  const request = (records: Record<string, unknown>[]) => ({
+    resourceLogs: [
+      {
+        resource: { attributes: [{ key: 'service.name', value: { stringValue: 'api' } }] },
+        scopeLogs: [{ logRecords: records }],
+      },
+    ],
+  })
+
+  it('queues lines with the level, service and masking, under /v1 and /otlp/v1', async () => {
+    const { app, sink } = setup()
+    for (const path of ['/v1/logs', '/otlp/v1/logs']) {
+      const res = await app.request(path, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-octadash-key': KEY },
+        body: JSON.stringify(
+          request([
+            {
+              timeUnixNano: '1794999990000000000',
+              severityText: 'Information',
+              body: { stringValue: 'Paid by ana@shop.example' },
+              attributes: [{ key: 'password', value: { stringValue: 'hunter2' } }],
+            },
+          ]),
+        ),
+      })
+      expect(res.status).toBe(200)
+      expect(await res.json()).toEqual({})
+    }
+    expect(sink.batches).toHaveLength(2)
+    const row = (sink.batches[0]?.rows as Record<string, unknown>[] | undefined)?.[0]
+    expect(row).toMatchObject({
+      project_id: scope.project_id,
+      source_id: scope.source_id,
+      timestamp: '2026-11-18 11:06:30.000000000',
+      level: 'info',
+      severity_number: 9,
+      service: 'api',
+      body: 'Paid by [email]',
+      attributes: { password: '[secret]' },
+      masked: 2,
+    })
+    expect(sink.batches[0]?.kind).toBe('logs')
+  })
+
+  it('takes the key as a bearer token and gzip bodies, and refuses without a key', async () => {
+    const { app, sink } = setup()
+    const body = gzipSync(JSON.stringify(request([{ body: { stringValue: 'hi' } }])))
+    const ok = await app.request('/v1/logs', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'content-encoding': 'gzip',
+        authorization: `Bearer ${KEY}`,
+      },
+      body,
+    })
+    expect(ok.status).toBe(200)
+    expect(sink.batches).toHaveLength(1)
+    const refused = await app.request('/v1/logs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(request([])),
+    })
+    expect(refused.status).toBe(401)
+  })
+
+  it('answers traces and metrics with a warning and keeps nothing', async () => {
+    const { app, sink } = setup()
+    const res = await app.request('/v1/traces', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-octadash-key': KEY },
+      body: '{}',
+    })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ partialSuccess: { rejectedSpans: '0' } })
+    expect(sink.batches).toHaveLength(0)
+  })
+
+  it('refuses a body that is not OTLP', async () => {
+    const res = await setup().app.request('/v1/logs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-protobuf', 'x-octadash-key': KEY },
+      body: new Uint8Array([0x0a, 0xff, 0x01]),
+    })
+    expect(res.status).toBe(400)
+  })
+})

@@ -307,7 +307,8 @@ export async function loadOverview(
 
 /** What an incident is about: a monitor's name, or a key event's. */
 function nameOf(data: unknown): string | null {
-  const d = (data ?? {}) as { name?: unknown; event?: unknown }
+  const d = (data ?? {}) as { name?: unknown; event?: unknown; search?: unknown }
   if (typeof d.name === 'string') return d.name
+  if (typeof d.search === 'string') return d.search
   return typeof d.event === 'string' ? d.event : null
 }

@@ -1,7 +1,14 @@
 import type { Logger } from '@octadash/core'
-import { type ClickHouseClient, type EventRow, insertEvents, type QueuedError } from '@octadash/db'
+import {
+  type ClickHouseClient,
+  type EventRow,
+  insertEvents,
+  type QueuedError,
+  type QueuedLog,
+} from '@octadash/db'
 import { type Redis, startConsumer } from '@octadash/queue'
 import { type ErrorWriterDeps, writeErrors } from './errors'
+import { createLogWriter, type LogWriterDeps } from './logs'
 import type { EventRouter } from './routing'
 
 /**
@@ -13,8 +20,10 @@ export function startWriters(
   clickhouse: ClickHouseClient,
   router: EventRouter,
   errors: Omit<ErrorWriterDeps, 'router' | 'log'>,
+  logs: Omit<LogWriterDeps, 'router' | 'log'>,
   log: Logger,
 ) {
+  const writeLogs = createLogWriter({ ...logs, router, log })
   const consumers = [
     startConsumer(
       valkey,
@@ -34,6 +43,7 @@ export function startWriters(
       (rows, token) => writeErrors(rows as QueuedError[], token, { ...errors, router, log }),
       { log },
     ),
+    startConsumer(valkey, 'logs', (rows, token) => writeLogs(rows as QueuedLog[], token), { log }),
   ]
   return {
     async stop() {

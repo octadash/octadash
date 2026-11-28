@@ -326,7 +326,14 @@ export async function toErrorRow(
     exception: JSON.stringify(exceptions),
     breadcrumbs: JSON.stringify(breadcrumbsOf(event)),
     tags: JSON.stringify(tagsOf(event)),
+    trace_id: traceIdOf(contexts),
   }
+}
+
+/** The trace the error happened in (Sentry's `contexts.trace.trace_id`), lowercase hex. */
+function traceIdOf(contexts: Json): string {
+  const id = str(obj(contexts.trace)?.trace_id, 64).toLowerCase()
+  return /^[0-9a-f]{16,32}$/.test(id) ? id : ''
 }
 
 export interface EnvelopeItem {

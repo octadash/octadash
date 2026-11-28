@@ -8,6 +8,7 @@ import {
   ClockIcon,
   InfoIcon,
   ShieldAlertIcon,
+  TerminalIcon,
   TriangleAlertIcon,
   TriangleIcon,
   UserIcon,
@@ -67,6 +68,7 @@ const KIND_ICON: Record<StripKind, typeof ActivityIcon> = {
   cert_expiring: ShieldAlertIcon,
   error_spike: BugIcon,
   key_event_stopped: UserIcon,
+  log_alert: TerminalIcon,
   other: TriangleAlertIcon,
 }
 

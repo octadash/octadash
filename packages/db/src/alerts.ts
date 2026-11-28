@@ -28,6 +28,11 @@ export const RULE_DEFAULTS = {
    * hours wait longer on their own. Ends with the next event.
    */
   key_event_stopped: { level: 'emergency', params: { expected: 5, silence: 30 } },
+  /**
+   * A saved Logs search with Alert on matched a line in a product. Ends after
+   * `silence` minutes without a match. Each product gets its own emergency.
+   */
+  log_alert: { level: 'emergency', params: { silence: 15 } },
 } as const satisfies Record<string, { level: AlertLevel | 'off'; params: Record<string, number> }>
 
 export type IncidentKind = keyof typeof RULE_DEFAULTS

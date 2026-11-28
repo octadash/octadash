@@ -12,6 +12,7 @@ const KINDS: StripKind[] = [
   'cert_expiring',
   'error_spike',
   'key_event_stopped',
+  'log_alert',
 ]
 
 /**
@@ -64,6 +65,7 @@ export async function loadStrip(
         minutes: typeof data.minutes === 'number' ? data.minutes : 15,
         normal: roundNormal(typeof data.normal === 'number' ? data.normal : 0, kind),
         event: typeof data.event === 'string' ? data.event : '',
+        search: typeof data.search === 'string' ? data.search : '',
       }
       const checked = data.checked as { controls?: { target: string; ms: number | null }[] }
       return {
@@ -109,11 +111,14 @@ export async function loadStrip(
                   ? 'spikeOver'
                   : incident.kind === 'key_event_stopped'
                     ? 'keyBack'
-                    : 'back',
+                    : incident.kind === 'log_alert'
+                      ? 'logQuiet'
+                      : 'back',
               {
                 product: incident.project_name,
                 name: typeof data.name === 'string' ? data.name : '',
                 event: typeof data.event === 'string' ? data.event : '',
+                search: typeof data.search === 'string' ? data.search : '',
               },
             ),
         lastedMs: resolvedAt - incident.started_at.getTime(),

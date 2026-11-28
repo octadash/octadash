@@ -23,12 +23,13 @@ import { RuleForm, type RuleFormLabels } from './rule-form'
 import { Card } from './ui/card'
 
 /** Which area each rule belongs to, so the list reads area by area. */
-const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors' | 'usage'> = {
+const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors' | 'usage' | 'logs'> = {
   monitor_down: 'uptime',
   heartbeat_missed: 'uptime',
   cert_expiring: 'uptime',
   error_spike: 'errors',
   key_event_stopped: 'usage',
+  log_alert: 'logs',
 }
 
 /**
@@ -47,7 +48,6 @@ const FUTURE: {
   { area: 'traffic', icon: GlobeIcon, rules: [{ rule: 'trafficStopped', level: 'emergency' }] },
   { area: 'money', icon: WalletIcon, rules: [{ rule: 'paymentsFailing', level: 'emergency' }] },
   { area: 'costs', icon: ReceiptIcon, rules: [{ rule: 'costRunaway', level: 'emergency' }] },
-  { area: 'logs', icon: TerminalIcon, rules: [{ rule: 'logAlert', level: 'emergency' }] },
 ]
 
 const LEVELS: Level[] = ['emergency', 'signal', 'off']
@@ -133,6 +133,7 @@ export async function RulesList({
   const uptime = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'uptime')
   const errors = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'errors')
   const usage = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'usage')
+  const logs = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'logs')
 
   /** One rule of a built area, with its form. */
   const form = (kind: IncidentKind) => {
@@ -248,6 +249,17 @@ export async function RulesList({
               coming.map((r) => future('usage', r)),
             )}
           </div>
+        </section>
+
+        <section aria-labelledby="rules-logs" className="border-t">
+          <AreaHeader
+            id="rules-logs"
+            as={heading}
+            icon={TerminalIcon}
+            title={t('areas.logs')}
+            note={t('rulesCount', { count: logs.length })}
+          />
+          <div className="divide-y">{logs.map(form)}</div>
         </section>
 
         {FUTURE.filter((f) => f.area !== 'uptime' && f.area !== 'usage').map(

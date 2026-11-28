@@ -300,7 +300,8 @@
         "cert_expiring": "Certificado de “{name}” perto de vencer",
         "other": "Emergência",
         "error_spike": "Pico de erros",
-        "key_event_stopped": "“{name}” parou"
+        "key_event_stopped": "“{name}” parou",
+        "log_alert": "Alerta de log “{name}”"
       },
       "more": "{count, plural, one {Mais # na página do produto} other {Mais # na página do produto}}"
     }
@@ -630,6 +631,11 @@
         "title": "Evento importante parou",
         "body": "Um evento que você marcou como importante (um cadastro, um pagamento) para de chegar em uma hora em que costuma vir.",
         "info": "O Octadash espera o tempo que o número esperado de eventos normalmente leva neste horário (a mesma hora dos últimos 7 dias), e nunca menos que o silêncio mínimo. Horas calmas esperam mais sozinhas, e um evento raro demais neste horário (menos de 5 por dia) nunca dispara. Fecha quando o próximo evento chega. Marque os eventos importantes em Configurar Uso do produto."
+      },
+      "log_alert": {
+        "title": "Alerta de log",
+        "body": "Uma busca salva em Logs com Alerta ligado encontra uma linha. Cada produto com uma linha encontrada ganha a própria emergência.",
+        "info": "Ligue o Alerta em uma busca salva na página de Logs. O Octadash roda a busca a cada minuto nas linhas desde que o alerta foi ligado. Ela fecha quando passam os minutos definidos sem nenhuma linha encontrada (no máximo 60). Só linhas que chegam depois de ligar o Alerta disparam."
       }
     },
     "legend": "Níveis",
@@ -702,15 +708,6 @@
           "body": "Gasto por hora bem acima do normal (tokens de IA, nuvem).",
           "wait": "Nenhuma fonte de custo conectada ainda.",
           "params": "3× o normal por 1 h"
-        }
-      },
-      "logs": {
-        "starts": "Começa quando Logs estiver configurado em um produto",
-        "logAlert": {
-          "title": "Alerta de log",
-          "body": "Uma busca que você salva encontra algo, como level=fatal.",
-          "wait": "Nenhum produto envia logs ainda.",
-          "params": "Você define a busca"
         }
       }
     },
@@ -990,7 +987,8 @@
       "uptime": "No ar",
       "other": "Octadash",
       "errors": "Erros",
-      "usage": "Uso do produto"
+      "usage": "Uso do produto",
+      "logs": "Logs"
     },
     "started": "Começou às {time} · {duration}",
     "titles": {
@@ -999,7 +997,8 @@
       "cert_expiring": "{product} · certificado vence em {days} dias",
       "other": "{product} · {name}",
       "error_spike": "{product} · pico de erros",
-      "key_event_stopped": "{product} · {event} parou"
+      "key_event_stopped": "{product} · {event} parou",
+      "log_alert": "{product} · alerta de log “{search}”"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1009,7 +1008,8 @@
       "closed": "Encerrada às {time}, depois de {duration}.",
       "spike": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando o normal neste horário é cerca de {normal}. Fecha sozinha quando os erros voltarem para baixo da regra.",
       "spikeNone": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando este horário normalmente não tem nenhum. Fecha sozinha quando os erros voltarem para baixo da regra.",
-      "keyEvent": "Nenhum {event} desde {time}, quando o normal neste horário é cerca de {normal} por hora. Fecha sozinha quando o próximo chegar."
+      "keyEvent": "Nenhum {event} desde {time}, quando o normal neste horário é cerca de {normal} por hora. Fecha sozinha quando o próximo chegar.",
+      "logAlert": "A busca salva “{search}” ({query}) encontrou uma linha. Fecha sozinha depois de {minutes} min sem nenhuma."
     },
     "onIt": "{name} está cuidando · desde {time}",
     "nobody": "Ninguém cuidando ainda",
@@ -1098,7 +1098,8 @@
       "cert_expiring": "{product} · certificado estava perto de vencer",
       "other": "{product} · {name}",
       "error_spike": "{product} · pico de erros",
-      "key_event_stopped": "{product} · {event} parou"
+      "key_event_stopped": "{product} · {event} parou",
+      "log_alert": "{product} · alerta de log “{search}”"
     },
     "spike": {
       "title": "Issues por trás do pico",
@@ -1114,7 +1115,8 @@
       "cert_expiring": "{product}: certificado vence em {days, plural, one {# dia} other {# dias}}",
       "other": "{product}: {name}",
       "error_spike": "{product}: pico de erros",
-      "key_event_stopped": "{product}: {event} parou"
+      "key_event_stopped": "{product}: {event} parou",
+      "log_alert": "{product}: alerta de log “{search}”"
     },
     "short": {
       "monitor_down": "{product} fora do ar",
@@ -1122,7 +1124,8 @@
       "cert_expiring": "{product} certificado vencendo",
       "other": "{product} {name}",
       "error_spike": "{product} pico de erros",
-      "key_event_stopped": "{product} {event} parou"
+      "key_event_stopped": "{product} {event} parou",
+      "log_alert": "{product} alerta de log"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
@@ -1130,7 +1133,8 @@
       "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
       "other": "{name}: {reason}",
       "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
-      "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora"
+      "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
+      "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” não responde",
@@ -1138,7 +1142,8 @@
       "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
       "other": "{name}",
       "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
-      "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora"
+      "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
+      "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}"
     },
     "kind": {
       "monitor_down": "Fora do ar",
@@ -1146,7 +1151,8 @@
       "cert_expiring": "Certificado vencendo",
       "other": "Emergência",
       "error_spike": "Pico de erros",
-      "key_event_stopped": "Evento importante parou"
+      "key_event_stopped": "Evento importante parou",
+      "log_alert": "Alerta de log"
     },
     "count": "{count, plural, one {# emergência} other {# emergências}}",
     "countProducts": "{count} emergências em {products} produtos",
@@ -1203,7 +1209,8 @@
       "submitNone": "Estou cuidando destas"
     },
     "spikeOver": "{product}: erros voltaram ao normal",
-    "keyBack": "{product}: {event} voltou a chegar"
+    "keyBack": "{product}: {event} voltou a chegar",
+    "logQuiet": "{product}: “{search}” voltou ao silêncio"
   },
   "traffic": {
     "title": "Tráfego",

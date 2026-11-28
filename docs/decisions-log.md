@@ -222,3 +222,33 @@ and why; anything here can be reversed.
 - **Tables that scroll sideways on a phone are focusable regions**
   (`scrollLabel` on `Table`), so keyboard users can scroll them; axe flagged
   them at 390 px.
+
+### Logs engine (2026-11-28)
+
+- **OTLP only, as the canvas says**, protobuf and JSON. Protobuf is decoded
+  by hand (about 200 lines) instead of adding protobufjs and generated code:
+  the ingest is bundled into one file, and the logs messages are few and
+  stable.
+- **Traces and metrics are answered, not kept.** A Collector that exports all
+  three gets a partial success saying so, instead of a 404 it would retry
+  forever. Traces get their own step later.
+- **Masking replaces, it does not drop.** Logs are for investigating, so the
+  line stays and only the value becomes `[email]`, `[card]`, `[document]`,
+  `[key]` or `[secret]`. Bare digit runs are left alone (they are usually
+  ids); cards need a valid Luhn check. Product usage keeps dropping personal
+  properties whole, as before.
+- **Retention is per product and per line.** The canvas offers 7, 14, 30 or
+  90 days per product. Each line keeps the days its product had when it
+  arrived, and the table is partitioned by retention and day, so ClickHouse
+  drops whole parts at night. Shortening the retention deletes older lines at
+  once; lengthening it applies to new lines only.
+- **Retention lives on `project_area`** (new `retention_days` column), so
+  other areas can use the same setting later instead of a table each.
+- **A saved search belongs to the organization**, like the canvas shows on
+  All products; `product:` inside the query narrows it.
+- **Log alert opens one emergency per product**, matching how every other
+  emergency works (10 products failing at once read as 10, grouped in one
+  message). It only counts lines that arrive after Alert is turned on, and it
+  looks back at most an hour, so the quiet spell is capped at 60 minutes.
+- **Errors now keep the trace id** (ClickHouse migration 0007), for "1 error
+  in Errors" on a log line.

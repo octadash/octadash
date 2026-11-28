@@ -8,6 +8,7 @@ import { Redis } from 'ioredis'
 export const STREAMS = {
   events: 'octadash:ingest:events',
   errors: 'octadash:ingest:errors',
+  logs: 'octadash:ingest:logs',
 } as const
 
 export type StreamKind = keyof typeof STREAMS
