@@ -10,7 +10,9 @@ description: Deploy from the public repository with the Coolify compose file.
 3. Deploy. Coolify generates every password (Postgres, ClickHouse, Valkey,
    Garage), the secret and one domain for the panel (`web`) and one for the
    ingest service (`ingest`). Change the domains under **Domains** if you want
-   your own.
+   your own. Coolify shows them with the container port
+   (`https://ingest.example.com:4000`): that port only tells the proxy where to
+   send traffic, and Octadash leaves it out of the code you paste.
 
 ## First run
 

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { EnvError, ingestEnvSchema, parseEnv, webEnvSchema, workerEnvSchema } from './env'
+import {
+  EnvError,
+  ingestEnvSchema,
+  parseEnv,
+  webEnvSchema,
+  withoutPort,
+  workerEnvSchema,
+} from './env'
 
 describe('parseEnv', () => {
   it('applies defaults', () => {
@@ -51,5 +58,28 @@ describe('parseEnv', () => {
       'https://a.example',
       'https://b.example',
     ])
+  })
+
+  it('drops the container port behind a proxy (Coolify writes https://host:4000)', () => {
+    const base = {
+      DATABASE_URL: 'postgres://u:p@localhost:5432/octadash',
+      VALKEY_URL: 'redis://:p@localhost:6379',
+      CLICKHOUSE_URL: 'http://u:p@localhost:8123/octadash',
+      OCTADASH_SECRET: 's'.repeat(32),
+      OCTADASH_URL: 'https://panel.example.com:3000',
+      OCTADASH_INGEST_URL: 'https://ingest.example.com:4000',
+    }
+    const kept = parseEnv(webEnvSchema, base)
+    expect(kept.OCTADASH_INGEST_URL).toBe('https://ingest.example.com:4000')
+    const web = parseEnv(webEnvSchema, { ...base, OCTADASH_BEHIND_PROXY: 'true' })
+    expect(web.OCTADASH_URL).toBe('https://panel.example.com')
+    expect(web.OCTADASH_INGEST_URL).toBe('https://ingest.example.com')
+    const worker = parseEnv(workerEnvSchema, { ...base, OCTADASH_BEHIND_PROXY: 'true' })
+    expect(worker.OCTADASH_URL).toBe('https://panel.example.com')
+  })
+
+  it('keeps the path when dropping the port', () => {
+    expect(withoutPort('https://example.com:4000/ingest')).toBe('https://example.com/ingest')
+    expect(withoutPort('https://example.com/')).toBe('https://example.com')
   })
 })

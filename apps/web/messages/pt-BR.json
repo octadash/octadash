@@ -1495,7 +1495,7 @@
     "back": "Voltar para {name}",
     "wontUse": "Não vou usar Tráfego neste produto",
     "example": "Como vai ficar",
-    "exampleBadge": "Exemplo",
+    "exampleBadge": "Números inventados",
     "exampleVisitors": "Visitantes",
     "examplePageviews": "Visualizações",
     "private": "Privado por padrão",
@@ -1974,7 +1974,7 @@
     "back": "Voltar para {name}",
     "wontUse": "Não vou usar Erros neste produto",
     "example": "Como vai ficar",
-    "exampleBadge": "Exemplo",
+    "exampleBadge": "Números inventados",
     "exampleIssues": [
       {
         "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
@@ -2760,7 +2760,8 @@
     "restore": "Usar {area} de novo",
     "example": "Como vai ficar",
     "exampleLabel": "Exemplo de como esta tela vai ficar",
-    "exampleBadge": "Exemplo",
+    "exampleNote": "Não são seus dados. Os seus números entram aqui quando chegar o primeiro evento.",
+    "exampleBadge": "Números inventados",
     "featuresLabel": "O que vem junto",
     "products": {
       "caption": "Situação de {area} em cada produto",
