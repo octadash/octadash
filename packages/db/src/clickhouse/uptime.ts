@@ -1,4 +1,7 @@
 import type { ClickHouseClient } from '@clickhouse/client'
+import { type Bucket, bucketSql, bucketStarts, ISO_TIMES } from './buckets'
+import { toClickHouseTime } from './events'
+import type { TrafficScope } from './traffic'
 
 /** One row of `uptime_checks`. */
 export interface UptimeCheckRow {
@@ -110,4 +113,81 @@ export async function latestCertDays(
   })
   for (const row of await result.json<{ id: string; days: number }>()) days.set(row.id, row.days)
   return days
+}
+
+export interface UptimeBucket {
+  /** Start of the bucket. */
+  at: Date
+  checks: number
+  /** Checks that failed: one is enough to paint the bucket as down. */
+  downs: number
+}
+
+export interface ProductUptimeHistory {
+  checks: number
+  ups: number
+  /** Every bucket of the period, empty ones included (no checks). */
+  buckets: UptimeBucket[]
+}
+
+/**
+ * Checks per product and per hour or day, for the bar of hours in an overview
+ * row. Paused or deleted monitors count while they had checks. Products with
+ * no check in the period are left out.
+ */
+export async function uptimeHistory(
+  client: ClickHouseClient,
+  scope: TrafficScope,
+  bucket: Bucket,
+): Promise<Map<string, ProductUptimeHistory>> {
+  const history = new Map<string, ProductUptimeHistory>()
+  if (scope.projectIds?.length === 0) return history
+  const { start } = bucketSql(bucket)
+  const result = await client.query({
+    query: `
+      SELECT
+        toString(project_id) AS product,
+        ${start}(timestamp, {tz:String}) AS at,
+        count() AS checks,
+        countIf(up = 0) AS downs
+      FROM uptime_checks
+      WHERE org_id = {org:UUID}
+        ${scope.projectIds ? 'AND project_id IN {projects:Array(UUID)}' : ''}
+        AND timestamp >= {from:DateTime64(3, 'UTC')}
+        AND timestamp < {to:DateTime64(3, 'UTC')}
+      GROUP BY product, at
+      ORDER BY product, at`,
+    query_params: {
+      org: scope.orgId,
+      projects: scope.projectIds ?? [],
+      from: toClickHouseTime(scope.from),
+      to: toClickHouseTime(scope.to),
+      tz: scope.timeZone ?? 'UTC',
+    },
+    clickhouse_settings: ISO_TIMES,
+    format: 'JSONEachRow',
+  })
+  const rows = await result.json<{ product: string; at: string; checks: string; downs: string }>()
+  const starts = await bucketStarts(client, scope, bucket)
+  const found = new Map<string, Map<number, UptimeBucket>>()
+  for (const row of rows) {
+    const byTime = found.get(row.product) ?? new Map<number, UptimeBucket>()
+    const at = new Date(row.at)
+    byTime.set(at.getTime(), { at, checks: Number(row.checks), downs: Number(row.downs) })
+    found.set(row.product, byTime)
+  }
+  for (const [product, byTime] of found) {
+    let checks = 0
+    let downs = 0
+    for (const b of byTime.values()) {
+      checks += b.checks
+      downs += b.downs
+    }
+    history.set(product, {
+      checks,
+      ups: checks - downs,
+      buckets: starts.map((at) => byTime.get(at.getTime()) ?? { at, checks: 0, downs: 0 }),
+    })
+  }
+  return history
 }

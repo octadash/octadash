@@ -221,6 +221,41 @@ export function listOpenIncidents(db: Db, orgId: string) {
 }
 
 /**
+ * Incidents that were open at some point of a period, oldest first: the "What
+ * happened" timeline. `projectIds` null means every product; an empty list
+ * matches nothing. Child incidents (one product down because its server is)
+ * come along with their `parent_id`.
+ */
+export async function listIncidentsBetween(
+  db: Db,
+  orgId: string,
+  projectIds: string[] | null,
+  from: Date,
+  to: Date,
+) {
+  if (projectIds?.length === 0) return []
+  let query = db
+    .selectFrom('incident')
+    .select([
+      'id',
+      'project_id',
+      'monitor_id',
+      'parent_id',
+      'kind',
+      'level',
+      'data',
+      'started_at',
+      'resolved_at',
+      'acknowledged_by',
+    ])
+    .where('org_id', '=', orgId)
+    .where('started_at', '<', to)
+    .where((eb) => eb.or([eb('resolved_at', 'is', null), eb('resolved_at', '>=', from)]))
+  if (projectIds) query = query.where('project_id', 'in', projectIds)
+  return query.orderBy('started_at').execute()
+}
+
+/**
  * Someone takes the emergencies: the strip says who and since when, for
  * everyone. The first person wins; taking an incident someone already took, or
  * one already over, changes nothing. Returns the incidents taken now.
