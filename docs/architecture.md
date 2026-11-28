@@ -158,6 +158,18 @@ versions and passwords generated at install. Each has one job.
 - Channel secrets (bot tokens, SMTP passwords, API keys) are encrypted with
   AES-256-GCM under a key derived from `OCTADASH_SECRET`, so the worker needs
   the same secret as the panel. Each channel has its own message language.
+- "I'm on it" on an emergency: any member sets `acknowledged_by` and
+  `acknowledged_at`; the first person keeps it. The incident stays open (the
+  strip stays red) until its cause is resolved. Reminders, when they come, skip
+  incidents someone took.
+- Live updates: whoever changes incidents, monitors or the outside watcher
+  publishes a small event on Valkey (`octadash:live:org:<id>`, or
+  `octadash:live:instance` for the whole install). Each panel process holds one
+  subscriber connection shared by every open screen and forwards events over
+  Server-Sent Events (`/api/live`); the screen then fetches its own data again.
+  Events name what changed, never the data, so nothing reaches a viewer who may
+  not see it. Several panel processes all receive every event. TV mode uses the
+  same stream. A lost event costs only freshness: the next load is right.
 
 ### Integrations are plugins
 

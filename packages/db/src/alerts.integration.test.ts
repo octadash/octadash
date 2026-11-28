@@ -92,10 +92,15 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
     expect(due.some((i) => i.id === first?.id)).toBe(true)
     await markNotified(db, [first?.id ?? ''], 'open', T0)
 
-    await acknowledgeIncidents(db, org, [first?.id ?? ''], 'user-1', T0)
-    expect(
-      (await listOpenIncidents(db, org)).find((i) => i.id === first?.id)?.acknowledged_at,
-    ).not.toBeNull()
+    expect(await acknowledgeIncidents(db, other, [first?.id ?? ''], 'user-2', T0)).toEqual([])
+    expect(await acknowledgeIncidents(db, org, [first?.id ?? ''], 'user-1', T0)).toEqual([
+      first?.id,
+    ])
+    // The first person keeps it.
+    expect(await acknowledgeIncidents(db, org, [first?.id ?? ''], 'user-2', T0)).toEqual([])
+    expect((await listOpenIncidents(db, org)).find((i) => i.id === first?.id)).toMatchObject({
+      acknowledged_by: 'user-1',
+    })
 
     await resolveIncident(db, input.dedupeKey, new Date(T0.getTime() + 300_000))
     const resolved = await db
@@ -169,9 +174,9 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
       data: {},
       at: T0,
     })
-    expect(await closeStaleMonitorIncidents(db, T0)).toBe(0)
+    expect(await closeStaleMonitorIncidents(db, T0)).toEqual([])
     await db.updateTable('monitor').set({ paused: true }).where('id', '=', monitor.id).execute()
-    expect(await closeStaleMonitorIncidents(db, T0)).toBe(1)
+    expect(await closeStaleMonitorIncidents(db, T0)).toEqual([org])
     const row = await db
       .selectFrom('incident')
       .selectAll()

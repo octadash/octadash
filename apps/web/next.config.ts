@@ -15,6 +15,7 @@ const config: NextConfig = {
     '@octadash/auth',
     '@octadash/integrations',
     '@octadash/uptime',
+    '@octadash/queue',
   ],
   // pg is loaded at runtime from node_modules, never bundled.
   serverExternalPackages: ['pg'],

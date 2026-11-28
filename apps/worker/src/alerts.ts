@@ -18,6 +18,7 @@ import {
   ruleFor,
 } from '@octadash/db'
 import { builtinIntegrations, type NotificationIntegration } from '@octadash/integrations'
+import type { LivePublisher, LiveTopic } from '@octadash/queue'
 import type { PgBoss } from 'pg-boss'
 import { type AlertEvent, alertLocale, alertMessage } from './alert-text'
 import type { Transition } from './uptime'
@@ -84,6 +85,8 @@ export interface AlertsDeps {
   secret: string
   panelUrl: string
   log: Logger
+  /** Tells open screens that incidents or monitors changed. */
+  live?: LivePublisher
   fetch?: typeof fetch
   now?: () => Date
 }
@@ -94,6 +97,19 @@ export function createAlerts(deps: AlertsDeps) {
 
   async function wake(at?: Date) {
     await deps.boss.send(ALERT_QUEUES.notify, null, at && at > now() ? { startAfter: at } : {})
+  }
+
+  /** A screen that misses an update catches up on its next load; never fail the job for it. */
+  async function tell(orgIds: Iterable<string>, topic: LiveTopic) {
+    if (!deps.live) return
+    const live = deps.live
+    await Promise.all(
+      [...new Set(orgIds)].map((orgId) =>
+        live.publish(orgId, topic).catch((err: unknown) => {
+          deps.log.warn({ err: err instanceof Error ? err.message : err }, 'live update lost')
+        }),
+      ),
+    )
   }
 
   /** The uptime scheduler calls this on every state change it saved. */
@@ -109,19 +125,27 @@ export function createAlerts(deps: AlertsDeps) {
         data: { name: monitor.name, url: monitor.url, reason },
         at,
       })
-      if (incident) await wake(incident.notify_after)
+      if (incident) {
+        await wake(incident.notify_after)
+        await tell([monitor.org_id], 'incidents')
+      }
     } else if (to === 'up') {
-      if (await resolveIncident(deps.db, dedupeKey, at)) await wake()
+      if (await resolveIncident(deps.db, dedupeKey, at)) {
+        await wake()
+        await tell([monitor.org_id], 'incidents')
+      }
     }
+    await tell([monitor.org_id], 'monitors')
   }
 
   /** Sends every message that is due, one per channel and event. */
   async function notify() {
     const at = now()
-    await closeStaleMonitorIncidents(deps.db, at)
+    const changed = new Set(await closeStaleMonitorIncidents(deps.db, at))
     await deps.db.transaction().execute(async (trx) => {
       const pending = await claimPendingIncidents(trx, at)
       if (pending.length === 0) return
+      for (const incident of pending) changed.add(incident.org_id)
       const orgIds = [...new Set(pending.map((incident) => incident.org_id))]
       const channels = await listEnabledChannels(trx, orgIds)
       const deliveries = planDeliveries(pending, channels)
@@ -133,6 +157,8 @@ export function createAlerts(deps: AlertsDeps) {
       await markNotified(trx, opened, 'open', at)
       await markNotified(trx, resolved, 'resolve', at)
     })
+    // After the commit, so a screen that reloads sees what changed.
+    await tell(changed, 'incidents')
   }
 
   async function send(db: Db, { channel, event, incidents }: Delivery, at: Date) {
@@ -178,7 +204,7 @@ export function createAlerts(deps: AlertsDeps) {
       (await listOpenIncidentKeys(deps.db, 'cert_expiring')).map((row) => row.dedupe_key),
     )
     const at = now()
-    let changed = false
+    const changed = new Set<string>()
     for (const monitor of monitors) {
       const left = days.get(monitor.id)
       if (left === undefined) continue
@@ -186,12 +212,15 @@ export function createAlerts(deps: AlertsDeps) {
       const rule = await ruleFor(deps.db, monitor.org_id, monitor.project_id, 'cert_expiring')
       const limit = rule.params.days ?? 7
       if (left <= limit && !open.has(key)) {
-        changed ||= Boolean(await openCert(monitor, key, left, at))
+        if (await openCert(monitor, key, left, at)) changed.add(monitor.org_id)
       } else if (left > limit && open.has(key)) {
-        changed ||= Boolean(await resolveIncident(deps.db, key, at))
+        if (await resolveIncident(deps.db, key, at)) changed.add(monitor.org_id)
       }
     }
-    if (changed) await wake()
+    if (changed.size > 0) {
+      await wake()
+      await tell(changed, 'incidents')
+    }
   }
 
   function openCert(monitor: ActiveMonitor, dedupeKey: string, days: number, at: Date) {

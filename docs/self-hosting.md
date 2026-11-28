@@ -61,14 +61,15 @@ ones in the compose files are the supported path.
 docker run -d --name octadash-web -p 3000:3000 \
   -e DATABASE_URL=postgres://... \
   -e CLICKHOUSE_URL=http://user:pass@clickhouse.example.com:8123/octadash \
+  -e VALKEY_URL=redis://:pass@valkey.example.com:6379 \
   -e OCTADASH_URL=https://octadash.example.com \
   -e OCTADASH_INGEST_URL=https://ingest.example.com \
   -e OCTADASH_SECRET=... \
   ghcr.io/octadash/octadash:edge web
 ```
 
-Run the same image with `ingest` (port 4000) and `worker` as the command. Both
-also need `VALKEY_URL`; the worker also needs `OCTADASH_URL` (links in alerts)
+Run the same image with `ingest` (port 4000) and `worker` as the command, with
+the same `VALKEY_URL`. The worker also needs `OCTADASH_URL` (links in alerts)
 and the same `OCTADASH_SECRET` as the panel (it decrypts the alert channels).
 
 ## From source

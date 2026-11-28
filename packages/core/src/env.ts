@@ -30,6 +30,8 @@ export const webEnvSchema = baseEnvSchema
       .enum(['true', 'false'])
       .default('false')
       .transform((value) => value === 'true'),
+    /** Live updates: the worker publishes changes here and the panel forwards them to open screens. */
+    VALKEY_URL: valkeyUrl,
   })
   .extend(clickhouseEnvSchema.shape)
 

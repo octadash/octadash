@@ -2,6 +2,7 @@ import { listGroups, listOrgMonitors, listProjects } from '@octadash/db'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
+import { LiveRefresh } from '@/components/live-refresh'
 import { LocaleSwitcher } from '@/components/locale-switcher'
 import { OrgSwitcher } from '@/components/org-switcher'
 import { ProductPicker } from '@/components/product-picker'
@@ -119,6 +120,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+      <LiveRefresh />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { createLogger } from '@octadash/core'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { decodeEntries, startConsumer } from './consumer'
 import { ValkeyHeartbeats } from './heartbeats'
+import { type LiveEvent, ValkeyLiveHub, ValkeyLivePublisher } from './live'
 import { ValkeySink } from './sink'
 import { createValkey, type Redis, STREAMS, WRITERS_GROUP } from './streams'
 
@@ -82,5 +83,27 @@ describe.skipIf(!url)('valkey streams (needs VALKEY_URL)', () => {
     expect([...pings]).toEqual([[id, 1_795_000_000_000]])
     expect((await store.read([])).size).toBe(0)
     await redis.del(`octadash:hb:${id}`)
+  })
+
+  it('forwards live events to the listeners of each organization', async () => {
+    const subscriber = createValkey(url ?? '', { name: 'octadash-test-live' })
+    const hub = new ValkeyLiveHub(subscriber)
+    const publisher = new ValkeyLivePublisher(redis, () => 42)
+    const org = crypto.randomUUID()
+    const seen: LiveEvent[] = []
+    const stop = await hub.subscribe([org, null], (event) => seen.push(event))
+    await publisher.publish(org, 'incidents')
+    await publisher.publish(crypto.randomUUID(), 'incidents')
+    await publisher.publish(null, 'watcher')
+    await new Promise((r) => setTimeout(r, 100))
+    expect(seen).toEqual([
+      { topic: 'incidents', at: 42 },
+      { topic: 'watcher', at: 42 },
+    ])
+    stop()
+    await publisher.publish(org, 'monitors')
+    await new Promise((r) => setTimeout(r, 100))
+    expect(seen).toHaveLength(2)
+    subscriber.disconnect()
   })
 })
