@@ -10,22 +10,24 @@ what do I do about it?**
 
 ## Principles
 
+- **Built for its maintainer first.** Octadash is built to run the
+  maintainer's own products. It is open source, so other people can use it too:
+  the stacks it serves best are documented, and everything else works through
+  standard SDKs (see [Getting data in](#getting-data-in)).
 - **Deliver what they do, without being them.** PostHog and Sentry are good
   tools, and anyone who likes them can keep them: Octadash accepts the same
   SDKs. The difference is seeing every product together. In PostHog each
   product is a separate project (one on the free plan, six on the paid one), so
-  checking the errors of all of them means opening each one. Octadash's "All
-  products" tab shows what is wrong across every product and crosses one area
-  with another, and a full-screen mode keeps it on a TV in the office, showing
-  only what you choose.
-- **Turn on what you need.** Someone who only wants analytics installs Octadash
-  and turns on web analytics, as they would with Umami. Nothing is heavy for
-  people who do not use it.
-- **A base is always on:** the minimum comfort and safety for any product that is
-  live (see [Layers](#layers)).
-- **Compatible by design.** Point the Sentry SDK, the PostHog SDK or an
-  OpenTelemetry exporter at Octadash and it works. Before building our own SDK
-  for a module, accept the format people already use.
+  checking the errors of all of them means opening each one. Octadash shows
+  every area for all products at once or for one product, and crosses one area
+  with another. A full-screen mode keeps it on a TV in the office.
+- **Installed complete, ready on first start.** One install brings every
+  module, with sensible defaults stored in the database (seeds): alert rules,
+  thresholds, retention. The owner installs it, adds the snippet to a product,
+  and it works. Every default can be changed per product.
+- **Tell, do not guess.** Octadash never inspects a product from outside to
+  guess which tools it uses. The owner says what to set up, gets instructions,
+  and the state of each module comes from the data that actually arrives.
 - **No number without an origin.** A value is assigned to a product only when its
   source says which product it belongs to. Octadash never guesses: AI spend seen
   only on the provider account shows as "unassigned spend", and a tool that
@@ -33,91 +35,232 @@ what do I do about it?**
 - **Every metric explains itself.** Each number carries its definition, formula,
   limits, what to look into, and the event that is missing when it cannot be
   computed.
-- **Uptime never wakes a product's database.** Checks hit a `/health` endpoint
-  that answers without a query; alerts fire after 3 failures in a row.
+- **Uptime never wakes a product's database.** The recommended check is a
+  `/health` endpoint that answers without a query, and the panel explains why
+  (see [Uptime](#uptime)).
 - **The list grows step by step.** The [backlog](#backlog) is the full size of what
   can be built. Items leave it when they are needed, not all at once.
 
-## Layers
+## Areas
 
-| Layer        | What it is                                                                                                    | Examples                                                                             | Who decides   |
-| ------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------- |
-| Base         | The minimum for any live product. Cannot be switched off.                                                     | accounts and products, URL diagnosis, uptime, SSL, domain expiry, alerts, heartbeats | us            |
-| Modules      | A whole area: screens, tables, ingest routes, worker jobs, MCP tools. On or off per instance and per product. | web analytics, errors, product events, revenue, AI cost, infra cost, logs            | the installer |
-| Integrations | An outside service that feeds a module or receives alerts (`packages/integrations`).                          | Stripe, Asaas, Paddle, OpenAI, Telegram, Slack                                       | the installer |
-| Community    | Modules and integrations built by others with the same contract, merged by pull request.                      | a Hotmart connector, a surveys module                                                | code review   |
+Every area works for **all products at once** or for **one product**, on the
+same screen. The panel has a menu with one entry per area and a product picker
+at the top whose first option is "All products".
 
-The setup wizard offers presets and the owner can change them later:
+| Area            | Answers                                           | Runs in                 |
+| --------------- | ------------------------------------------------- | ----------------------- |
+| Overview        | what needs my attention, and the day in numbers   | (built from the others) |
+| Uptime          | is it up, is the certificate valid, did a job run | Octadash (no code)      |
+| Traffic         | who comes and from where                          | browser                 |
+| Product usage   | sign-ups, logins, key actions, funnel, retention  | browser and server      |
+| Errors          | what broke and for how many people                | browser and server      |
+| Money           | revenue, MRR, churn, refunds                      | connectors (no code)    |
+| Costs           | AI cost, infra cost, margin                       | server and connectors   |
+| Logs and traces | what the server did at that moment                | server                  |
 
-| Preset         | Turns on                              | Similar to             |
-| -------------- | ------------------------------------- | ---------------------- |
-| Analytics only | base + web analytics                  | Umami, Plausible       |
-| Monitor        | base + errors + logs                  | UptimeRobot + Sentry   |
-| Product        | base + web analytics + product events | basic PostHog          |
-| Business       | base + revenue + AI cost + infra cost | Baremetrics + Helicone |
-| Everything     | all modules                           | all of the above       |
+Alert channels and data sources are integrations (`packages/integrations`).
+Community modules and integrations use the same contract and arrive by pull
+request.
 
-The "All products" tab shows only modules that are on. The URL diagnosis
-suggests modules: "your site has Stripe, turn on Revenue?".
+### Switching areas off
 
-## Observability levels
+There is no setup preset: an install starts with every area on. Each product
+card has "I won't use this" (see [Product page](#product-page)). For people who
+want an area gone everywhere, the instance settings have an advanced on/off
+switch per area: an area that is off registers no ingest route, schedules no
+job and is hidden from the panel and the MCP server.
 
-The URL diagnosis grades each product on six levels. They follow the order of
-the modules below.
+## Onboarding
 
-| Level        | Question                               | Answered from outside by                                                      |
-| ------------ | -------------------------------------- | ----------------------------------------------------------------------------- |
-| `alive`      | Is it up and safe to open?             | HTTP status, HTTPS, certificate                                               |
-| `used`       | Do you know how many people visit?     | A web analytics script                                                        |
-| `breaking`   | Do you find out when something breaks? | An error tracking SDK in the page or its bundles                              |
-| `growing`    | Do you know what people do inside?     | A product analytics SDK (partial: events need the data)                       |
-| `earning`    | Do you see the money coming in?        | Checkout links or payment SDKs (partial: revenue needs the gateway connected) |
-| `understood` | Is it all together in one place?       | Never from outside; Octadash answers it with data                             |
+1. **Create a product: only its name.** No URL, no platform. A product usually
+   has parts in different languages (a JavaScript front end, a .NET back end),
+   so the platform is chosen inside each area, not on the product.
+2. **Land on the product page**, which starts as a setup page and becomes the
+   product's dashboard as data arrives, without changing screens.
 
-`alive` also reports advice that does not lower the level: the http to https
-redirect, the home page load time and a health endpoint (`/api/health`,
-`/health`, `/healthz`, `/api/healthz`, `/api/status`, `/status`, answering 2xx
-with something that is not HTML).
+### Product page
 
-A status is `ok`, `partial` (a tool is there, but the URL alone can't confirm
-the data), `missing` or `unknown` (not visible from outside). The score counts
-levels that are `ok` or `partial`.
+One card per area. A card goes through three moments, always in the same place:
+
+| Moment              | What the card shows                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Not set up          | What the area does, a "Set up" button and "I won't use this"                                                                    |
+| Set up, no data yet | The area's real card with sample data, blurred, and a small label on top (as Google Search Console does). No "waiting" screens. |
+| Receiving data      | The area's summary: the main number, a small chart and a link to the full screen                                                |
+
+"I won't use this" removes the card from the page and moves it to a collapsed
+strip at the bottom, "Also available for this product", which explains each area
+in one line and can turn it back on. The same list is in the product settings.
+There is no "skip" or "not now": leaving a card alone already means "not now".
+
+### Set up an area
+
+"Set up" opens the area's empty state, modelled on PostHog's: what the area
+does, instructions in tabs per platform with the product's keys already filled
+in, and a sample of what the data will look like. Browser and server use the
+same project key, as in Sentry and PostHog; only the snippet changes.
+
+## Getting data in
+
+| Area            | Primary path (best supported)         | Other languages and tools                            |
+| --------------- | ------------------------------------- | ---------------------------------------------------- |
+| Traffic         | Octadash browser script               | (any site can add the script)                        |
+| Errors          | Octadash SDK for the browser and Node | Sentry SDKs (every language Sentry supports)         |
+| Product usage   | Octadash SDK for the browser and Node | OpenTelemetry; PostHog SDKs as a compatibility extra |
+| Costs (AI)      | Octadash wrapper for Node             | OpenTelemetry `gen_ai`                               |
+| Logs and traces | OpenTelemetry (OTLP over HTTP)        | any OpenTelemetry SDK                                |
+| Uptime, Money   | nothing to install                    |                                                      |
+
+Octadash writes its own SDKs only where they bring something extra: one browser
+script for traffic, errors and events together, and a package for Node and
+Next.js, which is what the maintainer's products use. For .NET, Python, Ruby,
+PHP, Go and the rest, Octadash accepts the SDKs people already use.
+
+How stable each format has been (checked on 2026-11-27):
+
+- **OpenTelemetry (OTLP):** stable for traces, metrics and logs, and evolves
+  without breaking (new fields are ignored). The `gen_ai` conventions are still
+  in development, so their attribute names may change.
+- **Sentry:** one breaking change, from `/store` to `/envelope` (server 20.6,
+  2020; JavaScript SDK v7, iOS SDK v6). Since then only new item types were
+  added, and an unknown item can be skipped.
+- **PostHog:** an internal format with no stability promise. In October 2026
+  PostHog added "capture v1" (`/i/v1/analytics/events`, `/i/v1/ai/events`), and
+  the new server and mobile SDK majors (Python 8, Node 6, Go 2, iOS 4,
+  Android 4, Flutter 6) send only there. The web SDK still uses the old
+  endpoints. This is why PostHog is a compatibility extra, not the main path.
+
+The docs keep a **supported SDKs** table: each SDK and the version range tested
+("Sentry .NET 5.x: tested"). CI runs those real SDKs against the ingest service,
+and automated dependency updates open a pull request for every new version, so
+a format change breaks a test before it reaches a user.
+
+## Alerts
+
+Octadash separates three kinds of information:
+
+| Kind      | Example                                 | What happens                                                                                                          |
+| --------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Emergency | site down, checkout broken, error spike | Sent at once to the chosen channels, and a red strip on top of every screen until someone resolves or acknowledges it |
+| Signal    | sign-ups on one product dropped         | No message. Highlighted in its area (the product's row turns red with the difference) and listed in the daily summary |
+| Data      | everything else                         | Shown, neutral                                                                                                        |
+
+Every rule ships as a seed and can be changed per product: "down for 2
+minutes" can become 5, "certificate expires in 7 days" can become 10, "errors 5
+times above normal" can become 10. Owners can also turn any signal into an alert
+of their own ("tell me if sign-ups on this product drop 30%").
+
+### What "normal" means for a signal
+
+The expected value combines two things:
+
+- the **shape**: how much this hour of this weekday usually represents, from the
+  same weekday and hour over the last 4 weeks;
+- the **level**: the last 7 days, so a campaign that lifted everything by 50%
+  lifts the expected value by 50%.
+
+Expected = shape × level. A signal fires when the real value is 30% away from
+the expected one and the period has at least 10 events, so a small product going
+from 2 sign-ups to 1 does not become "−50%" every day. The card shows both
+comparisons ("−35% against expected; last 7 days −40%, same weekdays +5%").
+A product with less than 4 weeks of data shows "still learning what is normal"
+and raises no signals. All these numbers are seeds and can be changed.
+
+### Channels
+
+Each channel is an integration the owner sets up with their own credentials, as
+in Coolify, with a "Send test" button. Octadash has no account of its own that
+sends anything. Rules choose the channels: for example, emergencies to Telegram
+and email, the daily summary only by email.
+
+| Channel  | Setup                                                                                                                                            | When    |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| Email    | SMTP (any server: Gmail, Zoho, SES...) or the Resend API. Also sends invites and password resets.                                                | step 2  |
+| Telegram | bot token and chat id                                                                                                                            | built   |
+| Webhook  | URL and an optional secret (covers Slack, Discord, n8n)                                                                                          | built   |
+| WhatsApp | official Cloud API (a separate sender number, an approved "utility" template, about R$ 0.035 per message in Brazil) or the owner's Evolution API | backlog |
+
+## Uptime
+
+- A product can have **several monitors**, each with a name, a URL and a type:
+  site (GET the home page), API or `/health` (GET, expects 2xx and not HTML),
+  heartbeat (a cron job or backup calls an Octadash URL; silence is an
+  emergency), and TCP port later. The first monitor is suggested as "Site", so
+  the owner only pastes the URL. The product's "Uptime" card shows the worst
+  state among its monitors.
+- **Waking the database.** The monitor form recommends a `/health` endpoint
+  that does not query the database, shows a ready snippet per framework, and
+  warns that a page that queries the database wakes it on every check. Neon
+  suspends an idle database after 5 minutes by default, so a check every minute
+  on a page that queries it keeps it awake and billed. When the URL is the home
+  page, the form suggests a longer interval.
+- **Same server.** Octadash compares the monitored address with its own public
+  IP. When they match, the card warns: "this monitor runs on the same server as
+  the product; if the server goes down, you will not be told".
+- **Who watches Octadash.** If Octadash's own server goes down, every alert
+  stops silently. Every install is told to set up an outside watcher: Octadash
+  sends a heartbeat every minute to a service such as Healthchecks.io (free
+  plan), which alerts the owner when the heartbeats stop. The install guide has
+  this step, and the settings show a warning until it is set up, stronger when
+  a monitor shares the server's IP. The hosted version can sell an outside
+  check later.
+- The checks that are certain (status code, HTTPS, certificate expiry, the
+  http to https redirect, response time) belong to uptime. Octadash no longer
+  guesses tools from a site's HTML.
+
+## Overview ("All products")
+
+The screen the owner looks at all day. It is not a copy of each product page:
+it puts every product side by side, area by area, and crosses areas.
+
+From top to bottom:
+
+0. **Emergency strip** (only when there is one) and **signals strip** ("3 things
+   out of normal today", clickable).
+1. **Uptime:** one row per product with a status dot, 30-day uptime, response
+   time and days until the certificate expires.
+2. **Traffic:** visitors today per product, against yesterday, with a 7-day
+   sparkline. The total is at the top of the block.
+3. **Product usage:** sign-ups and logins today per product against normal.
+   This is where "sign-ups on Tribunal dropped" shows up.
+4. **Errors:** new errors in the last 24 hours and people affected, per product.
+5. **Money:** today's revenue and MRR per product, with the total.
+6. **Costs:** AI and infra cost per product and the margin (revenue minus cost).
+
+Logs are not on the overview (they are for investigating), but the Logs area
+works for all products at once like every other area.
 
 ## Roadmap to 1.0
 
-Version 1.0 includes every module below. They ship one at a time, in this order.
-Each module ships with its MCP tools (read-only queries for AI assistants), its
-docs, and its `npx octadash init` step where code changes are needed.
+Version 1.0 includes every step below. They ship one at a time, in this order.
+Each step ships with its MCP tools (read-only queries for AI assistants) and its
+docs.
 
-| #   | Module               | Answers                                          | Data arrives through                                      | State                    |
-| --- | -------------------- | ------------------------------------------------ | --------------------------------------------------------- | ------------------------ |
-| 0   | Foundation           | who can see what                                 | accounts, organizations, products, API keys, setup wizard | done                     |
-| 1   | Diagnosis and levels | what is missing on this product                  | Octadash fetches the URL and its scripts                  | done (MCP tools pending) |
-| 2   | Uptime and alerts    | is it down                                       | checks from the worker; alert channels as integrations    | next                     |
-| 3   | Web analytics        | who comes and from where                         | cookieless script; "All products" tab                     |                          |
-| 4   | Errors               | what broke and for how many people               | Sentry SDK, PostHog `$exception`                          |                          |
-| 5   | Product events       | sign-ups, logins, key actions, funnel, retention | Octadash SDK, PostHog capture                             |                          |
-| 6   | Revenue              | MRR, new, churn, refunds                         | Stripe, Asaas, Paddle                                     |                          |
-| 7   | AI cost              | cost, tokens, model, errors per product          | Octadash wrapper, OTel `gen_ai`, PostHog `$ai_generation` |                          |
-| 8   | Infra cost           | what each product costs to run                   | provider APIs or manual entries                           |                          |
-| 9   | Logs and traces      | what the server did at that moment               | OTLP over HTTP                                            |                          |
-| 10  | Daily summary        | what changed since yesterday                     | email and the alert channels                              |                          |
+| #   | Step                  | Delivers                                                                                                                                                                                         | State |
+| --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| 0   | Foundation            | accounts, organizations, products, API keys, setup wizard                                                                                                                                        | done  |
+| 1   | New base              | ClickHouse and Valkey in the install, ingest that answers at once and queues in Valkey, area menu and product picker, product created by name, product page in setup mode, URL diagnosis removed | next  |
+| 2   | Uptime and alerts     | monitors, heartbeats, certificate, seeded rules, emergency strip, channels (email with SMTP and Resend, Telegram, webhook), outside watcher                                                      |       |
+| 3   | Traffic               | Octadash browser script; first data in ClickHouse; overview starts                                                                                                                               |       |
+| 4   | Errors                | Octadash SDK (browser and Node), Sentry SDK compatibility                                                                                                                                        |       |
+| 5   | Product usage         | events, sign-ups, logins; signals start here                                                                                                                                                     |       |
+| 6   | Money                 | Stripe, Asaas, Paddle                                                                                                                                                                            |       |
+| 7   | AI cost               | Octadash wrapper, OpenTelemetry `gen_ai`                                                                                                                                                         |       |
+| 8   | Infra cost and margin | provider APIs or manual entries                                                                                                                                                                  |       |
+| 9   | Logs and traces       | OTLP over HTTP                                                                                                                                                                                   |       |
+| 10  | Daily summary         | what changed since yesterday, by email and the alert channels                                                                                                                                    |       |
 
-Rules that apply to every module:
+Rules that apply to every step:
 
-- Retention is configurable per module, with personal data masking in errors
+- Retention is configurable per area, with personal data masking in errors
   and logs.
-- Revenue keeps contracted, paid, settled, refunded, fees and net amounts apart.
+- Money keeps contracted, paid, settled, refunded, fees and net amounts apart.
   Mixing them makes MRR wrong.
-
-Planned additions to these modules, decided on 2026-11-27:
-
-- Module 2 brings the module on/off switch and the setup presets, plus
-  heartbeats for cron jobs, workers and backups, domain expiry and maintenance
-  windows, because they are part of the base.
-- Module 5 starts from a list of standard event names (`signup.completed`,
-  `user.activated`, `checkout.completed`, `payment.confirmed`,
-  `subscription.canceled` and so on), so dashboards work without setup.
+- Product usage starts from a list of standard event names
+  (`signup.completed`, `user.activated`, `checkout.completed`,
+  `payment.confirmed`, `subscription.canceled` and so on), so dashboards work
+  without setup.
+- Signals arrive with each area from step 5 on.
 
 ## Backlog
 
@@ -128,25 +271,25 @@ spare.
 
 ### Base: availability and alerts
 
-| Item                                           | Seen in                       | Priority |
-| ---------------------------------------------- | ----------------------------- | -------- |
-| Heartbeats for cron jobs, workers, backups     | Healthchecks.io, Better Stack | high     |
-| Content check (200 but broken page)            | UptimeRobot                   | high     |
-| Domain expiry                                  | UptimeRobot                   | high     |
-| Public status page                             | Better Stack, Uptime Kuma     | high     |
-| Maintenance windows                            | Better Stack                  | high     |
-| Octadash watching its own health               | all                           | high     |
-| Full-screen TV mode for the "All products" tab | Grafana, Geckoboard           | high     |
-| DNS resolution and DNS changes                 | UptimeRobot                   | medium   |
-| TCP ports and ping                             | UptimeRobot, Uptime Kuma      | medium   |
-| SLA and SLO reports                            | Better Stack                  | medium   |
-| Vendor status (Stripe, Vercel, OpenAI down)    | Better Stack                  | medium   |
-| Synthetic tests with Playwright                | Checkly                       | medium   |
-| Alert escalation and acknowledgement           | Better Stack, PagerDuty       | medium   |
-| Checks from several regions                    | UptimeRobot, Checkly          | low      |
-| Visual diff between versions                   | Checkly                       | low      |
+| Item                                                       | Seen in                       | Priority |
+| ---------------------------------------------------------- | ----------------------------- | -------- |
+| Heartbeats for cron jobs, workers, backups                 | Healthchecks.io, Better Stack | high     |
+| Content check (200 but broken page)                        | UptimeRobot                   | high     |
+| Domain expiry                                              | UptimeRobot                   | high     |
+| Public status page                                         | Better Stack, Uptime Kuma     | high     |
+| Maintenance windows                                        | Better Stack                  | high     |
+| Octadash watching its own health (outside watcher, step 2) | all                           | high     |
+| Full-screen TV mode for the "All products" tab             | Grafana, Geckoboard           | high     |
+| DNS resolution and DNS changes                             | UptimeRobot                   | medium   |
+| TCP ports and ping                                         | UptimeRobot, Uptime Kuma      | medium   |
+| SLA and SLO reports                                        | Better Stack                  | medium   |
+| Vendor status (Stripe, Vercel, OpenAI down)                | Better Stack                  | medium   |
+| Synthetic tests with Playwright                            | Checkly                       | medium   |
+| Alert escalation and acknowledgement                       | Better Stack, PagerDuty       | medium   |
+| Checks from several regions                                | UptimeRobot, Checkly          | low      |
+| Visual diff between versions                               | Checkly                       | low      |
 
-### Web analytics (beyond module 3)
+### Web analytics (beyond step 3)
 
 | Item                                        | Seen in               | Priority |
 | ------------------------------------------- | --------------------- | -------- |
@@ -163,7 +306,7 @@ spare.
 | Chart annotations ("launched here")         | GA, PostHog           | medium   |
 | Cross-domain journeys                       | GA                    | low      |
 
-### Product events (beyond module 5)
+### Product events (beyond step 5)
 
 | Item                               | Seen in                      | Priority |
 | ---------------------------------- | ---------------------------- | -------- |
@@ -193,7 +336,7 @@ spare.
 | Average order value, repeat purchase, top sellers | GA, Shopify      | medium   |
 | Coupons used                                      | Shopify          | low      |
 
-### Errors (beyond module 4)
+### Errors (beyond step 4)
 
 | Item                               | Seen in              | Priority |
 | ---------------------------------- | -------------------- | -------- |
@@ -205,7 +348,7 @@ spare.
 | Open a GitHub issue from an error  | Sentry               | medium   |
 | Mobile and desktop app errors      | Sentry, Crashlytics  | medium   |
 
-### Revenue and payments (beyond module 6)
+### Revenue and payments (beyond step 6)
 
 | Item                                                         | Seen in                   | Priority |
 | ------------------------------------------------------------ | ------------------------- | -------- |
@@ -226,7 +369,7 @@ spare.
 | Margin, break-even, burn and runway                          | spreadsheets, Baremetrics | medium   |
 | Revenue goals and forecast                                   | Baremetrics               | low      |
 
-### AI (beyond module 7)
+### AI (beyond step 7)
 
 | Item                                            | Seen in                        | Priority |
 | ----------------------------------------------- | ------------------------------ | -------- |
@@ -243,7 +386,7 @@ spare.
 | Audio, image and phone call cost                | Helicone                       | medium   |
 | Automatic evaluations and RAG quality           | LangSmith, Braintrust, Phoenix | low      |
 
-### Infrastructure and cost (beyond module 8)
+### Infrastructure and cost (beyond step 8)
 
 | Item                                        | Seen in                | Priority |
 | ------------------------------------------- | ---------------------- | -------- |
@@ -256,7 +399,7 @@ spare.
 | Queue size, oldest job and failures         | Better Stack           | medium   |
 | Backups done and restore tests              | none                   | medium   |
 
-### Logs and traces (beyond module 9)
+### Logs and traces (beyond step 9)
 
 | Item                                                    | Seen in           | Priority |
 | ------------------------------------------------------- | ----------------- | -------- |
@@ -292,7 +435,7 @@ whenever the service allows it. Built today: Telegram and webhook.
 
 | Category               | Feeds                 | Planned                                                                             | Backlog                                                                                                 |
 | ---------------------- | --------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Alert channels         | alerts, daily summary | email (SMTP), Telegram (built), Slack, Discord, webhook (built), ntfy, WhatsApp     | Microsoft Teams, Google Chat, mobile push, PagerDuty, Pushover, SMS                                     |
+| Alert channels         | alerts, daily summary | email (SMTP and Resend), Telegram (built), webhook (built), Slack, Discord, ntfy    | WhatsApp, Microsoft Teams, Google Chat, mobile push, PagerDuty, Pushover, SMS                           |
 | Payments               | revenue               | Stripe, Asaas, Paddle                                                               | Mercado Pago, Pagar.me, Iugu, Hotmart, Kiwify, Eduzz, Lemon Squeezy, RevenueCat, App Store, Google Play |
 | AI providers           | AI cost               | OpenAI, Anthropic, OpenRouter, own wrapper, OTel `gen_ai`, PostHog `$ai_generation` | Google Gemini, Groq, Mistral, ElevenLabs, Replicate, fal, Vercel AI Gateway                             |
 | Hosting and databases  | infra cost            | infra providers (generic)                                                           | Vercel, Neon, Supabase, Coolify, Railway, Fly.io, Hetzner, DigitalOcean, Cloudflare, AWS                |
@@ -303,7 +446,7 @@ whenever the service allows it. Built today: Telegram and webhook.
 | Support and reputation | customers             | none                                                                                | Chatwoot, Intercom, Crisp, App Store and Google Play reviews                                            |
 | Vendor status          | base                  | none                                                                                | public status pages (Statuspage, Better Stack, instatus)                                                |
 
-Asaas, Pix and WhatsApp set Octadash apart from other open source panels
+Asaas and Pix set Octadash apart from other open source panels
 (Umami, Plausible, Uptime Kuma).
 
 ## Cross-signal diagnoses
@@ -349,11 +492,11 @@ events, or it becomes a false alarm.
 An item becomes work when it meets at least two of these:
 
 1. One of the maintainer's products needs it now.
-2. It comes almost free from data an enabled module already collects (SPF and
-   security headers come from the URL diagnosis).
+2. It comes almost free from data an enabled area already collects (security
+   headers and SPF come from the uptime checks).
 3. It feeds a cross-signal diagnosis.
 4. Someone from the community asked for it or sent the pull request.
 
-What does not move: the order of modules 0 to 10, the stack (Postgres only, no
-ClickHouse, no Redis) and the rule that no number is assigned to a product
-without an explicit origin.
+What does not move: the order of steps 0 to 10, the stack (Postgres, Valkey and
+ClickHouse, managed by Octadash; see [architecture.md](architecture.md)) and the
+rule that no number is assigned to a product without an explicit origin.

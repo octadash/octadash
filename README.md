@@ -19,8 +19,9 @@ Sentry, an uptime service, Stripe, the AI providers and a log tool, and still no
 single answer to "how is everything doing?". Octadash puts it in one place you
 host yourself, and tells you what each product is missing.
 
-- **Diagnosis first.** Paste a URL and Octadash tells you what the product has
-  (analytics, error tracking, health endpoint, SSL) and the next step to see more.
+- **Create a product with just its name.** Its page shows every area (uptime,
+  traffic, errors, money, AI cost, logs) with what it is for and how to set it up
+  for your platform, and each card turns into that area's summary once data arrives.
 - **Compatible by design.** Point the Sentry SDK, the PostHog SDK or an
   OpenTelemetry exporter at Octadash and it works. Changing one URL is the whole
   migration.
@@ -29,7 +30,9 @@ host yourself, and tells you what each product is missing.
 - **Plug in what you use.** Alert channels (email, Telegram, Slack, Discord,
   webhook) and data sources (Stripe, Asaas, Paddle, OpenAI, Anthropic) are
   integrations you enable per product.
-- **Postgres only.** One image, one database, a small VPS.
+- **Everything in the box.** One image plus Postgres, Valkey and ClickHouse,
+  installed and managed by Octadash on a small VPS. You never touch ClickHouse.
+  (ClickHouse and Valkey arrive with step 1 of the [roadmap](docs/product.md#roadmap-to-10).)
 
 ## Install
 
