@@ -32,7 +32,6 @@ host yourself, and tells you what each product is missing.
   integrations you enable per product.
 - **Everything in the box.** One image plus Postgres, Valkey and ClickHouse,
   installed and managed by Octadash on a small VPS. You never touch ClickHouse.
-  (ClickHouse and Valkey arrive with step 1 of the [roadmap](docs/product.md#roadmap-to-10).)
 
 ## Install
 
