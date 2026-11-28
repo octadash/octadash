@@ -109,59 +109,106 @@ export async function MoneyView({
       : { c: p, text: `${p > 0 ? '↑' : '↓'} ${Math.abs(p)} ${t('pts')}`, points: true }
   }
 
+  type TileId = MoneyMetric | 'started' | 'churn' | 'failed' | 'buyers' | 'returning' | 'ticket'
   const tiles: {
-    id: MoneyMetric | 'started' | 'churn' | 'failed'
+    id: TileId
     value: string
     delta: { c: number; text: string; points?: boolean } | null
     /** True when up is bad (churn, failures). */
     upIsBad?: boolean
     note?: string
-  }[] = [
-    {
-      id: 'revenue',
-      value: money(data.totals.revenue),
-      delta: change(data.totals.revenue, data.previous.revenue),
-      note:
-        data.totals.refunded > 0
+  }[] = []
+  const share = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : null)
+  tiles.push({
+    id: 'revenue',
+    value: money(data.totals.revenue),
+    delta: change(data.totals.revenue, data.previous.revenue),
+    note:
+      data.model === 'mixed' && data.totals.oneOffRevenue > 0
+        ? t('tiles.split', {
+            recurring: money(data.totals.revenue - data.totals.oneOffRevenue),
+            oneOff: money(data.totals.oneOffRevenue),
+          })
+        : data.totals.refunded > 0
           ? t('tiles.refunded', { amount: money(data.totals.refunded) })
           : undefined,
-    },
-    { id: 'mrr', value: money(data.totals.mrr), delta: change(data.totals.mrr, data.previous.mrr) },
-    {
-      id: 'started',
-      value: new Intl.NumberFormat(locale).format(data.totals.started),
-      delta: change(data.totals.started, data.previous.started),
-    },
-    {
-      id: 'churn',
-      value: pct(data.totals.churn),
-      delta: points(data.totals.churn, data.previous.churn),
-      upIsBad: true,
-    },
-    {
-      id: 'failed',
-      value: pct(data.totals.failed),
-      delta: points(data.totals.failed, data.previous.failed),
-      upIsBad: true,
-      note:
-        data.failingNow && several
-          ? t('tiles.failingNow', {
-              product: data.failingNow.name,
-              share: pct(data.failingNow.share, 0),
-            })
-          : undefined,
-    },
-  ]
+  })
+  if (data.model === 'oneOff') {
+    tiles.push(
+      {
+        id: 'buyers',
+        value: new Intl.NumberFormat(locale).format(data.totals.buyers),
+        delta: change(data.totals.buyers, data.previous.buyers),
+      },
+      {
+        id: 'returning',
+        value: pct(share(data.totals.returning, data.totals.buyers), 0),
+        delta: points(
+          share(data.totals.returning, data.totals.buyers),
+          share(data.previous.returning, data.previous.buyers),
+        ),
+        note:
+          data.totals.buyers > 0
+            ? t('tiles.returningNote', {
+                returning: data.totals.returning,
+                buyers: data.totals.buyers,
+              })
+            : undefined,
+      },
+      {
+        id: 'ticket',
+        value: data.totals.ticket === null ? '–' : money(data.totals.ticket),
+        delta:
+          data.totals.ticket === null || data.previous.ticket === null
+            ? null
+            : change(data.totals.ticket, data.previous.ticket),
+      },
+    )
+  } else {
+    tiles.push(
+      {
+        id: 'mrr',
+        value: money(data.totals.mrr),
+        delta: change(data.totals.mrr, data.previous.mrr),
+      },
+      {
+        id: 'started',
+        value: new Intl.NumberFormat(locale).format(data.totals.started),
+        delta: change(data.totals.started, data.previous.started),
+      },
+      {
+        id: 'churn',
+        value: pct(data.totals.churn),
+        delta: points(data.totals.churn, data.previous.churn),
+        upIsBad: true,
+      },
+    )
+  }
+  tiles.push({
+    id: 'failed',
+    value: pct(data.totals.failed),
+    delta: points(data.totals.failed, data.previous.failed),
+    upIsBad: true,
+    note:
+      data.failingNow && several
+        ? t('tiles.failingNow', {
+            product: data.failingNow.name,
+            share: pct(data.failingNow.share, 0),
+          })
+        : undefined,
+  })
+  // Revenue and MRR switch the chart; with one-off sales only, revenue is the chart.
+  const switches = data.model === 'oneOff' ? new Set<TileId>() : new Set<TileId>(['revenue', 'mrr'])
 
   const digits = digitsOf(data.currency)
   const major = (minor: number) => minor / 10 ** digits
   const offset = data.previousSeries.length - data.series.length
   const chartPoints = data.series.map((p, i) => ({
     at: p.at.toISOString(),
-    current: major(p[state.metric]),
+    current: major(p[data.metric]),
     previous:
       data.previousSeries[i + offset] !== undefined
-        ? major((data.previousSeries[i + offset] as (typeof data.series)[number])[state.metric])
+        ? major((data.previousSeries[i + offset] as (typeof data.series)[number])[data.metric])
         : null,
   }))
 
@@ -177,6 +224,9 @@ export async function MoneyView({
         <div className="flex max-w-2xl flex-col gap-1">
           <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
           <p className="text-sm text-muted-foreground">{intro}</p>
+          {data.model === 'oneOff' && (
+            <p className="text-sm text-muted-foreground">{t('model.oneOff')}</p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {product && (
@@ -223,7 +273,7 @@ export async function MoneyView({
             <>
               <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 {t(`tiles.${tile.id}`)}
-                {(tile.id === 'mrr' || tile.id === 'churn') && (
+                {(tile.id === 'mrr' || tile.id === 'churn' || tile.id === 'returning') && (
                   <InfoTip label={t(`tiles.${tile.id}InfoLabel`)} title={t(`tiles.${tile.id}`)}>
                     {t(`tiles.${tile.id}Info`)}
                   </InfoTip>
@@ -248,14 +298,14 @@ export async function MoneyView({
               {tile.note && <span className="text-xs text-muted-foreground">{tile.note}</span>}
             </>
           )
-          return tile.id === 'revenue' || tile.id === 'mrr' ? (
+          return (tile.id === 'revenue' || tile.id === 'mrr') && switches.has(tile.id) ? (
             <Link
               key={tile.id}
               href={moneyHref(path, state, { metric: tile.id })}
-              aria-current={tile.id === state.metric ? 'true' : undefined}
+              aria-current={tile.id === data.metric ? 'true' : undefined}
               className={cn(
                 'flex flex-col gap-1 rounded-xl border bg-card p-4 hover:border-brand focus-visible:border-brand',
-                tile.id === state.metric ? 'border-brand ring-1 ring-brand' : 'border-border',
+                tile.id === data.metric ? 'border-brand ring-1 ring-brand' : 'border-border',
               )}
             >
               {body}
@@ -274,8 +324,8 @@ export async function MoneyView({
       <MetricChart
         metrics={[
           {
-            id: state.metric,
-            label: t(`tiles.${state.metric}`),
+            id: data.metric,
+            label: t(`tiles.${data.metric}`),
             unit: 'count',
             currency: data.currency,
             points: chartPoints,
@@ -314,12 +364,26 @@ export async function MoneyView({
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('table.product')}</TableHead>
-                    <TableHead className="text-right">{t('table.mrr')}</TableHead>
-                    <TableHead className="text-right">{t('table.change')}</TableHead>
-                    <TableHead className="text-right">{t('table.today')}</TableHead>
-                    <TableHead className="text-right">{t('table.paying')}</TableHead>
-                    <TableHead className="text-right">{t('table.failedNow')}</TableHead>
-                    <TableHead className="text-right">{t('table.churn')}</TableHead>
+                    {data.model !== 'recurring' && (
+                      <TableHead className="text-right">{t('table.revenue')}</TableHead>
+                    )}
+                    {data.model === 'oneOff' ? (
+                      <>
+                        <TableHead className="text-right">{t('table.today')}</TableHead>
+                        <TableHead className="text-right">{t('table.buyers')}</TableHead>
+                        <TableHead className="text-right">{t('table.returning')}</TableHead>
+                        <TableHead className="text-right">{t('table.failedNow')}</TableHead>
+                      </>
+                    ) : (
+                      <>
+                        <TableHead className="text-right">{t('table.mrr')}</TableHead>
+                        <TableHead className="text-right">{t('table.change')}</TableHead>
+                        <TableHead className="text-right">{t('table.today')}</TableHead>
+                        <TableHead className="text-right">{t('table.paying')}</TableHead>
+                        <TableHead className="text-right">{t('table.failedNow')}</TableHead>
+                        <TableHead className="text-right">{t('table.churn')}</TableHead>
+                      </>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -332,34 +396,70 @@ export async function MoneyView({
                       </TableCell>
                       {row.connected ? (
                         <>
-                          <TableCell className="text-right tabular-nums">
-                            {row.mrr > 0 ? money(row.mrr) : '–'}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {row.mrrChange === null
-                              ? '–'
-                              : `${row.mrrChange > 0 ? '+' : row.mrrChange < 0 ? '−' : ''}${Math.abs(row.mrrChange)}%`}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {money(row.today)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {new Intl.NumberFormat(locale).format(row.paying)}
-                          </TableCell>
-                          <TableCell
-                            className={cn(
-                              'text-right tabular-nums',
-                              (row.failedNow ?? 0) >= 20 && 'font-semibold text-error',
-                            )}
-                          >
-                            {pct(row.failedNow, 0)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {pct(row.churn)}
-                          </TableCell>
+                          {data.model !== 'recurring' && (
+                            <TableCell className="text-right tabular-nums">
+                              {money(row.revenue)}
+                            </TableCell>
+                          )}
+                          {data.model === 'oneOff' ? (
+                            <>
+                              <TableCell className="text-right tabular-nums">
+                                {money(row.today)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {new Intl.NumberFormat(locale).format(row.buyers)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {pct(share(row.returning, row.buyers), 0)}
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  'text-right tabular-nums',
+                                  (row.failedNow ?? 0) >= 20 && 'font-semibold text-error',
+                                )}
+                              >
+                                {pct(row.failedNow, 0)}
+                              </TableCell>
+                            </>
+                          ) : (
+                            <>
+                              <TableCell className="text-right tabular-nums">
+                                {row.mrr > 0 ? money(row.mrr) : '–'}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {row.mrrChange === null
+                                  ? '–'
+                                  : `${row.mrrChange > 0 ? '+' : row.mrrChange < 0 ? '−' : ''}${Math.abs(row.mrrChange)}%`}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {money(row.today)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {row.model === 'oneOff'
+                                  ? '–'
+                                  : new Intl.NumberFormat(locale).format(row.paying)}
+                              </TableCell>
+                              <TableCell
+                                className={cn(
+                                  'text-right tabular-nums',
+                                  (row.failedNow ?? 0) >= 20 && 'font-semibold text-error',
+                                )}
+                              >
+                                {pct(row.failedNow, 0)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {pct(row.churn)}
+                              </TableCell>
+                            </>
+                          )}
                         </>
                       ) : (
-                        <TableCell colSpan={6} className="text-right text-sm">
+                        <TableCell
+                          colSpan={
+                            (data.model === 'oneOff' ? 4 : 6) + (data.model === 'recurring' ? 0 : 1)
+                          }
+                          className="text-right text-sm"
+                        >
                           <Link
                             href={`/p/${row.project.slug}/money/setup`}
                             className="text-brand underline underline-offset-2"

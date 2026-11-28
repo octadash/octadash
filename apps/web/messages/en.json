@@ -2324,7 +2324,14 @@
       "mrrInfoLabel": "What MRR is",
       "mrrInfo": "Monthly recurring revenue: what every active subscription adds per month, at its price today. Yearly plans count a twelfth. Trials are left out until they pay.",
       "churnInfoLabel": "How churn is counted",
-      "churnInfo": "Subscriptions that ended in the period, out of those active when it started. Up is bad."
+      "churnInfo": "Subscriptions that ended in the period, out of those active when it started. Up is bad.",
+      "buyers": "Customers who paid",
+      "returning": "Bought again",
+      "returningNote": "{returning} of {buyers}",
+      "returningInfoLabel": "How bought again is counted",
+      "returningInfo": "Customers who paid in the period and had already paid before it. A payment with no customer (a guest checkout) counts in revenue only.",
+      "ticket": "Average sale",
+      "split": "{recurring} recurring · {oneOff} one-off"
     },
     "pts": "pts",
     "change": "{change}% compared with the period before",
@@ -2346,7 +2353,10 @@
       "paying": "Paying",
       "failedNow": "Failed now",
       "churn": "Churn",
-      "connect": "Connect a gateway"
+      "connect": "Connect a gateway",
+      "revenue": "Revenue",
+      "buyers": "Customers",
+      "returning": "Bought again"
     },
     "latest": {
       "title": "Latest payments",
@@ -2361,6 +2371,9 @@
       "pending": "Pending",
       "overdue": "Overdue",
       "canceled": "Canceled"
+    },
+    "model": {
+      "oneOff": "Sold one purchase at a time (one-off sales or credit packs), so MRR and churn are not shown. They show up by themselves when a subscription comes in."
     }
   },
   "moneySetup": {

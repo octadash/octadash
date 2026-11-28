@@ -54,7 +54,7 @@ export interface OverviewRow extends OverviewProduct {
   /** Sign-ups in the period, when the product uses Product usage. */
   signups: { count: number; previous: number } | null
   /** Paid in the period and MRR now, in the organization's currency, when a gateway serves it. */
-  money: { revenue: number; mrr: number } | null
+  money: { revenue: number; mrr: number | null } | null
   /** Costs and margin in the period (by days), when a cost is connected. */
   costs: { cost: number; margin: number | null } | null
 }
@@ -101,7 +101,8 @@ export interface Overview {
     currency: string
     revenue: number
     previous: number
-    mrr: number
+    /** Null when nothing in scope is sold as a subscription. */
+    mrr: number | null
     series: { at: Date; revenue: number }[]
     previousSeries: { at: Date; revenue: number }[]
   } | null
@@ -268,7 +269,7 @@ export async function loadOverview(
 
   const moneyRow = (id: string) => {
     const row = money?.byProduct.find((p) => p.project.id === id)
-    return row ? { revenue: row.revenue, mrr: row.mrr } : null
+    return row ? { revenue: row.revenue, mrr: row.model === 'oneOff' ? null : row.mrr } : null
   }
   const costRow = (id: string) => {
     const row = costs?.byProduct.find((p) => p.project.id === id && p.connected)
@@ -427,7 +428,7 @@ export async function loadOverview(
           currency: money.currency,
           revenue: money.totals.revenue,
           previous: money.previous.revenue,
-          mrr: money.totals.mrr,
+          mrr: money.model === 'oneOff' ? null : money.totals.mrr,
           series: money.series.map((p) => ({ at: p.at, revenue: p.revenue })),
           previousSeries: money.previousSeries.map((p) => ({ at: p.at, revenue: p.revenue })),
         }
