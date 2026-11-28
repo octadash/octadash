@@ -70,10 +70,12 @@ export interface ErrorRow {
   trace_id: string
   /** The whole event as sent, masked (JSON). Empty for rows queued before it existed. */
   event?: string
+  /** Days its product kept errors when it arrived, which the TTL reads; 90 when left out. */
+  retention_days?: number
 }
 
 /** What the ingest queues: a row before the worker knows its issue. */
-export type QueuedError = Omit<ErrorRow, 'issue_id'>
+export type QueuedError = Omit<ErrorRow, 'issue_id' | 'retention_days'>
 
 export async function insertErrors(client: ClickHouseClient, rows: ErrorRow[], token?: string) {
   if (rows.length === 0) return
@@ -496,4 +498,24 @@ export async function errorsByProduct(
   return new Map(
     rows.map((row) => [row.project, { events: Number(row.events), issues: Number(row.issues) }]),
   )
+}
+
+/**
+ * Shortens what a product keeps: events older than `days` are deleted now
+ * instead of waiting for the retention they arrived with. ClickHouse runs it
+ * in the background.
+ */
+export async function trimErrors(
+  client: ClickHouseClient,
+  orgId: string,
+  projectId: string,
+  days: number,
+) {
+  await client.command({
+    query: `
+      ALTER TABLE errors DELETE
+      WHERE org_id = {org:UUID} AND project_id = {project:UUID}
+        AND timestamp < now() - toIntervalDay({days:UInt16})`,
+    query_params: { org: orgId, project: projectId, days },
+  })
 }

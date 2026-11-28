@@ -1,6 +1,6 @@
 import { uuidv7 } from '@octadash/core'
-import { DEFAULT_LOG_RETENTION_DAYS } from './clickhouse/logs'
 import type { Db } from './client'
+import { areaRetention } from './retention'
 
 /**
  * Logs records (migration 0022): how long each product keeps its lines and
@@ -8,18 +8,8 @@ import type { Db } from './client'
  */
 
 /** Days each product keeps its log lines; products not listed keep the default. */
-export async function logRetention(db: Db, projectIds: string[]): Promise<Map<string, number>> {
-  const out = new Map(projectIds.map((id) => [id, DEFAULT_LOG_RETENTION_DAYS]))
-  if (projectIds.length === 0) return out
-  const rows = await db
-    .selectFrom('project_area')
-    .select(['project_id', 'retention_days'])
-    .where('area', '=', 'logs')
-    .where('project_id', 'in', projectIds)
-    .where('retention_days', 'is not', null)
-    .execute()
-  for (const row of rows) if (row.retention_days) out.set(row.project_id, row.retention_days)
-  return out
+export function logRetention(db: Db, projectIds: string[]): Promise<Map<string, number>> {
+  return areaRetention(db, 'logs', projectIds)
 }
 
 /**

@@ -1,5 +1,6 @@
 import type { Logger } from '@octadash/core'
 import {
+  AREA_RETENTION,
   areaOfReceived,
   type ClickHouseClient,
   type EventRow,
@@ -16,6 +17,7 @@ import {
 import { type Redis, startConsumer } from '@octadash/queue'
 import { type ErrorWriterDeps, writeErrors } from './errors'
 import { createLogWriter, type LogWriterDeps } from './logs'
+import { cachedRetention } from './retention'
 import type { EventRouter } from './routing'
 
 /**
@@ -26,12 +28,20 @@ export function startWriters(
   valkey: Redis,
   clickhouse: ClickHouseClient,
   router: EventRouter,
-  errors: Omit<ErrorWriterDeps, 'router' | 'log'>,
+  errors: Omit<ErrorWriterDeps, 'router' | 'log' | 'retentionOf'> & {
+    loadRetention(projectIds: string[]): Promise<Map<string, number>>
+  },
   logs: Omit<LogWriterDeps, 'router' | 'log'>,
   log: Logger,
   retention: { receivedDays: number; traceDays: number; metricDays: number },
 ) {
   const writeLogs = createLogWriter({ ...logs, router, log })
+  const errorDeps: ErrorWriterDeps = {
+    ...errors,
+    retentionOf: cachedRetention(errors.loadRetention, AREA_RETENTION.errors.defaultDays),
+    router,
+    log,
+  }
   const consumers = [
     startConsumer(
       valkey,
@@ -48,7 +58,7 @@ export function startWriters(
     startConsumer(
       valkey,
       'errors',
-      (rows, token) => writeErrors(rows as QueuedError[], token, { ...errors, router, log }),
+      (rows, token) => writeErrors(rows as QueuedError[], token, errorDeps),
       { log },
     ),
     startConsumer(valkey, 'logs', (rows, token) => writeLogs(rows as QueuedLog[], token), { log }),

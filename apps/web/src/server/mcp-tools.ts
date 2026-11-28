@@ -3,8 +3,13 @@ import {
   compileLogQuery,
   createProject,
   createSource,
+  currencyDigits,
+  getIssue,
   hasPageScript,
+  issueEvent,
+  issueStats,
   listGroups,
+  listIssues,
   listOpenIncidents,
   listOrgMonitors,
   listProjects,
@@ -34,6 +39,8 @@ import { z } from 'zod'
 import type { McpTool } from '@/lib/mcp'
 import { SOURCE_PLATFORMS } from '@/lib/sources'
 import { services } from './context'
+import { loadCosts } from './costs'
+import { loadMoney } from './money'
 
 /**
  * The tools of Octadash's MCP server, one set per area. Each reading tool
@@ -73,6 +80,8 @@ async function productsOf(orgId: string, chosen: string | undefined) {
 }
 
 const slugOf = (all: Project[], id: string) => all.find((p) => p.id === id)?.slug ?? id
+/** Already in percent, to one decimal. */
+const oneDecimal = (value: number | null) => (value === null ? null : Math.round(value * 10) / 10)
 const pct = (value: number | null) => (value === null ? null : Math.round(value * 10_000) / 100)
 
 export const MCP_TOOLS: Tool[] = [
@@ -262,6 +271,277 @@ export const MCP_TOOLS: Tool[] = [
           ...(l.traceId ? { traceId: l.traceId } : {}),
           attributes: l.attributes,
         })),
+      }
+    },
+  },
+  {
+    name: 'list_issues',
+    needs: [['errors', 'read']],
+    title: 'Error issues',
+    description:
+      'Error issues (events grouped by where they happen), most recently seen first, with how many events and people each had in the period. Use issue_details for the stack trace of one.',
+    input: z.object({
+      product,
+      status: z
+        .enum(['unresolved', 'new', 'regressed', 'resolved', 'ignored'])
+        .default('unresolved')
+        .describe(
+          'unresolved by default; new = began in the period; regressed = came back after resolved.',
+        ),
+      hours: z
+        .number()
+        .int()
+        .min(1)
+        .max(720)
+        .default(24)
+        .describe('The period for event counts (and for "new"), in hours. 24 by default.'),
+      limit: z.number().int().min(1).max(100).default(25).describe('Most issues, 25 by default.'),
+    }),
+    async run(input, { orgId }) {
+      const { db, clickhouse, env } = services()
+      const { all, scope } = await productsOf(orgId, input.product as string | undefined)
+      const to = new Date()
+      const from = new Date(to.getTime() - Number(input.hours) * 3_600_000)
+      const projectIds = scope.map((p) => p.id)
+      const [issues, stats] = await Promise.all([
+        listIssues(db, orgId, {
+          projectIds,
+          tab: input.status as 'unresolved',
+          since: from,
+          userId: '',
+          limit: Number(input.limit),
+        }),
+        issueStats(clickhouse, { orgId, projectIds, from, to }, 1).catch(
+          () => new Map<string, { events: number; people: number }>(),
+        ),
+      ])
+      return {
+        period: { from, to },
+        issues: issues.map((issue) => {
+          const slug = slugOf(all, issue.project_id)
+          return {
+            id: issue.id,
+            product: slug,
+            type: issue.type,
+            message: issue.value,
+            culprit: issue.culprit,
+            level: issue.level,
+            handled: issue.handled,
+            status: issue.status,
+            firstSeen: issue.first_seen,
+            lastSeen: issue.last_seen,
+            timesSeen: issue.times_seen,
+            eventsInPeriod: stats.get(issue.id)?.events ?? 0,
+            peopleInPeriod: stats.get(issue.id)?.people ?? 0,
+            ...(issue.regressed_at ? { regressedAt: issue.regressed_at } : {}),
+            ...(issue.last_release ? { lastRelease: issue.last_release } : {}),
+            url: `${panelUrl(env.OCTADASH_URL)}/p/${slug}/errors/${issue.id}`,
+          }
+        }),
+      }
+    },
+  },
+  {
+    name: 'issue_details',
+    needs: [['errors', 'read']],
+    title: 'One error issue',
+    description:
+      'One issue with its newest event: the exception chain with the stack trace (the app’s own frames marked inApp), the last breadcrumbs, tags, release, environment, page and browser. Personal data was already masked when the event arrived.',
+    input: z.object({
+      issue: z.string().uuid().describe('The issue id, from list_issues.'),
+    }),
+    async run(input, { orgId }) {
+      const { db, clickhouse, env } = services()
+      const issue = await getIssue(db, orgId, String(input.issue))
+      if (!issue) throw new Error('No such issue in this organization.')
+      const { all } = await productsOf(orgId, undefined)
+      const event = await issueEvent(clickhouse, orgId, issue.id)
+      const slug = slugOf(all, issue.project_id)
+      return {
+        id: issue.id,
+        product: slug,
+        type: issue.type,
+        message: issue.value,
+        culprit: issue.culprit,
+        level: issue.level,
+        handled: issue.handled,
+        status: issue.status,
+        firstSeen: issue.first_seen,
+        lastSeen: issue.last_seen,
+        timesSeen: issue.times_seen,
+        firstRelease: issue.first_release,
+        lastRelease: issue.last_release,
+        url: `${panelUrl(env.OCTADASH_URL)}/p/${slug}/errors/${issue.id}`,
+        latestEvent: event && {
+          id: event.event_id,
+          at: event.timestamp,
+          release: event.release,
+          environment: event.environment,
+          platform: event.platform,
+          sdk: event.sdk,
+          url: event.url,
+          browser: event.browser,
+          os: event.os,
+          traceId: event.trace_id || undefined,
+          exceptions: event.exception.map((e) => ({
+            type: e.type,
+            value: e.value,
+            handled: e.mechanism?.handled,
+            // Innermost frames last, as SDKs send them; the last 40 are where it broke.
+            frames: e.frames.slice(-40).map((f) => ({
+              function: f.function,
+              file: f.filename || f.module,
+              line: f.lineno,
+              column: f.colno,
+              inApp: f.in_app,
+              ...(f.context_line ? { code: f.context_line.trim() } : {}),
+            })),
+          })),
+          breadcrumbs: event.breadcrumbs.slice(-20).map((b) => ({
+            at: b.timestamp ? new Date(b.timestamp).toISOString() : undefined,
+            category: b.category,
+            level: b.level,
+            message: b.message,
+          })),
+          tags: event.tags,
+        },
+      }
+    },
+  },
+  {
+    name: 'money',
+    needs: [['money', 'read']],
+    title: 'Money',
+    description:
+      'Revenue, MRR, new subscriptions, churn and failed charges for a period, against the period before, per product and with the latest payments. Amounts are in the organization currency, converted at each day rate.',
+    input: z.object({
+      product,
+      period: z
+        .enum(['today', '24h', '7d', '30d'])
+        .default('30d')
+        .describe('today, 24h, 7d or 30d (default).'),
+    }),
+    async run(input, { orgId }) {
+      const { scope } = await productsOf(orgId, input.product as string | undefined)
+      const data = await loadMoney(orgId, input.product ? scope.map((p) => p.id) : null, {
+        period: input.period as '30d',
+        metric: 'revenue',
+      })
+      const major = (minor: number) => minor / 10 ** currencyDigits(data.currency)
+      const share = (value: number | null) => (value === null ? null : Math.round(value * 10) / 10)
+      return {
+        currency: data.currency,
+        period: { from: data.period.from, to: data.period.to },
+        productsWithGateway: data.connected,
+        totals: {
+          revenue: major(data.totals.revenue),
+          oneOffRevenue: major(data.totals.oneOffRevenue),
+          refunded: major(data.totals.refunded),
+          mrr: major(data.totals.mrr),
+          newSubscriptions: data.totals.started,
+          churnPercent: share(data.totals.churn),
+          failedChargesPercent: share(data.totals.failed),
+          buyers: data.totals.buyers,
+          returningBuyers: data.totals.returning,
+        },
+        previous: {
+          revenue: major(data.previous.revenue),
+          mrr: major(data.previous.mrr),
+          newSubscriptions: data.previous.started,
+        },
+        ...(data.failingNow
+          ? { failingNow: { product: data.failingNow.name, percent: share(data.failingNow.share) } }
+          : {}),
+        byProduct: data.byProduct.map((p) => ({
+          product: p.project.slug,
+          gateway: p.connected,
+          revenue: major(p.revenue),
+          mrr: major(p.mrr),
+          mrrChangePercent: p.mrrChange,
+          today: major(p.today),
+          paying: p.paying,
+          churnPercent: share(p.churn),
+          failedNowPercent: share(p.failedNow),
+        })),
+        latestPayments: data.latest.slice(0, 10).map((pay) => ({
+          product: pay.product.slug,
+          at: pay.at,
+          status: pay.status,
+          amount: pay.amount / 10 ** currencyDigits(pay.currency),
+          currency: pay.currency,
+          gateway: pay.gateway,
+          subscription: pay.subscription,
+          ...(pay.failure ? { failure: pay.failure } : {}),
+        })),
+        ...(data.unconverted.length > 0 ? { leftOutNoRate: data.unconverted } : {}),
+        ...(data.complete ? {} : { partial: true }),
+      }
+    },
+  },
+  {
+    name: 'costs',
+    needs: [['costs', 'read']],
+    title: 'Costs and margin',
+    description:
+      'What the products cost (AI providers and fixed bills, split between products), revenue and margin for a period against the period before, this month forecast against budgets, and AI spend today against its average. Amounts in the organization currency.',
+    input: z.object({
+      product,
+      period: z
+        .enum(['month', '7d', '30d'])
+        .default('month')
+        .describe('month (this calendar month, default), 7d or 30d.'),
+    }),
+    async run(input, { orgId }) {
+      const { scope } = await productsOf(orgId, input.product as string | undefined)
+      const data = await loadCosts(orgId, input.product ? scope.map((p) => p.id) : null, {
+        period: input.period as 'month',
+      })
+      const major = (minor: number) => minor / 10 ** currencyDigits(data.currency)
+      return {
+        currency: data.currency,
+        period: { from: data.period.from, to: data.period.to },
+        totals: {
+          spend: major(data.totals.spend),
+          revenue: major(data.totals.revenue),
+          marginPercent: oneDecimal(data.totals.margin),
+        },
+        previous: {
+          spend: major(data.previous.spend),
+          marginPercent: oneDecimal(data.previous.margin),
+        },
+        month: {
+          spent: major(data.month.spent),
+          forecast: major(data.month.forecast),
+          ...(data.month.budget
+            ? {
+                budget: major(data.month.budget.amount),
+                budgetForecast: major(data.month.budget.forecast),
+              }
+            : {}),
+        },
+        aiToday: {
+          spend: major(data.ai.today),
+          dailyAverage: major(data.ai.average),
+          ...(data.ai.top ? { furthestAbove: data.ai.top } : {}),
+        },
+        byProduct: data.byProduct.map((p) => ({
+          product: p.project.slug,
+          cost: major(p.cost),
+          revenue: major(p.revenue),
+          marginPercent: oneDecimal(p.margin),
+          ...(p.aiTimes ? { aiTodayTimesAverage: p.aiTimes } : {}),
+          ...(p.budget ? { budget: p.budget } : {}),
+        })),
+        byProvider: data.byProvider.map((c) => ({
+          name: c.name,
+          provider: c.provider,
+          amount: major(c.amount),
+          unassigned: major(c.unassigned),
+          status: c.status,
+          syncedAt: c.syncedAt,
+        })),
+        ...(data.unconverted.length > 0 ? { leftOutNoRate: data.unconverted } : {}),
+        ...(data.complete ? {} : { partial: true }),
       }
     },
   },

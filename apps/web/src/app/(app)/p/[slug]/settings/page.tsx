@@ -1,9 +1,12 @@
 import {
+  AREA_RETENTION,
+  areaRetention,
   getProjectBySlug,
   listAreaDetails,
   listMonitors,
   listRuleOverrides,
   listSources,
+  RETENTION_AREAS,
 } from '@octadash/db'
 import { CircleDashedIcon, CircleIcon, CircleSlashIcon, TriangleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -15,6 +18,7 @@ import { ActionForm } from '@/components/action-form'
 import { DeleteProductDialog } from '@/components/delete-product-dialog'
 import { Field } from '@/components/field'
 import { InfoTip } from '@/components/info-tip'
+import { RetentionForm } from '@/components/retention-form'
 import { SubmitButton } from '@/components/submit-button'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -57,6 +61,14 @@ export default async function ProductSettingsPage({
     getTranslations('projects'),
     getFormatter(),
   ])
+  const kept = new Map(
+    await Promise.all(
+      RETENTION_AREAS.map(
+        async (area) =>
+          [area, (await areaRetention(db, area, [project.id])).get(project.id)] as const,
+      ),
+    ),
+  )
   const changed = overrides.filter((o) => o.product.slug === project.slug).length
 
   const rows = AREA_ITEMS.map(({ id, icon }) => {
@@ -195,6 +207,47 @@ export default async function ProductSettingsPage({
                       </Button>
                     )}
                   </div>
+                </li>
+              )
+            })}
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h2 className="flex items-center gap-1 font-display text-lg font-semibold">
+              {t('retention.title')}
+              <InfoTip label={t('retention.infoLabel')} title={t('retention.title')}>
+                {t('retention.info')}
+              </InfoTip>
+            </h2>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="flex flex-col divide-y divide-border">
+            {RETENTION_AREAS.map((area) => {
+              const { choices, defaultDays } = AREA_RETENTION[area]
+              return (
+                <li key={area} className="py-3 first:pt-0 last:pb-0">
+                  <RetentionForm
+                    slug={project.slug}
+                    area={area}
+                    days={kept.get(area) ?? defaultDays}
+                    choices={choices}
+                    canEdit={manager}
+                    labels={{
+                      name: t(`retention.${area}`),
+                      hint: t(`retention.${area}Hint`),
+                      choices: Object.fromEntries(
+                        choices.map((d) => [d, t('retention.days', { count: d })]),
+                      ),
+                      shorter: t('retention.shorter'),
+                      save: t('retention.save'),
+                      saved: t('retention.saved'),
+                    }}
+                  />
                 </li>
               )
             })}

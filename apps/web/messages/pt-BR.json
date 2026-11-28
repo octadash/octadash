@@ -1672,6 +1672,19 @@
       "deleteBody": "Os dados já recebidos ficam. A partir daí, dados com esta chave são recusados.",
       "deleteConfirmTitle": "Excluir {name}?",
       "delete": "Excluir origem"
+    },
+    "retention": {
+      "title": "Quanto tempo guardar",
+      "infoLabel": "Sobre quanto tempo guardar",
+      "info": "Por quanto tempo cada área guarda os dados deste produto. Um tempo maior vale para o que chega daqui em diante. Um menor também apaga, na hora, o que ficou mais antigo que ele. Os problemas continuam na lista; só os eventos deles saem.",
+      "errors": "Erros",
+      "errorsHint": "Cada evento de erro, com stack trace e contexto.",
+      "logs": "Logs",
+      "logsHint": "Cada linha de log.",
+      "days": "{count, plural, one {# dia} other {# dias}}",
+      "shorter": "Ao salvar, o que for mais antigo que isso é apagado agora.",
+      "save": "Salvar",
+      "saved": "Salvo."
     }
   },
   "tv": {

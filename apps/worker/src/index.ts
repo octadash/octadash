@@ -9,6 +9,7 @@ import {
 } from '@octadash/core'
 import {
   addSourceAreas,
+  areaRetention,
   createClickHouse,
   createDb,
   fileUsage,
@@ -148,6 +149,7 @@ const writers = startWriters(
       return outcomes
     },
     insert: (rows, token) => insertErrors(clickhouse, rows, token),
+    loadRetention: (projectIds) => areaRetention(db, 'errors', projectIds),
     onChange: async (changes) => {
       for (const orgId of new Set(changes.map((change) => change.orgId))) {
         await live.publish(orgId, 'errors').catch(() => {})

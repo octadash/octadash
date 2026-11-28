@@ -1,0 +1,54 @@
+---
+title: Dinheiro
+description: Receita, MRR, churn e pagamentos falhos de cada produto, lidos do Stripe, do Paddle e do Asaas com uma chave só de leitura.
+---
+
+Dinheiro lê pagamentos e assinaturas dos seus gateways de pagamento. Ele nunca
+cobra, estorna nem muda nada.
+
+## Conecte um gateway
+
+Em um produto, abra **Dinheiro** > **Configurar** (ou **Configurações do
+produto** > **Áreas** > Dinheiro), escolha o gateway e siga os passos.
+
+1. **Chave.** O Octadash confere ao salvar e guarda criptografada.
+
+   | Gateway | Chave                                                                                                                 |
+   | ------- | --------------------------------------------------------------------------------------------------------------------- |
+   | Stripe  | Uma chave restrita (`rk_…`) com Somente leitura. Uma chave secreta (`sk_…`) é recusada, porque ela cobra e estorna.   |
+   | Paddle  | Uma chave com Leitura em transações, assinaturas e produtos, e nada mais.                                             |
+   | Asaas   | O Asaas não tem chave só de leitura. Crie uma só para o Octadash e apague no Asaas para cortar o acesso na hora.       |
+
+2. **Quais pagamentos são deste produto.** A conta inteira, só alguns produtos
+   do gateway, ou por metadado (`product` no Stripe e no Paddle, a referência
+   externa no Asaas). Uma conta pode servir vários produtos sem contar nada duas
+   vezes.
+3. **Atualização ao vivo.** Adicione o webhook que a página mostra (Stripe:
+   `charge.*` e `customer.subscription.*`; Paddle: `transaction.*` e
+   `subscription.*`; Asaas: eventos de pagamento e assinatura, com o token de
+   acesso). Sem ele, o Octadash lê a cada 5 minutos.
+4. **Histórico.** Os últimos 12 meses são importados em segundo plano, para MRR e
+   churn já começarem com histórico.
+
+## O que mostra
+
+- **Receita** paga no período, com a parte avulsa separada, e o que foi
+  estornado.
+- **MRR**: quanto cada assinatura ativa soma por mês, no preço de hoje. Planos
+  anuais contam um doze avos; testes só quando pagam.
+- **Novas assinaturas** e **churn** (assinaturas que acabaram, sobre as ativas
+  no começo do período).
+- **Pagamentos falhos**, e a emergência **Pagamentos falhando**: 20% das
+  cobranças falham em 15 minutos, com pelo menos 10 cobranças. Dá para mudar nas
+  regras de alerta do produto.
+- Clientes que pagaram e que **compraram de novo**, e a venda média.
+
+Todo valor aparece na moeda da organização (**Configurações do Octadash** >
+**Geral**); outras moedas são convertidas pela cotação do dia. A margem, contra
+quanto o produto custa, fica em [Custos](/pt/use/costs).
+
+## Pergunte à sua IA
+
+Com um token que lê Dinheiro, o [servidor MCP](/pt/use/mcp) responde `money`:
+os mesmos totais de um período contra o anterior, por produto, com os últimos
+pagamentos.

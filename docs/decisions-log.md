@@ -579,3 +579,15 @@ The maintainer reviewed the night's decisions that change the product or its ris
   settings" follow the areas. All products shows only the bottom one. The
   account menu keeps its shortcut too. Replaces the entry above that moved
   Octadash's own settings to the account menu only.
+
+## Errors: retention per product and MCP tools (2026-11-28)
+
+- **Retention is a product setting, one row per area.** Product settings has a
+  "Data kept" card with Errors (30, 90, 180 or 365 days; 90 by default) and
+  Logs (the same choice as Logs > Set up). Each event keeps the days its
+  product had when it arrived and the table's TTL reads them, as logs already
+  did. A shorter choice deletes older events at once; issues stay listed.
+  Areas join the card as their retention becomes a setting.
+- **Errors MCP tools are read-only for now**: `list_issues` and
+  `issue_details`. Resolving or ignoring from an assistant waits for a reason
+  to: it is a team decision that the panel records with a name.

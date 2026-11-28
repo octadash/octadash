@@ -1,0 +1,57 @@
+---
+title: Costs
+description: What each product costs to run (AI providers, servers, fixed bills), its margin against Money, a monthly forecast and budgets.
+---
+
+Costs reads what providers charge and counts the fixed bills you type, splits
+them between products, and puts them against [Money](/use/money) for each
+product's margin. Octadash never pays anything.
+
+## Connect a cost
+
+In a product, open **Costs** > **Set up** (or **Product settings** > **Areas** >
+Costs).
+
+- **OpenAI or Anthropic**: an admin key, used only to read costs and the list of
+  projects. Octadash reads the last 90 days in the background, then every hour.
+  Providers publish costs with a delay (Anthropic up to about 4 hours), so
+  today's numbers grow during the day.
+- **Fixed bill**, for what has no API (a server, a domain, a tool paid yearly):
+  name, amount, currency, since when, every month or year. Counted day by day,
+  so each month adds up to the bill.
+
+## Shared costs
+
+One AI account or one server often serves several products. Each product takes
+the provider's projects that are its own, and a part of the rest, split:
+
+- **Equally** between the products sharing it;
+- **By traffic**: each product's share of that day's visitors, from
+  [Traffic](/send-data/traffic);
+- **Fixed percent**, scaled to add up to 100.
+
+A change holds from today on: past days keep the split they had, so past
+margins do not move.
+
+## What it shows
+
+- **Spend** in the period (this month, 7 or 30 days) against the period before,
+  and spend per day.
+- **Forecast this month**: spent so far, plus the daily average of the last 7
+  days for each day left.
+- **Margin**: revenue from Money (paid minus refunded) less the costs, out of
+  the revenue. Products without revenue show no margin.
+- **AI today** against its daily average, and the product furthest above its
+  own.
+- **Budgets**: a monthly budget per product with a warning percent. The page
+  warns when the forecast reaches it. Spend at 3× normal for an hour is the
+  **Cost runaway** emergency, budget or not.
+
+Amounts are in the organization's currency; other currencies are converted at
+the day's rate.
+
+## Ask your AI
+
+With a token that reads Costs, the [MCP server](/use/mcp) answers `costs`:
+spend, revenue and margin for a period against the one before, the month's
+forecast against budgets, AI today, per product and per provider.

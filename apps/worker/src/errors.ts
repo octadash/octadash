@@ -1,5 +1,6 @@
 import type { Logger } from '@octadash/core'
 import {
+  AREA_RETENTION,
   type ErrorRow,
   hitKey,
   type IssueHit,
@@ -12,6 +13,8 @@ export interface ErrorWriterDeps {
   router: EventRouter
   recordHits(hits: IssueHit[]): Promise<Map<string, IssueOutcome>>
   insert(rows: ErrorRow[], token: string): Promise<void>
+  /** Days each product keeps its errors; each event carries it for the table's TTL. */
+  retentionOf(projectIds: string[]): Promise<Map<string, number>>
   /** Called with the products that got a new or returning issue, once per batch. */
   onChange(
     changes: {
@@ -77,10 +80,17 @@ export async function writeErrors(rows: QueuedError[], token: string, deps: Erro
   if (kept.length === 0) return
   const hits = groupHits(kept)
   const outcomes = await deps.recordHits(hits)
+  const days = await deps.retentionOf(kept.map((row) => row.project_id))
   const written: ErrorRow[] = []
   for (const row of kept) {
     const issue = outcomes.get(hitKey(row.project_id, row.fingerprint))
-    if (issue) written.push({ ...row, issue_id: issue.id })
+    if (issue) {
+      written.push({
+        ...row,
+        issue_id: issue.id,
+        retention_days: days.get(row.project_id) ?? AREA_RETENTION.errors.defaultDays,
+      })
+    }
   }
   await deps.insert(written, token)
   const changes = hits.flatMap((hit) => {
