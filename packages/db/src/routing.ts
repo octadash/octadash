@@ -16,6 +16,18 @@ export function areaOfEvent(event: string): AreaId {
   return TRAFFIC_EVENTS.has(event) ? 'traffic' : 'usage'
 }
 
+/**
+ * The area a `received` row belongs to, so a product that marked an area
+ * "I won't use this" does not keep its extras either. Empty for data of no
+ * area (and for `dropped:` rows, which only count), which is always kept.
+ */
+export function areaOfReceived(kind: string): AreaId | '' {
+  if (kind.startsWith('sentry.')) return 'errors'
+  if (kind === 'posthog.$web_vitals') return 'traffic'
+  if (kind.startsWith('posthog.')) return 'usage'
+  return ''
+}
+
 /** The areas each product marked "I won't use this". */
 export async function listDismissedAreas(db: Db, projectIds: string[]) {
   const dismissed = new Map<string, Set<string>>()

@@ -75,6 +75,11 @@ export const workerEnvSchema = baseEnvSchema
           .map((url) => url.trim())
           .filter(Boolean),
       ),
+    /**
+     * Days data that no area reads yet is kept (the `received` table: Sentry
+     * sessions and check-ins, PostHog autocapture, profile updates...).
+     */
+    OCTADASH_RECEIVED_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
   })
   .extend(clickhouseEnvSchema.shape)
 

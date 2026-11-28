@@ -18,7 +18,7 @@ export function personId(projectId: string, id: string): string {
 }
 
 /** Property names that hold who someone is: a word of the name (user_email, userEmail, phone). */
-const PERSONAL_NAME =
+export const PERSONAL_NAME =
   /(^|[_.\-\s])(e-?mail|cpf|cnpj|ssn|passport|passaporte|phone|telefone|celular|whatsapp|password|senha|card_number|credit_card|iban|ip|ip_address|address|endereco)([_.\-\s]|$)/i
 const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/
 /** CPF, CNPJ and US SSN, with or without punctuation; bare 11 or 14 digits. */

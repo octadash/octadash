@@ -440,3 +440,34 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - Errors, several products: before any sends, a table of products with each one's next step, quickest first. Once one sends, the issue list takes the page and the table folds into "N more products can send errors" at the end.
 - Sent before, nothing now and nothing open: "No errors in the last 24 hours", with the last error, a wider period and the resolved issues, instead of a page of zeros.
 - A zero is only real if the source is alive: each source set for Errors shows whether it sent any data (page view, event, log or error) in the period. One that sent nothing gets a warning, since its zero may be only silence.
+
+## Received data, 2026-11-28
+
+- **Nothing received is thrown away** (asked by the owner). Data no area reads
+  yet goes to the ClickHouse table `received`, masked, for 30 days
+  (`OCTADASH_RECEIVED_RETENTION_DAYS`). A kind nobody has seen is kept by
+  default. Every discard has a reason in `DISCARDS` and a `dropped:` count.
+- **PostHog `$exception` goes to Errors**: it was refused before. The other
+  events that are not product events, and `/engage/`, go to `received`.
+- **File storage is the fourth bundled store** (decided by the owner):
+  replays, attachments and profiles go to an S3-compatible store that ships in
+  the compose and is managed by Octadash (generated password, bucket created on
+  start), with no size limit beyond the request's. Settings can point to an
+  external S3 or R2 instead. Retention is applied by Octadash, not by bucket
+  rules, so it behaves the same on every store. Until it lands, items over
+  1 MB are counted (`dropped:`), not stored.
+- **Garage, not MinIO or SeaweedFS.** MinIO's community edition went into
+  maintenance in December 2025 and was archived in 2026, with no official
+  Docker images since October 2025. Garage is one binary with embedded
+  metadata, built for small servers, stable at v2 and in production since
+  2020; its gaps (versioning, bucket policies) are features Octadash does not
+  use. SeaweedFS covers more of S3 but runs several processes even on one
+  node. Garage is AGPL, like Octadash. Its memory and image size are measured
+  in the load test before the first release, not assumed.
+- **No fifth store.** Log search, metrics and vector search fit in
+  ClickHouse; the queue fits in Valkey (Kafka only for the cloud at high
+  volume). A Chromium for uptime screenshots would be an optional profile.
+- **Still left out, on purpose**: personal data (masked), areas marked "I
+  won't use this" (counted on the card), `/flags` and config requests (no
+  data). Gateway and AI cost data is read from the provider, which keeps it,
+  so fields Octadash does not read today can be read again later.

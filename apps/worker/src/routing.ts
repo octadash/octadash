@@ -56,7 +56,7 @@ export class EventRouter {
       kept.push(row)
       const source = row.source_id ?? NO_SOURCE
       const pair = `${source}:${area}`
-      if (source !== NO_SOURCE && !this.known.has(pair)) {
+      if (source !== NO_SOURCE && area && !this.known.has(pair)) {
         fed.set(pair, { source_id: source, area })
       }
     }

@@ -206,9 +206,10 @@ describe('error endpoints', () => {
     })
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ id: '0123456789abcdef0123456789abcdef' })
-    expect(sink.batches).toHaveLength(1)
-    expect(sink.batches[0]?.kind).toBe('errors')
-    expect(sink.batches[0]?.rows).toHaveLength(1)
+    expect(sink.batches.map((batch) => [batch.kind, batch.rows.length])).toEqual([
+      ['errors', 1],
+      ['received', 1],
+    ])
   })
 
   it('takes the old store endpoint with the key in the auth header', async () => {
