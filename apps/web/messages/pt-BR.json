@@ -1593,5 +1593,182 @@
     "linkManagers": "Só quem gerencia pode criar ou parar o link.",
     "linkReady": "O link privado está pronto para copiar.",
     "start": "Abrir modo TV"
+  },
+  "errorsArea": {
+    "title": "Erros",
+    "intro": "Erros de todos os produtos, agrupados em issues: o mesmo erro no mesmo lugar conta uma vez, com quantas pessoas ele atingiu.",
+    "introGroup": "Erros dos produtos de {group}, agrupados em issues: o mesmo erro no mesmo lugar conta uma vez.",
+    "introOne": "Erros de {product}, agrupados em issues: o mesmo erro no mesmo lugar conta uma vez, com quantas pessoas ele atingiu.",
+    "sending": "{count, plural, one {# produto} other {# produtos}} · {sending} enviam erros",
+    "periodLabel": "Período",
+    "periods": {
+      "today": "Hoje",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Faltam alguns números: o banco de eventos não respondeu. A lista de issues está completa.",
+    "tiles": {
+      "label": "Números do período",
+      "events": "Erros",
+      "issues": "Issues atingidas",
+      "newIssues": "Issues novas",
+      "people": "Pessoas atingidas"
+    },
+    "change": "{change} em relação ao período anterior",
+    "since": {
+      "today": "desde a meia-noite",
+      "24h": "nas últimas 24 horas",
+      "7d": "nos últimos 7 dias",
+      "30d": "nos últimos 30 dias"
+    },
+    "chart": {
+      "current": "Este período",
+      "previous": "Período anterior",
+      "emergency": "Emergência",
+      "asTable": "Mostrar como tabela",
+      "time": "Hora"
+    },
+    "issues": "Issues",
+    "tabsLabel": "Quais issues",
+    "tabs": {
+      "unresolved": "Abertas",
+      "new": "Novas",
+      "regressed": "Voltaram",
+      "mine": "Minhas",
+      "resolved": "Resolvidas",
+      "ignored": "Ignoradas"
+    },
+    "sortLabel": "Ordem",
+    "sorts": {
+      "people": "Mais pessoas atingidas",
+      "events": "Mais eventos",
+      "newest": "Mais novas",
+      "recent": "Vistas por último"
+    },
+    "empty": {
+      "unresolved": "Nenhuma issue aberta. Erros novos aparecem aqui assim que chegam.",
+      "new": "Nenhuma issue começou neste período.",
+      "regressed": "Nenhuma issue voltou depois de resolvida.",
+      "mine": "Você não está cuidando de nenhuma issue. Abra uma e clique em \"Estou cuidando\" para o time saber.",
+      "resolved": "Nenhuma issue resolvida ainda.",
+      "ignored": "Nenhuma issue ignorada."
+    },
+    "columns": {
+      "kind": "Tipo",
+      "issue": "Issue",
+      "last24": "Últimas 24 h",
+      "events": "Eventos",
+      "people": "Pessoas",
+      "onIt": "Cuidando",
+      "actions": "Ações"
+    },
+    "badges": {
+      "new": "Nova",
+      "regressed": "Voltou"
+    },
+    "when": {
+      "backIn": "voltou em {release}, {ago}",
+      "back": "voltou {ago}",
+      "since": "desde {release}, {ago}",
+      "first": "vista pela primeira vez {ago}"
+    },
+    "bars": "{count, plural, one {# evento} other {# eventos}} nas últimas 24 horas",
+    "onIt": "{name} · {ago}",
+    "nobody": "Ninguém",
+    "actions": {
+      "resolve": "Resolver",
+      "reopen": "Reabrir",
+      "more": "Mais ações",
+      "open": "Abrir issue",
+      "nextRelease": "Resolver na próxima versão",
+      "ignore": "Ignorar…",
+      "take": "Estou cuidando",
+      "leave": "Deixar",
+      "copyLink": "Copiar link"
+    },
+    "showing": "Mostrando {shown} de {total}",
+    "loadMore": "Carregar mais",
+    "foot": "Mesmo erro no mesmo lugar = uma issue. Uma resolvida que acontece de novo volta como \"Voltou\".",
+    "kind": {
+      "unhandled": "não tratado",
+      "handled": "tratado",
+      "warning": "aviso"
+    },
+    "status": {
+      "resolved": "Resolvida",
+      "ignored": "Ignorada"
+    },
+    "none": {
+      "title": "Nenhum erro ainda",
+      "body": "Os erros chegam de dois jeitos, e os dois usam a chave de qualquer origem do produto:",
+      "script": "O script do Octadash, o mesmo do Tráfego, já envia os erros do navegador. Coloque data-release na tag para saber em qual versão cada um começou.",
+      "sentry": "Código que já usa um SDK do Sentry (qualquer linguagem) envia para cá trocando o DSN. Cada origem mostra o seu DSN nas configurações do produto.",
+      "sources": "Ver as origens e o DSN",
+      "all": "Escolha um produto para ver as origens:"
+    },
+    "ignore": {
+      "trigger": "Ignorar",
+      "title": "Ignorar até",
+      "body": "Tira a issue da lista até uma condição que você escolhe. Quando ela acontece, a issue volta como \"Voltou\", para nada ficar escondido por engano.",
+      "info": "Tira a issue da lista até uma condição que você escolhe: acontecer mais 100 vezes, atingir mais 50 pessoas, passarem 24 horas, ou nunca. Quando a condição acontece, ela volta como \"Voltou\", para nada ficar escondido para sempre por engano.",
+      "infoLabel": "Sobre Ignorar",
+      "legend": "Trazer de volta quando",
+      "choices": {
+        "events": "Acontecer mais 100 vezes",
+        "people": "Atingir mais 50 pessoas",
+        "day": "Passarem 24 horas",
+        "never": "Nunca"
+      },
+      "confirm": "Ignorar"
+    },
+    "issue": {
+      "breadcrumb": "Onde você está",
+      "unknown": "Não informado",
+      "onIt": "{name} está cuidando · {ago}",
+      "resolvedIn": "Resolvida na próxima versão depois de {release}. Um evento de {release} não reabre; um de qualquer outra versão reabre.",
+      "resolved": "Resolvida. O próximo evento reabre como \"Voltou\".",
+      "ignored": "Ignorada. Volta como \"Voltou\" quando a condição acontecer.",
+      "events": "Eventos",
+      "people": "Pessoas",
+      "firstSeen": "Primeira vez",
+      "lastSeen": "Última vez",
+      "chart": "Eventos por dia, últimos 30 dias",
+      "chartLabel": "{events, plural, one {# evento} other {# eventos}} nos últimos 30 dias, uma barra por dia",
+      "startedIn": "Começou em {release}, {ago}",
+      "nextReleaseHint": "\"Resolver na próxima versão\" fecha agora e só reabre se acontecer de novo em uma versão mais nova.",
+      "where": "Onde aconteceu",
+      "ownOnly": "Só o seu código",
+      "at": "em {fn}",
+      "atLine": "na linha {line}",
+      "hidden": "+ {count} linhas de bibliotecas escondidas.",
+      "showAll": "Mostrar tudo",
+      "causedBy": "Causado por",
+      "noFrames": "O SDK não enviou a pilha deste erro.",
+      "noEvent": "Os eventos desta issue são mais antigos que a retenção.",
+      "before": "O que a pessoa fez antes",
+      "noBreadcrumbs": "O SDK não enviou nada sobre o que aconteceu antes. Os SDKs do Sentry e o pacote Node do Octadash enviam.",
+      "time": "Hora",
+      "kind": "Tipo",
+      "what": "O quê",
+      "whoTitle": "Quem é atingido",
+      "facets": {
+        "browser": "Navegador",
+        "release": "Versão",
+        "path": "Página",
+        "country": "País"
+      },
+      "thisEvent": "Este evento",
+      "person": "Pessoa",
+      "nobody": "Não informada",
+      "anonymous": "anônimo {id}… (sem nome nem e-mail)",
+      "environment": "Ambiente",
+      "release": "Versão",
+      "source": "Origem",
+      "page": "Página",
+      "received": "Recebido",
+      "previous": "← Evento anterior",
+      "newest": "Evento mais recente"
+    }
   }
 }

@@ -1,7 +1,7 @@
 import { uuidv7 } from '@octadash/core'
-import { sql } from 'kysely'
+import { type ExpressionBuilder, sql } from 'kysely'
 import type { Db } from './client'
-import type { IgnoreUntil, IssueStatus } from './schema'
+import type { Database, IgnoreUntil, IssueStatus } from './schema'
 
 /**
  * Error issues (see migration 0019). The worker calls `recordIssueHits` for
@@ -158,6 +158,7 @@ export interface IssueRecord {
   ignore_until: IgnoreUntil | null
   regressed_at: Date | null
   acknowledged_at: Date | null
+  acknowledged_by: string | null
   acknowledged_by_name: string | null
 }
 
@@ -182,6 +183,7 @@ const issueColumns = [
   'error_issue.ignore_until',
   'error_issue.regressed_at',
   'error_issue.acknowledged_at',
+  'error_issue.acknowledged_by',
 ] as const
 
 function toRecord<
@@ -194,34 +196,113 @@ function toRecord<
   }
 }
 
+/** The tabs of the issues list. */
+export const ISSUE_TABS = ['unresolved', 'new', 'regressed', 'mine', 'resolved', 'ignored'] as const
+export type IssueTab = (typeof ISSUE_TABS)[number]
+
 export interface IssueFilter {
   projectIds: string[]
-  status?: IssueStatus
-  /** Only issues seen at or after this time. */
-  seenSince?: Date
+  tab: IssueTab
+  /** "New": issues that began at or after this time. */
+  since: Date
+  /** "Mine": issues this person is on. */
+  userId: string
   limit?: number
 }
 
-/** Issues of some products, most recently seen first. Counts for the period come from ClickHouse. */
+function tabFilter(tab: IssueTab, since: Date, userId: string) {
+  return (eb: ExpressionBuilder<Database, 'error_issue'>) => {
+    switch (tab) {
+      case 'unresolved':
+        return eb('error_issue.status', '=', 'unresolved')
+      case 'new':
+        return eb.and([
+          eb('error_issue.status', '=', 'unresolved'),
+          eb('error_issue.first_seen', '>=', since),
+        ])
+      case 'regressed':
+        return eb.and([
+          eb('error_issue.status', '=', 'unresolved'),
+          eb('error_issue.regressed_at', 'is not', null),
+        ])
+      case 'mine':
+        return eb.and([
+          eb('error_issue.status', '=', 'unresolved'),
+          eb('error_issue.acknowledged_by', '=', userId),
+        ])
+      case 'resolved':
+        return eb('error_issue.status', '=', 'resolved')
+      case 'ignored':
+        return eb('error_issue.status', '=', 'ignored')
+    }
+  }
+}
+
+/** Issues of a tab, most recently seen first. Counts for a period come from ClickHouse. */
 export async function listIssues(
   db: Db,
   orgId: string,
   filter: IssueFilter,
 ): Promise<IssueRecord[]> {
   if (filter.projectIds.length === 0) return []
-  let query = db
+  const rows = await db
     .selectFrom('error_issue')
     .leftJoin('auth_user', 'auth_user.id', 'error_issue.acknowledged_by')
     .select([...issueColumns, 'auth_user.name as acknowledged_by_name'])
     .where('error_issue.org_id', '=', orgId)
     .where('error_issue.project_id', 'in', filter.projectIds)
-  if (filter.status) query = query.where('error_issue.status', '=', filter.status)
-  if (filter.seenSince) query = query.where('error_issue.last_seen', '>=', filter.seenSince)
-  const rows = await query
+    .where(tabFilter(filter.tab, filter.since, filter.userId))
     .orderBy('error_issue.last_seen', 'desc')
     .limit(filter.limit ?? 500)
     .execute()
   return rows.map(toRecord) as IssueRecord[]
+}
+
+/** How many issues each tab holds. */
+export async function countIssues(
+  db: Db,
+  orgId: string,
+  projectIds: string[],
+  since: Date,
+  userId: string,
+): Promise<Record<IssueTab, number>> {
+  const counts = Object.fromEntries(ISSUE_TABS.map((tab) => [tab, 0])) as Record<IssueTab, number>
+  if (projectIds.length === 0) return counts
+  const row = await db
+    .selectFrom('error_issue')
+    .select((eb) =>
+      ISSUE_TABS.map((tab) =>
+        eb.fn
+          .count<string>('error_issue.id')
+          .filterWhere(tabFilter(tab, since, userId))
+          .as(tab),
+      ),
+    )
+    .where('error_issue.org_id', '=', orgId)
+    .where('error_issue.project_id', 'in', projectIds)
+    .executeTakeFirst()
+  for (const tab of ISSUE_TABS) counts[tab] = Number(row?.[tab] ?? 0)
+  return counts
+}
+
+/** Issues that began in a period: the "New issues" number. */
+export async function countNewIssues(
+  db: Db,
+  orgId: string,
+  projectIds: string[],
+  from: Date,
+  to: Date,
+): Promise<number> {
+  if (projectIds.length === 0) return 0
+  const row = await db
+    .selectFrom('error_issue')
+    .select((eb) => eb.fn.countAll<string>().as('n'))
+    .where('org_id', '=', orgId)
+    .where('project_id', 'in', projectIds)
+    .where('first_seen', '>=', from)
+    .where('first_seen', '<', to)
+    .executeTakeFirst()
+  return Number(row?.n ?? 0)
 }
 
 export async function getIssue(

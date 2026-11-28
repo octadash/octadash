@@ -22,7 +22,7 @@ export function LiveRefresh() {
       clearTimeout(timer)
       timer = setTimeout(() => router.refresh(), BURST_MS)
     }
-    for (const topic of ['incidents', 'monitors', 'watcher']) {
+    for (const topic of ['incidents', 'monitors', 'watcher', 'errors']) {
       source.addEventListener(topic, refresh)
     }
     // After a dropped connection, events may have been missed: catch up once.

@@ -150,6 +150,8 @@ export async function errorTotals(
 export interface ErrorPoint {
   at: Date
   events: number
+  issues: number
+  people: number
 }
 
 /** Events per hour or day, empty buckets filled, cut in the scope's time zone. */
@@ -163,7 +165,8 @@ export async function errorSeries(
   const { start, step } = bucketSql(bucket)
   const result = await client.query({
     query: `
-      SELECT ${start}(timestamp, {tz:String}) AS at, count() AS events
+      SELECT ${start}(timestamp, {tz:String}) AS at, count() AS events,
+        uniq(issue_id) AS issues, uniq(${PERSON}) AS people
       FROM errors
       WHERE ${IN_SCOPE} ${issueId ? 'AND issue_id = {issue:UUID}' : ''}
       GROUP BY at
@@ -176,13 +179,20 @@ export async function errorSeries(
     clickhouse_settings: ISO_TIMES,
     format: 'JSONEachRow',
   })
-  const rows = await result.json<{ at: string; events: string }>()
-  return rows.map((row) => ({ at: new Date(row.at), events: Number(row.events) }))
+  const rows = await result.json<{ at: string; events: string; issues: string; people: string }>()
+  return rows.map((row) => ({
+    at: new Date(row.at),
+    events: Number(row.events),
+    issues: Number(row.issues),
+    people: Number(row.people),
+  }))
 }
 
 export interface IssueStats {
   events: number
   people: number
+  /** The source of the latest event. */
+  source: string
   /** Events per bucket of the period, oldest first, `buckets` long. */
   spark: number[]
 }
@@ -212,21 +222,30 @@ export async function issueStats(
   })
   // People need a distinct count over the whole period, not per slot.
   const people = await client.query({
-    query: `SELECT toString(issue_id) AS issue, uniq(${PERSON}) AS people
+    query: `SELECT toString(issue_id) AS issue, uniq(${PERSON}) AS people,
+        toString(argMax(source_id, timestamp)) AS source
       FROM errors WHERE ${IN_SCOPE} GROUP BY issue`,
     query_params: scopeParams(scope),
     format: 'JSONEachRow',
   })
   for (const row of await result.json<{ issue: string; slot: string; events: string }>()) {
-    const entry = stats.get(row.issue) ?? { events: 0, people: 0, spark: Array(buckets).fill(0) }
+    const entry = stats.get(row.issue) ?? {
+      events: 0,
+      people: 0,
+      source: '',
+      spark: Array(buckets).fill(0),
+    }
     const slot = Math.min(buckets - 1, Math.max(0, Number(row.slot)))
     entry.spark[slot] += Number(row.events)
     entry.events += Number(row.events)
     stats.set(row.issue, entry)
   }
-  for (const row of await people.json<{ issue: string; people: string }>()) {
+  for (const row of await people.json<{ issue: string; people: string; source: string }>()) {
     const entry = stats.get(row.issue)
-    if (entry) entry.people = Number(row.people)
+    if (entry) {
+      entry.people = Number(row.people)
+      entry.source = row.source
+    }
   }
   return stats
 }

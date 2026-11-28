@@ -202,6 +202,16 @@ export async function rotateSourceKey(
   })
 }
 
+/** Every source of the organization, for pages that name the source of a row. */
+export function listOrgSources(db: Db, orgId: string) {
+  return db
+    .selectFrom('source')
+    .select(['id', 'project_id', 'name', 'platform', 'areas'])
+    .where('org_id', '=', orgId)
+    .orderBy('created_at')
+    .execute()
+}
+
 /** Every source of the organization that feeds Traffic, for the Traffic page of any scope. */
 export function listTrafficSources(db: Db, orgId: string) {
   return db

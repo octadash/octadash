@@ -12,7 +12,15 @@ import {
 } from './clickhouse/errors'
 import { migrateClickHouse } from './clickhouse/migrate'
 import { createDb } from './client'
-import { getIssue, type IssueHit, listIssues, recordIssueHits, updateIssue } from './errors'
+import {
+  countIssues,
+  countNewIssues,
+  getIssue,
+  type IssueHit,
+  listIssues,
+  recordIssueHits,
+  updateIssue,
+} from './errors'
 import { migrateToLatest } from './migrate'
 import { createProject } from './projects'
 
@@ -20,6 +28,7 @@ const url = process.env.DATABASE_URL
 const chUrl = process.env.CLICKHOUSE_URL
 const org = '00000000-0000-4000-8000-0000000001e1'
 const T0 = new Date('2026-11-28T10:00:00Z')
+const user = '00000000-0000-4000-8000-0000000001e9'
 
 function hit(projectId: string, fingerprint: string, at: Date, release = '', count = 1): IssueHit {
   return {
@@ -122,12 +131,24 @@ describe.skipIf(!url)('error issues (needs DATABASE_URL)', () => {
   })
 
   it('lists issues by status, newest first', async () => {
-    const unresolved = await listIssues(db, org, { projectIds: [product], status: 'unresolved' })
+    const base = { projectIds: [product], since: T0, userId: user }
+    const unresolved = await listIssues(db, org, { ...base, tab: 'unresolved' })
     expect(unresolved.length).toBeGreaterThan(0)
     expect(unresolved.every((issue) => issue.status === 'unresolved')).toBe(true)
-    const all = await listIssues(db, org, { projectIds: [product] })
-    expect(all[0]?.last_seen.getTime()).toBeGreaterThanOrEqual(all.at(-1)?.last_seen.getTime() ?? 0)
-    expect(await listIssues(db, org, { projectIds: [] })).toEqual([])
+    const first = unresolved[0]
+    expect(first?.last_seen.getTime()).toBeGreaterThanOrEqual(
+      unresolved.at(-1)?.last_seen.getTime() ?? 0,
+    )
+    await updateIssue(db, org, first?.id ?? '', user, { kind: 'take' })
+    expect((await listIssues(db, org, { ...base, tab: 'mine' })).map((i) => i.id)).toEqual([
+      first?.id,
+    ])
+    const counts = await countIssues(db, org, [product], T0, user)
+    expect(counts.mine).toBe(1)
+    expect(counts.unresolved).toBe(unresolved.length)
+    expect(counts.regressed).toBeGreaterThan(0)
+    expect(await countNewIssues(db, org, [product], T0, later(1))).toBe(4)
+    expect(await listIssues(db, org, { ...base, projectIds: [], tab: 'new' })).toEqual([])
   })
 })
 
@@ -188,13 +209,21 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
   it('counts events, issues and people, and draws the series', async () => {
     expect(await errorTotals(client, scope)).toEqual({ events: 4, issues: 1, people: 2 })
     const series = await errorSeries(client, scope, 'hour')
-    expect(series.map((p) => p.events)).toEqual([3, 1])
+    expect(series.map((p) => [p.events, p.people])).toEqual([
+      [3, 2],
+      [1, 0],
+    ])
     expect(await issuePeople(client, issue, later(10))).toBe(1)
   })
 
   it('reads issue stats, who it hits and one event', async () => {
     const stats = (await issueStats(client, scope, 4)).get(issue)
-    expect(stats).toEqual({ events: 4, people: 2, spark: [2, 1, 0, 1] })
+    expect(stats).toEqual({
+      events: 4,
+      people: 2,
+      source: '00000000-0000-0000-0000-000000000000',
+      spark: [2, 1, 0, 1],
+    })
     const facets = await issueFacets(client, scope, issue, ['browser'])
     expect(facets.browser[0]).toMatchObject({ value: 'Safari', events: 3, share: 0.75 })
     const newest = await issueEvent(client, org, issue)

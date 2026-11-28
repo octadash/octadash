@@ -229,7 +229,7 @@ export function EmergencyStrip({ data }: { data: StripData }) {
       {data.watcherFailing && (
         <Bar
           tone="error"
-          label={t('label')}
+          label={t('watcherTitle')}
           title={t('watcherTitle')}
           detail={t('watcherBody')}
           actions={

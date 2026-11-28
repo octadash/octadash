@@ -1593,5 +1593,182 @@
     "linkManagers": "Only managers can make or stop the link.",
     "linkReady": "The private link is ready to copy.",
     "start": "Open TV mode"
+  },
+  "errorsArea": {
+    "title": "Errors",
+    "intro": "Errors from every product, grouped into issues: the same error in the same place counts once, with how many people it hit.",
+    "introGroup": "Errors from the products of {group}, grouped into issues: the same error in the same place counts once.",
+    "introOne": "Errors from {product}, grouped into issues: the same error in the same place counts once, with how many people it hit.",
+    "sending": "{count, plural, one {# product} other {# products}} · {sending} send errors",
+    "periodLabel": "Period",
+    "periods": {
+      "today": "Today",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Some numbers are missing: the event store did not answer. The list of issues is complete.",
+    "tiles": {
+      "label": "Numbers of the period",
+      "events": "Errors",
+      "issues": "Issues hit",
+      "newIssues": "New issues",
+      "people": "People hit"
+    },
+    "change": "{change} compared with the period before",
+    "since": {
+      "today": "since midnight",
+      "24h": "in the last 24 hours",
+      "7d": "in the last 7 days",
+      "30d": "in the last 30 days"
+    },
+    "chart": {
+      "current": "This period",
+      "previous": "Period before",
+      "emergency": "Emergency",
+      "asTable": "Show as a table",
+      "time": "Time"
+    },
+    "issues": "Issues",
+    "tabsLabel": "Which issues",
+    "tabs": {
+      "unresolved": "Unresolved",
+      "new": "New",
+      "regressed": "Regressed",
+      "mine": "Mine",
+      "resolved": "Resolved",
+      "ignored": "Ignored"
+    },
+    "sortLabel": "Order",
+    "sorts": {
+      "people": "Most people hit",
+      "events": "Most events",
+      "newest": "Newest",
+      "recent": "Last seen"
+    },
+    "empty": {
+      "unresolved": "No unresolved issues. New errors show up here as they arrive.",
+      "new": "No issue began in this period.",
+      "regressed": "No issue came back after being resolved.",
+      "mine": "You are not on any issue. Open one and press \"I'm on it\" so the team knows.",
+      "resolved": "No resolved issues yet.",
+      "ignored": "No ignored issues."
+    },
+    "columns": {
+      "kind": "Kind",
+      "issue": "Issue",
+      "last24": "Last 24 h",
+      "events": "Events",
+      "people": "People",
+      "onIt": "On it",
+      "actions": "Actions"
+    },
+    "badges": {
+      "new": "New",
+      "regressed": "Regressed"
+    },
+    "when": {
+      "backIn": "came back in {release}, {ago}",
+      "back": "came back {ago}",
+      "since": "since {release}, {ago}",
+      "first": "first seen {ago}"
+    },
+    "bars": "{count, plural, one {# event} other {# events}} in the last 24 hours",
+    "onIt": "{name} · {ago}",
+    "nobody": "Nobody",
+    "actions": {
+      "resolve": "Resolve",
+      "reopen": "Reopen",
+      "more": "More actions",
+      "open": "Open issue",
+      "nextRelease": "Resolve in next release",
+      "ignore": "Ignore…",
+      "take": "I'm on it",
+      "leave": "Leave it",
+      "copyLink": "Copy link"
+    },
+    "showing": "Showing {shown} of {total}",
+    "loadMore": "Load more",
+    "foot": "Same error in the same place = one issue. A resolved one that happens again comes back as Regressed.",
+    "kind": {
+      "unhandled": "unhandled",
+      "handled": "handled",
+      "warning": "warning"
+    },
+    "status": {
+      "resolved": "Resolved",
+      "ignored": "Ignored"
+    },
+    "none": {
+      "title": "No errors yet",
+      "body": "Errors arrive in two ways, and both work with the key of any source of the product:",
+      "script": "The Octadash script, the same one Traffic uses, already reports errors from the browser. Add data-release to the tag to know which release each one started in.",
+      "sentry": "Code that already uses a Sentry SDK (any language) sends here by changing its DSN. Each source shows its DSN in the product settings.",
+      "sources": "See the sources and their DSN",
+      "all": "Pick a product to see its sources:"
+    },
+    "ignore": {
+      "trigger": "Ignore",
+      "title": "Ignore until",
+      "body": "Hides the issue from the list until a condition you pick. When it is met, the issue comes back as Regressed, so nothing stays hidden by accident.",
+      "info": "Hides the issue from the list until a condition you pick: it happens 100 more times, hits 50 more people, 24 hours pass, or never. When the condition is met it comes back as Regressed, so nothing stays hidden forever by accident.",
+      "infoLabel": "About Ignore",
+      "legend": "Bring it back when",
+      "choices": {
+        "events": "It happens 100 more times",
+        "people": "It hits 50 more people",
+        "day": "24 hours pass",
+        "never": "Never"
+      },
+      "confirm": "Ignore"
+    },
+    "issue": {
+      "breadcrumb": "Where you are",
+      "unknown": "Not known",
+      "onIt": "{name} is on it · {ago}",
+      "resolvedIn": "Resolved in the next release after {release}. An event from {release} does not reopen it; one from any other release does.",
+      "resolved": "Resolved. The next event reopens it as Regressed.",
+      "ignored": "Ignored. It comes back as Regressed when its condition is met.",
+      "events": "Events",
+      "people": "People",
+      "firstSeen": "First seen",
+      "lastSeen": "Last seen",
+      "chart": "Events per day, last 30 days",
+      "chartLabel": "{events, plural, one {# event} other {# events}} in the last 30 days, one bar per day",
+      "startedIn": "Started in {release}, {ago}",
+      "nextReleaseHint": "\"Resolve in next release\" closes it now and reopens it only if it happens again in a later release.",
+      "where": "Where it happened",
+      "ownOnly": "Your code only",
+      "at": "in {fn}",
+      "atLine": "at line {line}",
+      "hidden": "+ {count} frames from libraries, hidden.",
+      "showAll": "Show all",
+      "causedBy": "Caused by",
+      "noFrames": "The SDK sent no stack for this error.",
+      "noEvent": "The events of this issue are older than the retention.",
+      "before": "What the person did before",
+      "noBreadcrumbs": "The SDK sent nothing about what happened before. Sentry SDKs and the Octadash Node package send it.",
+      "time": "Time",
+      "kind": "Kind",
+      "what": "What",
+      "whoTitle": "Who it hits",
+      "facets": {
+        "browser": "Browser",
+        "release": "Release",
+        "path": "Page",
+        "country": "Country"
+      },
+      "thisEvent": "This event",
+      "person": "Person",
+      "nobody": "Not known",
+      "anonymous": "anon {id}… (no name or e-mail)",
+      "environment": "Environment",
+      "release": "Release",
+      "source": "Source",
+      "page": "Page",
+      "received": "Received",
+      "previous": "← Previous event",
+      "newest": "Newest event"
+    }
   }
 }

@@ -130,3 +130,16 @@ and why; anything here can be reversed.
 - **A batch retried after a failure counts twice in the issue's total** in
   Postgres; screens read counts from ClickHouse, which drops the repeated
   insert, so only the "ignore until N more events" condition can fire early.
+- **Errors screens follow the canvas**: four numbers on top (errors, issues
+  hit, new issues, people hit), the chart with the period before, then the
+  issues table with tabs (Unresolved, New, Regressed, Mine, Resolved, Ignored)
+  and the order by people hit first. The issue page has its actions, numbers,
+  30 days in bars, where it happened (only the app's frames by default), what
+  the person did before, who it hits and the event itself.
+- **Question for Luciano: pt-BR keeps the word "issue"** ("issues", "Abertas",
+  "Voltaram"). It is the word Sentry, GitHub and developers in Brazil use.
+  "Problema" would read well but needs gendered rewording on every label.
+- **Not built yet, on purpose**: release marks on the chart and a SPIKE badge
+  (they need the alert rule first), a search box for filters, source maps and
+  commit details on the stack. "Set up Errors" is not a page yet: the empty
+  state points to the source settings, where the DSN is.
