@@ -17,19 +17,21 @@ export const clickhouseEnvSchema = z.object({
 /** Valkey (or Redis) holding the ingest streams: redis://:pass@valkey:6379 */
 const valkeyUrl = z.url({ protocol: /^rediss?$/ })
 
-export const webEnvSchema = baseEnvSchema.extend({
-  /** Public URL of the panel, e.g. https://octadash.example.com */
-  OCTADASH_URL: z.url(),
-  /** Public URL of the ingest service, used in SDK snippets and DSNs. */
-  OCTADASH_INGEST_URL: z.url(),
-  /** Secret used to sign sessions and encrypt integration credentials. */
-  OCTADASH_SECRET: z.string().min(32, 'OCTADASH_SECRET must have at least 32 characters'),
-  /** Anyone may create an account. Off on self-hosted installs: only the owner and invited people. */
-  OCTADASH_OPEN_SIGNUP: z
-    .enum(['true', 'false'])
-    .default('false')
-    .transform((value) => value === 'true'),
-})
+export const webEnvSchema = baseEnvSchema
+  .extend({
+    /** Public URL of the panel, e.g. https://octadash.example.com */
+    OCTADASH_URL: z.url(),
+    /** Public URL of the ingest service, used in SDK snippets and DSNs. */
+    OCTADASH_INGEST_URL: z.url(),
+    /** Secret used to sign sessions and encrypt integration credentials. */
+    OCTADASH_SECRET: z.string().min(32, 'OCTADASH_SECRET must have at least 32 characters'),
+    /** Anyone may create an account. Off on self-hosted installs: only the owner and invited people. */
+    OCTADASH_OPEN_SIGNUP: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
+  })
+  .extend(clickhouseEnvSchema.shape)
 
 export const ingestEnvSchema = baseEnvSchema.extend({
   PORT: z.coerce.number().int().positive().default(4000),

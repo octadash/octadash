@@ -1,6 +1,6 @@
 import { buildAuthOptions } from '@octadash/auth'
 import { parseEnv, webEnvSchema } from '@octadash/core'
-import { createDb } from '@octadash/db'
+import { createClickHouse, createDb } from '@octadash/db'
 import { betterAuth } from 'better-auth'
 import { nextCookies } from 'better-auth/next-js'
 
@@ -11,6 +11,7 @@ import { nextCookies } from 'better-auth/next-js'
 function createServices() {
   const env = parseEnv(webEnvSchema)
   const { db, pool } = createDb(env.DATABASE_URL, { applicationName: 'octadash-web' })
+  const clickhouse = createClickHouse(env.CLICKHOUSE_URL, { applicationName: 'octadash-web' })
   const options = buildAuthOptions({
     pool,
     secret: env.OCTADASH_SECRET,
@@ -19,7 +20,7 @@ function createServices() {
   })
   // nextCookies lets server actions set the session cookie; it must be the last plugin.
   const auth = betterAuth({ ...options, plugins: [...options.plugins, nextCookies()] })
-  return { env, db, pool, auth }
+  return { env, db, pool, auth, clickhouse }
 }
 
 type Services = ReturnType<typeof createServices>

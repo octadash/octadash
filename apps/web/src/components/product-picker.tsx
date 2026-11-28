@@ -5,8 +5,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { areaOf, scopeOf } from '@/lib/areas'
+import type { ProductStatus } from '@/lib/monitors'
 import { cn } from '@/lib/utils'
 import { NewProductDialog, type NewProductLabels } from './new-product-dialog'
+import { StatusDot } from './status-dot'
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
@@ -28,7 +30,7 @@ export function ProductPicker({
   labels,
   newProductLabels,
 }: {
-  products: { slug: string; name: string }[]
+  products: { slug: string; name: string; status: ProductStatus }[]
   canCreate: boolean
   labels: PickerLabels
   newProductLabels: NewProductLabels
@@ -61,7 +63,11 @@ export function ProductPicker({
             className="h-9.5 max-w-64 gap-2.5 px-3"
             aria-label={labels.label}
           >
-            {current ? <StatusDot /> : <LayersIcon className="text-muted-foreground" />}
+            {current ? (
+              <StatusDot status={current.status} />
+            ) : (
+              <LayersIcon className="text-muted-foreground" />
+            )}
             <span className="truncate">{current?.name ?? labels.all}</span>
             <ChevronsUpDownIcon data-icon="inline-end" className="text-muted-foreground" />
           </Button>
@@ -94,7 +100,7 @@ export function ProductPicker({
                 href={hrefFor(`/p/${product.slug}`)}
                 active={product.slug === scope.slug}
                 onSelect={() => setOpen(false)}
-                icon={<StatusDot />}
+                icon={<StatusDot status={product.status} />}
               >
                 {product.name}
               </PickerItem>
@@ -123,11 +129,6 @@ export function ProductPicker({
       )}
     </>
   )
-}
-
-/** Gray until the product has uptime: the color will come from its monitors. */
-function StatusDot() {
-  return <span aria-hidden className="size-2 shrink-0 rounded-full bg-muted-foreground/50" />
 }
 
 function PickerItem({

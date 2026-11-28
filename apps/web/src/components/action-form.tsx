@@ -1,15 +1,24 @@
 'use client'
 
-import { createContext, type ReactNode, startTransition, useActionState } from 'react'
+import {
+  createContext,
+  type ReactNode,
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+} from 'react'
 
-export type FormState = { error?: string } | undefined
+/** `done` tells a form that stays on the page (a dialog) that the action succeeded. */
+export type FormState = { error?: string; done?: boolean } | undefined
 
 /** True while the surrounding ActionForm waits for its server action. */
 export const PendingContext = createContext(false)
 
 /**
  * A form bound to a server action that returns `{ error }` on failure and
- * redirects on success. Errors are already translated by the action.
+ * redirects or answers `{ done: true }` on success. Errors are already
+ * translated by the action.
  *
  * Submits through a transition instead of the form's `action`, so React does
  * not clear the fields when the server answers with an error.
@@ -18,12 +27,19 @@ export function ActionForm({
   action,
   children,
   className,
+  onDone,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>
   children: ReactNode
   className?: string
+  onDone?: () => void
 }) {
   const [state, formAction, pending] = useActionState(action, undefined)
+  const onDoneRef = useRef(onDone)
+  onDoneRef.current = onDone
+  useEffect(() => {
+    if (state?.done) onDoneRef.current?.()
+  }, [state])
   return (
     // No `action` prop: with one, React resets the form after any transition
     // started from onSubmit, which would wipe the fields on an error.
