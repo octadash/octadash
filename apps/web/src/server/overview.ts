@@ -1,5 +1,9 @@
 import {
   bucketStarts,
+  countNewIssues,
+  type ErrorPoint,
+  errorSeries,
+  errorsByProduct,
   fillSeries,
   getOrganizationSettings,
   listIncidentsBetween,
@@ -37,6 +41,8 @@ export interface OverviewRow extends OverviewProduct {
   emergency: { since: Date; takenBy: string | null } | null
   uptime: { ratio: number | null; hours: HourState[] } | null
   traffic: { visitors: number; previous: number; spark: number[] } | null
+  /** Errors in the period, when the product uses Errors. */
+  errors: { events: number; previous: number; issues: number } | null
 }
 
 export interface TimelineItem {
@@ -61,6 +67,14 @@ export interface Overview {
     online: number
     series: TrafficPoint[]
     previousSeries: TrafficPoint[]
+  } | null
+  errors: {
+    events: number
+    previous: number
+    /** Issues first seen in the period. */
+    newIssues: number
+    series: ErrorPoint[]
+    previousSeries: ErrorPoint[]
   } | null
   /** Incident starts, to mark on the chart. */
   marks: { at: Date; product: string }[]
@@ -127,6 +141,14 @@ export async function loadOverview(
     ),
     safely(() => onlineNow(clickhouse, scope, now), 0, failed),
   ])
+  const noErrors = new Map<string, { events: number; issues: number }>()
+  const [errorsNow, errorsBefore, errorPoints, previousErrorPoints, newIssues] = await Promise.all([
+    safely(() => errorsByProduct(clickhouse, scope), noErrors, failed),
+    safely(() => errorsByProduct(clickhouse, previousScope), noErrors, failed),
+    safely(() => errorSeries(clickhouse, scope, period.chart), [] as ErrorPoint[], failed),
+    safely(() => errorSeries(clickhouse, previousScope, period.chart), [] as ErrorPoint[], failed),
+    countNewIssues(db, orgId, ids, period.from, period.to),
+  ])
 
   const takers = [...new Set(incidents.map((i) => i.acknowledged_by).filter((id) => id !== null))]
   const names = new Map(
@@ -152,6 +174,10 @@ export async function loadOverview(
       areas.get(product.id)?.get('traffic') === 'set_up' ||
       visitorsOf.has(product.id) ||
       previousOf.has(product.id)
+    const usesErrors =
+      areas.get(product.id)?.get('errors') === 'set_up' ||
+      errorsNow.has(product.id) ||
+      errorsBefore.has(product.id)
     const emergency = open
       .filter((i) => i.project_id === product.id)
       .sort((a, b) => a.started_at.getTime() - b.started_at.getTime())[0]
@@ -180,6 +206,13 @@ export async function loadOverview(
             visitors: visitorsOf.get(product.id) ?? 0,
             previous: previousOf.get(product.id) ?? 0,
             spark: fillSeries(sparks.get(product.id) ?? [], rowBuckets).map((p) => p.visitors),
+          }
+        : null,
+      errors: usesErrors
+        ? {
+            events: errorsNow.get(product.id)?.events ?? 0,
+            previous: errorsBefore.get(product.id)?.events ?? 0,
+            issues: errorsNow.get(product.id)?.issues ?? 0,
           }
         : null,
     }
@@ -212,6 +245,9 @@ export async function loadOverview(
     return c === 0 ? 100 : ((c - d) / c) * 100
   })
   const trafficRows = rows.filter((r) => r.traffic)
+  const errorRows = rows.filter((r) => r.errors)
+  const sum = (m: Map<string, { events: number }>) =>
+    [...m.values()].reduce((total, v) => total + v.events, 0)
 
   const timeline = products
     .map((product) => ({
@@ -252,6 +288,16 @@ export async function loadOverview(
             online,
             series,
             previousSeries,
+          }
+        : null,
+    errors:
+      errorRows.length > 0
+        ? {
+            events: sum(errorsNow),
+            previous: sum(errorsBefore),
+            newIssues,
+            series: errorPoints,
+            previousSeries: previousErrorPoints,
           }
         : null,
     marks: incidents

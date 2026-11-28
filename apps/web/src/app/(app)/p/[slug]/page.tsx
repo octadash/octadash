@@ -8,15 +8,21 @@ import { GetStarted } from '@/components/get-started'
 import { MetricChart } from '@/components/metric-chart'
 import { StatusDot } from '@/components/status-dot'
 import { TvButton } from '@/components/tv-button'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AREA_ITEMS } from '@/lib/areas'
+import { issueTitle } from '@/lib/errors'
 import { parsePeriod } from '@/lib/period'
 import { cn } from '@/lib/utils'
 import { services } from '@/server/context'
 import { loadGetStarted } from '@/server/get-started'
 import type { TimelineItem } from '@/server/overview'
-import { loadProductPage, type MonitorLine } from '@/server/product-page'
+import {
+  loadProductPage,
+  type MonitorLine,
+  type ProductPage as ProductPageData,
+} from '@/server/product-page'
 import { canManage, requireOrg } from '@/server/session'
 import { formatUptime } from '@/server/uptime-view'
 import { chartLabels, previousAt } from '@/views/overview'
@@ -59,7 +65,7 @@ export default async function ProductPage({
     loadGetStarted(org),
   ])
   const { overview, states, monitors, response } = data
-  const { period, timeZone, traffic, uptime } = overview
+  const { period, timeZone, traffic, uptime, errors } = overview
   const periodName = tOverview(`periods.${period.id}`)
   const format = formats(locale, timeZone, period.id)
   const row = overview.rows[0]
@@ -67,7 +73,10 @@ export default async function ProductPage({
   const inUse = AREA_ITEMS.filter((area) => states.get(area.id) !== 'dismissed')
   const dismissed = AREA_ITEMS.filter((area) => states.get(area.id) === 'dismissed')
   const receiving = inUse.filter(
-    (area) => (area.id === 'uptime' && monitors.length > 0) || (area.id === 'traffic' && traffic),
+    (area) =>
+      (area.id === 'uptime' && monitors.length > 0) ||
+      (area.id === 'traffic' && traffic) ||
+      (area.id === 'errors' && errors && errors.series.some((p) => p.events > 0)),
   ).length
   const waiting = inUse.filter((area) => states.get(area.id) === 'set_up').length - receiving
   const toSetUp = inUse.filter((area) => !states.has(area.id)).length
@@ -90,6 +99,22 @@ export default async function ProductPage({
         at: p.at.toISOString(),
         current: p.visitors,
         previous: previousAt(traffic.previousSeries, traffic.series.length, i),
+      })),
+    })
+  }
+  if (errors) {
+    metrics.push({
+      id: 'errors',
+      label: tOverview('chart.errors'),
+      unit: 'count' as const,
+      points: errors.series.map((p, i) => ({
+        at: p.at.toISOString(),
+        current: p.events,
+        previous: previousAt(
+          errors.previousSeries.map((q) => ({ visitors: q.events })),
+          errors.series.length,
+          i,
+        ),
       })),
     })
   }
@@ -137,7 +162,7 @@ export default async function ProductPage({
         </p>
       )}
 
-      {(uptime || traffic) && (
+      {(uptime || traffic || errors) && (
         <Tiles label={tOverview('totals')}>
           {uptime && row && (
             <Tile
@@ -168,6 +193,17 @@ export default async function ProductPage({
               delta={deltaOf(tOverview, traffic.visitors, traffic.previous)}
               sub={tOverview('online', { count: traffic.online })}
               spark={traffic.series.map((p) => p.visitors)}
+            />
+          )}
+          {errors && (
+            <Tile
+              href={`${base}/errors`}
+              label={tOverview('tiles.errors')}
+              area={t('areas.errors.name')}
+              value={format.number.format(errors.events)}
+              delta={fewerIsBetter(deltaOf(tOverview, errors.events, errors.previous))}
+              sub={tOverview('tiles.newIssues', { count: errors.newIssues })}
+              spark={errors.series.map((p) => p.events)}
             />
           )}
         </Tiles>
@@ -220,6 +256,18 @@ export default async function ProductPage({
                 monitors={monitors}
                 t={t}
                 locale={locale}
+              />
+            ) : area.id === 'errors' &&
+              data.errors &&
+              data.errors.days.some((d) => d.events > 0) ? (
+              <ErrorsCard
+                key={area.id}
+                area={area}
+                base={base}
+                data={data.errors}
+                sources={data.sources.filter((s) => s.areas.includes('errors')).length}
+                number={format.number}
+                t={t}
               />
             ) : area.id === 'traffic' && data.traffic ? (
               <TrafficCard
@@ -434,6 +482,93 @@ function TrafficCard({
         className="mt-auto self-start text-sm text-brand hover:underline"
       >
         {t('productPage.open', { area: t('areas.traffic.name') })}
+        <ArrowRightIcon aria-hidden className="ml-1 inline size-3.5" />
+      </Link>
+    </section>
+  )
+}
+
+/** For errors fewer is better: a drop reads as good, a rise does not. */
+function fewerIsBetter<T extends { up: boolean; down: boolean }>(delta: T | null): T | null {
+  return delta ? { ...delta, up: delta.down, down: delta.up } : null
+}
+
+function ErrorsCard({
+  area,
+  base,
+  data,
+  sources,
+  number,
+  t,
+}: {
+  area: AreaItem
+  base: string
+  data: NonNullable<ProductPageData['errors']>
+  sources: number
+  number: Intl.NumberFormat
+  t: Translate
+}) {
+  const max = Math.max(1, ...data.days.map((d) => d.events))
+  const total = data.days.reduce((sum, d) => sum + d.events, 0)
+  return (
+    <section
+      aria-labelledby="card-errors"
+      className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5"
+    >
+      <header className="flex flex-wrap items-center gap-2.5">
+        <area.icon aria-hidden className="size-4 text-muted-foreground" />
+        <h3 id="card-errors" className="font-display text-lg font-semibold">
+          {t('areas.errors.name')}
+        </h3>
+        {sources > 0 && (
+          <span className="ml-auto text-xs text-muted-foreground">
+            {t('productPage.errorSources', { count: sources })}
+          </span>
+        )}
+      </header>
+      {data.issues.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t('productPage.noIssues')}</p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {data.issues.map((issue) => (
+            <li key={issue.id} className="flex flex-col gap-0.5">
+              <span className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`${base}/errors/${issue.id}`}
+                  className="text-sm font-medium break-words hover:text-brand hover:underline"
+                >
+                  {issueTitle(issue)}
+                </Link>
+                {issue.isNew && <Badge variant="brand">{t('errorsArea.badges.new')}</Badge>}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {[
+                  issue.culprit,
+                  t('productPage.issueNumbers', { events: issue.events, people: issue.people }),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="mt-auto flex flex-col gap-1">
+        <div aria-hidden className="flex h-10 items-end gap-1">
+          {data.days.map((d) => (
+            <span
+              key={d.at.toISOString()}
+              className="flex-1 rounded-sm bg-error/60"
+              style={{ height: `${Math.max(4, (d.events / max) * 100)}%` }}
+            />
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t('productPage.errorDays', { total: number.format(total) })}
+        </p>
+      </div>
+      <Link href={`${base}/errors`} className="self-start text-sm text-brand hover:underline">
+        {t('productPage.open', { area: t('areas.errors.name') })}
         <ArrowRightIcon aria-hidden className="ml-1 inline size-3.5" />
       </Link>
     </section>
