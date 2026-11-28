@@ -10,6 +10,7 @@ import {
   deleteSource,
   listSources,
   rotateSourceKey,
+  setSourceVisitorMode,
   updateSource,
 } from './sources'
 
@@ -41,14 +42,24 @@ describe.skipIf(!url)('sources (needs DATABASE_URL)', () => {
     })
     expect(site).toMatchObject({ name: 'Site', platform: 'nextjs', areas: ['traffic', 'usage'] })
     expect(site?.public_key).toMatch(/^[0-9a-f]{32}$/)
+    expect(site?.visitor_mode).toBe('daily')
     expect(await findIngestKey(db, site?.public_key ?? '')).toEqual({
       org_id: org,
       project_id: project.id,
       source_id: site?.id,
+      visitor_mode: 'daily',
+    })
+    expect(await setSourceVisitorMode(db, other, site?.id ?? '', 'persistent')).toBe(false)
+    expect(await setSourceVisitorMode(db, org, site?.id ?? '', 'persistent')).toBe(true)
+    expect(await findIngestKey(db, site?.public_key ?? '')).toMatchObject({
+      visitor_mode: 'persistent',
     })
     // The product key from before sources still resolves, without a source.
     const [legacy] = await listProjectKeys(db, org, project.id)
-    expect(await findIngestKey(db, legacy?.public_key ?? '')).toMatchObject({ source_id: null })
+    expect(await findIngestKey(db, legacy?.public_key ?? '')).toMatchObject({
+      source_id: null,
+      visitor_mode: 'daily',
+    })
     expect((await listSources(db, org, project.id)).map((s) => s.public_key)).toEqual([
       site?.public_key,
     ])

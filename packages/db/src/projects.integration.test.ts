@@ -49,6 +49,7 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
       org_id: orgA,
       project_id: first.id,
       source_id: null,
+      visitor_mode: 'daily',
     })
     expect(await findIngestKey(db, 'f'.repeat(32))).toBeUndefined()
   })

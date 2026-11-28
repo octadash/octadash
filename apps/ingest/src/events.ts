@@ -3,6 +3,7 @@ import { type EventRow, NO_SOURCE, toClickHouseTime } from '@octadash/db'
 import { z } from 'zod'
 import { pageFields, parseUserAgent } from './context'
 import type { IngestScope } from './keys'
+import { BROWSER_ID, persistentVisitor } from './visitor'
 
 export const MAX_EVENTS_PER_REQUEST = 1_000
 export const MAX_PROPERTIES_BYTES = 32 * 1024
@@ -61,7 +62,9 @@ function text(value: unknown, max = 1000): string {
 /**
  * Turns validated events into the rows the worker writes to ClickHouse. A
  * server SDK sends on behalf of a visitor, so `$ip` and `$user_agent` in the
- * properties (PostHog's names) win over the request's own.
+ * properties (PostHog's names) win over the request's own. `$visitor_id`, the
+ * id the browser keeps, counts only when the source counts returning visitors,
+ * and is never stored as it came.
  */
 export async function toEventRows(
   scope: IngestScope,
@@ -72,7 +75,8 @@ export async function toEventRows(
   const receivedAt = toClickHouseTime(received)
   const rows: EventRow[] = []
   for (const event of events) {
-    const properties = JSON.stringify(event.properties ?? {})
+    const { $visitor_id: browserId, ...kept } = event.properties ?? {}
+    const properties = JSON.stringify(kept)
     if (Buffer.byteLength(properties) > MAX_PROPERTIES_BYTES) {
       throw new PropertiesTooLargeError(event.event)
     }
@@ -90,7 +94,12 @@ export async function toEventRows(
       distinct_id: event.distinct_id ?? '',
       session_id: event.session_id ?? '',
       properties,
-      visitor_id: await sender.visitor(ip, userAgent),
+      visitor_id:
+        scope.visitor_mode === 'persistent' &&
+        typeof browserId === 'string' &&
+        BROWSER_ID.test(browserId)
+          ? persistentVisitor(scope.project_id, browserId)
+          : await sender.visitor(ip, userAgent),
       ...pageFields(event.properties),
       browser: client.browser,
       os: client.os,
