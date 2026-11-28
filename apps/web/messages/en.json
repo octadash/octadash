@@ -613,7 +613,11 @@
     "areas": {
       "uptime": "Uptime",
       "errors": "Errors",
-      "usage": "Product usage"
+      "usage": "Product usage",
+      "traffic": "Traffic",
+      "money": "Money",
+      "costs": "Costs",
+      "logs": "Logs"
     },
     "future": {
       "errors": {
@@ -632,10 +636,60 @@
           "body": "Sign-ups away from what this hour and weekday usually have.",
           "wait": "Needs 4 weeks of data to learn what is normal.",
           "params": "30% below expected, at least 10 events"
+        },
+        "keyEventStopped": {
+          "title": "Key event stopped",
+          "body": "An event you mark as key (checkout, sign-up) stops at an hour it usually happens.",
+          "wait": "Needs 4 weeks of data to learn when it usually happens.",
+          "params": "None in 1 h when 10 or more are expected"
+        }
+      },
+      "uptime": {
+        "domainExpiring": {
+          "title": "Domain expiring",
+          "body": "The domain registration of a monitor expires soon.",
+          "wait": "Needs a registry lookup Octadash does not do yet.",
+          "params": "30 days ahead"
+        }
+      },
+      "traffic": {
+        "starts": "Starts when Traffic is set up on a product",
+        "trafficStopped": {
+          "title": "Traffic stopped",
+          "body": "Pageviews drop to zero while the site is up: the script was removed or broke.",
+          "wait": "Needs a few days of traffic to know what to expect.",
+          "params": "None in 30 min when 20 or more are expected"
+        }
+      },
+      "money": {
+        "starts": "Starts when Money is set up on a product",
+        "paymentsFailing": {
+          "title": "Payments failing",
+          "body": "Failed charges at the gateway well above normal.",
+          "wait": "No gateway is connected yet.",
+          "params": "20% failed in 15 min, at least 10 charges"
+        }
+      },
+      "costs": {
+        "starts": "Starts when Costs is set up on a product",
+        "costRunaway": {
+          "title": "Cost runaway",
+          "body": "Spend per hour well above normal (AI tokens, cloud).",
+          "wait": "No cost source is connected yet.",
+          "params": "3× normal for 1 h"
+        }
+      },
+      "logs": {
+        "starts": "Starts when Logs is set up on a product",
+        "logAlert": {
+          "title": "Log alert",
+          "body": "A search you save matches, such as level=fatal.",
+          "wait": "No product sends logs yet.",
+          "params": "You set the search"
         }
       }
     },
-    "moreAreas": "Each area brings its own rules when it ships (Money: payments failing; Costs: spend above normal). They appear here already set, so nothing needs to be written from zero."
+    "moreAreas": "Each area brings its rules already set when it ships, so nothing needs to be written from zero. Every kind uses the same strip, emergency page and channels."
   },
   "groups": {
     "newTitle": "New group",
@@ -1010,6 +1064,93 @@
       "heartbeat_missed": "{product} · {name} did not run",
       "cert_expiring": "{product} · certificate was close to expiring",
       "other": "{product} · {name}"
+    }
+  },
+  "strip": {
+    "label": "Emergencies",
+    "title": {
+      "monitor_down": "{product} is down",
+      "heartbeat_missed": "{product}: “{name}” did not run",
+      "cert_expiring": "{product}: certificate expires in {days, plural, one {# day} other {# days}}",
+      "other": "{product}: {name}"
+    },
+    "short": {
+      "monitor_down": "{product} down",
+      "heartbeat_missed": "{product} heartbeat missed",
+      "cert_expiring": "{product} certificate expiring",
+      "other": "{product} {name}"
+    },
+    "detail": {
+      "monitor_down": "Monitor “{name}”: {reason}",
+      "heartbeat_missed": "“{name}”: {reason}",
+      "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
+      "other": "{name}: {reason}"
+    },
+    "detailNoReason": {
+      "monitor_down": "Monitor “{name}” is not answering",
+      "heartbeat_missed": "“{name}” did not check in on time",
+      "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
+      "other": "{name}"
+    },
+    "kind": {
+      "monitor_down": "Down",
+      "heartbeat_missed": "Heartbeat missed",
+      "cert_expiring": "Certificate expiring",
+      "other": "Emergency"
+    },
+    "count": "{count, plural, one {# emergency} other {# emergencies}}",
+    "countProducts": "{count} emergencies on {products} products",
+    "together": "Started within {minutes, plural, one {# min} other {# min}} of each other",
+    "shared": "{count} share the server {ip}",
+    "oldest": "oldest {duration}",
+    "see": "See",
+    "seeAll": "See all {count}",
+    "seeAllShort": "See all",
+    "imOnIt": "I'm on it",
+    "onIt": "{name} is on it · {duration}",
+    "onItYou": "You are on it · {duration}",
+    "nobody": "Nobody on it yet",
+    "onSome": "{name} is on {count} of {total}",
+    "onSomeYou": "You are on {count} of {total}",
+    "onSomeSeveral": "{count} of {total} taken",
+    "back": "{product} is back",
+    "renewed": "{product}: certificate renewed",
+    "closedBy": "{product}: closed by {name}",
+    "backDetail": "Lasted {duration}",
+    "backDetailTaker": "Lasted {duration} · {name} was on it",
+    "seeWhat": "See what happened",
+    "newOne": "New emergency: {title}",
+    "newMany": "{count, plural, one {# new emergency} other {# new emergencies}}",
+    "watcherTitle": "Octadash can't reach its outside watcher",
+    "watcherBody": "If this server goes down, nobody will be told. Checks from this server still run.",
+    "list": {
+      "intro": "Nobody on it first, then the oldest. Updates live.",
+      "hint": "Hint: {count} of these share the server {ip}",
+      "hintTogether": "Hint: {count} of these started within {minutes} min and share the server {ip}",
+      "reached": "Octadash checked: {targets} answer from here, so this install's network is fine.",
+      "failed": "Octadash checked: {targets} did not answer from here, so this install's network may be the problem.",
+      "decide": "They may be one problem; you decide. Tick the ones you handle and press “I'm on these”.",
+      "filterLabel": "Show",
+      "all": "All {count}",
+      "nobody": "Nobody on it · {count}",
+      "mine": "Mine · {count}",
+      "sort": "Sort",
+      "sortNobody": "Nobody on it first",
+      "sortOldest": "Oldest first",
+      "sortNewest": "Newest first",
+      "select": "Select {product}: {kind}",
+      "open": "Open {product}: {kind}",
+      "taker": "{name} · {duration}",
+      "takerYou": "You · {duration}",
+      "more": "{count} more",
+      "showAll": "Show all",
+      "selected": "{count} selected",
+      "selectShared": "Select the {count} on {ip}",
+      "clear": "Clear",
+      "submit": "I'm on these {count}",
+      "empty": "Nothing here. Change what the list shows above.",
+      "and": "{first} and {last}",
+      "submitNone": "I'm on these"
     }
   }
 }

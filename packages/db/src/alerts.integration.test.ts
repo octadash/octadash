@@ -5,6 +5,7 @@ import {
   closeStaleMonitorIncidents,
   listIncidentsBetween,
   listOpenIncidents,
+  listResolvedSince,
   listRuleOverrides,
   listRules,
   markNotified,
@@ -138,6 +139,14 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
       .execute((trx) => claimPendingIncidents(trx, new Date(T0.getTime() + 301_000)))
     expect(resolved.find((i) => i.id === first?.id)?.resolved_at).not.toBeNull()
     await markNotified(db, [first?.id ?? ''], 'resolve', T0)
+    // The strip turns green for a moment: what ended, and who was on it.
+    const ended = await listResolvedSince(db, org, new Date(T0.getTime() + 299_000))
+    expect(ended.find((i) => i.id === first?.id)).toMatchObject({
+      project_name: 'Incidents',
+      acknowledged_by: '00000000-0000-4000-8000-0000000000a1',
+      closed_by: null,
+    })
+    expect(await listResolvedSince(db, other, T0)).toEqual([])
 
     // A blip: down and back before the delay. Nobody is told, either way.
     const blip = await openIncident(db, { ...input, at: new Date(T0.getTime() + 400_000) })

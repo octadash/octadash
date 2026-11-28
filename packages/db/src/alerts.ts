@@ -222,6 +222,42 @@ export function listOpenIncidents(db: Db, orgId: string) {
 }
 
 /**
+ * Emergencies that ended since `since`, newest first: the strip turns green
+ * for a moment ("Acme Shop is back"). `closedBy` is set when someone closed
+ * it by hand instead of the check passing.
+ */
+export function listResolvedSince(db: Db, orgId: string, since: Date) {
+  return db
+    .selectFrom('incident')
+    .innerJoin('project', 'project.id', 'incident.project_id')
+    .select((eb) => [
+      'incident.id',
+      'incident.kind',
+      'incident.data',
+      'incident.started_at',
+      'incident.resolved_at',
+      'incident.notify_after',
+      'incident.acknowledged_by',
+      'project.name as project_name',
+      'project.slug as project_slug',
+      eb
+        .selectFrom('incident_event')
+        .select('incident_event.user_id')
+        .whereRef('incident_event.incident_id', '=', 'incident.id')
+        .where('incident_event.kind', '=', 'closed')
+        .orderBy('incident_event.at', 'desc')
+        .limit(1)
+        .as('closed_by'),
+    ])
+    .where('incident.org_id', '=', orgId)
+    .where('incident.level', '=', 'emergency')
+    .where('incident.resolved_at', '>=', since)
+    .orderBy('incident.resolved_at', 'desc')
+    .limit(20)
+    .execute()
+}
+
+/**
  * Incidents that were open at some point of a period, oldest first: the "What
  * happened" timeline. `projectIds` null means every product; an empty list
  * matches nothing. Child incidents (one product down because its server is)

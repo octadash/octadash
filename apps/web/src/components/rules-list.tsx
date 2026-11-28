@@ -6,7 +6,16 @@ import {
   listRules,
   RULE_DEFAULTS,
 } from '@octadash/db'
-import { ActivityIcon, BugIcon, type LucideIcon, UserIcon } from 'lucide-react'
+import {
+  ActivityIcon,
+  BugIcon,
+  GlobeIcon,
+  type LucideIcon,
+  ReceiptIcon,
+  TerminalIcon,
+  UserIcon,
+  WalletIcon,
+} from 'lucide-react'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { services } from '@/server/context'
 import { LEVEL_ICON, type Level } from './level-icon'
@@ -22,11 +31,29 @@ const RULE_AREA: Record<IncidentKind, 'uptime'> = {
 
 /**
  * Rules of areas not built yet, shown dimmed so people see what is coming and
- * that it arrives already set. Each area replaces its preview when it ships.
+ * that it arrives already set: the kinds of emergency closed in the
+ * Emergencies canvas, plus the signals each area brings. Each area replaces
+ * its preview when it ships.
  */
-const FUTURE: { area: 'errors' | 'usage'; icon: LucideIcon; rule: string; level: Level }[] = [
-  { area: 'errors', icon: BugIcon, rule: 'errorSpike', level: 'emergency' },
-  { area: 'usage', icon: UserIcon, rule: 'signupsDropped', level: 'signal' },
+const FUTURE: {
+  area: 'uptime' | 'errors' | 'usage' | 'traffic' | 'money' | 'costs' | 'logs'
+  icon: LucideIcon
+  rules: { rule: string; level: Level }[]
+}[] = [
+  { area: 'uptime', icon: ActivityIcon, rules: [{ rule: 'domainExpiring', level: 'emergency' }] },
+  { area: 'errors', icon: BugIcon, rules: [{ rule: 'errorSpike', level: 'emergency' }] },
+  {
+    area: 'usage',
+    icon: UserIcon,
+    rules: [
+      { rule: 'keyEventStopped', level: 'emergency' },
+      { rule: 'signupsDropped', level: 'signal' },
+    ],
+  },
+  { area: 'traffic', icon: GlobeIcon, rules: [{ rule: 'trafficStopped', level: 'emergency' }] },
+  { area: 'money', icon: WalletIcon, rules: [{ rule: 'paymentsFailing', level: 'emergency' }] },
+  { area: 'costs', icon: ReceiptIcon, rules: [{ rule: 'costRunaway', level: 'emergency' }] },
+  { area: 'logs', icon: TerminalIcon, rules: [{ rule: 'logAlert', level: 'emergency' }] },
 ]
 
 const LEVELS: Level[] = ['emergency', 'signal', 'off']
@@ -101,6 +128,26 @@ export async function RulesList({
     .map((channel) => ({ id: channel.id, name: channel.name }))
   const uptime = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'uptime')
 
+  /** A rule of an area not built yet, dimmed, with what it waits for. */
+  const future = (area: string, { rule, level }: { rule: string; level: Level }) => (
+    <div
+      key={`${area}-${rule}`}
+      className="flex flex-wrap items-start justify-between gap-3 px-4 py-4"
+    >
+      <div className="flex max-w-md flex-col gap-1">
+        <p className="font-medium text-muted-foreground">{t(`future.${area}.${rule}.title`)}</p>
+        <p className="text-sm text-muted-foreground">{t(`future.${area}.${rule}.body`)}</p>
+        <p className="text-xs text-muted-foreground">{t(`future.${area}.${rule}.wait`)}</p>
+        <p className="text-sm text-muted-foreground">{t(`future.${area}.${rule}.params`)}</p>
+      </div>
+      <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <span className="sr-only">{t('level')}:</span>
+        {LEVEL_ICON[level]}
+        {levels[level]}
+      </p>
+    </div>
+  )
+
   return (
     <div className="flex flex-col gap-4">
       <ul aria-label={t('legend')} className="grid gap-3 sm:grid-cols-3">
@@ -163,35 +210,22 @@ export async function RulesList({
                 />
               )
             })}
+            {FUTURE.filter((f) => f.area === 'uptime').flatMap(({ rules: coming }) =>
+              coming.map((r) => future('uptime', r)),
+            )}
           </div>
         </section>
 
-        {FUTURE.map(({ area, icon, rule, level }) => (
-          <section key={area} aria-labelledby={`rules-${area}`} className="border-t">
+        {FUTURE.filter((f) => f.area !== 'uptime').map(({ area, icon, rules: coming }) => (
+          <section key={area} aria-labelledby={`rules-future-${area}`} className="border-t">
             <AreaHeader
-              id={`rules-${area}`}
+              id={`rules-future-${area}`}
               as={heading}
               icon={icon}
               title={t(`areas.${area}`)}
               note={t(`future.${area}.starts`)}
             />
-            <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-4">
-              <div className="flex max-w-md flex-col gap-1">
-                <p className="font-medium text-muted-foreground">
-                  {t(`future.${area}.${rule}.title`)}
-                </p>
-                <p className="text-sm text-muted-foreground">{t(`future.${area}.${rule}.body`)}</p>
-                <p className="text-xs text-muted-foreground">{t(`future.${area}.${rule}.wait`)}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t(`future.${area}.${rule}.params`)}
-                </p>
-              </div>
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <span className="sr-only">{t('level')}:</span>
-                {LEVEL_ICON[level]}
-                {levels[level]}
-              </p>
-            </div>
+            <div className="divide-y">{coming.map((r) => future(area, r))}</div>
           </section>
         ))}
       </Card>

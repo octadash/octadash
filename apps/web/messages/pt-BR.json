@@ -613,7 +613,11 @@
     "areas": {
       "uptime": "No ar",
       "errors": "Erros",
-      "usage": "Uso do produto"
+      "usage": "Uso do produto",
+      "traffic": "Tráfego",
+      "money": "Dinheiro",
+      "costs": "Custos",
+      "logs": "Logs"
     },
     "future": {
       "errors": {
@@ -632,10 +636,60 @@
           "body": "Cadastros longe do que esta hora e este dia da semana costumam ter.",
           "wait": "Precisa de 4 semanas de dados para aprender o normal.",
           "params": "30% abaixo do esperado, no mínimo 10 eventos"
+        },
+        "keyEventStopped": {
+          "title": "Evento importante parou",
+          "body": "Um evento que você marca como importante (checkout, cadastro) para em uma hora em que costuma acontecer.",
+          "wait": "Precisa de 4 semanas de dados para aprender quando costuma acontecer.",
+          "params": "Nenhum em 1 h quando 10 ou mais são esperados"
+        }
+      },
+      "uptime": {
+        "domainExpiring": {
+          "title": "Domínio vencendo",
+          "body": "O registro do domínio de um monitor vence em breve.",
+          "wait": "Precisa de uma consulta ao registro que o Octadash ainda não faz.",
+          "params": "30 dias antes"
+        }
+      },
+      "traffic": {
+        "starts": "Começa quando Tráfego estiver configurado em um produto",
+        "trafficStopped": {
+          "title": "Tráfego parou",
+          "body": "As visualizações caem a zero com o site no ar: o script foi removido ou quebrou.",
+          "wait": "Precisa de alguns dias de tráfego para saber o que esperar.",
+          "params": "Nenhuma em 30 min quando 20 ou mais são esperadas"
+        }
+      },
+      "money": {
+        "starts": "Começa quando Dinheiro estiver configurado em um produto",
+        "paymentsFailing": {
+          "title": "Pagamentos falhando",
+          "body": "Cobranças recusadas no gateway bem acima do normal.",
+          "wait": "Nenhum gateway conectado ainda.",
+          "params": "20% recusadas em 15 min, no mínimo 10 cobranças"
+        }
+      },
+      "costs": {
+        "starts": "Começa quando Custos estiver configurado em um produto",
+        "costRunaway": {
+          "title": "Custo disparado",
+          "body": "Gasto por hora bem acima do normal (tokens de IA, nuvem).",
+          "wait": "Nenhuma fonte de custo conectada ainda.",
+          "params": "3× o normal por 1 h"
+        }
+      },
+      "logs": {
+        "starts": "Começa quando Logs estiver configurado em um produto",
+        "logAlert": {
+          "title": "Alerta de log",
+          "body": "Uma busca que você salva encontra algo, como level=fatal.",
+          "wait": "Nenhum produto envia logs ainda.",
+          "params": "Você define a busca"
         }
       }
     },
-    "moreAreas": "Cada área traz suas regras quando chegar (Dinheiro: pagamentos falhando; Custos: gasto acima do normal). Elas aparecem aqui já configuradas, para ninguém escrever do zero."
+    "moreAreas": "Cada área traz suas regras já configuradas quando chegar, para ninguém escrever do zero. Todo tipo usa a mesma faixa, a mesma página de emergência e os mesmos canais."
   },
   "groups": {
     "newTitle": "Novo grupo",
@@ -1010,6 +1064,93 @@
       "heartbeat_missed": "{product} · {name} não rodou",
       "cert_expiring": "{product} · certificado estava perto de vencer",
       "other": "{product} · {name}"
+    }
+  },
+  "strip": {
+    "label": "Emergências",
+    "title": {
+      "monitor_down": "{product} está fora do ar",
+      "heartbeat_missed": "{product}: “{name}” não rodou",
+      "cert_expiring": "{product}: certificado vence em {days, plural, one {# dia} other {# dias}}",
+      "other": "{product}: {name}"
+    },
+    "short": {
+      "monitor_down": "{product} fora do ar",
+      "heartbeat_missed": "{product} sem heartbeat",
+      "cert_expiring": "{product} certificado vencendo",
+      "other": "{product} {name}"
+    },
+    "detail": {
+      "monitor_down": "Monitor “{name}”: {reason}",
+      "heartbeat_missed": "“{name}”: {reason}",
+      "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
+      "other": "{name}: {reason}"
+    },
+    "detailNoReason": {
+      "monitor_down": "Monitor “{name}” não responde",
+      "heartbeat_missed": "“{name}” não chamou no horário",
+      "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
+      "other": "{name}"
+    },
+    "kind": {
+      "monitor_down": "Fora do ar",
+      "heartbeat_missed": "Heartbeat perdido",
+      "cert_expiring": "Certificado vencendo",
+      "other": "Emergência"
+    },
+    "count": "{count, plural, one {# emergência} other {# emergências}}",
+    "countProducts": "{count} emergências em {products} produtos",
+    "together": "Começaram com até {minutes} min de diferença",
+    "shared": "{count} no mesmo servidor {ip}",
+    "oldest": "a mais antiga há {duration}",
+    "see": "Ver",
+    "seeAll": "Ver as {count}",
+    "seeAllShort": "Ver todas",
+    "imOnIt": "Estou cuidando",
+    "onIt": "{name} está cuidando · {duration}",
+    "onItYou": "Você está cuidando · {duration}",
+    "nobody": "Ninguém cuidando ainda",
+    "onSome": "{name} cuida de {count} de {total}",
+    "onSomeYou": "Você cuida de {count} de {total}",
+    "onSomeSeveral": "{count} de {total} assumidas",
+    "back": "{product} voltou",
+    "renewed": "{product}: certificado renovado",
+    "closedBy": "{product}: encerrada por {name}",
+    "backDetail": "Durou {duration}",
+    "backDetailTaker": "Durou {duration} · {name} estava cuidando",
+    "seeWhat": "Ver o que aconteceu",
+    "newOne": "Nova emergência: {title}",
+    "newMany": "{count, plural, one {# nova emergência} other {# novas emergências}}",
+    "watcherTitle": "O Octadash não alcança o vigia externo",
+    "watcherBody": "Se este servidor cair, ninguém será avisado. As checagens daqui continuam rodando.",
+    "list": {
+      "intro": "Primeiro as sem ninguém cuidando, depois as mais antigas. Atualiza ao vivo.",
+      "hint": "Dica: {count} delas estão no mesmo servidor {ip}",
+      "hintTogether": "Dica: {count} delas começaram com até {minutes} min de diferença e estão no mesmo servidor {ip}",
+      "reached": "O Octadash checou: {targets} respondem daqui, então a rede desta instalação está bem.",
+      "failed": "O Octadash checou: {targets} não responderam daqui, então a rede desta instalação pode ser o problema.",
+      "decide": "Pode ser um problema só; você decide. Marque as que vai resolver e aperte “Estou cuidando destas”.",
+      "filterLabel": "Mostrar",
+      "all": "Todas · {count}",
+      "nobody": "Ninguém cuidando · {count}",
+      "mine": "Minhas · {count}",
+      "sort": "Ordem",
+      "sortNobody": "Sem ninguém cuidando primeiro",
+      "sortOldest": "Mais antigas primeiro",
+      "sortNewest": "Mais novas primeiro",
+      "select": "Selecionar {product}: {kind}",
+      "open": "Abrir {product}: {kind}",
+      "taker": "{name} · {duration}",
+      "takerYou": "Você · {duration}",
+      "more": "Mais {count}",
+      "showAll": "Mostrar todas",
+      "selected": "{count, plural, one {# selecionada} other {# selecionadas}}",
+      "selectShared": "Selecionar as {count} em {ip}",
+      "clear": "Limpar",
+      "submit": "Estou cuidando destas {count}",
+      "empty": "Nada aqui. Mude o que a lista mostra acima.",
+      "and": "{first} e {last}",
+      "submitNone": "Estou cuidando destas"
     }
   }
 }
