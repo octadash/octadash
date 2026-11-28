@@ -72,3 +72,26 @@ export async function setProjectArea(
     )
     .execute()
 }
+
+/** Each area's decision for one product, with what arrived while it was not used. */
+export async function listAreaDetails(db: Db, orgId: string, projectId: string) {
+  const rows = await db
+    .selectFrom('project_area')
+    .select(['area', 'state', 'updated_at', 'discarded_events', 'discarded_at'])
+    .where('org_id', '=', orgId)
+    .where('project_id', '=', projectId)
+    .execute()
+  return new Map(
+    rows
+      .filter((row) => isArea(row.area))
+      .map((row) => [
+        row.area as AreaId,
+        {
+          state: row.state,
+          since: row.updated_at,
+          discarded: Number(row.discarded_events),
+          discardedAt: row.discarded_at,
+        },
+      ]),
+  )
+}

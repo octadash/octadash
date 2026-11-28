@@ -10,7 +10,8 @@
     "language": "Language",
     "organization": "Organization",
     "account": "Account",
-    "close": "Close"
+    "close": "Close",
+    "saved": "Saved."
   },
   "auth": {
     "setupTitle": "Welcome to Octadash",
@@ -129,7 +130,8 @@
     "pickOne": "Pick at least one emergency.",
     "writeNote": "Write the note first.",
     "writeWhy": "Say why you are closing it.",
-    "noteTooLong": "Keep it under {max} characters."
+    "noteTooLong": "Keep it under {max} characters.",
+    "nameMismatch": "The name does not match."
   },
   "areas": {
     "overview": {
@@ -1307,14 +1309,6 @@
     "intro": "Visitors, pages, where they come from and their country, from a small script. No cookies, no consent banner needed by default.",
     "sources": "Sources",
     "sourcesHint": "This product already has a source. Use it, and the same key also sends page views; or add a new one below.",
-    "platforms": {
-      "html": "HTML",
-      "nextjs": "Next.js",
-      "react": "React / Vite",
-      "wordpress": "WordPress",
-      "gtm": "Google Tag Manager",
-      "other": "Other"
-    },
     "status": {
       "receiving": "sends page views · last {time}",
       "waiting": "for Traffic · waiting for the first page view",
@@ -1379,5 +1373,148 @@
       "Bots are recognized and counted apart."
     ],
     "noSource": "No source for Traffic yet. Add one to get its code."
+  },
+  "platforms": {
+    "html": "HTML",
+    "nextjs": "Next.js",
+    "react": "React / Vite",
+    "wordpress": "WordPress",
+    "gtm": "Google Tag Manager",
+    "node": "Node.js",
+    "python": "Python",
+    "dotnet": ".NET",
+    "java": "Java",
+    "go": "Go",
+    "php": "PHP",
+    "ruby": "Ruby",
+    "mobile": "Mobile app",
+    "other": "Other"
+  },
+  "productSettings": {
+    "nav": "Product settings",
+    "general": "General",
+    "sources": "Sources",
+    "rules": "Alert rules",
+    "footer": "Monitors are in <uptime>Uptime</uptime>. Channels, members and the organization's rules are in <settings>Settings</settings>.",
+    "generalPage": {
+      "title": "General",
+      "intro": "Name, areas and what happens to {name}.",
+      "product": "Product",
+      "name": "Name",
+      "nameHint": "Shows in the picker, alerts and the TV mode.",
+      "address": "Address in Octadash",
+      "addressHint": "Changes when you rename; old links keep working.",
+      "saved": "Saved."
+    },
+    "areas": {
+      "title": "Areas",
+      "infoLabel": "About areas",
+      "info": "An area is on when it has a source or a monitor. Not used hides it from this product's pages, cards and alerts. Data that still arrives for an area not used is not stored, only counted, so a forgotten SDK shows up here.",
+      "state": {
+        "on": "On",
+        "notSetUp": "Not set up",
+        "notUsed": "Not used",
+        "soon": "Coming later"
+      },
+      "manage": "Manage",
+      "setUp": "Set up",
+      "useAgain": "Use again",
+      "monitors": "{count, plural, one {# monitor} other {# monitors}}",
+      "sources": "{count, plural, one {1 source: {names}} other {# sources: {names}}}",
+      "nothing": "Nothing connected yet",
+      "notUsed": "Marked not used",
+      "discarded": "{count, plural, one {# event} other {# events}} arrived since, the last {time}. They were not stored.",
+      "soonBody": "This area is not built yet."
+    },
+    "rulesCard": {
+      "title": "Alert rules",
+      "same": "{name} uses the organization's rules.",
+      "changed": "{name} uses the organization's rules, {count, plural, one {with # changed here} other {with # changed here}}.",
+      "open": "Alert rules"
+    },
+    "rulesPage": {
+      "title": "Alert rules",
+      "intro": "{name} follows the organization's rules. Change one here and it holds for this product only."
+    },
+    "danger": {
+      "title": "Danger zone",
+      "body": "Delete {name} with {sources, plural, =0 {no sources} one {# source} other {# sources}}, {monitors, plural, =0 {no monitors} one {# monitor} other {# monitors}} and all their data. Keys stop working at once. This cannot be undone; you will be asked to type the name.",
+      "dialogBody": "Every source, monitor, emergency and all data of {name} are deleted. Keys stop working at once.",
+      "typeName": "Type {name} to confirm",
+      "mismatch": "The name does not match."
+    },
+    "sourcesPage": {
+      "title": "Sources",
+      "intro": "The parts of {name} that send data to Octadash, each with its own key.",
+      "infoLabel": "What is a source?",
+      "info": "One part of the product that sends data: the site, the API, the mobile app. Each has its own key, so you see which part stopped sending and can swap one key without touching the others. You don't pick areas here: one source feeds every area its data belongs to. A page view goes to Traffic, any other event to Product usage.",
+      "add": "Add source",
+      "columns": {
+        "source": "Source",
+        "areas": "Areas",
+        "key": "Key",
+        "last": "Last data"
+      },
+      "nothingYet": "Nothing yet",
+      "receiving": "Receiving · {time}",
+      "quiet": "Nothing for {time}",
+      "never": "Never received",
+      "open": "Open {name}",
+      "empty": "No sources yet. Setting up an area such as Traffic adds one, or add it here.",
+      "also": "Also sending data to {name}",
+      "alsoBody": "These don't use a key, so they are managed in their area.",
+      "monitors": "{count, plural, one {# monitor checks} other {# monitors check}} the product from outside",
+      "monitorsLink": "Monitors",
+      "addTitle": "Add source",
+      "addBody": "A name and where it runs. It gets its own key; the areas fill in as data arrives.",
+      "name": "Name",
+      "namePlaceholder": "API",
+      "platform": "Platform",
+      "create": "Add source"
+    },
+    "source": {
+      "back": "Sources",
+      "created": "{platform} · created {date}",
+      "installCode": "Install code",
+      "sends": "What it sends",
+      "last24": "Last 24 hours",
+      "pageviews": "page views",
+      "events": "events",
+      "nothingSent": "nothing sent",
+      "soon": "coming later",
+      "keyTitle": "Key",
+      "keyBody": "The key only sends data; it can't read anything. That is why it is fine inside a web page.",
+      "key": "Key",
+      "dsn": "Sentry DSN",
+      "dsnInfoLabel": "About the Sentry DSN",
+      "dsnInfo": "For code that already uses a Sentry SDK: put this DSN in place of the Sentry one and errors come to Octadash, with nothing else to change. It carries the same key, so rotating the key changes the DSN too.",
+      "ingest": "Ingest address",
+      "rotate": "Rotate key",
+      "oldKey": "Old key",
+      "stopsIn": "Stops working {time}",
+      "stopNow": "Stop now",
+      "rotateTitle": "Rotate the key of {name}",
+      "rotateBody": "A new key is made now. The old one keeps working for the time you pick, so you can deploy the new key first and lose nothing.",
+      "rotateWhen": "Old key stops working",
+      "when": {
+        "now": "Now",
+        "hour": "In 1 hour",
+        "day": "In 24 hours",
+        "week": "In 7 days"
+      },
+      "leakTitle": "If the key leaked, pick Now",
+      "leakBody": "Anyone with the key can send fake data to this product. Apps still on the old key stop sending until you deploy the new one.",
+      "afterTitle": "After rotating",
+      "afterBody": "The page shows both keys: the new one to copy, and the old one with when it stops and a \"Stop now\" button. The DSN changes with the key.",
+      "detailsTitle": "Name and platform",
+      "nameHint": "Shows in alerts: \"{product} · {name}\".",
+      "platformHint": "Only changes the install code shown.",
+      "trafficTitle": "Traffic options",
+      "localNote": "Visits from localhost are an option of the install code.",
+      "deleteTitle": "Delete source",
+      "deleteBody": "Data already received stays. From then on, data with this key is refused.",
+      "deleteConfirmTitle": "Delete {name}?",
+      "delete": "Delete source"
+    }
   }
 }

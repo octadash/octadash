@@ -212,3 +212,58 @@ export function listTrafficSources(db: Db, orgId: string) {
     .orderBy('created_at')
     .execute()
 }
+
+/** One source of the organization, with its current key; undefined when it is not theirs. */
+export async function getSource(db: Db, orgId: string, sourceId: string) {
+  const source = await db
+    .selectFrom('source')
+    .select(['id', 'project_id'])
+    .where('org_id', '=', orgId)
+    .where('id', '=', sourceId)
+    .executeTakeFirst()
+  if (!source) return undefined
+  return (await listSources(db, orgId, source.project_id)).find((s) => s.id === sourceId)
+}
+
+/** Name and platform only: the areas come from what the source sends. */
+export async function renameSource(
+  db: Db,
+  orgId: string,
+  sourceId: string,
+  input: { name: string; platform: string },
+) {
+  const result = await db
+    .updateTable('source')
+    .set({ name: input.name.trim(), platform: input.platform.trim(), updated_at: new Date() })
+    .where('org_id', '=', orgId)
+    .where('id', '=', sourceId)
+    .executeTakeFirst()
+  return result.numUpdatedRows > 0n
+}
+
+/**
+ * The keys of a source that still work, newest first: the current one
+ * (`revoked_at` null) and old ones still inside their overlap after a rotation.
+ */
+export function listSourceKeys(db: Db, orgId: string, sourceId: string, now = new Date()) {
+  return db
+    .selectFrom('source_key')
+    .select(['id', 'public_key', 'created_at', 'revoked_at'])
+    .where('org_id', '=', orgId)
+    .where('source_id', '=', sourceId)
+    .where((eb) => eb.or([eb('revoked_at', 'is', null), eb('revoked_at', '>', now)]))
+    .orderBy('created_at', 'desc')
+    .execute()
+}
+
+/** "Stop now" on an old key still inside its overlap. The current key cannot be stopped this way. */
+export async function stopOldKey(db: Db, orgId: string, keyId: string, now = new Date()) {
+  const result = await db
+    .updateTable('source_key')
+    .set({ revoked_at: now })
+    .where('org_id', '=', orgId)
+    .where('id', '=', keyId)
+    .where('revoked_at', '>', now)
+    .executeTakeFirst()
+  return result.numUpdatedRows > 0n
+}

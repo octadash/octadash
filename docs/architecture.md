@@ -254,8 +254,14 @@ usage) with one key. The worker routes each batch:
   (`discarded_events`) so its card can say it is receiving data while off. The
   ingest stays a thin, fast door with no lookup per area.
 
-Keys from before sources (product keys) keep working, without a source, until
-the setup screens create sources; then they are dropped.
+Keys from before sources (product keys) became a source named "Main" in
+migration 0017, so every key belongs to a source; the keys did not change. A
+new product starts with no key: its sources, and their keys, come from each
+area's setup or from Product settings › Sources.
+
+A product's address follows its name. Renaming keeps the old address in
+`project_slug_alias`, so links and bookmarks keep working; a product that takes
+the address later wins over the old one.
 
 Traffic needs no cookie. The browser script (`/o/v1/script.js`, served by the
 ingest) sends `$pageview` with `$current_url` and `$referrer`, PostHog's names,

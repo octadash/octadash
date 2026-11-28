@@ -10,7 +10,8 @@ export interface SettingsSection {
   title: string
   /** "owner": shown next to the title for sections only owners see. */
   note?: string
-  items: { href: string; label: string; keywords?: string }[]
+  /** `exact`: active only on that page, for an item whose pages nest under others. */
+  items: { href: string; label: string; keywords?: string; exact?: boolean }[]
 }
 
 /**
@@ -21,10 +22,13 @@ export function SettingsNav({
   sections,
   labels,
   footer,
+  search = true,
 }: {
   sections: SettingsSection[]
-  labels: { nav: string; search: string; none: string }
+  labels: { nav: string; search?: string; none?: string }
   footer: ReactNode
+  /** A search box over the menu; a short menu does without. */
+  search?: boolean
 }) {
   const pathname = usePathname()
   const [query, setQuery] = useState('')
@@ -44,17 +48,19 @@ export function SettingsNav({
 
   return (
     <nav aria-label={labels.nav} className="flex flex-col gap-4 md:w-56 md:shrink-0">
-      <label className="flex h-9 items-center gap-2 rounded-lg border border-border px-2.5 text-sm text-muted-foreground focus-within:border-ring">
-        <SearchIcon className="size-4" aria-hidden />
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={labels.search}
-          aria-label={labels.search}
-          className="min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
-        />
-      </label>
+      {search && (
+        <label className="flex h-9 items-center gap-2 rounded-lg border border-border px-2.5 text-sm text-muted-foreground focus-within:border-ring">
+          <SearchIcon className="size-4" aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={labels.search}
+            aria-label={labels.search}
+            className="min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+          />
+        </label>
+      )}
       {shown.length === 0 && <p className="px-2.5 text-sm text-muted-foreground">{labels.none}</p>}
       {shown.map((section) => (
         <div key={section.title} className="flex flex-col gap-0.5">
@@ -66,7 +72,8 @@ export function SettingsNav({
           </h2>
           <ul className="flex flex-col gap-0.5">
             {section.items.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+              const active =
+                pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`))
               return (
                 <li key={item.href}>
                   <Link

@@ -10,7 +10,8 @@
     "language": "Idioma",
     "organization": "Organização",
     "account": "Conta",
-    "close": "Fechar"
+    "close": "Fechar",
+    "saved": "Salvo."
   },
   "auth": {
     "setupTitle": "Boas-vindas ao Octadash",
@@ -129,7 +130,8 @@
     "pickOne": "Escolha pelo menos uma emergência.",
     "writeNote": "Escreva a nota primeiro.",
     "writeWhy": "Diga por que está encerrando.",
-    "noteTooLong": "Use menos de {max} caracteres."
+    "noteTooLong": "Use menos de {max} caracteres.",
+    "nameMismatch": "O nome não confere."
   },
   "areas": {
     "overview": {
@@ -1307,14 +1309,6 @@
     "intro": "Visitantes, páginas, de onde vêm e o país, com um script pequeno. Sem cookies e, por padrão, sem banner de consentimento.",
     "sources": "Origens",
     "sourcesHint": "Este produto já tem uma origem. Use-a, e a mesma chave passa a enviar visualizações também; ou adicione uma nova abaixo.",
-    "platforms": {
-      "html": "HTML",
-      "nextjs": "Next.js",
-      "react": "React / Vite",
-      "wordpress": "WordPress",
-      "gtm": "Google Tag Manager",
-      "other": "Outro"
-    },
     "status": {
       "receiving": "envia visualizações · última {time}",
       "waiting": "para Tráfego · esperando a primeira visualização",
@@ -1379,5 +1373,148 @@
       "Bots são reconhecidos e contados à parte."
     ],
     "noSource": "Ainda não há origem para Tráfego. Adicione uma para ver o código."
+  },
+  "platforms": {
+    "html": "HTML",
+    "nextjs": "Next.js",
+    "react": "React / Vite",
+    "wordpress": "WordPress",
+    "gtm": "Google Tag Manager",
+    "node": "Node.js",
+    "python": "Python",
+    "dotnet": ".NET",
+    "java": "Java",
+    "go": "Go",
+    "php": "PHP",
+    "ruby": "Ruby",
+    "mobile": "App de celular",
+    "other": "Outro"
+  },
+  "productSettings": {
+    "nav": "Configurações do produto",
+    "general": "Geral",
+    "sources": "Origens",
+    "rules": "Regras de alerta",
+    "footer": "Os monitores ficam em <uptime>No ar</uptime>. Canais, membros e as regras da organização ficam em <settings>Configurações</settings>.",
+    "generalPage": {
+      "title": "Geral",
+      "intro": "Nome, áreas e o que acontece com {name}.",
+      "product": "Produto",
+      "name": "Nome",
+      "nameHint": "Aparece no seletor, nos alertas e no modo TV.",
+      "address": "Endereço no Octadash",
+      "addressHint": "Muda quando você renomeia; os links antigos continuam funcionando.",
+      "saved": "Salvo."
+    },
+    "areas": {
+      "title": "Áreas",
+      "infoLabel": "Sobre as áreas",
+      "info": "Uma área está ligada quando tem uma origem ou um monitor. Não usar esconde a área das páginas, cards e alertas deste produto. Dados que ainda chegam para uma área não usada não são guardados, só contados, para um SDK esquecido aparecer aqui.",
+      "state": {
+        "on": "Ligada",
+        "notSetUp": "Não configurada",
+        "notUsed": "Não usada",
+        "soon": "Em breve"
+      },
+      "manage": "Gerenciar",
+      "setUp": "Configurar",
+      "useAgain": "Usar de novo",
+      "monitors": "{count, plural, one {# monitor} other {# monitores}}",
+      "sources": "{count, plural, one {1 origem: {names}} other {# origens: {names}}}",
+      "nothing": "Nada conectado ainda",
+      "notUsed": "Marcada como não usada",
+      "discarded": "{count, plural, one {# evento chegou} other {# eventos chegaram}} desde então, o último {time}. Não foram guardados.",
+      "soonBody": "Esta área ainda não foi construída."
+    },
+    "rulesCard": {
+      "title": "Regras de alerta",
+      "same": "{name} usa as regras da organização.",
+      "changed": "{name} usa as regras da organização, {count, plural, one {com # alterada aqui} other {com # alteradas aqui}}.",
+      "open": "Regras de alerta"
+    },
+    "rulesPage": {
+      "title": "Regras de alerta",
+      "intro": "{name} segue as regras da organização. Mude uma aqui e ela vale só para este produto."
+    },
+    "danger": {
+      "title": "Zona de perigo",
+      "body": "Excluir {name} com {sources, plural, =0 {nenhuma origem} one {# origem} other {# origens}}, {monitors, plural, =0 {nenhum monitor} one {# monitor} other {# monitores}} e todos os dados. As chaves param de funcionar na hora. Não dá para desfazer; vamos pedir que você digite o nome.",
+      "dialogBody": "Todas as origens, monitores, emergências e dados de {name} são excluídos. As chaves param de funcionar na hora.",
+      "typeName": "Digite {name} para confirmar",
+      "mismatch": "O nome não confere."
+    },
+    "sourcesPage": {
+      "title": "Origens",
+      "intro": "As partes de {name} que mandam dados para o Octadash, cada uma com sua chave.",
+      "infoLabel": "O que é uma origem?",
+      "info": "Uma parte do produto que manda dados: o site, a API, o app de celular. Cada uma tem sua chave, então você vê qual parte parou de mandar e troca uma chave sem mexer nas outras. Você não escolhe áreas aqui: uma origem alimenta todas as áreas a que seus dados pertencem. Uma visualização vai para Tráfego, qualquer outro evento para Uso do produto.",
+      "add": "Adicionar origem",
+      "columns": {
+        "source": "Origem",
+        "areas": "Áreas",
+        "key": "Chave",
+        "last": "Último dado"
+      },
+      "nothingYet": "Nada ainda",
+      "receiving": "Recebendo · {time}",
+      "quiet": "Nada há {time}",
+      "never": "Nunca recebeu",
+      "open": "Abrir {name}",
+      "empty": "Nenhuma origem ainda. Configurar uma área como Tráfego cria uma, ou adicione aqui.",
+      "also": "Também mandam dados para {name}",
+      "alsoBody": "Estes não usam chave, então são gerenciados na área deles.",
+      "monitors": "{count, plural, one {# monitor verifica} other {# monitores verificam}} o produto de fora",
+      "monitorsLink": "Monitores",
+      "addTitle": "Adicionar origem",
+      "addBody": "Um nome e onde roda. Ela ganha uma chave própria; as áreas se preenchem conforme os dados chegam.",
+      "name": "Nome",
+      "namePlaceholder": "API",
+      "platform": "Plataforma",
+      "create": "Adicionar origem"
+    },
+    "source": {
+      "back": "Origens",
+      "created": "{platform} · criada em {date}",
+      "installCode": "Código de instalação",
+      "sends": "O que ela manda",
+      "last24": "Últimas 24 horas",
+      "pageviews": "visualizações",
+      "events": "eventos",
+      "nothingSent": "nada enviado",
+      "soon": "em breve",
+      "keyTitle": "Chave",
+      "keyBody": "A chave só manda dados; não lê nada. Por isso pode ficar dentro de uma página web.",
+      "key": "Chave",
+      "dsn": "DSN do Sentry",
+      "dsnInfoLabel": "Sobre o DSN do Sentry",
+      "dsnInfo": "Para código que já usa um SDK do Sentry: coloque este DSN no lugar do Sentry e os erros vêm para o Octadash, sem mudar mais nada. Ele leva a mesma chave, então trocar a chave muda o DSN também.",
+      "ingest": "Endereço de envio",
+      "rotate": "Trocar chave",
+      "oldKey": "Chave antiga",
+      "stopsIn": "Para de funcionar {time}",
+      "stopNow": "Parar agora",
+      "rotateTitle": "Trocar a chave de {name}",
+      "rotateBody": "Uma chave nova é criada agora. A antiga continua funcionando pelo tempo que você escolher, para você publicar a nova antes e não perder nada.",
+      "rotateWhen": "A chave antiga para de funcionar",
+      "when": {
+        "now": "Agora",
+        "hour": "Em 1 hora",
+        "day": "Em 24 horas",
+        "week": "Em 7 dias"
+      },
+      "leakTitle": "Se a chave vazou, escolha Agora",
+      "leakBody": "Qualquer um com a chave pode mandar dados falsos para este produto. Apps ainda com a chave antiga param de mandar até você publicar a nova.",
+      "afterTitle": "Depois de trocar",
+      "afterBody": "A página mostra as duas chaves: a nova para copiar, e a antiga com quando ela para e um botão \"Parar agora\". O DSN muda com a chave.",
+      "detailsTitle": "Nome e plataforma",
+      "nameHint": "Aparece nos alertas: \"{product} · {name}\".",
+      "platformHint": "Só muda o código de instalação mostrado.",
+      "trafficTitle": "Opções de Tráfego",
+      "localNote": "Visitas de localhost são uma opção do código de instalação.",
+      "deleteTitle": "Excluir origem",
+      "deleteBody": "Os dados já recebidos ficam. A partir daí, dados com esta chave são recusados.",
+      "deleteConfirmTitle": "Excluir {name}?",
+      "delete": "Excluir origem"
+    }
   }
 }

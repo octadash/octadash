@@ -58,6 +58,7 @@ export function TrafficInstall({
   trafficHref: string
 }) {
   const t = useTranslations('trafficSetup')
+  const tp = useTranslations('platforms')
   const locale = useLocale()
   const ids = useId()
   const [tab, setTab] = useState<TrafficPlatform>(platform)
@@ -121,7 +122,7 @@ export function TrafficInstall({
           >
             {TRAFFIC_PLATFORMS.map((p) => (
               <TabsTrigger key={p} value={p} className="h-8 flex-none px-2.5">
-                {t(`platforms.${p}`)}
+                {tp(p)}
               </TabsTrigger>
             ))}
           </TabsList>
