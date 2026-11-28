@@ -3345,7 +3345,7 @@
   },
   "apiTokens": {
     "title": "API tokens",
-    "intro": "Read-only tokens of this organization. With one, an AI assistant such as Claude or Cursor reads uptime, emergencies, traffic and logs through Octadash's MCP server. A token can read every product and change nothing.",
+    "intro": "Tokens of this organization for Octadash's MCP server. With one, an AI assistant such as Claude or Cursor works with your products. You choose what each token may touch; the assistant sees only the tools its token allows, and you answer for what it does with them.",
     "newTitle": "New token",
     "newIntro": "The MCP server answers at {url}.",
     "name": "Name",
@@ -3363,6 +3363,41 @@
     "neverUsed": "never used",
     "revoke": "Revoke",
     "revokeTitle": "Revoke {name}?",
-    "revokeBody": "Whatever uses it stops reading Octadash at once. This cannot be undone; make a new token if needed."
+    "revokeBody": "Whatever uses it stops reading Octadash at once. This cannot be undone; make a new token if needed.",
+    "access": "What it may touch",
+    "accessHint": "Start from a preset, then change any item. Write includes read. Items with no tool yet keep their choice for when their tools arrive.",
+    "presets": {
+      "read": "Read only",
+      "setup": "Setup with AI"
+    },
+    "custom": "Changed item by item.",
+    "customBadge": "Custom",
+    "resource": "Item",
+    "level": "Access",
+    "levels": {
+      "none": "No access",
+      "read": "Read",
+      "write": "Write"
+    },
+    "delete": "Delete",
+    "deleteHint": "Lets the assistant delete in that item. Off by default and only where it can write. Deleting cannot be undone.",
+    "resources": {
+      "products": "Products and groups",
+      "sources": "Sources",
+      "keys": "Keys and install code",
+      "monitors": "Monitors (Uptime)",
+      "alerts": "Emergencies and alert rules",
+      "traffic": "Traffic",
+      "usage": "Product usage",
+      "key_events": "Key events and funnels",
+      "errors": "Errors",
+      "logs": "Logs",
+      "money": "Money",
+      "costs": "Costs",
+      "settings": "Settings (members, channels)"
+    },
+    "nothing": "Choose at least one item it can read.",
+    "writes": "Writes: {items}",
+    "withDelete": "{item} (and deletes)"
   }
 }

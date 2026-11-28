@@ -8,6 +8,7 @@ import {
 } from './api-tokens'
 import { createDb } from './client'
 import { migrateToLatest } from './migrate'
+import { TOKEN_PRESETS } from './token-scopes'
 
 const url = process.env.DATABASE_URL
 const org = '00000000-0000-4000-8000-0000000003a1'
@@ -26,9 +27,12 @@ describe.skipIf(!url)('API tokens (needs DATABASE_URL)', () => {
   })
 
   it('finds the organization of a working token, keeps only a hash, and stops a revoked one', async () => {
-    const token = await createApiToken(db, org, null, 'Claude')
+    const token = await createApiToken(db, org, null, 'Claude', TOKEN_PRESETS.read)
     expect(isApiToken(token)).toBe(true)
-    expect(await findApiToken(db, token)).toEqual({ orgId: org })
+    expect(await findApiToken(db, token)).toMatchObject({
+      orgId: org,
+      scopes: { levels: { logs: 'read' } },
+    })
     expect(await findApiToken(db, `${token.slice(0, -1)}x`)).toBeNull()
     expect(await findApiToken(db, 'not a token')).toBeNull()
 
@@ -41,9 +45,20 @@ describe.skipIf(!url)('API tokens (needs DATABASE_URL)', () => {
 
     // Another organization cannot revoke it.
     await revokeApiToken(db, other, row?.id ?? '')
-    expect(await findApiToken(db, token)).toEqual({ orgId: org })
+    expect(await findApiToken(db, token)).toMatchObject({ orgId: org })
     await revokeApiToken(db, org, row?.id ?? '')
     expect(await findApiToken(db, token)).toBeNull()
     expect((await listApiTokens(db, org))[0]?.revoked_at).toBeInstanceOf(Date)
+  })
+
+  it('keeps what each token may touch', async () => {
+    const token = await createApiToken(db, org, null, 'Claude Code', {
+      levels: { products: 'write', logs: 'read' },
+      delete: ['products'],
+    })
+    expect((await findApiToken(db, token))?.scopes).toEqual({
+      levels: { products: 'write', logs: 'read' },
+      delete: ['products'],
+    })
   })
 })

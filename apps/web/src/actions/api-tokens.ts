@@ -1,15 +1,30 @@
 'use server'
 
-import { createApiToken, revokeApiToken } from '@octadash/db'
+import {
+  cleanScopes,
+  createApiToken,
+  isEmptyScopes,
+  revokeApiToken,
+  type TokenScopes,
+} from '@octadash/db'
 import { revalidatePath } from 'next/cache'
 import type { FormState } from '@/components/action-form'
 import { services } from '@/server/context'
 import { requireManager } from '@/server/session'
 
-/** A new read-only token. It comes back once, to copy; only its hash is kept. */
-export async function createApiTokenAction(name: string): Promise<{ token: string }> {
+/**
+ * A new token with what it may touch, resource by resource. It comes back
+ * once, to copy; only its hash is kept. A token that may touch nothing is
+ * refused.
+ */
+export async function createApiTokenAction(
+  name: string,
+  scopes: TokenScopes,
+): Promise<{ token: string }> {
   const { org, user } = await requireManager()
-  const token = await createApiToken(services().db, org.id, user.id, name)
+  const clean = cleanScopes(scopes)
+  if (isEmptyScopes(clean)) throw new Error('A token needs at least one item it can read.')
+  const token = await createApiToken(services().db, org.id, user.id, name, clean)
   revalidatePath('/settings/api-tokens')
   return { token }
 }

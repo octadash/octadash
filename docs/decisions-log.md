@@ -559,3 +559,14 @@ The maintainer reviewed the night's decisions that change the product or its ris
   the official SDK and its session and stream handling would add more than it
   saves. Tokens are per organization, read every product and are revoked in
   Octadash settings > API tokens.
+- **Token scopes item by item** (asked by the owner, as PostHog's API keys).
+  Each token gives every item no access, read or write; delete is a separate
+  permission, off by default and only where it can write. Presets "Read only"
+  and "Setup with AI". Tokens made before read everything. The MCP server lists
+  only the tools a token's scopes allow, so whoever makes the token decides
+  what the assistant can do.
+- **The setup skill lives in its own repository**, `octadash/skills`, as
+  Sentry (`getsentry/sentry-for-ai`) and PostHog (`PostHog/skills`) do: the
+  Agent Skills format (a folder with `SKILL.md`) installs in Claude Code,
+  Codex, Cursor and others with `npx skills add octadash/skills`, and the same
+  repository is a Claude Code plugin marketplace. MIT, like `@octadash/node`.

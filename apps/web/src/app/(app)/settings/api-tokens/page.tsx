@@ -1,4 +1,4 @@
-import { listApiTokens } from '@octadash/db'
+import { allows, listApiTokens, presetOf, TOKEN_RESOURCES, type TokenScopes } from '@octadash/db'
 import type { Metadata } from 'next'
 import { getFormatter, getTranslations } from 'next-intl/server'
 import { NewApiToken, RevokeApiToken } from '@/components/api-tokens'
@@ -13,8 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Read-only tokens of the organization: an AI assistant (Claude, Cursor) reads
- * uptime, emergencies, traffic and logs through the MCP server with one.
+ * Tokens of the organization: an AI assistant (Claude, Cursor) reads uptime,
+ * emergencies, traffic and logs through the MCP server with one, and a setup
+ * token also lets it put Octadash in a project.
  */
 export default async function ApiTokensPage() {
   const { org } = await requireManager()
@@ -25,6 +26,11 @@ export default async function ApiTokensPage() {
     getTranslations('common'),
     getFormatter(),
   ])
+  const accessLabel = (scopes: TokenScopes) => {
+    const preset = presetOf(scopes)
+    return preset ? t(`presets.${preset}`) : t('customBadge')
+  }
+  const writes = (scopes: TokenScopes) => TOKEN_RESOURCES.filter((r) => allows(scopes, r, 'write'))
   const mcpUrl = `${env.OCTADASH_URL.replace(/\/+$/, '')}/api/mcp`
 
   return (
@@ -48,7 +54,20 @@ export default async function ApiTokensPage() {
               name: t('name'),
               nameHint: t('nameHint'),
               namePlaceholder: t('namePlaceholder'),
+              access: t('access'),
+              accessHint: t('accessHint'),
+              presets: { read: t('presets.read'), setup: t('presets.setup') },
+              custom: t('custom'),
+              resource: t('resource'),
+              level: t('level'),
+              levels: { none: t('levels.none'), read: t('levels.read'), write: t('levels.write') },
+              delete: t('delete'),
+              deleteHint: t('deleteHint'),
+              resources: Object.fromEntries(
+                TOKEN_RESOURCES.map((r) => [r, t(`resources.${r}`)]),
+              ) as Record<(typeof TOKEN_RESOURCES)[number], string>,
               create: t('create'),
+              nothing: t('nothing'),
               token: t('token'),
               once: t('once'),
               command: t('command'),
@@ -79,6 +98,7 @@ export default async function ApiTokensPage() {
                     <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                       {token.name}
                       <code className="text-xs text-muted-foreground">{token.prefix}…</code>
+                      <Badge variant="secondary">{accessLabel(token.scopes)}</Badge>
                       {token.revoked_at && <Badge variant="outline">{t('revoked')}</Badge>}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -91,6 +111,20 @@ export default async function ApiTokensPage() {
                         ? t('used', { when: format.relativeTime(token.last_used_at) })
                         : t('neverUsed')}
                     </span>
+                    {writes(token.scopes).length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {t('writes', {
+                          items: format.list(
+                            writes(token.scopes).map((r) =>
+                              token.scopes.delete.includes(r)
+                                ? t('withDelete', { item: t(`resources.${r}`) })
+                                : t(`resources.${r}`),
+                            ),
+                            { type: 'conjunction' },
+                          ),
+                        })}
+                      </span>
+                    )}
                   </div>
                   {!token.revoked_at && (
                     <RevokeApiToken

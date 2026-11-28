@@ -1,27 +1,55 @@
 import {
+  allows,
   compileLogQuery,
+  createProject,
+  createSource,
+  hasPageScript,
   listGroups,
   listOpenIncidents,
   listOrgMonitors,
   listProjects,
+  listSources,
   monitorStats,
   parseLogQuery,
   searchLogs,
+  sentryDsn,
+  sourcesLastData,
+  type TokenResource,
+  type TokenScopes,
   trafficBreakdown,
   trafficSummary,
 } from '@octadash/db'
+import {
+  errorSnippet,
+  isErrorPlatform,
+  isTrafficPlatform,
+  LOG_SOURCE_PLATFORMS,
+  logSnippet,
+  logTabOf,
+  tabOf,
+  trafficSnippet,
+  usageSnippet,
+} from '@octadash/snippets'
 import { z } from 'zod'
 import type { McpTool } from '@/lib/mcp'
+import { SOURCE_PLATFORMS } from '@/lib/sources'
 import { services } from './context'
 
 /**
- * The read-only tools of Octadash's MCP server, one set per area. Each takes
- * an optional product slug; without it, every product of the organization.
- * Every step of the roadmap adds its own here.
+ * The tools of Octadash's MCP server, one set per area. Each reading tool
+ * takes an optional product slug; without it, every product of the
+ * organization. Every step of the roadmap adds its own here. The setup tools
+ * (`writes`) only add a product or a source and read install code, for a
+ * coding assistant putting Octadash in a project; only a setup token sees them.
  */
 
 export interface McpContext {
   orgId: string
+}
+
+/** A tool with the scopes it needs: a token sees it only when it has them all. */
+type Tool = McpTool<McpContext> & {
+  needs: [TokenResource, 'read' | 'write' | 'delete'][]
 }
 
 type Project = Awaited<ReturnType<typeof listProjects>>[number]
@@ -47,9 +75,10 @@ async function productsOf(orgId: string, chosen: string | undefined) {
 const slugOf = (all: Project[], id: string) => all.find((p) => p.id === id)?.slug ?? id
 const pct = (value: number | null) => (value === null ? null : Math.round(value * 10_000) / 100)
 
-export const MCP_TOOLS: McpTool<McpContext>[] = [
+export const MCP_TOOLS: Tool[] = [
   {
     name: 'list_products',
+    needs: [['products', 'read']],
     title: 'Products and groups',
     description:
       'The products of the organization (slug and name) and the saved groups of products. Other tools take a product slug.',
@@ -69,6 +98,7 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
   },
   {
     name: 'uptime_status',
+    needs: [['monitors', 'read']],
     title: 'Uptime',
     description:
       'Every monitor (website, health endpoint, heartbeat) with its state now, uptime and median response time over the last 24 hours and 30 days, and days left on the certificate.',
@@ -103,6 +133,7 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
   },
   {
     name: 'open_emergencies',
+    needs: [['alerts', 'read']],
     title: 'Open emergencies and signals',
     description:
       'What is open right now: emergencies (a site down, a missed heartbeat, an error spike, a key event that stopped, failing payments, runaway costs) and signals, with when each started and whether someone is on it.',
@@ -126,6 +157,7 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
   },
   {
     name: 'traffic',
+    needs: [['traffic', 'read']],
     title: 'Traffic',
     description:
       'Visitors and page views over the last days, against the days before, with the top pages, sources, channels and countries. Bots are counted apart.',
@@ -188,6 +220,7 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
   },
   {
     name: 'search_logs',
+    needs: [['logs', 'read']],
     title: 'Search logs',
     description:
       'Log lines, newest first, with the same search the Logs page takes: words, "exact phrases", level:error, service:api, any attribute as key:value, and - to exclude. Personal data was already masked when the line arrived.',
@@ -232,4 +265,240 @@ export const MCP_TOOLS: McpTool<McpContext>[] = [
       }
     },
   },
+  {
+    name: 'list_sources',
+    needs: [['sources', 'read']],
+    title: 'Sources and their data',
+    description:
+      'The sources of one product (each app, site or server that sends data), with where it runs, the areas it feeds and when it last sent each kind of data in the last 30 days. Use it to check that the first data arrived after installing.',
+    input: z.object({
+      product: z.string().describe('Product slug or name, from list_products.'),
+    }),
+    async run(input, { orgId }) {
+      const { db, clickhouse } = services()
+      const project = await oneProduct(orgId, String(input.product))
+      const now = new Date()
+      const [sources, last] = await Promise.all([
+        listSources(db, orgId, project.id),
+        sourcesLastData(clickhouse, orgId, [project.id], new Date(now.getTime() - 30 * 86_400_000)),
+      ])
+      return {
+        product: project.slug,
+        sources: sources.map((s) => {
+          const seen = last.get(s.id)
+          return {
+            id: s.id,
+            name: s.name,
+            platform: s.platform,
+            areas: s.areas,
+            lastData: seen
+              ? {
+                  any: seen.any,
+                  pageview: seen.pageview ?? null,
+                  event: seen.event ?? null,
+                  error: seen.error ?? null,
+                  log: seen.log ?? null,
+                }
+              : null,
+          }
+        }),
+      }
+    },
+  },
+  {
+    name: 'create_product',
+    needs: [['products', 'write']],
+    title: 'Create a product',
+    description:
+      'Creates a product by name, or returns the one with that name if it exists (existed: true). A product is one thing you sell or run (a SaaS, a site) and holds its sources.',
+    input: z.object({
+      name: z
+        .string()
+        .trim()
+        .min(1)
+        .max(80)
+        .describe('The product name people know, such as "Pagebird".'),
+    }),
+    writes: true,
+    async run(input, { orgId }) {
+      const { db, env } = services()
+      const name = String(input.name).trim()
+      const all = await listProjects(db, orgId)
+      const found = all.find((p) => p.name.toLowerCase() === name.toLowerCase())
+      const project = found ?? (await createProject(db, orgId, { name }))
+      return {
+        existed: Boolean(found),
+        slug: project.slug,
+        name: project.name,
+        url: `${panelUrl(env.OCTADASH_URL)}/p/${project.slug}`,
+      }
+    },
+  },
+  {
+    name: 'create_source',
+    needs: [['sources', 'write']],
+    title: 'Add a source',
+    description:
+      'Adds a source to a product: one app, site or server that sends data, with its own key. Returns the existing one when the product already has a source with that name (existed: true). Then call source_setup for its key and code.',
+    input: z.object({
+      product: z.string().describe('Product slug or name, from list_products or create_product.'),
+      name: z
+        .string()
+        .trim()
+        .min(1)
+        .max(80)
+        .describe('What it is, so people tell sources apart: "Site", "App", "API", "Worker".'),
+      platform: z
+        .enum(SOURCE_PLATFORMS)
+        .describe(
+          'Where its code runs. html (any page), nextjs, react (any browser app built with a bundler), wordpress, gtm (Google Tag Manager), node, python, dotnet, java, go, php, ruby, mobile, other.',
+        ),
+    }),
+    writes: true,
+    async run(input, { orgId }) {
+      const { db } = services()
+      const project = await oneProduct(orgId, String(input.product))
+      const name = String(input.name).trim()
+      const existing = (await listSources(db, orgId, project.id)).find(
+        (s) => s.name.toLowerCase() === name.toLowerCase(),
+      )
+      const source =
+        existing ??
+        (await createSource(db, orgId, project.id, {
+          name,
+          platform: String(input.platform),
+          areas: [],
+        }))
+      if (!source) throw new Error(`No product "${String(input.product)}".`)
+      return {
+        existed: Boolean(existing),
+        product: project.slug,
+        source: { id: source.id, name: source.name, platform: source.platform },
+      }
+    },
+  },
+  {
+    name: 'source_setup',
+    needs: [
+      ['sources', 'read'],
+      ['keys', 'read'],
+    ],
+    title: 'Install code of a source',
+    description:
+      "The source's public key and the exact code to install, per area it can feed: traffic (page script), errors (Sentry SDK with the DSN, or the page script), usage (track and identify), logs (OpenTelemetry). Public keys are meant to ship in client code; keep them in environment variables anyway.",
+    input: z.object({
+      product: z.string().describe('Product slug or name.'),
+      source: z.string().describe('Source id or name, from create_source or list_sources.'),
+    }),
+    async run(input, { orgId }) {
+      const { db, env } = services()
+      const project = await oneProduct(orgId, String(input.product))
+      const wanted = String(input.source).trim().toLowerCase()
+      const sources = await listSources(db, orgId, project.id)
+      const source = sources.find((s) => s.id === wanted || s.name.toLowerCase() === wanted)
+      if (!source) {
+        throw new Error(
+          `No source "${String(input.source)}" in ${project.slug}. Sources: ${sources.map((s) => s.name).join(', ') || 'none yet'}.`,
+        )
+      }
+      if (!source.public_key)
+        throw new Error('This source has no working key. Rotate it in the panel.')
+      const ingestUrl = env.OCTADASH_INGEST_URL.replace(/\/+$/, '')
+      const publicKey = source.public_key
+      const dsn = sentryDsn(ingestUrl, publicKey, String(project.ingest_id))
+      const platform = source.platform
+      const browser = isTrafficPlatform(platform) && platform !== 'other'
+      const docs = 'https://docs.octadash.com/send-data'
+      return {
+        product: project.slug,
+        source: { id: source.id, name: source.name, platform },
+        ingestUrl,
+        publicKey,
+        dsn,
+        env: { OCTADASH_KEY: publicKey, OCTADASH_HOST: ingestUrl, SENTRY_DSN: dsn },
+        code: {
+          ...(browser
+            ? {
+                traffic: {
+                  ...trafficSnippet(platform, {
+                    ingestUrl,
+                    publicKey,
+                    persistent: source.visitor_mode === 'persistent',
+                    local: false,
+                  }),
+                  docs: `${docs}/traffic`,
+                },
+              }
+            : {}),
+          ...(isErrorPlatform(platform)
+            ? {
+                errors: {
+                  ...errorSnippet(platform, { ingestUrl, publicKey, dsn }),
+                  docs: `${docs}/errors`,
+                },
+              }
+            : {}),
+          usage: {
+            ...usageSnippet(tabOf(platform), {
+              ingestUrl,
+              publicKey,
+              hasScript: browser && hasPageScript(platform, ['traffic']),
+            }),
+            docs: `${docs}/product-usage`,
+          },
+          ...((LOG_SOURCE_PLATFORMS as readonly string[]).includes(platform)
+            ? {
+                logs: {
+                  ...logSnippet(logTabOf(platform), {
+                    ingestUrl,
+                    publicKey,
+                    service: serviceName(source.name),
+                  }),
+                  docs: `${docs}/logs`,
+                },
+              }
+            : {}),
+        },
+        ...(platform === 'node' ? { nodeSdk: `${docs}/node` } : {}),
+        check:
+          'After installing, open the app once and call list_sources: lastData shows what arrived.',
+      }
+    },
+  },
 ]
+
+/** One product by slug or name, or an error that lists them. */
+async function oneProduct(orgId: string, chosen: string) {
+  const { scope } = await productsOf(orgId, chosen || undefined)
+  const [project] = scope
+  if (!project || scope.length !== 1)
+    throw new Error('Name one product: its slug or name, from list_products.')
+  return project
+}
+
+const panelUrl = (url: string) => url.replace(/\/+$/, '')
+const serviceName = (name: string) =>
+  name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') || 'api'
+
+/** The tools a token sees: those its scopes allow, every need of each. */
+export function toolsFor(scopes: TokenScopes): McpTool<McpContext>[] {
+  return MCP_TOOLS.filter((tool) =>
+    tool.needs.every(([resource, need]) => allows(scopes, resource, need)),
+  )
+}
+
+export function instructionsFor(scopes: TokenScopes): string {
+  const parts = [
+    'Questions about the products of one Octadash organization. Start with list_products; the other tools take a product slug, or none for every product. This token sees only the tools its scopes allow.',
+  ]
+  if (allows(scopes, 'products', 'write') && allows(scopes, 'sources', 'write')) {
+    parts.push(
+      'To set a product up: create_product, create_source, then source_setup for the key and the exact code to install, and list_sources to check the first data arrived. These tools only add.',
+    )
+  }
+  return parts.join(' ')
+}
