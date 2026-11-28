@@ -22,7 +22,10 @@ export class EventRouter {
 
   constructor(private readonly deps: RouterDeps) {}
 
-  async route(rows: EventRow[]): Promise<EventRow[]> {
+  async route<T extends { project_id: string; source_id: string }>(
+    rows: T[],
+    areaOf: (row: T) => string = (row) => areaOfEvent((row as unknown as EventRow).event),
+  ): Promise<T[]> {
     if (rows.length === 0) return rows
     const now = this.deps.now()
     const stale = [...new Set(rows.map((row) => row.project_id))].filter(
@@ -38,11 +41,11 @@ export class EventRouter {
       }
     }
 
-    const kept: EventRow[] = []
+    const kept: T[] = []
     const discarded = new Map<string, Discarded>()
     const fed = new Map<string, { source_id: string; area: string }>()
     for (const row of rows) {
-      const area = areaOfEvent(row.event)
+      const area = areaOf(row)
       if (this.dismissed.get(row.project_id)?.areas.has(area)) {
         const key = `${row.project_id}:${area}`
         const entry = discarded.get(key) ?? { project_id: row.project_id, area, count: 0 }

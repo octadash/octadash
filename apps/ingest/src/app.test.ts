@@ -52,7 +52,7 @@ describe('ingest app', () => {
     expect(res.headers.get('content-type')).toContain('javascript')
     const body = await res.text()
     expect(body).toContain('$pageview')
-    expect(body.length).toBeLessThan(2500)
+    expect(body.length).toBeLessThan(4500)
   })
 
   it('allows cross-origin calls from SDKs', async () => {

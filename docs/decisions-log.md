@@ -115,3 +115,18 @@ and why; anything here can be reversed.
 - **A product whose monitor is down counts as down** on the TV, even before
   its emergency opens, so the header never says "all up" while a tile says
   "Down".
+- **Errors engine first, screens next.** The ingest takes Sentry envelopes and
+  `/store/` (tested with the real `@sentry/node` 9) and the Octadash script now
+  reports uncaught errors and rejected promises (at most 10 per page, each
+  message once) plus `octadash.captureException`. `data-release` and
+  `data-environment` on the script tag mark the release.
+- **Errors keep 90 days** by default (Sentry's paid plans keep 90). Per-area
+  retention will change it.
+- **The person hit is what the app sends as its user**, as Sentry does; with
+  no user, the daily visitor hash. E-mails and names are stored only when the
+  app sends them. Masking comes with the retention settings.
+- **"Resolve in next release"** follows Sentry: events from the release the
+  issue was last seen in, or with no release, do not reopen it.
+- **A batch retried after a failure counts twice in the issue's total** in
+  Postgres; screens read counts from ClickHouse, which drops the repeated
+  insert, so only the "ignore until N more events" condition can fire early.
