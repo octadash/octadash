@@ -2250,5 +2250,194 @@
     "notLogBody": "Senhas, tokens e documentos. O Octadash mascara valores que parecem números de cartão, e-mails e chaves antes de guardar, e diz quantos mascarou.",
     "maskedWeek": "{count, plural, one {# valor mascarado nos últimos 7 dias.} other {# valores mascarados nos últimos 7 dias.}}",
     "maskedNone": "Nada mascarado nos últimos 7 dias."
+  },
+  "moneyArea": {
+    "title": "Dinheiro",
+    "none": {
+      "title": "Nenhum gateway de pagamento conectado",
+      "body": "Conecte Stripe, Asaas ou Paddle e esta página mostra receita, MRR, novas assinaturas, churn e pagamentos com falha, com cada produto separado.",
+      "readOnly": "O Octadash só lê seus pagamentos com uma chave de leitura. Ele nunca cobra, estorna ou muda nada.",
+      "connect": "Conectar um gateway de pagamento",
+      "all": "Conecte um gateway em um produto:"
+    },
+    "intro": "Receita, assinaturas e pagamentos com falha de todos os produtos, lidos dos seus gateways de pagamento. Em {currency}; outras moedas convertidas pela cotação do dia.",
+    "introOne": "Receita, assinaturas e pagamentos com falha de {product}, lidos dos gateways dele. Em {currency}; outras moedas convertidas pela cotação do dia.",
+    "introGroup": "Receita, assinaturas e pagamentos com falha dos produtos de {group}. Em {currency}; outras moedas convertidas pela cotação do dia.",
+    "setUp": "Gateways",
+    "periodLabel": "Período",
+    "periods": {
+      "today": "Hoje",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Faltam alguns números: o banco de pagamentos não respondeu.",
+    "unconverted": "Pagamentos em {currencies} ficam fora dos totais até chegar a cotação de hoje.",
+    "tiles": {
+      "label": "Totais do período",
+      "revenue": "Receita",
+      "mrr": "MRR",
+      "started": "Novas assinaturas",
+      "churn": "Churn",
+      "failed": "Pagamentos com falha",
+      "refunded": "{amount} estornados",
+      "failingNow": "{product} {share} agora",
+      "mrrInfoLabel": "O que é MRR",
+      "mrrInfo": "Receita recorrente mensal: quanto cada assinatura ativa soma por mês, no preço de hoje. Planos anuais contam um doze avos. Testes grátis ficam de fora até pagarem.",
+      "churnInfoLabel": "Como o churn é contado",
+      "churnInfo": "Assinaturas que terminaram no período, entre as que estavam ativas no início dele. Subir é ruim."
+    },
+    "pts": "p.p.",
+    "change": "{change}% em relação ao período anterior",
+    "changePoints": "{change} pontos percentuais em relação ao período anterior",
+    "chart": {
+      "current": "Este período",
+      "previous": "O período anterior",
+      "emergency": "Emergência",
+      "asTable": "Mostrar como tabela",
+      "time": "Horário"
+    },
+    "table": {
+      "title": "Por produto",
+      "margin": "A margem fica em Custos",
+      "product": "Produto",
+      "mrr": "MRR",
+      "change": "30 d",
+      "today": "Hoje",
+      "paying": "Pagantes",
+      "failedNow": "Falha agora",
+      "churn": "Churn",
+      "connect": "Conectar um gateway"
+    },
+    "latest": {
+      "title": "Últimos pagamentos",
+      "live": "ao vivo",
+      "empty": "Nenhum pagamento ainda. Com o webhook, eles aparecem aqui segundos depois de acontecerem; sem ele, em até 5 minutos.",
+      "newPayments": "Novos pagamentos: #"
+    },
+    "status": {
+      "paid": "Pago",
+      "failed": "Falhou",
+      "refunded": "Estornado",
+      "pending": "Pendente",
+      "overdue": "Vencido",
+      "canceled": "Cancelado"
+    }
+  },
+  "moneySetup": {
+    "title": "Conectar um gateway de pagamento",
+    "newTitle": "Conectar outra conta",
+    "intro": "O Octadash lê seus pagamentos; ele nunca cobra nem estorna. Uma conexão pode servir vários produtos.",
+    "trail": "Onde você está",
+    "money": "Dinheiro",
+    "steps": {
+      "gateway": "Gateway",
+      "key": "Chave de leitura",
+      "rule": "Quais pagamentos são de {product}",
+      "webhook": "Atualização ao vivo",
+      "history": "Histórico"
+    },
+    "later": "Depois",
+    "name": "Nome",
+    "nameHint": "Para diferenciar as contas quando houver mais de uma.",
+    "namePlaceholder": "Conta {gateway}",
+    "key": "Chave do {gateway}",
+    "keyHint": "Conferida ao salvar.",
+    "keyInfoLabel": "Quais permissões a chave precisa",
+    "test": "Testar chave",
+    "testing": "Testando…",
+    "testOk": "A chave funciona.",
+    "testOkProducts": "{count, plural, =0 {A chave funciona. Nenhum produto encontrado.} one {A chave funciona. # produto encontrado.} other {A chave funciona. # produtos encontrados.}}",
+    "testFailed": "A chave não funcionou: {message}",
+    "rule": {
+      "legend": "Quais pagamentos são de {product}",
+      "all": "Toda esta conta do {gateway}",
+      "allBody": "A conta é usada só por {product}.",
+      "products": "Só estes produtos do {gateway}",
+      "productsBody": "Pagamentos com um destes produtos.",
+      "metadata": {
+        "other": "Por metadata",
+        "asaas": "Por referência externa"
+      },
+      "metadataBody": {
+        "other": "Pagamentos com o metadata product igual a um destes valores.",
+        "asaas": "Pagamentos cuja referência externa (externalReference) é um destes valores."
+      },
+      "found": "{picked} de {count} escolhidos",
+      "ids": "Ids dos produtos",
+      "idsHint": "Separados por vírgula. Use Testar chave para escolher em uma lista.",
+      "tags": {
+        "other": "Valores de product",
+        "asaas": "Referências externas"
+      },
+      "tagsHint": "Separados por vírgula, como o seu código grava."
+    },
+    "webhook": {
+      "stripe": "Adicione este webhook em Stripe › Desenvolvedores › Webhooks, com os eventos charge.* e customer.subscription.*, para os pagamentos aparecerem em segundos. Sem ele, o Octadash lê a cada 5 min.",
+      "paddle": "Adicione este destino de notificação em Paddle › Developer tools › Notifications, com os eventos transaction.* e subscription.*, para os pagamentos aparecerem em segundos. Sem ele, o Octadash lê a cada 5 min.",
+      "asaas": "Adicione este webhook em Asaas › Integrações › Webhooks, com os eventos de cobrança e de assinatura, e cole nele o token de acesso abaixo, para os pagamentos aparecerem em segundos. Sem ele, o Octadash lê a cada 5 min."
+    },
+    "webhookUrl": "URL do webhook",
+    "signingSecret": "Segredo de assinatura",
+    "signingSecretHint": {
+      "stripe": "Do webhook que você criou no Stripe (whsec_…). Sem ele, os webhooks são recusados.",
+      "paddle": "Do destino de notificação que você criou no Paddle. Sem ele, os webhooks são recusados."
+    },
+    "asaasToken": "Token de acesso do webhook",
+    "asaasTokenHint": "O Asaas manda ele em cada webhook, assim o Octadash sabe que veio da sua conta. Copie agora: ele não aparece de novo.",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "history": "O Octadash importa os últimos 12 meses para o MRR e o churn já começarem com histórico. Roda em segundo plano; cerca de 4 min para 10.000 pagamentos.",
+    "connect": "Conectar e importar",
+    "addAnother": "Conectar outro gateway",
+    "state": {
+      "label": "Estado",
+      "importing": "Importando os últimos 12 meses…",
+      "ok": "Em dia · lido {time}",
+      "failing": "Com falha:",
+      "webhook": "Webhook",
+      "webhookAt": "Último recebido {time}",
+      "noWebhook": "Nenhum recebido ainda; lido a cada 5 min.",
+      "key": "Chave",
+      "alsoServes": "Também serve"
+    },
+    "ruleNote": "Ao salvar, a conta é lida de novo desde o início, e os números dos produtos que ela serve se completam em alguns minutos.",
+    "saveRule": "Salvar",
+    "saved": "Salvo.",
+    "updateKeys": "Atualizar chaves",
+    "keysKeep": "Deixe vazio para manter a atual.",
+    "reuse": {
+      "title": "Já conectado em outro produto",
+      "body": "Uma conta pode servir vários produtos. Escolha quais pagamentos dela são deste produto.",
+      "serves": "serve {products}",
+      "button": "Usar aqui também"
+    },
+    "stop": {
+      "button": "Parar de usar aqui",
+      "title": "Parar de usar {name} aqui?",
+      "body": "Este produto deixa de ler pagamentos dela. Os outros produtos continuam usando.",
+      "bodyLast": "Nenhum outro produto usa, então a conexão é apagada com todos os pagamentos e assinaturas lidos dela. Nada muda no gateway.",
+      "cancel": "Cancelar"
+    },
+    "readOnly": "Nenhum gateway de pagamento está conectado. Um dono ou admin conecta aqui.",
+    "back": "Voltar para {name}",
+    "wontUse": "Não vou usar Dinheiro neste produto",
+    "side": {
+      "sharedTitle": "Uma conta, vários produtos",
+      "sharedBody": "Conecte a conta uma vez. Cada produto escolhe seus pagamentos pelo produto do gateway ou por metadata, assim uma conta compartilhada mostra a receita certa em cada produto, sem contar nada duas vezes.",
+      "emergencyTitle": "Emergência que começa aqui",
+      "emergencyBody": "Pagamentos falhando: 20% das cobranças falham em 15 min, com pelo menos 10 cobranças. Dá para mudar nas regras de alerta do produto.",
+      "keyTitle": "Chave de leitura",
+      "keyBody": "O Octadash só lê pagamentos, assinaturas e produtos. Ele não cobra, não estorna e não muda nada. A chave fica guardada criptografada e nunca volta para o navegador. O “i” ao lado da chave diz quais permissões dar a ela."
+    },
+    "errors": {
+      "notFound": "Este produto ou conexão não existe mais. Recarregue a página.",
+      "gateway": "Escolha um gateway.",
+      "noKey": "Cole a chave de leitura.",
+      "key": "A chave não funcionou: {message}",
+      "rule": "Escolha pelo menos um produto ou valor.",
+      "allTaken": "{product} já fica com todos os pagamentos desta conta. Escolha produtos ou metadata aqui, ou mude {product} antes.",
+      "nothing": "Cole uma chave ou segredo novo."
+    }
   }
 }

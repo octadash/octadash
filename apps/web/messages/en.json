@@ -2250,5 +2250,194 @@
     "notLogBody": "Passwords, tokens and documents. Octadash masks values that look like card numbers, e-mails and keys before storing, and says how many it masked.",
     "maskedWeek": "{count, plural, one {# value masked in the last 7 days.} other {# values masked in the last 7 days.}}",
     "maskedNone": "Nothing masked in the last 7 days."
+  },
+  "moneyArea": {
+    "title": "Money",
+    "none": {
+      "title": "No payment gateway connected",
+      "body": "Connect Stripe, Asaas or Paddle and this page shows revenue, MRR, new subscriptions, churn and failed payments, with each product apart.",
+      "readOnly": "Octadash only reads your payments with a read-only key. It never charges, refunds or changes anything.",
+      "connect": "Connect a payment gateway",
+      "all": "Connect a gateway in a product:"
+    },
+    "intro": "Revenue, subscriptions and failed payments of every product, read from your payment gateways. Shown in {currency}; other currencies converted at the day’s rate.",
+    "introOne": "Revenue, subscriptions and failed payments of {product}, read from its payment gateways. Shown in {currency}; other currencies converted at the day’s rate.",
+    "introGroup": "Revenue, subscriptions and failed payments of the products in {group}. Shown in {currency}; other currencies converted at the day’s rate.",
+    "setUp": "Gateways",
+    "periodLabel": "Period",
+    "periods": {
+      "today": "Today",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Some numbers are missing: the payment database did not answer.",
+    "unconverted": "Payments in {currencies} are left out of the totals until today’s exchange rate arrives.",
+    "tiles": {
+      "label": "Totals for the period",
+      "revenue": "Revenue",
+      "mrr": "MRR",
+      "started": "New subscriptions",
+      "churn": "Churn",
+      "failed": "Failed payments",
+      "refunded": "{amount} refunded",
+      "failingNow": "{product} {share} now",
+      "mrrInfoLabel": "What MRR is",
+      "mrrInfo": "Monthly recurring revenue: what every active subscription adds per month, at its price today. Yearly plans count a twelfth. Trials are left out until they pay.",
+      "churnInfoLabel": "How churn is counted",
+      "churnInfo": "Subscriptions that ended in the period, out of those active when it started. Up is bad."
+    },
+    "pts": "pts",
+    "change": "{change}% compared with the period before",
+    "changePoints": "{change} percentage points compared with the period before",
+    "chart": {
+      "current": "This period",
+      "previous": "The period before",
+      "emergency": "Emergency",
+      "asTable": "Show as a table",
+      "time": "Time"
+    },
+    "table": {
+      "title": "By product",
+      "margin": "Margin is in Costs",
+      "product": "Product",
+      "mrr": "MRR",
+      "change": "30 d",
+      "today": "Today",
+      "paying": "Paying",
+      "failedNow": "Failed now",
+      "churn": "Churn",
+      "connect": "Connect a gateway"
+    },
+    "latest": {
+      "title": "Latest payments",
+      "live": "live",
+      "empty": "No payment yet. Payments show here seconds after they happen when the webhook is set, or within 5 minutes without it.",
+      "newPayments": "New payments: #"
+    },
+    "status": {
+      "paid": "Paid",
+      "failed": "Failed",
+      "refunded": "Refunded",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "canceled": "Canceled"
+    }
+  },
+  "moneySetup": {
+    "title": "Connect a payment gateway",
+    "newTitle": "Connect another account",
+    "intro": "Octadash reads your payments; it never charges or refunds. One connection can serve several products.",
+    "trail": "Where you are",
+    "money": "Money",
+    "steps": {
+      "gateway": "Gateway",
+      "key": "Read-only key",
+      "rule": "Which payments are {product}’s",
+      "webhook": "Live updates",
+      "history": "History"
+    },
+    "later": "Later",
+    "name": "Name",
+    "nameHint": "To tell accounts apart when you have more than one.",
+    "namePlaceholder": "{gateway} account",
+    "key": "{gateway} key",
+    "keyHint": "Checked when you save.",
+    "keyInfoLabel": "Which permissions the key needs",
+    "test": "Test key",
+    "testing": "Testing…",
+    "testOk": "The key works.",
+    "testOkProducts": "{count, plural, =0 {The key works. No products found.} one {The key works. # product found.} other {The key works. # products found.}}",
+    "testFailed": "The key did not work: {message}",
+    "rule": {
+      "legend": "Which payments are {product}’s",
+      "all": "All of this {gateway} account",
+      "allBody": "The account is used only by {product}.",
+      "products": "Only these {gateway} products",
+      "productsBody": "Payments with one of these products.",
+      "metadata": {
+        "other": "By metadata",
+        "asaas": "By external reference"
+      },
+      "metadataBody": {
+        "other": "Payments with the metadata product set to one of these values.",
+        "asaas": "Payments whose external reference (externalReference) is one of these values."
+      },
+      "found": "{picked} of {count} picked",
+      "ids": "Product ids",
+      "idsHint": "Separated by commas. Press Test key to pick them from a list.",
+      "tags": {
+        "other": "Values of product",
+        "asaas": "External references"
+      },
+      "tagsHint": "Separated by commas, as your code sets them."
+    },
+    "webhook": {
+      "stripe": "Add this webhook in Stripe › Developers › Webhooks, with the charge.* and customer.subscription.* events, so payments show in seconds. Without it, Octadash reads every 5 min.",
+      "paddle": "Add this notification destination in Paddle › Developer tools › Notifications, with the transaction.* and subscription.* events, so payments show in seconds. Without it, Octadash reads every 5 min.",
+      "asaas": "Add this webhook in Asaas › Integrations › Webhooks, with the payment and subscription events, and paste the access token below in it, so payments show in seconds. Without it, Octadash reads every 5 min."
+    },
+    "webhookUrl": "Webhook URL",
+    "signingSecret": "Signing secret",
+    "signingSecretHint": {
+      "stripe": "From the webhook you created in Stripe (whsec_…). Without it, webhooks are refused.",
+      "paddle": "From the notification destination you created in Paddle. Without it, webhooks are refused."
+    },
+    "asaasToken": "Access token for the webhook",
+    "asaasTokenHint": "Asaas sends it with every webhook, so Octadash knows it came from your account. Copy it now: it is not shown again.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "history": "Octadash imports the last 12 months so MRR and churn start with history. It runs in the background; about 4 min for 10,000 payments.",
+    "connect": "Connect and import",
+    "addAnother": "Connect another gateway",
+    "state": {
+      "label": "State",
+      "importing": "Importing the last 12 months…",
+      "ok": "Up to date · read {time}",
+      "failing": "Failing:",
+      "webhook": "Webhook",
+      "webhookAt": "Last received {time}",
+      "noWebhook": "None received yet; read every 5 min.",
+      "key": "Key",
+      "alsoServes": "Also serves"
+    },
+    "ruleNote": "Saving reads the account again from the start, so the numbers of the products it serves fill again in a few minutes.",
+    "saveRule": "Save",
+    "saved": "Saved.",
+    "updateKeys": "Update keys",
+    "keysKeep": "Leave empty to keep the one you have.",
+    "reuse": {
+      "title": "Already connected for another product",
+      "body": "One account can serve several products. Pick which of its payments are this product’s.",
+      "serves": "serves {products}",
+      "button": "Use it here too"
+    },
+    "stop": {
+      "button": "Stop using here",
+      "title": "Stop using {name} here?",
+      "body": "This product stops reading payments from it. The other products keep it.",
+      "bodyLast": "No other product uses it, so the connection is deleted with every payment and subscription read from it. The gateway itself is not touched.",
+      "cancel": "Cancel"
+    },
+    "readOnly": "No payment gateway is connected. An owner or admin connects one here.",
+    "back": "Back to {name}",
+    "wontUse": "I won’t use Money in this product",
+    "side": {
+      "sharedTitle": "One account, several products",
+      "sharedBody": "Connect an account once. Each product picks its payments by the gateway’s product or by metadata, so a shared account shows the right revenue in each product and nothing counted twice.",
+      "emergencyTitle": "Emergency that starts here",
+      "emergencyBody": "Payments failing: 20% of charges fail in 15 min, with at least 10 charges. Changeable in the product’s alert rules.",
+      "keyTitle": "Read-only key",
+      "keyBody": "Octadash only reads payments, subscriptions and products. It can’t charge, refund or change anything. The key is stored encrypted and never comes back to the browser. The “i” next to the key says which permissions to give it."
+    },
+    "errors": {
+      "notFound": "This product or connection no longer exists. Reload the page.",
+      "gateway": "Pick a gateway.",
+      "noKey": "Paste the read-only key.",
+      "key": "The key did not work: {message}",
+      "rule": "Pick at least one product or value.",
+      "allTaken": "{product} already takes every payment of this account. Pick products or metadata here, or change {product} first.",
+      "nothing": "Paste a new key or secret."
+    }
   }
 }

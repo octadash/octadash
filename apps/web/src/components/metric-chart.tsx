@@ -17,6 +17,8 @@ export interface Metric {
   label: string
   /** How a value reads in the table: "1,234" or "320 ms". */
   unit: 'count' | 'ms'
+  /** Values are amounts in this currency (major units), for the table. */
+  currency?: string
   points: ChartPoint[]
 }
 
@@ -60,9 +62,13 @@ export function MetricChart({
   const format = (metric: Metric, value: number | null) =>
     value === null
       ? '–'
-      : metric.unit === 'ms'
-        ? `${number.format(value)} ms`
-        : number.format(value)
+      : metric.currency
+        ? new Intl.NumberFormat(locale, { style: 'currency', currency: metric.currency }).format(
+            value,
+          )
+        : metric.unit === 'ms'
+          ? `${number.format(value)} ms`
+          : number.format(value)
   const first = metrics[0]
   if (!first) return null
 

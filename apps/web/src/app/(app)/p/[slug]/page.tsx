@@ -622,7 +622,8 @@ function AreaCard({
                   area.id === 'errors' ||
                   area.id === 'traffic' ||
                   area.id === 'usage' ||
-                  area.id === 'logs'
+                  area.id === 'logs' ||
+                  area.id === 'money'
                     ? `/p/${slug}/${area.id}/setup`
                     : `/p/${slug}/${area.id}`
                 }
