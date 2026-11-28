@@ -143,3 +143,14 @@ and why; anything here can be reversed.
   (they need the alert rule first), a search box for filters, source maps and
   commit details on the stack. "Set up Errors" is not a page yet: the empty
   state points to the source settings, where the DSN is.
+- **Error spike follows the Emergencies canvas** (5× normal, at least 20
+  errors, in 15 minutes). "Normal" is the same hour on each of the last 7 days,
+  not the shape × level of signals: an emergency must be simple to explain. A
+  product with no history fires on the minimum alone. Errors of ignored issues
+  never count, as the Ignore dialog promises. The multiple and the minimum are
+  editable per product (at least 1, so a rule cannot fire on every error).
+- **A new issue is not an emergency.** Sentry tells on every new issue by
+  default; here a new issue is data (the New tab and the number on top) and only
+  a spike sends a message, so a busy product does not flood the channels.
+- **The warning badge text now uses the theme's warning color**: the amber on
+  its pale background failed contrast in the light theme.

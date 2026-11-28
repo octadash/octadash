@@ -199,6 +199,14 @@ versions and passwords generated at install. Each has one job.
 - The person an error hit is the user the app sent (id, else e-mail, else
   name), or the browser's daily visitor hash marked `v:`. The address is never
   stored.
+- Error spike (`error_spike`): every minute the worker takes the products with
+  an issue seen in the last 15 minutes (`error_issue.last_seen` is indexed) plus
+  those with an open spike, and reads from ClickHouse, by the table's sort key,
+  their errors in the last 15 minutes against the same hour on each of the last
+  7 days scaled to 15 minutes. Ignored issues never count. It opens when the
+  count reaches the rule's multiple of normal and its minimum (5× and 20 by
+  default), names the top 3 issues, and closes when the last 15 minutes fall
+  back under. The issues it names show "Spike" in the list.
 
 ### Integrations are plugins
 

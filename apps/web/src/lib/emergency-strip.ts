@@ -4,7 +4,12 @@
  * browser keeps the times current and decides what the strip says.
  */
 
-export type StripKind = 'monitor_down' | 'heartbeat_missed' | 'cert_expiring' | 'other'
+export type StripKind =
+  | 'monitor_down'
+  | 'heartbeat_missed'
+  | 'cert_expiring'
+  | 'error_spike'
+  | 'other'
 
 export interface StripItem {
   id: string

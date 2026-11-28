@@ -23,10 +23,11 @@ import { RuleForm, type RuleFormLabels } from './rule-form'
 import { Card } from './ui/card'
 
 /** Which area each rule belongs to, so the list reads area by area. */
-const RULE_AREA: Record<IncidentKind, 'uptime'> = {
+const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors'> = {
   monitor_down: 'uptime',
   heartbeat_missed: 'uptime',
   cert_expiring: 'uptime',
+  error_spike: 'errors',
 }
 
 /**
@@ -41,7 +42,6 @@ const FUTURE: {
   rules: { rule: string; level: Level }[]
 }[] = [
   { area: 'uptime', icon: ActivityIcon, rules: [{ rule: 'domainExpiring', level: 'emergency' }] },
-  { area: 'errors', icon: BugIcon, rules: [{ rule: 'errorSpike', level: 'emergency' }] },
   {
     area: 'usage',
     icon: UserIcon,
@@ -102,7 +102,13 @@ export async function RulesList({
     if (override.level !== 'off') {
       for (const [key, value] of Object.entries(override.params)) {
         if (base && base.params[key] === value) continue
-        parts.push(unit(value, key === 'days' ? 'day' : 'minute'))
+        parts.push(
+          key === 'days' || key === 'minutes'
+            ? unit(value, key === 'days' ? 'day' : 'minute')
+            : key === 'times'
+              ? `${value}×`
+              : String(value),
+        )
       }
     }
     return parts.join(', ')
@@ -114,6 +120,8 @@ export async function RulesList({
     params: {
       minutes: { label: t('params.minutes'), unit: t('params.minutesUnit') },
       days: { label: t('params.days'), unit: t('params.daysUnit') },
+      times: { label: t('params.times'), unit: t('params.timesUnit') },
+      events: { label: t('params.events'), unit: t('params.eventsUnit') },
     },
     sendTo: t('sendTo'),
     allChannels: t('allChannels'),
@@ -127,6 +135,45 @@ export async function RulesList({
     .filter((channel) => channel.enabled)
     .map((channel) => ({ id: channel.id, name: channel.name }))
   const uptime = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'uptime')
+  const errors = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'errors')
+
+  /** One rule of a built area, with its form. */
+  const form = (kind: IncidentKind) => {
+    const rule = rules.find((r) => r.kind === kind)
+    if (!rule) return null
+    const changed = overrides
+      .filter((o) => o.kind === kind)
+      .map((o) => ({
+        name: o.product.name,
+        slug: o.product.slug,
+        summary: summary(kind, o),
+      }))
+    const labels: RuleFormLabels = {
+      ...base,
+      title: t(`kinds.${kind}.title`),
+      body: t(`kinds.${kind}.body`),
+      info: {
+        label: t('about', { name: t(`kinds.${kind}.title`) }),
+        title: t(`kinds.${kind}.title`),
+        body: t(`kinds.${kind}.info`),
+      },
+      note:
+        Object.keys(RULE_DEFAULTS[kind].params).length === 0 ? t(`kinds.${kind}.note`) : undefined,
+      changedOn: changed.length > 0 ? t('changedOn', { count: changed.length }) : '',
+    }
+    return (
+      <RuleForm
+        key={kind}
+        kind={kind}
+        slug={project?.slug}
+        rule={rule}
+        channels={enabled}
+        overrides={changed}
+        canEdit={canEdit}
+        labels={labels}
+      />
+    )
+  }
 
   /** A rule of an area not built yet, dimmed, with what it waits for. */
   const future = (area: string, { rule, level }: { rule: string; level: Level }) => (
@@ -172,48 +219,22 @@ export async function RulesList({
             note={t('rulesCount', { count: uptime.length })}
           />
           <div className="divide-y">
-            {uptime.map((kind) => {
-              const rule = rules.find((r) => r.kind === kind)
-              if (!rule) return null
-              const changed = overrides
-                .filter((o) => o.kind === kind)
-                .map((o) => ({
-                  name: o.product.name,
-                  slug: o.product.slug,
-                  summary: summary(kind, o),
-                }))
-              const labels: RuleFormLabels = {
-                ...base,
-                title: t(`kinds.${kind}.title`),
-                body: t(`kinds.${kind}.body`),
-                info: {
-                  label: t('about', { name: t(`kinds.${kind}.title`) }),
-                  title: t(`kinds.${kind}.title`),
-                  body: t(`kinds.${kind}.info`),
-                },
-                note:
-                  Object.keys(RULE_DEFAULTS[kind].params).length === 0
-                    ? t(`kinds.${kind}.note`)
-                    : undefined,
-                changedOn: changed.length > 0 ? t('changedOn', { count: changed.length }) : '',
-              }
-              return (
-                <RuleForm
-                  key={kind}
-                  kind={kind}
-                  slug={project?.slug}
-                  rule={rule}
-                  channels={enabled}
-                  overrides={changed}
-                  canEdit={canEdit}
-                  labels={labels}
-                />
-              )
-            })}
+            {uptime.map(form)}
             {FUTURE.filter((f) => f.area === 'uptime').flatMap(({ rules: coming }) =>
               coming.map((r) => future('uptime', r)),
             )}
           </div>
+        </section>
+
+        <section aria-labelledby="rules-errors" className="border-t">
+          <AreaHeader
+            id="rules-errors"
+            as={heading}
+            icon={BugIcon}
+            title={t('areas.errors')}
+            note={t('rulesCount', { count: errors.length })}
+          />
+          <div className="divide-y">{errors.map(form)}</div>
         </section>
 
         {FUTURE.filter((f) => f.area !== 'uptime').map(({ area, icon, rules: coming }) => (

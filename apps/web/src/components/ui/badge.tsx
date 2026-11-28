@@ -17,7 +17,7 @@ const badgeVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
         brand: 'bg-primary/15 text-brand',
         ok: 'bg-ok/15 text-emerald-700 dark:text-ok',
-        warn: 'bg-warn/15 text-amber-700 dark:text-warn',
+        warn: 'bg-warn/15 text-warn',
         error: 'bg-destructive/15 text-destructive',
       },
     },

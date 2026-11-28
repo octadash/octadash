@@ -395,3 +395,42 @@ export async function updateIssue(
       )
   }
 }
+
+/** Products with an error since a time, for the Error spike rule. */
+export async function recentErrorProducts(
+  db: Db,
+  since: Date,
+): Promise<{ orgId: string; projectId: string }[]> {
+  const rows = await db
+    .selectFrom('error_issue')
+    .select(['org_id', 'project_id'])
+    .distinct()
+    .where('last_seen', '>=', since)
+    .execute()
+  return rows.map((row) => ({ orgId: row.org_id, projectId: row.project_id }))
+}
+
+/** Ignored issues of these products: their events never make a spike. */
+export async function ignoredIssueIds(db: Db, projectIds: string[]): Promise<string[]> {
+  if (projectIds.length === 0) return []
+  const rows = await db
+    .selectFrom('error_issue')
+    .select('id')
+    .where('project_id', 'in', projectIds)
+    .where('status', '=', 'ignored')
+    .execute()
+  return rows.map((row) => row.id)
+}
+
+/** The few fields an alert names an issue by. */
+export async function issueHeads(
+  db: Db,
+  ids: string[],
+): Promise<{ id: string; type: string; value: string; culprit: string }[]> {
+  if (ids.length === 0) return []
+  return db
+    .selectFrom('error_issue')
+    .select(['id', 'type', 'value', 'culprit'])
+    .where('id', 'in', ids)
+    .execute()
+}

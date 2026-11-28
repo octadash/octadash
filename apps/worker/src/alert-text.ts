@@ -20,6 +20,11 @@ interface Words {
   missed: (monitor: string) => string
   cert: (monitor: string, days: number) => string
   certRenewed: (monitor: string) => string
+  spike: (product: string, count: number, minutes: number) => string
+  spikeNormal: (normal: number) => string
+  spikeTop: (issue: string, count: number) => string
+  spikeOver: (product: string) => string
+  spikeLasted: (duration: string) => string
   downFor: (duration: string) => string
   wasDownFor: (duration: string) => string
   manyDown: (count: number) => string
@@ -42,6 +47,11 @@ const words: Record<AlertLocale, Words> = {
         ? `The certificate of ${m} has expired`
         : `The certificate of ${m} expires in ${d} days`,
     certRenewed: (m) => `The certificate of ${m} was renewed`,
+    spike: (p, n, min) => `Error spike on ${p}: ${n} errors in ${min} min`,
+    spikeNormal: (n) => `Normal for this time is about ${n}.`,
+    spikeTop: (issue, n) => `Most: ${issue} (${n}).`,
+    spikeOver: (p) => `Errors on ${p} are back to normal`,
+    spikeLasted: (d) => `The spike lasted ${d}.`,
     downFor: (d) => `Down for ${d}.`,
     wasDownFor: (d) => `It was down for ${d}.`,
     manyDown: (n) => `${n} monitors are down`,
@@ -73,6 +83,11 @@ const words: Record<AlertLocale, Words> = {
     cert: (m, d) =>
       d <= 0 ? `O certificado de ${m} venceu` : `O certificado de ${m} vence em ${d} dias`,
     certRenewed: (m) => `O certificado de ${m} foi renovado`,
+    spike: (p, n, min) => `Pico de erros em ${p}: ${n} erros em ${min} min`,
+    spikeNormal: (n) => `O normal para este horário é cerca de ${n}.`,
+    spikeTop: (issue, n) => `Mais frequente: ${issue} (${n}).`,
+    spikeOver: (p) => `Os erros de ${p} voltaram ao normal`,
+    spikeLasted: (d) => `O pico durou ${d}.`,
     downFor: (d) => `Fora do ar há ${d}.`,
     wasDownFor: (d) => `Ficou fora do ar por ${d}.`,
     manyDown: (n) => `${n} monitores fora do ar`,
@@ -113,6 +128,11 @@ interface IncidentData {
   url?: string | null
   reason?: string | null
   days?: number
+  /** Error spike: events in the window, the normal and the top issues. */
+  count?: number
+  normal?: number
+  minutes?: number
+  issues?: { type?: string; value?: string; count?: number }[]
 }
 
 export type AlertEvent = 'open' | 'resolve'
@@ -126,6 +146,25 @@ function describe(incident: PendingIncident, event: AlertEvent, now: Date, local
   const ended = incident.resolved_at ? new Date(incident.resolved_at).getTime() : now.getTime()
   const reason = data.reason ? failureText(data.reason, locale) : null
 
+  if (incident.kind === 'error_spike') {
+    if (event === 'resolve') {
+      return {
+        title: w.spikeOver(incident.project_name),
+        detail: w.spikeLasted(duration(ended - started, locale)),
+      }
+    }
+    const top = data.issues?.[0]
+    const issue = top ? [top.type, top.value].filter(Boolean).join(': ').slice(0, 120) : ''
+    return {
+      title: w.spike(incident.project_name, data.count ?? 0, data.minutes ?? 15),
+      detail: [
+        w.spikeNormal(Math.round(data.normal ?? 0)),
+        issue ? w.spikeTop(issue, top?.count ?? 0) : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
+    }
+  }
   if (incident.kind === 'cert_expiring') {
     return event === 'open'
       ? { title: w.cert(name, data.days ?? 0), detail: data.url ?? '' }
@@ -168,12 +207,17 @@ export function alertMessage(
       title: line.title,
       body: line.detail,
       project: { id: first.project_id, name: first.project_name },
-      url: `${base}/p/${first.project_slug}/uptime`,
+      url:
+        first.kind === 'error_spike'
+          ? `${base}/p/${first.project_slug}/emergencies/${first.id}`
+          : `${base}/p/${first.project_slug}/uptime`,
       occurredAt: now,
     }
   }
 
-  const monitorsOnly = incidents.every((i) => i.kind !== 'cert_expiring')
+  const monitorsOnly = incidents.every(
+    (i) => i.kind === 'monitor_down' || i.kind === 'heartbeat_missed',
+  )
   const title = monitorsOnly
     ? event === 'open'
       ? w.manyDown(incidents.length)
@@ -183,13 +227,15 @@ export function alertMessage(
       : w.manyResolved(incidents.length)
   const lines = incidents.map((incident) => {
     const line = describe(incident, event, now, locale)
-    return `• ${incident.project_name}: ${line.title}. ${line.detail}`.trim()
+    const title =
+      incident.kind === 'error_spike' ? line.title : `${incident.project_name}: ${line.title}`
+    return `• ${title}. ${line.detail}`.trim()
   })
   return {
     severity,
     title,
     body: lines.join('\n'),
-    url: `${base}/all/uptime`,
+    url: monitorsOnly ? `${base}/all/uptime` : `${base}/all`,
     occurredAt: now,
   }
 }

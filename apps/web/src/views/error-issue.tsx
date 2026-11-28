@@ -89,6 +89,7 @@ export async function ErrorIssueView({
           {issue.regressed_at && issue.status === 'unresolved' && (
             <Badge variant="warn">{t('badges.regressed')}</Badge>
           )}
+          {data.spike && <Badge variant="destructive">{t('spike')}</Badge>}
           {issue.status !== 'unresolved' && (
             <Badge variant="secondary">{t(`status.${issue.status}`)}</Badge>
           )}

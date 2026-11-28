@@ -2,7 +2,7 @@ import { encryptSecret } from '@octadash/core'
 import type { ChannelRow, PendingIncident } from '@octadash/db'
 import { describe, expect, it } from 'vitest'
 import { alertMessage, duration, failureText } from './alert-text'
-import { channelConfig, planDeliveries } from './alerts'
+import { channelConfig, isSpike, planDeliveries } from './alerts'
 
 const NOW = new Date('2026-11-28T12:10:00Z')
 const SECRET = 'a'.repeat(40)
@@ -109,6 +109,43 @@ describe('alert text', () => {
       { now: NOW, locale: 'pt-BR', panelUrl: 'https://x.dev' },
     )
     expect(cert.title).toBe('O certificado de Site vence em 5 dias')
+  })
+
+  it('says an error spike with its normal and the issue behind it', () => {
+    const spike = incident({
+      kind: 'error_spike',
+      data: {
+        count: 240,
+        normal: 12.4,
+        minutes: 15,
+        issues: [{ type: 'TypeError', value: 'x is undefined', count: 200 }],
+      },
+    })
+    const open = alertMessage([spike], 'open', {
+      now: NOW,
+      locale: 'en',
+      panelUrl: 'https://x.dev/',
+    })
+    expect(open.title).toBe('Error spike on Tribunal de Ideias: 240 errors in 15 min')
+    expect(open.body).toBe(
+      'Normal for this time is about 12. Most: TypeError: x is undefined (200).',
+    )
+    expect(open.url).toBe('https://x.dev/p/tribunal/emergencies/i1')
+    const over = alertMessage([{ ...spike, resolved_at: NOW }], 'resolve', {
+      now: NOW,
+      locale: 'pt-BR',
+      panelUrl: 'https://x.dev',
+    })
+    expect(over.title).toBe('Os erros de Tribunal de Ideias voltaram ao normal')
+    expect(over.body).toBe('O pico durou 7 min.')
+  })
+
+  it('needs both the minimum and the multiple of normal for a spike', () => {
+    const rule = { times: 5, events: 20 }
+    expect(isSpike(19, 0, rule)).toBe(false)
+    expect(isSpike(20, 0, rule)).toBe(true)
+    expect(isSpike(40, 10, rule)).toBe(false)
+    expect(isSpike(50, 10, rule)).toBe(true)
   })
 
   it('formats durations and failures', () => {

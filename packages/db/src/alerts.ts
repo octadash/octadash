@@ -16,6 +16,11 @@ export const RULE_DEFAULTS = {
   heartbeat_missed: { level: 'emergency', params: {} },
   /** A certificate expires in `days` or fewer. */
   cert_expiring: { level: 'emergency', params: { days: 7 } },
+  /**
+   * A product's errors in the last 15 minutes reach `times` its normal for
+   * this time of day and at least `events`. Ends when they fall back under.
+   */
+  error_spike: { level: 'emergency', params: { times: 5, events: 20 } },
 } as const satisfies Record<string, { level: AlertLevel | 'off'; params: Record<string, number> }>
 
 export type IncidentKind = keyof typeof RULE_DEFAULTS
@@ -409,7 +414,7 @@ export async function recordNotification(
 export function listOpenIncidentKeys(db: Db, kind: IncidentKind) {
   return db
     .selectFrom('incident')
-    .select(['dedupe_key', 'monitor_id'])
+    .select(['dedupe_key', 'monitor_id', 'org_id', 'project_id'])
     .where('kind', '=', kind)
     .where('resolved_at', 'is', null)
     .execute()

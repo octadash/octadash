@@ -289,7 +289,8 @@
         "monitor_down": "“{name}” down",
         "heartbeat_missed": "Heartbeat “{name}” missed",
         "cert_expiring": "Certificate of “{name}” about to expire",
-        "other": "Emergency"
+        "other": "Emergency",
+        "error_spike": "Error spike"
       },
       "more": "{count, plural, one {# more on the product page} other {# more on the product page}}"
     }
@@ -578,7 +579,11 @@
       "minutes": "Wait",
       "minutesUnit": "min before telling",
       "days": "Tell",
-      "daysUnit": "days ahead"
+      "daysUnit": "days ahead",
+      "times": "Times normal",
+      "timesUnit": "× normal",
+      "events": "At least",
+      "eventsUnit": "errors in 15 min"
     },
     "allChannels": "All channels",
     "noChannels": "No channels yet. Without one, the emergency shows only in the panel.",
@@ -601,6 +606,11 @@
         "title": "Certificate expiring",
         "body": "The HTTPS certificate of a monitor expires soon.",
         "info": "Octadash reads the certificate on every check. Most certificates renew on their own about 30 days before they expire; if one is still old this close, the renewal failed."
+      },
+      "error_spike": {
+        "title": "Error spike",
+        "body": "A product’s errors in the last 15 minutes reach a multiple of its normal for this time of day, with a minimum so a quiet product does not fire on 3 errors.",
+        "info": "Normal is the same hour on each of the last 7 days. Errors of ignored issues never count. It closes on its own when the last 15 minutes fall back under the rule. A product with no history fires on the minimum alone."
       }
     },
     "legend": "Levels",
@@ -965,21 +975,25 @@
     "over": "over",
     "area": {
       "uptime": "Uptime",
-      "other": "Octadash"
+      "other": "Octadash",
+      "errors": "Errors"
     },
     "started": "Started {time} · {duration}",
     "titles": {
       "monitor_down": "{product} · {name} is down",
       "heartbeat_missed": "{product} · {name} did not run",
       "cert_expiring": "{product} · certificate expires in {days} days",
-      "other": "{product} · {name}"
+      "other": "{product} · {name}",
+      "error_spike": "{product} · error spike"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
       "down": "{reason} on the last {count, plural, one {check} other {# checks}}. It closes on its own when a check passes again.",
       "heartbeat": "{reason}. It closes on its own when the job calls again.",
       "other": "It closes on its own when the check passes again.",
-      "closed": "Over at {time}, after {duration}."
+      "closed": "Over at {time}, after {duration}.",
+      "spike": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where about {normal} is normal at this time. It closes on its own when errors fall back under the rule.",
+      "spikeNone": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where this time of day usually has none. It closes on its own when errors fall back under the rule."
     },
     "onIt": "{name} is on it · since {time}",
     "nobody": "Nobody on it yet",
@@ -1052,7 +1066,8 @@
       "sameIp": "Same IP ({ip}) as some of them. They may be the same problem or not; you decide. Each emergency stays separate.",
       "onIt": "{name} is on it",
       "nobody": "nobody on it",
-      "submit": "I'm on these too"
+      "submit": "I'm on these too",
+      "titleOther": "Open at the same time"
     },
     "last": {
       "title": "Last time",
@@ -1065,7 +1080,13 @@
       "monitor_down": "{product} · {name} was down",
       "heartbeat_missed": "{product} · {name} did not run",
       "cert_expiring": "{product} · certificate was close to expiring",
-      "other": "{product} · {name}"
+      "other": "{product} · {name}",
+      "error_spike": "{product} · error spike"
+    },
+    "spike": {
+      "title": "Issues behind the spike",
+      "events": "{count, plural, one {# event} other {# events}} in {minutes} min",
+      "all": "See all errors of {product}"
     }
   },
   "strip": {
@@ -1074,31 +1095,36 @@
       "monitor_down": "{product} is down",
       "heartbeat_missed": "{product}: “{name}” did not run",
       "cert_expiring": "{product}: certificate expires in {days, plural, one {# day} other {# days}}",
-      "other": "{product}: {name}"
+      "other": "{product}: {name}",
+      "error_spike": "{product}: error spike"
     },
     "short": {
       "monitor_down": "{product} down",
       "heartbeat_missed": "{product} heartbeat missed",
       "cert_expiring": "{product} certificate expiring",
-      "other": "{product} {name}"
+      "other": "{product} {name}",
+      "error_spike": "{product} error spike"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
       "heartbeat_missed": "“{name}”: {reason}",
       "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
-      "other": "{name}: {reason}"
+      "other": "{name}: {reason}",
+      "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” is not answering",
       "heartbeat_missed": "“{name}” did not check in on time",
       "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
-      "other": "{name}"
+      "other": "{name}",
+      "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min"
     },
     "kind": {
       "monitor_down": "Down",
       "heartbeat_missed": "Heartbeat missed",
       "cert_expiring": "Certificate expiring",
-      "other": "Emergency"
+      "other": "Emergency",
+      "error_spike": "Error spike"
     },
     "count": "{count, plural, one {# emergency} other {# emergencies}}",
     "countProducts": "{count} emergencies on {products} products",
@@ -1153,7 +1179,8 @@
       "empty": "Nothing here. Change what the list shows above.",
       "and": "{first} and {last}",
       "submitNone": "I'm on these"
-    }
+    },
+    "spikeOver": "{product}: errors back to normal"
   },
   "traffic": {
     "title": "Traffic",
@@ -1769,6 +1796,7 @@
       "received": "Received",
       "previous": "← Previous event",
       "newest": "Newest event"
-    }
+    },
+    "spike": "Spike"
   }
 }

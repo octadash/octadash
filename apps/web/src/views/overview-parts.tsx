@@ -310,5 +310,7 @@ export function Timeline({
 }
 
 function kindKey(kind: string) {
-  return ['monitor_down', 'heartbeat_missed', 'cert_expiring'].includes(kind) ? kind : 'other'
+  return ['monitor_down', 'heartbeat_missed', 'cert_expiring', 'error_spike'].includes(kind)
+    ? kind
+    : 'other'
 }
