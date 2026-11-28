@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Script from 'next/script'
 import { Provider } from '@/components/provider'
+import { TrackCopies } from '@/components/track'
 import { i18n, isLang } from '@/lib/i18n'
 import { baseOptions } from '@/lib/layout.shared'
 import { siteUrl } from '@/lib/shared'
@@ -48,7 +49,8 @@ export default async function Layout({ params, children }: LayoutProps<'/[lang]'
             {children}
           </DocsLayout>
         </Provider>
-        {/* The docs count their own visits with Octadash (no cookie). */}
+        <TrackCopies />
+        {/* The docs count their own visits and events with Octadash (no cookie). */}
         <Script
           defer
           src="https://octadash-ingest.89dev.com.br/o/v1/script.js"
