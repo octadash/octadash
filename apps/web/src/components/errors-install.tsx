@@ -1,13 +1,17 @@
 'use client'
 
-import { ArrowRightIcon, CheckCircle2Icon, LoaderCircleIcon } from 'lucide-react'
+import { ArrowRightIcon, CheckCircle2Icon, ChevronDownIcon, LoaderCircleIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { ERROR_PLATFORMS, type ErrorPlatform, errorSnippet, testError } from '@/lib/errors-setup'
 import { CopyField } from './copy-field'
 import { Button } from './ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+
+/** With the page script on, the platforms left are the ones that run on a server. */
+const SERVER_PLATFORMS = ERROR_PLATFORMS.filter((p) => p !== 'html' && p !== 'react')
 
 /** How often step 3 asks whether an error arrived. */
 const POLL_MS = 3000
@@ -44,6 +48,8 @@ export function ErrorsInstall({
   platform,
   issueHref,
   errorsHref,
+  scriptOn = false,
+  sourceName = '',
 }: {
   sourceId: string
   ingestUrl: string
@@ -53,11 +59,19 @@ export function ErrorsInstall({
   /** The product's issue page, without the id. */
   issueHref: string
   errorsHref: string
+  /**
+   * The source already has the Octadash page script, which reports uncaught
+   * errors by itself: step 1 says so, and the SDK is only for server errors.
+   */
+  scriptOn?: boolean
+  sourceName?: string
 }) {
   const t = useTranslations('errorsSetup')
   const tp = useTranslations('platforms')
   const locale = useLocale()
-  const [tab, setTab] = useState<ErrorPlatform>(platform)
+  // With the script on, the tabs are for the server: the page is covered.
+  const [tab, setTab] = useState<ErrorPlatform>(scriptOn && platform === 'html' ? 'node' : platform)
+  const [serverOpen, setServerOpen] = useState(false)
   const [test, setTest] = useState<Test>('idle')
   const [last, setLast] = useState<{
     at: string
@@ -114,45 +128,106 @@ export function ErrorsInstall({
 
   return (
     <ol className="flex flex-col gap-6">
-      <Step n={1} title={t('step1')}>
-        <Tabs value={tab} onValueChange={(v) => setTab(v as ErrorPlatform)} className="gap-2">
-          <TabsList
-            aria-label={t('codeLabel')}
-            className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto"
-          >
-            {ERROR_PLATFORMS.map((p) => (
-              <TabsTrigger key={p} value={p} className="h-8 flex-none px-2.5">
-                {tp(p)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {ERROR_PLATFORMS.map((p) => {
-            const snippet = errorSnippet(p, options)
-            return (
-              <TabsContent key={p} value={p} className="flex flex-col gap-2">
-                {snippet.install && (
+      {scriptOn ? (
+        <Step n={1} title={t('scriptOnTitle')}>
+          <p className="flex items-start gap-2 text-sm text-muted-foreground">
+            <CheckCircle2Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-ok" />
+            {t('scriptOnBody', { source: sourceName })}
+          </p>
+          <Collapsible open={serverOpen} onOpenChange={setServerOpen}>
+            <CollapsibleTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="group">
+                {t('serverToo')}
+                <ChevronDownIcon
+                  data-icon="inline-end"
+                  className="transition-transform group-data-[state=open]:rotate-180"
+                  aria-hidden
+                />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="flex flex-col gap-2 pt-3">
+              <p className="text-sm text-muted-foreground">{t('serverTooBody')}</p>
+              <Tabs value={tab} onValueChange={(v) => setTab(v as ErrorPlatform)} className="gap-2">
+                <TabsList
+                  aria-label={t('codeLabel')}
+                  className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto"
+                >
+                  {SERVER_PLATFORMS.map((p) => (
+                    <TabsTrigger key={p} value={p} className="h-8 flex-none px-2.5">
+                      {tp(p)}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {SERVER_PLATFORMS.map((p) => {
+                  const snippet = errorSnippet(p, options)
+                  return (
+                    <TabsContent key={p} value={p} className="flex flex-col gap-2">
+                      {snippet.install && (
+                        <CopyField
+                          value={snippet.install}
+                          label={t('install')}
+                          copyLabel={t('copy')}
+                          copiedLabel={t('copied')}
+                        />
+                      )}
+                      <p className="font-mono text-xs text-muted-foreground">{snippet.file}</p>
+                      <CopyField
+                        value={snippet.code}
+                        copyLabel={t('copy')}
+                        copiedLabel={t('copied')}
+                        multiline
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {p === 'other' ? t('noteOther') : t('noteSdk')}
+                      </p>
+                    </TabsContent>
+                  )
+                })}
+              </Tabs>
+            </CollapsibleContent>
+          </Collapsible>
+        </Step>
+      ) : (
+        <Step n={1} title={t('step1')}>
+          <Tabs value={tab} onValueChange={(v) => setTab(v as ErrorPlatform)} className="gap-2">
+            <TabsList
+              aria-label={t('codeLabel')}
+              className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto"
+            >
+              {ERROR_PLATFORMS.map((p) => (
+                <TabsTrigger key={p} value={p} className="h-8 flex-none px-2.5">
+                  {tp(p)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {ERROR_PLATFORMS.map((p) => {
+              const snippet = errorSnippet(p, options)
+              return (
+                <TabsContent key={p} value={p} className="flex flex-col gap-2">
+                  {snippet.install && (
+                    <CopyField
+                      value={snippet.install}
+                      label={t('install')}
+                      copyLabel={t('copy')}
+                      copiedLabel={t('copied')}
+                    />
+                  )}
+                  <p className="font-mono text-xs text-muted-foreground">{snippet.file}</p>
                   <CopyField
-                    value={snippet.install}
-                    label={t('install')}
+                    value={snippet.code}
                     copyLabel={t('copy')}
                     copiedLabel={t('copied')}
+                    multiline
                   />
-                )}
-                <p className="font-mono text-xs text-muted-foreground">{snippet.file}</p>
-                <CopyField
-                  value={snippet.code}
-                  copyLabel={t('copy')}
-                  copiedLabel={t('copied')}
-                  multiline
-                />
-                <p className="text-xs text-muted-foreground">
-                  {p === 'html' ? t('noteScript') : p === 'other' ? t('noteOther') : t('noteSdk')}
-                </p>
-              </TabsContent>
-            )
-          })}
-        </Tabs>
-      </Step>
+                  <p className="text-xs text-muted-foreground">
+                    {p === 'html' ? t('noteScript') : p === 'other' ? t('noteOther') : t('noteSdk')}
+                  </p>
+                </TabsContent>
+              )
+            })}
+          </Tabs>
+        </Step>
+      )}
 
       <Step n={2} title={t('step2')}>
         <p className="text-sm text-muted-foreground">{t('step2Body')}</p>

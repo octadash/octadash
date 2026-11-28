@@ -1,4 +1,4 @@
-import { getProjectBySlug, lastError, listSources, sentryDsn } from '@octadash/db'
+import { getProjectBySlug, hasPageScript, lastError, listSources, sentryDsn } from '@octadash/db'
 import { ArrowLeftIcon, CheckIcon, CodeIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -221,6 +221,8 @@ export default async function ErrorsSetupPage({
                 }
                 issueHref={`/p/${project.slug}/errors`}
                 errorsHref={`/p/${project.slug}/errors`}
+                scriptOn={hasPageScript(current.platform ?? '', current.areas)}
+                sourceName={current.name}
               />
             </RouteSheet>
           )}

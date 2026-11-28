@@ -36,9 +36,15 @@ Tudo que o Octadash mostra é uma de três coisas:
 
 Uma origem é do produto, não de uma área, porque o mesmo código envia mais de
 um tipo de dado. O script do navegador envia visualizações (Tráfego) e eventos
-como `signed_up` (Uso) com uma chave só. Um SDK do Sentry envia erros e, depois,
-traces. A área de cada dado vem do tipo dele, nunca da chave, então um site
-nunca precisa de duas chaves ou dois scripts.
+como `signed_up` (Uso) com uma chave só, e relata os erros não tratados da
+página (Erros). Um SDK do Sentry envia erros do servidor e, depois, traces. A
+área de cada dado vem do tipo dele, nunca da chave, então um site nunca precisa
+de duas chaves ou dois scripts.
+
+A instalação é uma vez por origem, quando você a adiciona. Uma origem com o
+script já vale para Tráfego, Uso e Erros: essas áreas nunca pedem para instalar
+de novo. Elas dizem que a origem já envia esse dado e mostram só o que falta,
+como um SDK para erros no servidor.
 
 Quando chega dado de uma área ainda não configurada, essa área passa a receber
 sozinha.

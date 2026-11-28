@@ -28,11 +28,42 @@ export interface Source {
   created_at: Date
 }
 
+/** Platforms where the source's code is the Octadash page script. */
+const SCRIPT_PLATFORMS = ['html', 'nextjs', 'react', 'wordpress', 'gtm']
+
+/** What the page script sends by itself: page views, uncaught errors, and `track` events. */
+export const SCRIPT_AREAS = ['errors', 'traffic', 'usage'] as const
+
+/**
+ * Whether a source's code is the Octadash page script: Traffic always is, and
+ * so are Product usage in the browser and Errors on a plain HTML page (the
+ * Next.js and React Errors code is the Sentry SDK).
+ */
+export function hasPageScript(platform: string, areas: readonly string[]): boolean {
+  if (!SCRIPT_PLATFORMS.includes(platform)) return false
+  return (
+    areas.includes('traffic') ||
+    areas.includes('usage') ||
+    (platform === 'html' && areas.includes('errors'))
+  )
+}
+
+/**
+ * The areas a source feeds. One install per source: once the page script is
+ * on the page, the source feeds Traffic, Errors and Product usage, and no
+ * other area asks to install it again.
+ */
+export function sourceAreas(platform: string, areas: readonly string[]): string[] {
+  const all = hasPageScript(platform, areas) ? [...areas, ...SCRIPT_AREAS] : areas
+  return [...new Set(all)].sort()
+}
+
 function clean(input: SourceInput) {
+  const platform = input.platform.trim()
   return {
     name: input.name.trim(),
-    platform: input.platform.trim(),
-    areas: [...new Set(input.areas)].sort(),
+    platform,
+    areas: sourceAreas(platform, input.areas),
   }
 }
 
@@ -137,12 +168,22 @@ export function withArea(area: string) {
   >`(select array_agg(distinct a order by a) from unnest(array_append(areas, ${area}::text)) a)`
 }
 
-/** Adds an area to a source, as when an area's setup reuses an existing source. */
+/**
+ * Adds an area to a source, as when an area's setup reuses an existing
+ * source. Adding Traffic to a page source brings Errors and Product usage too.
+ */
 export async function addSourceArea(db: Db, orgId: string, sourceId: string, area: string) {
+  const current = await db
+    .selectFrom('source')
+    .select(['platform', 'areas'])
+    .where('org_id', '=', orgId)
+    .where('id', '=', sourceId)
+    .executeTakeFirst()
+  if (!current) return false
   const result = await db
     .updateTable('source')
     .set({
-      areas: withArea(area),
+      areas: sourceAreas(current.platform, [...current.areas, area]),
       updated_at: new Date(),
     })
     .where('org_id', '=', orgId)

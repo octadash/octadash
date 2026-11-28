@@ -4,8 +4,12 @@ description: Browser and server errors, grouped, with how many people each one h
 ---
 
 Octadash speaks the Sentry protocol. Every server and app platform uses the
-Sentry SDK with the source's DSN; the browser can use the Octadash script,
-which reports uncaught errors without an SDK.
+Sentry SDK with the source's DSN; the browser uses the Octadash script, which
+reports uncaught errors without an SDK.
+
+A source that already has the script, installed for Traffic or Product usage,
+already sends its browser errors. Errors says so and does not ask you to install
+anything again; the code below is only for errors on the server.
 
 ## Add the code
 

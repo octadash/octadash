@@ -35,9 +35,15 @@ Everything Octadash shows is one of three things:
 
 A source belongs to the product, not to one area, because the same code sends
 more than one kind of data. The browser script sends page views (Traffic) and
-events such as `signed_up` (Product usage) with one key. A Sentry SDK sends
-errors and, later, traces. The area of each piece of data comes from its kind,
-never from the key, so a site never needs two keys or two scripts.
+events such as `signed_up` (Product usage) with one key, and reports the
+page's uncaught errors (Errors). A Sentry SDK sends server errors and, later,
+traces. The area of each piece of data comes from its kind, never from the key,
+so a site never needs two keys or two scripts.
+
+You install once per source, when you add it. A source with the script already
+counts for Traffic, Product usage and Errors: those areas never ask you to
+install it again. They say the source already sends that data and show only
+what is missing, such as an SDK for errors on the server.
 
 When data arrives for an area that is not set up yet, that area starts
 receiving on its own.

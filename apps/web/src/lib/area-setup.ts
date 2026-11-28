@@ -54,8 +54,9 @@ export function areaSetup(
 ): AreaSetup {
   const forArea = input.sources.find((s) => s.areas.includes(area))
   if (input.hadData) return { state: 'sending', source: forArea ?? null }
-  if (forArea) return { state: 'waiting', source: forArea }
+  // "I won't use this" wins over a page script that would send it anyway.
   if (input.dismissed) return { state: 'dismissed', source: null }
+  if (forArea) return { state: 'waiting', source: forArea }
   // A source with the page script is the quickest start: it is already on the page.
   const excluded = CANNOT_START[area] ?? []
   const usable = input.sources.filter((s) => !excluded.includes(s.platform))

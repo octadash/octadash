@@ -4,8 +4,12 @@ description: Erros do navegador e do servidor, agrupados, com quantas pessoas ca
 ---
 
 O Octadash fala o protocolo do Sentry. Toda plataforma de servidor e de app usa
-o SDK do Sentry com o DSN da origem; o navegador pode usar o script do
-Octadash, que relata erros não tratados sem SDK.
+o SDK do Sentry com o DSN da origem; o navegador usa o script do Octadash, que
+relata erros não tratados sem SDK.
+
+Uma origem que já tem o script, instalado para Tráfego ou Uso, já envia os erros
+do navegador. Erros diz isso e não pede para instalar nada de novo; o código
+abaixo é só para erros no servidor.
 
 ## Adicione o código
 
