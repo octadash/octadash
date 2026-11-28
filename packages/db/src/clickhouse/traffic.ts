@@ -1,4 +1,5 @@
 import type { ClickHouseClient } from '@clickhouse/client'
+import { type Bucket, bucketSql, ISO_TIMES } from './buckets'
 import { toClickHouseTime } from './events'
 
 /**
@@ -13,6 +14,8 @@ export interface TrafficScope {
   projectIds: string[] | null
   from: Date
   to: Date
+  /** IANA zone that day buckets follow ("America/Sao_Paulo"). Default UTC. */
+  timeZone?: string
 }
 
 /** A person: the id the app gave them, else the daily hash. */
@@ -32,6 +35,7 @@ function params(scope: TrafficScope) {
     projects: scope.projectIds ?? [],
     from: toClickHouseTime(scope.from),
     to: toClickHouseTime(scope.to),
+    tz: scope.timeZone ?? 'UTC',
   }
 }
 
@@ -73,19 +77,21 @@ export interface TrafficPoint {
   visitors: number
 }
 
-/** Page views and visitors per hour or per day, with empty buckets filled. */
+/**
+ * Page views and visitors per hour or per day, with empty buckets filled. Days
+ * start at midnight in the scope's time zone.
+ */
 export async function trafficSeries(
   client: ClickHouseClient,
   scope: TrafficScope,
-  bucket: 'hour' | 'day',
+  bucket: Bucket,
 ): Promise<TrafficPoint[]> {
   if (scope.projectIds?.length === 0) return []
-  const unit = bucket === 'hour' ? 'toStartOfHour' : 'toStartOfDay'
-  const step = bucket === 'hour' ? 3600 : 86400
+  const { start, step } = bucketSql(bucket)
   const result = await client.query({
     query: `
       SELECT
-        ${unit}(timestamp) AS at,
+        ${start}(timestamp, {tz:String}) AS at,
         count() AS pageviews,
         uniq(${VISITOR}) AS visitors
       FROM events
@@ -93,18 +99,81 @@ export async function trafficSeries(
       GROUP BY at
       ORDER BY at
       WITH FILL
-        FROM ${unit}(toDateTime({from:DateTime64(3, 'UTC')}, 'UTC'))
+        FROM ${start}(toDateTime({from:DateTime64(3, 'UTC')}, 'UTC'), {tz:String})
         TO toDateTime({to:DateTime64(3, 'UTC')}, 'UTC')
         STEP ${step}`,
     query_params: params(scope),
+    clickhouse_settings: ISO_TIMES,
     format: 'JSONEachRow',
   })
   const rows = await result.json<{ at: string; pageviews: string; visitors: string }>()
   return rows.map((row) => ({
-    at: new Date(`${row.at.replace(' ', 'T')}Z`),
+    at: new Date(row.at),
     pageviews: Number(row.pageviews),
     visitors: Number(row.visitors),
   }))
+}
+
+/**
+ * The same series split by product, for a sparkline per row. Buckets without
+ * visits are left out; `fillSeries` puts them back from the scope's series.
+ */
+export async function trafficSeriesByProduct(
+  client: ClickHouseClient,
+  scope: TrafficScope,
+  bucket: Bucket,
+): Promise<Map<string, TrafficPoint[]>> {
+  const series = new Map<string, TrafficPoint[]>()
+  if (scope.projectIds?.length === 0) return series
+  const { start } = bucketSql(bucket)
+  const result = await client.query({
+    query: `
+      SELECT
+        toString(project_id) AS product,
+        ${start}(timestamp, {tz:String}) AS at,
+        count() AS pageviews,
+        uniq(${VISITOR}) AS visitors
+      FROM events
+      WHERE ${where(scope)} AND ${PAGEVIEW} AND is_bot = 0
+      GROUP BY product, at
+      ORDER BY product, at`,
+    query_params: params(scope),
+    clickhouse_settings: ISO_TIMES,
+    format: 'JSONEachRow',
+  })
+  const rows = await result.json<{
+    product: string
+    at: string
+    pageviews: string
+    visitors: string
+  }>()
+  for (const row of rows) {
+    const points = series.get(row.product) ?? []
+    points.push({
+      at: new Date(row.at),
+      pageviews: Number(row.pageviews),
+      visitors: Number(row.visitors),
+    })
+    series.set(row.product, points)
+  }
+  return series
+}
+
+/** Puts back the empty buckets of a sparse series, taking the buckets from a full one. */
+export function fillSeries(sparse: TrafficPoint[], buckets: Date[]): TrafficPoint[] {
+  const byTime = new Map(sparse.map((point) => [point.at.getTime(), point]))
+  return buckets.map((at) => byTime.get(at.getTime()) ?? { at, pageviews: 0, visitors: 0 })
+}
+
+/** People with a page view in the last few minutes: "N online now". */
+export async function onlineNow(
+  client: ClickHouseClient,
+  scope: Pick<TrafficScope, 'orgId' | 'projectIds'>,
+  at: Date,
+  minutes = 5,
+): Promise<number> {
+  const from = new Date(at.getTime() - minutes * 60_000)
+  return (await trafficSummary(client, { ...scope, from, to: at })).visitors
 }
 
 /** What a breakdown can group by. `source` is the UTM source, else the referring site. */

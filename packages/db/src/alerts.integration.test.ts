@@ -3,6 +3,7 @@ import {
   acknowledgeIncidents,
   claimPendingIncidents,
   closeStaleMonitorIncidents,
+  listIncidentsBetween,
   listOpenIncidents,
   listRules,
   markNotified,
@@ -117,6 +118,14 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
       .transaction()
       .execute((trx) => claimPendingIncidents(trx, new Date(T0.getTime() + 900_000)))
     expect(after.some((i) => i.id === blip?.id)).toBe(false)
+
+    // The timeline of a period: whatever was open at some point of it.
+    const at = (ms: number) => new Date(T0.getTime() + ms)
+    const between = await listIncidentsBetween(db, org, [project.id], at(200_000), at(410_000))
+    expect(between.map((i) => i.id)).toEqual([first?.id, blip?.id])
+    expect(await listIncidentsBetween(db, org, null, at(500_000), at(600_000))).toEqual([])
+    expect(await listIncidentsBetween(db, org, [], T0, at(600_000))).toEqual([])
+    expect(await listIncidentsBetween(db, other, null, T0, at(600_000))).toEqual([])
   })
 
   it('does not open incidents for a rule that is off', async () => {

@@ -1,9 +1,17 @@
 import { afterAll, describe, expect, it } from 'vitest'
+import { bucketStarts } from './buckets'
 import { createClickHouse, parseClickHouseUrl } from './client'
 import { insertEvents, toClickHouseTime } from './events'
 import { migrateClickHouse } from './migrate'
-import { trafficBreakdown, trafficSeries, trafficSummary } from './traffic'
-import { insertUptimeChecks, monitorStats } from './uptime'
+import {
+  fillSeries,
+  onlineNow,
+  trafficBreakdown,
+  trafficSeries,
+  trafficSeriesByProduct,
+  trafficSummary,
+} from './traffic'
+import { insertUptimeChecks, monitorStats, uptimeHistory } from './uptime'
 
 const url = process.env.CLICKHOUSE_URL
 
@@ -164,5 +172,80 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     expect(series).toHaveLength(24)
     expect(series[1]).toEqual({ at: new Date('2026-11-20T01:00:00Z'), pageviews: 2, visitors: 1 })
     expect(series[0]?.pageviews).toBe(0)
+
+    // Days start at local midnight: 03:00 UTC in São Paulo.
+    const week = { ...scope, projectIds: null, to: new Date(day.getTime() + 2 * 86_400_000) }
+    const days = await trafficSeries(client, { ...week, timeZone: 'America/Sao_Paulo' }, 'day')
+    expect(days.map((d) => d.at.toISOString())).toEqual([
+      '2026-11-19T03:00:00.000Z',
+      '2026-11-20T03:00:00.000Z',
+      '2026-11-21T03:00:00.000Z',
+    ])
+    // Hours 1 and 2 UTC are still the 19th there; hour 3 is the 20th.
+    expect(days.map((d) => d.pageviews)).toEqual([4, 1, 0])
+
+    const byProduct = await trafficSeriesByProduct(client, { ...scope, projectIds: null }, 'hour')
+    expect(byProduct.get(b)?.map((p) => p.pageviews)).toEqual([1, 1])
+    const filled = fillSeries(
+      byProduct.get(b) ?? [],
+      series.map((p) => p.at),
+    )
+    expect(filled).toHaveLength(24)
+    expect(filled.slice(0, 4).map((p) => p.visitors)).toEqual([0, 0, 1, 1])
+
+    const minuteAfter = new Date(day.getTime() + 3 * 3_600_000 + 60_000)
+    expect(await onlineNow(client, { orgId: org, projectIds: null }, minuteAfter)).toBe(1)
+    expect(await onlineNow(client, { orgId: org, projectIds: [a] }, minuteAfter)).toBe(0)
+  })
+
+  it('cuts days at local midnight, daylight saving time included', async () => {
+    const starts = await bucketStarts(
+      client,
+      {
+        from: new Date('2026-10-31T12:00:00Z'),
+        to: new Date('2026-11-02T12:00:00Z'),
+        timeZone: 'America/New_York',
+      },
+      'day',
+    )
+    expect(starts.map((d) => d.toISOString())).toEqual([
+      '2026-10-31T04:00:00.000Z',
+      '2026-11-01T04:00:00.000Z',
+      '2026-11-02T05:00:00.000Z',
+    ])
+  })
+
+  it('keeps an hour-by-hour uptime history per product', async () => {
+    const a = crypto.randomUUID()
+    const b = crypto.randomUUID()
+    const day = new Date('2026-11-21T00:00:00Z')
+    const at = (hours: number) => toClickHouseTime(new Date(day.getTime() + hours * 3_600_000))
+    const check = (project: string, hours: number, up: 0 | 1) => ({
+      org_id: org,
+      project_id: project,
+      monitor_id: crypto.randomUUID(),
+      timestamp: at(hours),
+      up,
+      status_code: up ? 200 : 502,
+      duration_ms: 100,
+      error: up ? '' : 'HTTP 502',
+      cert_days: null,
+    })
+    await insertUptimeChecks(client, [
+      check(a, 0.5, 1),
+      check(a, 0.6, 0),
+      check(a, 5, 1),
+      check(b, 1, 1),
+    ])
+    const scope = { orgId: org, from: day, to: new Date(day.getTime() + 86_400_000) }
+    const history = await uptimeHistory(client, { ...scope, projectIds: [a] }, 'hour')
+    expect([...history.keys()]).toEqual([a])
+    const ofA = history.get(a)
+    expect(ofA).toMatchObject({ checks: 3, ups: 2 })
+    expect(ofA?.buckets).toHaveLength(24)
+    expect(ofA?.buckets[0]).toMatchObject({ checks: 2, downs: 1 })
+    expect(ofA?.buckets[1]).toMatchObject({ checks: 0, downs: 0 })
+    expect(ofA?.buckets[5]).toMatchObject({ checks: 1, downs: 0 })
+    expect(await uptimeHistory(client, { ...scope, projectIds: [] }, 'hour')).toEqual(new Map())
   })
 })

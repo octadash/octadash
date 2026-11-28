@@ -1,3 +1,4 @@
+export * from './buckets'
 export * from './client'
 export * from './events'
 export * from './migrate'

@@ -11,6 +11,7 @@ import type { ColumnType, Generated } from 'kysely'
  */
 export interface Database {
   octadash_instance: OctadashInstanceTable
+  organization_settings: OrganizationSettingsTable
   project: ProjectTable
   source: SourceTable
   source_key: SourceKeyTable
@@ -51,6 +52,15 @@ export interface ProjectTable {
   /** Legacy address from the diagnosis era. Read once by the uptime step, then dropped. */
   url: ColumnType<string | null, never, never>
   created_at: CreatedAt
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export interface OrganizationSettingsTable {
+  org_id: string
+  /** ISO 4217, upper case: "BRL", "USD". */
+  currency: ColumnType<string, string | undefined, string>
+  /** IANA: "America/Sao_Paulo". */
+  time_zone: ColumnType<string, string | undefined, string>
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
 
