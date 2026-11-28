@@ -16,7 +16,10 @@ import {
   trafficHref,
 } from '@/lib/traffic'
 import { cn } from '@/lib/utils'
+import { loadAreaSetup } from '@/server/area-setup'
 import { loadTraffic, TRAFFIC_CARDS } from '@/server/traffic'
+import { AreaProducts, AreaProductsPage } from './area-start'
+import { TrafficStartView } from './area-start-views'
 
 /**
  * The Traffic page, as closed in the Traffic canvas: numbers on top that
@@ -77,36 +80,17 @@ export async function TrafficView({
     total: data.lists[dimension]?.total ?? 0,
   })
 
-  // Nothing to show yet: no source sends page views and nothing came in.
-  if (data.sources.length === 0 && totals.visitors === 0 && filters.length === 0) {
+  const setup = await loadAreaSetup(orgId, data.projects, 'traffic')
+  if (totals.visitors === 0 && filters.length === 0 && !setup.some((s) => s.state === 'sending')) {
+    const [first] = setup
+    if (product && first) return <TrafficStartView orgId={orgId} product={product} setup={first} />
     return (
-      <div className="flex max-w-2xl flex-col gap-4">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <Card>
-          <CardContent className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{t('none.title')}</h2>
-            <p className="text-sm text-muted-foreground">{t('none.body')}</p>
-            {product ? (
-              <Button asChild className="self-start">
-                <Link href={`/p/${product.slug}/traffic/setup`}>{t('none.setUp')}</Link>
-              </Button>
-            ) : (
-              <>
-                <p className="text-sm font-medium">{t('none.all')}</p>
-                <ul className="flex flex-wrap gap-2">
-                  {data.projects.map((p) => (
-                    <li key={p.id}>
-                      <Button asChild variant="outline">
-                        <Link href={`/p/${p.slug}/traffic/setup`}>{p.name}</Link>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <AreaProductsPage
+        area="traffic"
+        title={t('title')}
+        intro={group ? t('introGroup', { group }) : t('intro')}
+        setup={setup}
+      />
     )
   }
 
@@ -393,6 +377,7 @@ export async function TrafficView({
           </Button>
         </CardContent>
       </Card>
+      {several && <AreaProducts area="traffic" setup={setup} folded />}
     </div>
   )
 }

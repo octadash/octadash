@@ -239,9 +239,10 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
 
   it('tells when each source last sent anything', async () => {
     const last = await sourcesLastData(client, org, [project], T0)
-    expect(last.get('00000000-0000-0000-0000-000000000000')?.toISOString()).toBe(
-      later(90).toISOString(),
-    )
+    const seen = last.get('00000000-0000-0000-0000-000000000000')
+    expect(seen?.any.toISOString()).toBe(later(90).toISOString())
+    expect(seen?.error?.toISOString()).toBe(later(90).toISOString())
+    expect(seen?.pageview).toBeUndefined()
     expect((await sourcesLastData(client, org, [project], later(91))).size).toBe(0)
     expect((await sourcesLastData(client, org, [], T0)).size).toBe(0)
   })

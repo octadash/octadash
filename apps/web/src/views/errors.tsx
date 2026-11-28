@@ -27,8 +27,9 @@ import {
 import { percentChange } from '@/lib/period'
 import { cn } from '@/lib/utils'
 import { type IssueRow, loadErrors } from '@/server/errors'
+import { AreaProducts } from './area-start'
 import { ignoreLabels } from './error-labels'
-import { ErrorsProducts, ErrorsQuiet, ErrorsStartView } from './errors-empty'
+import { ErrorsQuiet, ErrorsStartView } from './errors-empty'
 
 /** Bars of the last 24 hours, one per hour; the numbers are in the row's Events cell. */
 function Bars({ values, label }: { values: number[]; label: string }) {
@@ -135,7 +136,7 @@ export async function ErrorsView({
             {group ? t('introGroup', { group }) : t('intro')}
           </p>
         </div>
-        <ErrorsProducts setup={data.setup} folded={false} />
+        <AreaProducts area="errors" setup={data.setup} folded={false} />
       </div>
     )
   }
@@ -266,7 +267,7 @@ export async function ErrorsView({
           several={several}
           resolved={data.counts.resolved}
         />
-        {several && <ErrorsProducts setup={data.setup} folded />}
+        {several && <AreaProducts area="errors" setup={data.setup} folded />}
       </div>
     )
   }
@@ -533,7 +534,7 @@ export async function ErrorsView({
           <p>{t('foot')}</p>
         </div>
       </section>
-      {several && <ErrorsProducts setup={data.setup} folded />}
+      {several && <AreaProducts area="errors" setup={data.setup} folded />}
     </div>
   )
 }

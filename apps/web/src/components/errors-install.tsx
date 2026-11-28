@@ -12,18 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 /** How often step 3 asks whether an error arrived. */
 const POLL_MS = 3000
 
-function Step({
-  n,
-  title,
-  level,
-  children,
-}: {
-  n: number
-  title: string
-  level: 2 | 3
-  children: React.ReactNode
-}) {
-  const Heading = level === 2 ? 'h2' : 'h3'
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
     <li className="flex gap-3">
       <span
@@ -33,7 +22,7 @@ function Step({
         {n}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <Heading className="text-sm font-semibold">{title}</Heading>
+        <h3 className="text-sm font-semibold">{title}</h3>
         {children}
       </div>
     </li>
@@ -55,7 +44,6 @@ export function ErrorsInstall({
   platform,
   issueHref,
   errorsHref,
-  level = 3,
 }: {
   sourceId: string
   ingestUrl: string
@@ -65,8 +53,6 @@ export function ErrorsInstall({
   /** The product's issue page, without the id. */
   issueHref: string
   errorsHref: string
-  /** The steps' heading level: 2 on the empty Errors page, 3 under a card title. */
-  level?: 2 | 3
 }) {
   const t = useTranslations('errorsSetup')
   const tp = useTranslations('platforms')
@@ -128,7 +114,7 @@ export function ErrorsInstall({
 
   return (
     <ol className="flex flex-col gap-6">
-      <Step n={1} title={t('step1')} level={level}>
+      <Step n={1} title={t('step1')}>
         <Tabs value={tab} onValueChange={(v) => setTab(v as ErrorPlatform)} className="gap-2">
           <TabsList
             aria-label={t('codeLabel')}
@@ -168,7 +154,7 @@ export function ErrorsInstall({
         </Tabs>
       </Step>
 
-      <Step n={2} title={t('step2')} level={level}>
+      <Step n={2} title={t('step2')}>
         <p className="text-sm text-muted-foreground">{t('step2Body')}</p>
         {!last && (
           <div className="flex flex-wrap items-center gap-3">

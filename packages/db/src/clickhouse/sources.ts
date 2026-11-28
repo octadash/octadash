@@ -58,35 +58,59 @@ export async function sourceActivity(
   )
 }
 
+/** When a source last sent each kind of data; `any` is the newest of them. */
+export interface SourceLastData {
+  any: Date
+  pageview?: Date
+  event?: Date
+  error?: Date
+  log?: Date
+}
+
 /**
- * When each source of these products last sent anything (a page view, an
- * event, an error or a log) since a time. Errors uses it to tell a real zero
- * from a source gone silent. Sources that sent nothing are left out.
+ * When each source of these products last sent each kind of data (page
+ * views, other events, errors, logs) since a time. The empty pages use it to
+ * tell a source that never sent from one gone silent, and a real zero from
+ * silence. Sources that sent nothing are left out.
  */
 export async function sourcesLastData(
   client: ClickHouseClient,
   orgId: string,
   projectIds: string[],
   since: Date,
-): Promise<Map<string, Date>> {
+): Promise<Map<string, SourceLastData>> {
   if (projectIds.length === 0) return new Map()
-  const where = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}`
+  const where = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+    AND timestamp >= {since:DateTime64(3, 'UTC')}`
   const result = await client.query({
     query: `
-      SELECT source, max(last) AS last FROM (
-        SELECT toString(source_id) AS source, max(received_at) AS last FROM events
-          WHERE ${where} AND timestamp >= {since:DateTime64(3, 'UTC')} GROUP BY source_id
-        UNION ALL
-        SELECT toString(source_id), max(received_at) FROM errors
-          WHERE ${where} AND timestamp >= {since:DateTime64(3, 'UTC')} GROUP BY source_id
-        UNION ALL
-        SELECT toString(source_id), toDateTime64(max(timestamp), 3, 'UTC') FROM logs
-          WHERE ${where} AND timestamp >= {since:DateTime64(3, 'UTC')} GROUP BY source_id
-      ) GROUP BY source`,
+      SELECT toString(source_id) AS source,
+        if(event = '$pageview', 'pageview', 'event') AS kind, max(received_at) AS last
+        FROM events WHERE ${where} AND event != '$pageleave' GROUP BY source_id, kind
+      UNION ALL
+      SELECT toString(source_id), 'error', max(received_at)
+        FROM errors WHERE ${where} GROUP BY source_id
+      UNION ALL
+      SELECT toString(source_id), 'log', toDateTime64(max(timestamp), 3, 'UTC')
+        FROM logs WHERE ${where} GROUP BY source_id`,
     query_params: { org: orgId, projects: projectIds, since: toClickHouseTime(since) },
     clickhouse_settings: ISO_TIMES,
     format: 'JSONEachRow',
   })
-  const rows = await result.json<{ source: string; last: string }>()
-  return new Map(rows.map((row) => [row.source, new Date(row.last)]))
+  const rows = await result.json<{ source: string; kind: string; last: string }>()
+  const out = new Map<string, SourceLastData>()
+  for (const row of rows) {
+    const at = new Date(row.last)
+    const seen = out.get(row.source) ?? { any: at }
+    if (at > seen.any) seen.any = at
+    if (
+      row.kind === 'pageview' ||
+      row.kind === 'event' ||
+      row.kind === 'error' ||
+      row.kind === 'log'
+    )
+      seen[row.kind] = at
+    out.set(row.source, seen)
+  }
+  return out
 }

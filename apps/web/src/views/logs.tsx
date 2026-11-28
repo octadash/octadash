@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LOG_PERIODS, type LogsState, logsHref } from '@/lib/logs'
 import { cn } from '@/lib/utils'
+import { loadAreaSetup } from '@/server/area-setup'
 import { loadLogs } from '@/server/logs'
+import { AreaProducts, AreaProductsPage } from './area-start'
+import { LogsStartView } from './area-start-views'
 
 /**
  * Logs, as closed in the Logs canvas: one search box over every line, a
@@ -44,37 +47,11 @@ export async function LogsView({
   const number = new Intl.NumberFormat(locale)
   const several = data.projects.length > 1
 
-  if (!data.anyLine) {
-    return (
-      <div className="flex max-w-2xl flex-col gap-4">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <Card>
-          <CardContent className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{t('none.title')}</h2>
-            <p className="text-sm text-muted-foreground">{t('none.body')}</p>
-            <p className="text-sm text-muted-foreground">{t('none.seq')}</p>
-            {product ? (
-              <Button asChild className="self-start">
-                <Link href={`/p/${product.slug}/logs/setup`}>{t('none.setUp')}</Link>
-              </Button>
-            ) : (
-              <>
-                <p className="text-sm font-medium">{t('none.all')}</p>
-                <ul className="flex flex-wrap gap-2">
-                  {data.projects.map((p) => (
-                    <li key={p.id}>
-                      <Button asChild variant="outline">
-                        <Link href={`/p/${p.slug}/logs/setup`}>{p.name}</Link>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    )
+  const setup = await loadAreaSetup(orgId, data.projects, 'logs')
+  if (!data.anyLine && !setup.some((s) => s.state === 'sending')) {
+    const [first] = setup
+    if (product && first) return <LogsStartView orgId={orgId} product={product} setup={first} />
+    return <AreaProductsPage area="logs" title={t('title')} intro={t('intro')} setup={setup} />
   }
 
   const kept =
@@ -267,6 +244,7 @@ export async function LogsView({
           />
         </div>
       </div>
+      {several && <AreaProducts area="logs" setup={setup} folded />}
     </div>
   )
 }

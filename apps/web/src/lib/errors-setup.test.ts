@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { areaSetup } from './area-setup'
 import {
   ERROR_PLATFORMS,
   errorSnippet,
@@ -62,5 +63,18 @@ describe('where a product stands on Errors', () => {
   it('tells nothing yet from a product that won’t use Errors', () => {
     expect(errorsSetup(base).state).toBe('none')
     expect(errorsSetup({ ...base, sources: [site], dismissed: true }).state).toBe('dismissed')
+  })
+})
+
+describe('where a product stands on Logs and Traffic', () => {
+  const site = { id: 's1', name: 'Site', platform: 'html', areas: ['traffic', 'errors'] }
+  const api = { id: 's2', name: 'API', platform: 'node', areas: ['errors'] }
+  const base = { hadData: false, dismissed: false }
+
+  it('never offers a page script for logs, nor a server for page views', () => {
+    expect(areaSetup('logs', { ...base, sources: [site] }).state).toBe('none')
+    expect(areaSetup('logs', { ...base, sources: [site, api] }).source).toBe(api)
+    expect(areaSetup('usage', { ...base, sources: [api, site] }).source).toBe(site)
+    expect(areaSetup('traffic', { ...base, sources: [api] }).state).toBe('none')
   })
 })

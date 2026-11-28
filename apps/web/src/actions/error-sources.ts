@@ -51,37 +51,6 @@ export async function addErrorSourceAction(_: FormState, formData: FormData): Pr
   redirect(`/p/${found.project.slug}/errors/setup?source=${source.id}`)
 }
 
-/**
- * The empty Errors page's first step: one click on where the code runs makes
- * a source for Errors, named after the platform (Site for the script), and the page shows its code.
- */
-export async function startErrorsAction(formData: FormData) {
-  const found = await productOf(String(formData.get('slug') ?? ''))
-  const platform = z.enum(ERROR_PLATFORMS).safeParse(formData.get('platform'))
-  if (!found || !platform.success) return
-  const { db } = services()
-  const [tp, ts] = await Promise.all([
-    getTranslations('platforms'),
-    getTranslations('errorsArea.start'),
-  ])
-  const source = await createSource(db, found.org.id, found.project.id, {
-    name: platform.data === 'html' ? ts('siteName') : tp(platform.data),
-    platform: platform.data,
-    areas: ['errors'],
-  })
-  if (!source) return
-  await setProjectArea(db, found.org.id, found.project.id, 'errors', 'set_up')
-  revalidatePath(`/p/${found.project.slug}`, 'layout')
-  redirect(`/p/${found.project.slug}/errors`)
-}
-
-/** Where "Use for Errors" goes after: the setup page, or back to the Errors page it came from. */
-function after(slug: string, formData: FormData, source: string) {
-  return formData.get('next') === 'errors'
-    ? `/p/${slug}/errors`
-    : `/p/${slug}/errors/setup?source=${source}`
-}
-
 /** "Use for Errors": a source that already sends page views or events starts sending errors too. */
 export async function addErrorsToSourceAction(formData: FormData) {
   const found = await productOf(String(formData.get('slug') ?? ''))
@@ -93,5 +62,5 @@ export async function addErrorsToSourceAction(formData: FormData) {
   await addSourceArea(db, found.org.id, id, 'errors')
   await setProjectArea(db, found.org.id, found.project.id, 'errors', 'set_up')
   revalidatePath(`/p/${found.project.slug}`, 'layout')
-  redirect(after(found.project.slug, formData, id))
+  redirect(`/p/${found.project.slug}/errors/setup?source=${id}`)
 }
