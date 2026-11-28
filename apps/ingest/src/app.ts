@@ -64,12 +64,17 @@ export function createApp(deps: IngestDeps) {
 
   // A cron job or backup reports that it ran. The token is the secret; the
   // ping is kept in Valkey and the worker compares it with the monitor's interval.
-  const heartbeat = async (c: Context) => {
+  // `/fail` reports that the job ran and failed, so people hear at once
+  // instead of after the grace.
+  const heartbeat = (failed: boolean) => async (c: Context) => {
     const token = c.req.param('token') ?? ''
     let monitorId: string | null
     try {
       monitorId = await deps.heartbeats.resolver.resolve(token)
-      if (monitorId) await deps.heartbeats.store.record(monitorId, now())
+      if (monitorId) {
+        if (failed) await deps.heartbeats.store.recordFailure(monitorId, now())
+        else await deps.heartbeats.store.record(monitorId, now())
+      }
     } catch (err) {
       deps.onError?.(err)
       return c.json({ error: 'unavailable' }, 503)
@@ -77,8 +82,12 @@ export function createApp(deps: IngestDeps) {
     if (!monitorId) return c.json({ error: 'unknown_heartbeat' }, 404)
     return c.json({ ok: true })
   }
-  app.get('/hb/:token', heartbeat)
-  app.post('/hb/:token', heartbeat)
+  for (const prefix of ['/hb', '/o/v1/hb']) {
+    app.get(`${prefix}/:token`, heartbeat(false))
+    app.post(`${prefix}/:token`, heartbeat(false))
+    app.get(`${prefix}/:token/fail`, heartbeat(true))
+    app.post(`${prefix}/:token/fail`, heartbeat(true))
+  }
 
   app.post(
     '/o/v1/events',

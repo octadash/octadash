@@ -75,6 +75,7 @@ const uptime = startUptime(
     loadMonitors: () => listActiveMonitors(db),
     check: checkUrl,
     readPings: (ids) => heartbeats.read(ids),
+    readFailures: (ids) => heartbeats.readFailures(ids),
     writeRows: (rows) => insertUptimeChecks(clickhouse, rows),
     setStatus: (id, from, to, at) => setMonitorStatus(db, id, from, to, at),
     onTransition: (transition) => alerts.onTransition(transition),

@@ -10,6 +10,12 @@ export interface MonitorInput {
   url: string | null
   intervalSeconds: number
   graceSeconds: number
+  /** Heartbeats only: a cron schedule instead of the interval. */
+  schedule?: string | null
+  /** Sites and /health: how long to wait for an answer. Default 10. */
+  timeoutSeconds?: number
+  /** Heartbeats only: the token already shown to the owner before saving. */
+  heartbeatToken?: string
 }
 
 /** 24 random bytes in URL-safe base64: the secret part of a heartbeat URL. */
@@ -65,6 +71,8 @@ export async function createMonitor(db: Db, orgId: string, projectId: string, in
       'interval_seconds',
       'grace_seconds',
       'heartbeat_token',
+      'schedule',
+      'timeout_seconds',
     ])
     .expression((eb) =>
       eb
@@ -78,7 +86,17 @@ export async function createMonitor(db: Db, orgId: string, projectId: string, in
           eb.val(heartbeat ? null : input.url).as('url'),
           eb.val(input.intervalSeconds).as('interval_seconds'),
           eb.val(input.graceSeconds).as('grace_seconds'),
-          eb.val(heartbeat ? generateHeartbeatToken() : null).as('heartbeat_token'),
+          eb
+            .val(
+              heartbeat
+                ? input.heartbeatToken && isHeartbeatToken(input.heartbeatToken)
+                  ? input.heartbeatToken
+                  : generateHeartbeatToken()
+                : null,
+            )
+            .as('heartbeat_token'),
+          eb.val(heartbeat ? (input.schedule ?? null) : null).as('schedule'),
+          eb.val(input.timeoutSeconds ?? 10).as('timeout_seconds'),
         ])
         .where('org_id', '=', orgId)
         .where('id', '=', projectId),
@@ -93,7 +111,7 @@ export async function updateMonitor(
   db: Db,
   orgId: string,
   monitorId: string,
-  input: Omit<MonitorInput, 'kind'> & { paused?: boolean },
+  input: Omit<MonitorInput, 'kind' | 'heartbeatToken'> & { paused?: boolean },
 ) {
   const current = await getMonitor(db, orgId, monitorId)
   if (!current) return null
@@ -104,6 +122,10 @@ export async function updateMonitor(
       url: current.kind === 'heartbeat' ? null : input.url,
       interval_seconds: input.intervalSeconds,
       grace_seconds: input.graceSeconds,
+      ...(input.schedule === undefined
+        ? {}
+        : { schedule: current.kind === 'heartbeat' ? input.schedule : null }),
+      ...(input.timeoutSeconds === undefined ? {} : { timeout_seconds: input.timeoutSeconds }),
       ...(input.paused === undefined ? {} : { paused: input.paused }),
       updated_at: new Date(),
     })
@@ -135,21 +157,25 @@ export function findHeartbeatMonitor(db: Db, token: string) {
 export function listActiveMonitors(db: Db) {
   return db
     .selectFrom('monitor')
+    .leftJoin('organization_settings', 'organization_settings.org_id', 'monitor.org_id')
     .select([
-      'id',
-      'org_id',
-      'project_id',
-      'name',
-      'kind',
-      'url',
-      'interval_seconds',
-      'grace_seconds',
-      'heartbeat_token',
-      'status',
-      'status_since',
-      'updated_at',
+      'monitor.id',
+      'monitor.org_id',
+      'monitor.project_id',
+      'monitor.name',
+      'monitor.kind',
+      'monitor.url',
+      'monitor.interval_seconds',
+      'monitor.grace_seconds',
+      'monitor.heartbeat_token',
+      'monitor.schedule',
+      'monitor.timeout_seconds',
+      'monitor.status',
+      'monitor.status_since',
+      'monitor.updated_at',
+      'organization_settings.time_zone',
     ])
-    .where('paused', '=', false)
+    .where('monitor.paused', '=', false)
     .execute()
 }
 

@@ -128,6 +128,9 @@ export interface MonitorTable {
   interval_seconds: Generated<number>
   grace_seconds: Generated<number>
   heartbeat_token: string | null
+  /** Heartbeats: five-field cron in the organization's time zone; null means every interval. */
+  schedule: ColumnType<string | null, string | null | undefined, string | null>
+  timeout_seconds: Generated<number>
   paused: Generated<boolean>
   status: Generated<MonitorStatus>
   status_since: Date | null

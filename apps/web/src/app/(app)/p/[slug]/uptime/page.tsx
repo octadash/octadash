@@ -1,19 +1,19 @@
 import { getProjectBySlug, listMonitors } from '@octadash/db'
 import { PlusIcon, ServerIcon } from 'lucide-react'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFormatter, getTranslations } from 'next-intl/server'
 import { pauseMonitorAction } from '@/actions/monitors'
 import { CopyField } from '@/components/copy-field'
 import { DeleteMonitorDialog } from '@/components/delete-monitor-dialog'
 import { HealthSnippets } from '@/components/health-snippets'
-import { MonitorDialog } from '@/components/monitor-dialog'
 import { StatusDot } from '@/components/status-dot'
 import { Button } from '@/components/ui/button'
 import { describeFailure, durationLabel } from '@/lib/monitors'
 import { services } from '@/server/context'
 import { sameServerUrls } from '@/server/same-server'
 import { canManage, requireOrg } from '@/server/session'
-import { formatUptime, monitorDialogProps, safeMonitorStats } from '@/server/uptime-view'
+import { formatUptime, safeMonitorStats } from '@/server/uptime-view'
 
 /** Uptime of one product: its monitors, their numbers, and how to add a good one. */
 export default async function ProductUptimePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -23,7 +23,7 @@ export default async function ProductUptimePage({ params }: { params: Promise<{ 
   const project = await getProjectBySlug(db, org.id, slug)
   if (!project) notFound()
   const monitors = await listMonitors(db, org.id, project.id)
-  const [stats, sameServer, t, common, format, addDialog, editDialog] = await Promise.all([
+  const [stats, sameServer, t, common, format, tf] = await Promise.all([
     safeMonitorStats(
       clickhouse,
       org.id,
@@ -36,24 +36,18 @@ export default async function ProductUptimePage({ params }: { params: Promise<{ 
     getTranslations('uptime'),
     getTranslations('common'),
     getFormatter(),
-    monitorDialogProps('add'),
-    monitorDialogProps('edit'),
+    getTranslations('monitorForm'),
   ])
   const manager = canManage(org.role)
   const duration = (seconds: number) => durationLabel(seconds, (key, values) => t(key, values))
   const first = monitors.length === 0
   const addButton = manager && (
-    <MonitorDialog
-      slug={project.slug}
-      {...addDialog}
-      values={{ name: first ? t('kindSite') : '', kind: 'site', url: '', interval: 300, grace: 0 }}
-      trigger={
-        <Button size="lg" className="px-4">
-          <PlusIcon data-icon="inline-start" />
-          {first ? t('addFirst') : t('add')}
-        </Button>
-      }
-    />
+    <Button size="lg" className="px-4" asChild>
+      <Link href={`/p/${project.slug}/uptime/new`}>
+        <PlusIcon data-icon="inline-start" />
+        {first ? t('addFirst') : t('add')}
+      </Link>
+    </Button>
   )
 
   return (
@@ -126,19 +120,11 @@ export default async function ProductUptimePage({ params }: { params: Promise<{ 
                   </div>
                   {manager && (
                     <div className="flex flex-wrap gap-1">
-                      <MonitorDialog
-                        slug={project.slug}
-                        {...editDialog}
-                        values={{
-                          id: monitor.id,
-                          name: monitor.name,
-                          kind: monitor.kind,
-                          url: monitor.url ?? '',
-                          interval: monitor.interval_seconds,
-                          grace: monitor.grace_seconds,
-                        }}
-                        trigger={<Button variant="ghost">{t('edit')}</Button>}
-                      />
+                      <Button variant="ghost" asChild>
+                        <Link href={`/p/${project.slug}/uptime/${monitor.id}/edit`}>
+                          {t('edit')}
+                        </Link>
+                      </Button>
                       <form action={pauseMonitorAction}>
                         <input type="hidden" name="monitorId" value={monitor.id} />
                         <input type="hidden" name="paused" value={String(!monitor.paused)} />
@@ -217,7 +203,12 @@ export default async function ProductUptimePage({ params }: { params: Promise<{ 
           <h2 className="font-display text-lg font-semibold">{t('healthTitle')}</h2>
           <p className="text-sm text-muted-foreground">{t('healthBody')}</p>
         </div>
-        <HealthSnippets copy={common('copy')} copied={common('copied')} />
+        <HealthSnippets
+          copy={common('copy')}
+          copied={common('copied')}
+          label={tf('framework')}
+          other={tf('other')}
+        />
       </section>
     </>
   )
