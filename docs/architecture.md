@@ -59,9 +59,9 @@ Each service gets its own public address (for example `octadash.example.com`
 and `ingest.example.com`). SDK snippets and DSNs shown in the panel use the
 ingest address.
 
-### Storage: Postgres, Valkey and ClickHouse
+### Storage: Postgres, Valkey, ClickHouse and Garage
 
-All three ship in `docker-compose.yml` and in the Coolify compose, with pinned
+All four ship in `docker-compose.yml` and in the Coolify compose, with pinned
 versions and passwords generated at install. Each has one job.
 
 | Store      | Holds                                                                                     | Why this one                                                          |
@@ -69,6 +69,7 @@ versions and passwords generated at install. Each has one job.
 | Postgres   | records: accounts, organizations, products, keys, monitors, alert rules, channels, issues | relational, transactional, what Better Auth and pg-boss already use   |
 | Valkey     | the ingest buffer (streams), cache, rate limits, uptime state between checks              | ingest must answer in milliseconds and never wait on a database       |
 | ClickHouse | raw events, pageviews, error occurrences, logs, spans, AI calls, uptime results; rollups  | high-volume time series, fast aggregation, compression, TTL retention |
+| Garage     | files: Sentry attachments, replays and profiles, anything over 1 MB                       | S3-compatible, one small binary, so an external S3 or R2 drops in     |
 
 #### Postgres
 
@@ -107,7 +108,46 @@ versions and passwords generated at install. Each has one job.
   in-memory sink and the cloud can change the transport without touching the
   routes.
 
-#### Running the three
+#### Garage (file storage)
+
+- What does not fit a ClickHouse row is kept as a file, whole: Sentry
+  attachments, replays and profiles always, and any other item over 1 MB.
+  The row in `received` keeps the item's facts and where the file is
+  (`encoding = 'file'`, `{ meta, file: { key, bytes, content_type } }`).
+  Files are masked like rows: JSON and text go through the same masking,
+  bytes are kept as sent.
+- Keys start with the day the file arrived:
+  `files/<day>/<org>/<product>/<kind>/<id>`. Retention removes whole days,
+  and the per-organization folder right after the day is where the cloud
+  will count quotas.
+- The bundled store is [Garage](https://garagehq.deuxfleurs.fr) v2, one node
+  with no replication (`--single-node --default-bucket`): it makes its key
+  and the `octadash` bucket from `.env` on first start, so there is nothing
+  to set up. Metadata in SQLite, with a snapshot every 6 hours
+  (`docker/garage/garage.toml`). It is not reachable from outside the
+  compose.
+- Any S3-compatible bucket works instead (S3, R2, Backblaze, a Garage or
+  SeaweedFS of your own): `STORAGE_ENDPOINT`, `STORAGE_BUCKET`,
+  `STORAGE_REGION`, `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY`. The
+  client signs requests itself (`packages/storage`, aws4fetch), with no
+  native code, so it bundles.
+- **Octadash applies retention and the size limit itself**, not bucket rules,
+  so it behaves the same on every store. Every hour the worker removes the
+  days older than `OCTADASH_RECEIVED_RETENTION_DAYS` (the same as the rows that
+  point to them), and past `OCTADASH_STORAGE_LIMIT_GB` (20 GB by default) it
+  removes the oldest days first, never today, writing a `dropped:file` row per
+  product with the count and reason `storage_limit`. Its last look goes to
+  Valkey for the panel: **Settings** > **File storage**, a banner on settings
+  pages while storage is not set, not answering or almost full, and a red bar
+  in the emergency strip while it is not answering.
+- Storage down while an item arrives: an item under 1 MB stays in its row as
+  before; a bigger one is counted (`storage_unavailable`) and the error is
+  logged.
+- The ingest writes the file before it answers, so a file is never held in
+  Valkey's memory. A Sentry envelope may be up to 20 MB (40 MB unpacked),
+  the attachment limit most Sentry SDKs apply by default.
+
+#### Running the four
 
 - **Pinned versions** in the compose files; upgrades come with Octadash releases.
 - **CPU**: the official ClickHouse amd64 image needs the x86-64-v3 level (AVX2
@@ -116,11 +156,14 @@ versions and passwords generated at install. Each has one job.
 - **Memory**: the bundled ClickHouse runs with a low-memory profile so a 4 GB VPS
   is enough. Estimate, not measured: the load test before the first release
   replaces this sentence with numbers.
-- **Backups**: three volumes (Postgres, ClickHouse, Valkey). self-hosting.md
-  documents backing up the first two; Valkey only holds data in transit.
-- **Bring your own** Postgres keeps working (`DATABASE_URL`). An external
-  ClickHouse or Valkey (`CLICKHOUSE_URL`, `VALKEY_URL`) is allowed but not the
-  default path.
+- **Backups**: Postgres, ClickHouse and Garage (two volumes, metadata and
+  data). self-hosting.md documents each; Valkey only holds data in transit.
+- **Bring your own** Postgres keeps working (`DATABASE_URL`), and so does an
+  external bucket for files (`STORAGE_*`). An external ClickHouse or Valkey
+  (`CLICKHOUSE_URL`, `VALKEY_URL`) is allowed but not the default path.
+- **Nothing is installed from the panel.** That would need the Docker socket,
+  which is root on the server. Every store comes with the compose, and an
+  external one is set in `.env`.
 
 ### Multi-tenancy from day one
 
@@ -451,12 +494,9 @@ screen reads it yet: the area that comes later starts with its history.
   answer leave a `dropped:<kind>` row in `received` with the count, so nothing
   goes missing silently. Today: personal data (masked), areas marked "I won't
   use this" (counted on the card), error events beyond the limit of one
-  request, and items over 1 MB.
-- Files (replays, attachments, profiles) go to file storage, the fourth
-  bundled store: Garage, S3-compatible, managed by Octadash, or an external S3
-  or R2 set in Settings. Retention is applied by Octadash, so it works the
-  same on every store. Until that step lands, items over 1 MB are counted,
-  not stored.
+  request, and, only when file storage is missing, down or full, files.
+- Files (replays, attachments, profiles, anything over 1 MB) go to file
+  storage, whole (see Garage above).
 - `fates.test.ts` fails when a route has no entry in `ROUTES`, or when any
   Sentry item type or PostHog event stops reaching a stream.
 

@@ -3,8 +3,10 @@ import { getTranslations } from 'next-intl/server'
 import type { StripData, StripItem, StripKind } from '@/lib/emergency-strip'
 import { RESOLVED_SHOW_MS } from '@/lib/emergency-strip'
 import { describeFailure } from '@/lib/monitors'
+import { storageState } from '@/lib/storage'
 import { statusCodeOf } from '@/lib/uptime-board'
 import { services } from './context'
+import { readStorageStatus } from './live'
 
 const KINDS: StripKind[] = [
   'monitor_down',
@@ -30,11 +32,12 @@ export async function loadStrip(
   withSignals = false,
 ): Promise<StripData> {
   const { db } = services()
-  const [open, ended, members, watcher, t, tu, te] = await Promise.all([
+  const [open, ended, members, watcher, storage, t, tu, te] = await Promise.all([
     listOpenIncidents(db, orgId),
     listResolvedSince(db, orgId, new Date(now.getTime() - RESOLVED_SHOW_MS)),
     listMembers(db, orgId),
     canManage ? getWatcher(db) : Promise.resolve(undefined),
+    canManage ? readStorageStatus() : Promise.resolve(null),
     getTranslations('strip'),
     getTranslations('uptime'),
     getTranslations('emergency'),
@@ -144,6 +147,7 @@ export async function loadStrip(
     items,
     resolved,
     watcherFailing: watcher?.watcher_status === 'failing' && !!watcher.watcher_url,
+    storageFailing: storageState(storage, now.getTime()) === 'failing',
   }
 }
 

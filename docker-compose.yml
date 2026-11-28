@@ -15,8 +15,16 @@ x-octadash: &octadash
     OCTADASH_URL: ${OCTADASH_URL:-http://localhost:3000}
     OCTADASH_INGEST_URL: ${OCTADASH_INGEST_URL:-http://localhost:4000}
     OCTADASH_SECRET: ${OCTADASH_SECRET:?set OCTADASH_SECRET in .env}
+    # File storage. The bundled Garage by default; point these at S3, R2 or any
+    # S3-compatible bucket to keep files there instead.
+    STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-http://garage:3900}
+    STORAGE_BUCKET: ${STORAGE_BUCKET:-octadash}
+    STORAGE_REGION: ${STORAGE_REGION:-garage}
+    STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID:?set STORAGE_ACCESS_KEY_ID in .env}
+    STORAGE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_ACCESS_KEY:?set STORAGE_SECRET_ACCESS_KEY in .env}
+    OCTADASH_STORAGE_LIMIT_GB: ${OCTADASH_STORAGE_LIMIT_GB:-20}
     LOG_LEVEL: ${LOG_LEVEL:-info}
-  # ClickHouse and Valkey only need to be started: each role waits for them
+  # ClickHouse, Valkey and Garage only need to be started: each role waits for them
   # itself and logs a clear error (for example, a CPU without AVX2).
   depends_on:
     postgres:
@@ -24,6 +32,8 @@ x-octadash: &octadash
     clickhouse:
       condition: service_started
     valkey:
+      condition: service_started
+    garage:
       condition: service_started
 
 services:
@@ -89,6 +99,29 @@ services:
       timeout: 5s
       retries: 10
 
+  # File storage (S3-compatible): attachments, replays, profiles and anything
+  # over 1 MB. One node; the key and the bucket are made on first start from
+  # .env, so there is nothing to set up. Not exposed outside the compose.
+  garage:
+    image: dxflrs/garage:v2.5.0
+    restart: unless-stopped
+    command: ["/garage", "server", "--single-node", "--default-bucket"]
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?set GARAGE_RPC_SECRET in .env}
+      GARAGE_DEFAULT_ACCESS_KEY: ${STORAGE_ACCESS_KEY_ID:?set STORAGE_ACCESS_KEY_ID in .env}
+      GARAGE_DEFAULT_SECRET_KEY: ${STORAGE_SECRET_ACCESS_KEY:?set STORAGE_SECRET_ACCESS_KEY in .env}
+      GARAGE_DEFAULT_BUCKET: ${STORAGE_BUCKET:-octadash}
+    volumes:
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   web:
     <<: *octadash
     command: ["web"]
@@ -145,3 +178,5 @@ volumes:
   postgres-data:
   clickhouse-data:
   valkey-data:
+  garage-meta:
+  garage-data:

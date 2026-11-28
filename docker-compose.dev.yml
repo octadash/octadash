@@ -1,4 +1,4 @@
-# Local development: Postgres, ClickHouse and Valkey. Run the apps with `pnpm dev`.
+# Local development: Postgres, ClickHouse, Valkey and Garage. Run the apps with `pnpm dev`.
 name: octadash-dev
 
 services:
@@ -40,7 +40,29 @@ services:
     volumes:
       - valkey-dev:/data
 
+  garage:
+    image: dxflrs/garage:v2.5.0
+    command: ["/garage", "server", "--single-node", "--default-bucket"]
+    environment:
+      GARAGE_RPC_SECRET: 0000000000000000000000000000000000000000000000000000000000000000
+      GARAGE_DEFAULT_ACCESS_KEY: GK000000000000000000000000
+      GARAGE_DEFAULT_SECRET_KEY: octadash-development-secret-key
+      GARAGE_DEFAULT_BUCKET: octadash
+    ports:
+      - "3900:3900"
+    volumes:
+      - garage-meta-dev:/var/lib/garage/meta
+      - garage-data-dev:/var/lib/garage/data
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
 volumes:
   postgres-dev:
   clickhouse-dev:
   valkey-dev:
+  garage-meta-dev:
+  garage-data-dev:

@@ -387,6 +387,8 @@
     "channels": "Canais",
     "alerts": "Regras de alerta",
     "watcher": "Vigia externo",
+    "storage": "Armazenamento de arquivos",
+    "storageKeywords": "arquivos anexos replays s3 r2 garage disco backup",
     "nav": "Menu de configurações",
     "search": "Buscar nas configurações",
     "none": "Nada encontrado.",
@@ -793,6 +795,37 @@
       "failingTitle": "O sinal para o vigia externo está falhando.",
       "failingBody": "O Octadash não consegue chamar a URL do vigia. Se continuar, o vigia vai avisar que o Octadash caiu.",
       "action": "Configurar vigia externo"
+    }
+  },
+  "storage": {
+    "title": "Armazenamento de arquivos",
+    "intro": "Anexos, replays, profiles e tudo acima de 1 MB que seus produtos enviam ficam guardados aqui como arquivos, inteiros. O ClickHouse guarda a linha que aponta para cada um.",
+    "statusTitle": "Situação",
+    "unknown": "Esperando a primeira verificação (o worker olha um minuto depois de iniciar e depois a cada hora).",
+    "off": "Nenhum armazenamento de arquivos configurado. Arquivos acima de 1 MB são contados, não guardados.",
+    "failing": "O armazenamento de arquivos não responde: {error}. Arquivos menores ficam na própria linha; os acima de 1 MB são contados, não guardados, até ele voltar.",
+    "ok": "Funcionando. Última verificação {when}.",
+    "bundled": "Armazenamento incluído (Garage), rodando nesta instalação. Nada para configurar.",
+    "external": "Bucket externo em {host}.",
+    "usageTitle": "Espaço usado",
+    "used": "{used} de {limit} ({percent}%).",
+    "usedNoLimit": "{used}, sem limite definido.",
+    "almostFull": "Quase cheio. Ao chegar no limite, os arquivos do dia mais antigo saem primeiro, e cada produto fica com a contagem do que saiu.",
+    "retention": "Os arquivos ficam {days} dias, como o resto dos dados que nenhuma área lê ainda.",
+    "trimmed": "Os arquivos de {day} foram removidos {when} para ficar dentro do limite ({files, plural, one {# arquivo} other {# arquivos}}).",
+    "howTitle": "Como mudar",
+    "howIntro": "Isso fica no arquivo .env da instalação; depois os serviços reiniciam.",
+    "howLimit": "<code>OCTADASH_STORAGE_LIMIT_GB</code> define o espaço máximo dos arquivos (20 GB por padrão, 0 para sem limite).",
+    "howExternal": "Para usar S3, R2 ou outro bucket compatível com S3, defina <code>STORAGE_ENDPOINT</code>, <code>STORAGE_BUCKET</code>, <code>STORAGE_REGION</code>, <code>STORAGE_ACCESS_KEY_ID</code> e <code>STORAGE_SECRET_ACCESS_KEY</code>.",
+    "howBackup": "Faça backup dos volumes garage-data e garage-meta junto com os outros volumes.",
+    "warning": {
+      "offTitle": "Arquivos acima de 1 MB não estão sendo guardados.",
+      "offBody": "Nenhum armazenamento de arquivos configurado, então anexos, replays e itens grandes só são contados.",
+      "failingTitle": "O armazenamento de arquivos não responde.",
+      "failingBody": "Arquivos acima de 1 MB são contados, não guardados, até ele voltar.",
+      "fullTitle": "O armazenamento de arquivos está quase cheio.",
+      "fullBody": "No limite, os arquivos do dia mais antigo saem primeiro.",
+      "action": "Ver armazenamento de arquivos"
     }
   },
   "getStarted": {
@@ -1226,6 +1259,8 @@
     "newMany": "{count, plural, one {# nova emergência} other {# novas emergências}}",
     "watcherTitle": "O Octadash não alcança o vigia externo",
     "watcherBody": "Se este servidor cair, ninguém será avisado. As checagens daqui continuam rodando.",
+    "storageTitle": "O armazenamento de arquivos não responde",
+    "storageBody": "Anexos, replays e tudo acima de 1 MB estão sendo contados, não guardados, até ele voltar.",
     "list": {
       "intro": "Primeiro as sem ninguém cuidando, depois as mais antigas. Atualiza ao vivo.",
       "hint": "Dica: {count} delas estão no mesmo servidor {ip}",

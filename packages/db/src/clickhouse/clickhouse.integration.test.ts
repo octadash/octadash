@@ -4,7 +4,7 @@ import { createClickHouse, parseClickHouseUrl } from './client'
 import { insertEvents, toClickHouseTime } from './events'
 import { insertMetrics } from './metrics'
 import { migrateClickHouse } from './migrate'
-import { insertReceived } from './received'
+import { fileUsage, insertReceived } from './received'
 import { sourceActivity } from './sources'
 import { insertSpans } from './spans'
 import {
@@ -124,6 +124,34 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
       { kind: 'dropped:sentry.attachment', retention_days: 30 },
       { kind: 'sentry.session', retention_days: 30 },
     ])
+  })
+
+  it('sums the files each product keeps per day', async () => {
+    const fileOrg = '00000000-0000-4000-8000-0000000000f1'
+    const project = '00000000-0000-4000-8000-0000000000f2'
+    const at = (iso: string) => toClickHouseTime(new Date(iso))
+    const file = (received: string, bytes: number) => ({
+      org_id: fileOrg,
+      project_id: project,
+      source_id: '00000000-0000-4000-8000-0000000000f3',
+      kind: 'sentry.attachment',
+      timestamp: at(received),
+      received_at: at(received),
+      payload: JSON.stringify({ file: { key: 'files/x', bytes, content_type: 'text/plain' } }),
+      encoding: 'file' as const,
+      bytes: bytes + 1,
+      masked: 0,
+      retention_days: 30,
+    })
+    const day = new Date().toISOString().slice(0, 10)
+    await insertReceived(client, [
+      file(`${day}T01:00:00Z`, 100),
+      file(`${day}T02:00:00Z`, 50),
+      { ...file(`${day}T03:00:00Z`, 999), encoding: 'json' },
+    ])
+    const usage = (await fileUsage(client, [day])).filter((row) => row.org_id === fileOrg)
+    expect(usage).toEqual([{ day, org_id: fileOrg, project_id: project, files: 2, bytes: 150 }])
+    expect(await fileUsage(client, [])).toEqual([])
   })
 
   it('keeps spans with nanosecond times and finds them by trace', async () => {

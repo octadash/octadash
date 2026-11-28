@@ -16,6 +16,7 @@
     "@octadash/core": "workspace:*",
     "@octadash/db": "workspace:*",
     "@octadash/queue": "workspace:*",
+    "@octadash/storage": "workspace:*",
     "hono": "^4.13.23",
     "zod": "^4.6.7"
   },

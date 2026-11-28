@@ -11,10 +11,12 @@ import {
   addSourceAreas,
   createClickHouse,
   createDb,
+  fileUsage,
   getWatcher,
   hitKey,
   insertErrors,
   insertLogs,
+  insertReceived,
   insertUptimeChecks,
   issuePeople,
   listActiveMonitors,
@@ -25,11 +27,18 @@ import {
   recordWatcherPing,
   setMonitorStatus,
 } from '@octadash/db'
-import { createValkey, ValkeyHeartbeats, ValkeyLivePublisher } from '@octadash/queue'
+import {
+  createValkey,
+  ValkeyHeartbeats,
+  ValkeyLivePublisher,
+  ValkeyStorageStatus,
+} from '@octadash/queue'
+import { storageFromEnv } from '@octadash/storage'
 import { checkUrl, diagnose } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
 import { createAlerts, registerAlertJobs } from './alerts'
 import { createCosts, registerCostJobs } from './costs'
+import { registerFileJobs } from './files'
 import { registerJobs } from './jobs'
 import { createMoney, registerMoneyJobs } from './money'
 import { EventRouter } from './routing'
@@ -85,6 +94,22 @@ await registerMoneyJobs(
   log,
 )
 await registerCostJobs(boss, createCosts({ db, secret: env.OCTADASH_SECRET, log }))
+const storageStatus = new ValkeyStorageStatus(valkey)
+await registerFileJobs(
+  boss,
+  {
+    store: storageFromEnv(env),
+    host: env.STORAGE_ENDPOINT ? new URL(env.STORAGE_ENDPOINT).host : null,
+    retentionDays: env.OCTADASH_RECEIVED_RETENTION_DAYS,
+    limitBytes: Math.round(env.OCTADASH_STORAGE_LIMIT_GB * 1e9),
+    usage: (days) => fileUsage(clickhouse, days),
+    insertDropped: (rows) => insertReceived(clickhouse, rows),
+    previous: () => storageStatus.read(),
+    now: Date.now,
+    log,
+  },
+  (status) => storageStatus.write(status),
+)
 const router = new EventRouter({
   loadDismissed: (projectIds) => listDismissedAreas(db, projectIds),
   recordDiscarded: (discarded, at) => recordDiscarded(db, discarded, at),

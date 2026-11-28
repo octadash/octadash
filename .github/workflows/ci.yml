@@ -67,9 +67,14 @@ jobs:
       DATABASE_URL: postgres://octadash:octadash@localhost:5432/octadash
       CLICKHOUSE_URL: http://octadash:octadash@localhost:8123/octadash
       VALKEY_URL: redis://localhost:6379
+      STORAGE_ENDPOINT: http://localhost:3900
+      STORAGE_ACCESS_KEY_ID: GK000000000000000000000000
+      STORAGE_SECRET_ACCESS_KEY: octadash-development-secret-key
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v7
+      # File storage, started from the dev compose so its Garage setup is tested too.
+      - run: docker compose -f docker-compose.dev.yml up -d --wait garage
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:

@@ -248,6 +248,19 @@ export function EmergencyStrip({ data }: { data: StripData }) {
           }
         />
       )}
+      {data.storageFailing && (
+        <Bar
+          tone="error"
+          label={t('storageTitle')}
+          title={t('storageTitle')}
+          detail={t('storageBody')}
+          actions={
+            <Button asChild size="sm" className={SOLID}>
+              <Link href="/settings/storage">{t('see')}</Link>
+            </Button>
+          }
+        />
+      )}
       {strip}
     </>
   )
