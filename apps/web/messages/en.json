@@ -1013,7 +1013,7 @@
       "body": "{count, plural, =2 {Both resolve} other {All resolve}} to {ip}, so it may be that server. The control addresses answer normally, so Octadash's own network is fine. Each one stays its own emergency.",
       "see": "See {product}"
     },
-    "sameServer": "{monitors} point to the server Octadash runs on.",
+    "sameServer": "{count, plural, one {{monitors} points} other {{monitors} point}} to the server Octadash runs on.",
     "filters": "Filter by state",
     "filter": {
       "all": "All",

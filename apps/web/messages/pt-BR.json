@@ -1013,7 +1013,7 @@
       "body": "{count, plural, =2 {Os dois apontam} other {Todos apontam}} para {ip}, então pode ser esse servidor. Os endereços de controle respondem normalmente, então a rede do próprio Octadash está bem. Cada uma continua sendo uma emergência separada.",
       "see": "Ver {product}"
     },
-    "sameServer": "{monitors} apontam para o servidor onde o Octadash roda.",
+    "sameServer": "{count, plural, one {{monitors} aponta} other {{monitors} apontam}} para o servidor onde o Octadash roda.",
     "filters": "Filtrar por estado",
     "filter": {
       "all": "Todos",

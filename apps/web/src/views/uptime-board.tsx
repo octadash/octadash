@@ -153,7 +153,7 @@ export async function UptimeBoardView({
       const lines: MonitorLine[] = monitors.map((m) => ({
         id: m.monitor.id,
         name: m.monitor.name,
-        kind: kindLabel[m.monitor.kind],
+        kind: monitorDetail(m.monitor.name, kindLabel[m.monitor.kind], m.monitor.url),
         paused: m.monitor.paused,
         editHref: manager ? `/p/${p.project.slug}/uptime/${m.monitor.id}/edit` : null,
         state: cell(m.state, m.monitor.kind, true),
@@ -364,6 +364,7 @@ export async function UptimeBoardView({
           <div className="flex flex-col gap-1">
             <p className="font-medium">
               {t('sameServer', {
+                count: sameServer.length,
                 monitors: names.format(
                   sameServer.map((m) =>
                     single ? m.monitor.name : `${m.product.name} · ${m.monitor.name}`,
@@ -450,4 +451,21 @@ function Tile({
       <span className="text-xs text-muted-foreground">{sub}</span>
     </div>
   )
+}
+
+/**
+ * What follows a monitor's name in the table: its kind, unless the name already
+ * says it ("Site · Site"), and the host it checks, so two monitors of one
+ * product never look the same.
+ */
+function monitorDetail(name: string, kind: string, url: string | null): string {
+  const parts = name.trim().toLowerCase() === kind.toLowerCase() ? [] : [kind]
+  if (url) {
+    try {
+      parts.push(new URL(url).host)
+    } catch {
+      // A stored address is always valid; nothing to add if it is not.
+    }
+  }
+  return parts.join(' · ')
 }
