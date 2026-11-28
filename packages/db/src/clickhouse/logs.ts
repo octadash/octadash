@@ -47,17 +47,21 @@ export async function insertLogs(client: ClickHouseClient, rows: LogRow[], token
 export interface LogScope {
   orgId: string
   projectIds: string[]
+  /** Only these sources; empty or left out, every source. */
+  sourceIds?: string[]
   from: Date
   to: Date
 }
 
-const IN_SCOPE = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+const IN_SOURCES = `(empty({sources:Array(UUID)}) OR source_id IN {sources:Array(UUID)})`
+const IN_SCOPE = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
   AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp < {to:DateTime64(3, 'UTC')}`
 
 function scopeParams(scope: LogScope) {
   return {
     org: scope.orgId,
     projects: scope.projectIds,
+    sources: scope.sourceIds ?? [],
     from: toClickHouseTime(scope.from),
     to: toClickHouseTime(scope.to),
   }

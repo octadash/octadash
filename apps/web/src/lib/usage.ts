@@ -1,3 +1,4 @@
+import { sourceParam } from './source-scope'
 import { TRAFFIC_PERIODS, type TrafficPeriodId } from './traffic'
 
 /**
@@ -21,6 +22,8 @@ export interface UsageState {
   /** Part of an event name, from the search box. */
   q: string
   show: number
+  /** One source of the scope, or every source (null). */
+  source: string | null
 }
 
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
@@ -34,6 +37,7 @@ export function parseUsageState(search: Record<string, string | string[] | undef
     metric: USAGE_METRICS.find((m) => m === metric) ?? 'active',
     q: (one(search.q) ?? '').trim().slice(0, 100),
     show: Number.isInteger(show) && show > 0 ? Math.min(show, 200) : EVENTS_PAGE,
+    source: sourceParam(search.source),
   }
 }
 
@@ -45,6 +49,7 @@ export function usageHref(path: string, state: UsageState, change: Partial<Usage
   if (next.metric !== 'active') params.set('metric', next.metric)
   if (next.q) params.set('q', next.q)
   if (next.show !== EVENTS_PAGE) params.set('show', String(next.show))
+  if (next.source) params.set('source', next.source)
   const query = params.toString()
   return query ? `${path}?${query}` : path
 }

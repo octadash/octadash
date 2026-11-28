@@ -11,11 +11,12 @@ import { LOG_TABS, logSnippet, logTabOf } from './logs-setup'
 
 describe('logs state', () => {
   it('reads the address with defaults', () => {
-    expect(parseLogsState({})).toEqual({ period: '24h', q: '', live: true })
+    expect(parseLogsState({})).toEqual({ period: '24h', q: '', live: true, source: null })
     expect(parseLogsState({ period: '7d', q: ' level:error ', live: '0' })).toEqual({
       period: '7d',
       q: 'level:error',
       live: false,
+      source: null,
     })
     expect(parseLogsState({ period: 'year' }).period).toBe('24h')
   })

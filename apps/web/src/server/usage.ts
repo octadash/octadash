@@ -19,6 +19,7 @@ import {
   usageSeries,
   usageTotals,
 } from '@octadash/db'
+import { type ScopeSource, scopeSources } from '@/lib/source-scope'
 import { type TrafficPeriod, trafficPeriod } from '@/lib/traffic'
 import { type Normal, normalOf, normalWindows, type UsageState } from '@/lib/usage'
 import { services } from './context'
@@ -27,6 +28,8 @@ type Project = Awaited<ReturnType<typeof listProjects>>[number]
 
 export interface UsageEvent extends UsageEventRow {
   product: { name: string; slug: string }
+  /** Names of the sources that sent it in the period. */
+  sourceNames: string[]
   key: boolean
   /** The period just before, for "vs before". */
   before: number
@@ -57,6 +60,10 @@ export interface UsageData {
   anyEvent: boolean
   /** False when ClickHouse did not answer. */
   complete: boolean
+  /** Sources of the products in scope, for the source filter. */
+  sources: ScopeSource[]
+  /** The source the page is filtered to, when it belongs to the scope. */
+  source: ScopeSource | null
 }
 
 const NONE: UsageTotals = { active: 0, signups: 0, keyEvents: 0 }
@@ -83,9 +90,23 @@ export async function loadUsage(
     listFunnels(db, orgId, ids),
     listOpenIncidents(db, orgId),
   ])
-  const scope = { orgId, projectIds: ids, from: period.from, to: period.to, timeZone }
+  const { sources: inScope, source } = scopeSources(sources, projects, state.source)
+  const scope = {
+    orgId,
+    projectIds: ids,
+    sourceIds: source ? [source.id] : [],
+    from: period.from,
+    to: period.to,
+    timeZone,
+  }
   const previousScope = { ...scope, ...period.previous }
-  const month = { ...scope, from: new Date(now.getTime() - 30 * 86_400_000), to: now }
+  // Whether anything ever arrived is asked of every source: one quiet source is not "nothing set up".
+  const month = {
+    ...scope,
+    sourceIds: [],
+    from: new Date(now.getTime() - 30 * 86_400_000),
+    to: now,
+  }
   const refs = keys.map((k) => ({ projectId: k.projectId, event: k.event }))
 
   let complete = true
@@ -131,12 +152,14 @@ export async function loadUsage(
       .filter((i) => i.kind === 'key_event_stopped')
       .map((i) => `${i.project_id}:${String((i.data as { event?: unknown } | null)?.event ?? '')}`),
   )
+  const sourceName = new Map(sources.map((s) => [s.id, s.name]))
   const events: UsageEvent[] = rows.map((row) => {
     const id = `${row.projectId}:${row.event}`
     const [previous = 0, ...normal] = row.baseline
     return {
       ...row,
       product: productOf(row.projectId),
+      sourceNames: row.sourceIds.map((s) => sourceName.get(s) ?? '').filter(Boolean),
       key: isKey.has(id),
       before: previous,
       normal: normalOf(row.count, normal, stopped.has(id)),
@@ -152,6 +175,8 @@ export async function loadUsage(
       people: 0,
       baseline: [],
       last: null,
+      sourceIds: [],
+      sourceNames: [],
       product: productOf(k.projectId),
       key: true,
       before: 0,
@@ -192,5 +217,7 @@ export async function loadUsage(
     cohorts,
     anyEvent: seen.active > 0 || rows.length > 0 || keys.length > 0,
     complete,
+    sources: inScope,
+    source,
   }
 }

@@ -685,10 +685,11 @@ Nuclei (heavy, many false positives, legal risk).
 
 ### Platform
 
-| Item                                                                                             | Seen in                                       | Priority |
-| ------------------------------------------------------------------------------------------------ | --------------------------------------------- | -------- |
-| Audit log: who changed a rule, a monitor or a channel, who muted or took an incident, exportable | OpenStatus, Datadog, Grafana                  | medium   |
-| Monitoring as code: public API, CLI and a config file for products, monitors and rules           | OpenStatus, Checkly, Better Stack (Terraform) | medium   |
+| Item                                                                                                                                                            | Seen in                                       | Priority |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------- |
+| Audit log: who changed a rule, a monitor or a channel, who muted or took an incident, exportable                                                                | OpenStatus, Datadog, Grafana                  | medium   |
+| Monitoring as code: public API, CLI and a config file for products, monitors and rules                                                                          | OpenStatus, Checkly, Better Stack (Terraform) | medium   |
+| Upgrade without losing data: the ingest stays up while the panel restarts (its own Coolify app with rolling updates, or the script and SDKs resend what failed) | Coolify Compose has no rolling updates        | high     |
 
 Out of scope, after the study of Better Stack, Datadog and Grafana on
 2026-11-28: automatic instrumentation with eBPF (needs kernel access and

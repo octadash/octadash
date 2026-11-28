@@ -1,6 +1,12 @@
 'use client'
 
-import { ArrowRightIcon, CheckCircle2Icon, ChevronDownIcon, LoaderCircleIcon } from 'lucide-react'
+import {
+  ArrowRightIcon,
+  CheckCircle2Icon,
+  ChevronDownIcon,
+  LoaderCircleIcon,
+  PlusIcon,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
@@ -50,6 +56,7 @@ export function ErrorsInstall({
   errorsHref,
   scriptOn = false,
   sourceName = '',
+  addServerHref,
 }: {
   sourceId: string
   ingestUrl: string
@@ -65,6 +72,11 @@ export function ErrorsInstall({
    */
   scriptOn?: boolean
   sourceName?: string
+  /**
+   * The source runs only in the browser (a site with the script): errors on a
+   * server come from another source, added here, never from this key.
+   */
+  addServerHref?: string
 }) {
   const t = useTranslations('errorsSetup')
   const tp = useTranslations('platforms')
@@ -134,58 +146,74 @@ export function ErrorsInstall({
             <CheckCircle2Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-ok" />
             {t('scriptOnBody', { source: sourceName })}
           </p>
-          <Collapsible open={serverOpen} onOpenChange={setServerOpen}>
-            <CollapsibleTrigger asChild>
-              <Button type="button" variant="outline" size="sm" className="group">
-                {t('serverToo')}
-                <ChevronDownIcon
-                  data-icon="inline-end"
-                  className="transition-transform group-data-[state=open]:rotate-180"
-                  aria-hidden
-                />
+          {addServerHref ? (
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-sm text-muted-foreground">{t('serverSource')}</p>
+              <Button asChild type="button" variant="outline" size="sm">
+                <Link href={addServerHref}>
+                  <PlusIcon data-icon="inline-start" aria-hidden />
+                  {t('addServerSource')}
+                </Link>
               </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="flex flex-col gap-2 pt-3">
-              <p className="text-sm text-muted-foreground">{t('serverTooBody')}</p>
-              <Tabs value={tab} onValueChange={(v) => setTab(v as ErrorPlatform)} className="gap-2">
-                <TabsList
-                  aria-label={t('codeLabel')}
-                  className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto"
+            </div>
+          ) : (
+            <Collapsible open={serverOpen} onOpenChange={setServerOpen}>
+              <CollapsibleTrigger asChild>
+                <Button type="button" variant="outline" size="sm" className="group">
+                  {t('serverToo')}
+                  <ChevronDownIcon
+                    data-icon="inline-end"
+                    className="transition-transform group-data-[state=open]:rotate-180"
+                    aria-hidden
+                  />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="flex flex-col gap-2 pt-3">
+                <p className="text-sm text-muted-foreground">{t('serverTooBody')}</p>
+                <Tabs
+                  value={tab}
+                  onValueChange={(v) => setTab(v as ErrorPlatform)}
+                  className="gap-2"
                 >
-                  {SERVER_PLATFORMS.map((p) => (
-                    <TabsTrigger key={p} value={p} className="h-8 flex-none px-2.5">
-                      {tp(p)}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                {SERVER_PLATFORMS.map((p) => {
-                  const snippet = errorSnippet(p, options)
-                  return (
-                    <TabsContent key={p} value={p} className="flex flex-col gap-2">
-                      {snippet.install && (
+                  <TabsList
+                    aria-label={t('codeLabel')}
+                    className="max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto"
+                  >
+                    {SERVER_PLATFORMS.map((p) => (
+                      <TabsTrigger key={p} value={p} className="h-8 flex-none px-2.5">
+                        {tp(p)}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {SERVER_PLATFORMS.map((p) => {
+                    const snippet = errorSnippet(p, options)
+                    return (
+                      <TabsContent key={p} value={p} className="flex flex-col gap-2">
+                        {snippet.install && (
+                          <CopyField
+                            value={snippet.install}
+                            label={t('install')}
+                            copyLabel={t('copy')}
+                            copiedLabel={t('copied')}
+                          />
+                        )}
+                        <p className="font-mono text-xs text-muted-foreground">{snippet.file}</p>
                         <CopyField
-                          value={snippet.install}
-                          label={t('install')}
+                          value={snippet.code}
                           copyLabel={t('copy')}
                           copiedLabel={t('copied')}
+                          multiline
                         />
-                      )}
-                      <p className="font-mono text-xs text-muted-foreground">{snippet.file}</p>
-                      <CopyField
-                        value={snippet.code}
-                        copyLabel={t('copy')}
-                        copiedLabel={t('copied')}
-                        multiline
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {p === 'other' ? t('noteOther') : t('noteSdk')}
-                      </p>
-                    </TabsContent>
-                  )
-                })}
-              </Tabs>
-            </CollapsibleContent>
-          </Collapsible>
+                        <p className="text-xs text-muted-foreground">
+                          {p === 'other' ? t('noteOther') : t('noteSdk')}
+                        </p>
+                      </TabsContent>
+                    )
+                  })}
+                </Tabs>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </Step>
       ) : (
         <Step n={1} title={t('step1')}>

@@ -1,4 +1,5 @@
 import { ISSUE_TABS, type IssueTab } from '@octadash/db'
+import { sourceParam } from './source-scope'
 import { TRAFFIC_PERIODS, type TrafficPeriodId } from './traffic'
 
 /**
@@ -24,6 +25,8 @@ export interface ErrorsState {
   sort: ErrorSort
   metric: ErrorMetric
   show: number
+  /** One source of the scope, or every source (null). */
+  source: string | null
 }
 
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
@@ -42,6 +45,7 @@ export function parseErrorsState(
     sort: ERROR_SORTS.find((s) => s === sort) ?? 'people',
     metric: ERROR_METRICS.find((m) => m === metric) ?? 'events',
     show: Number.isInteger(show) && show > 0 ? Math.min(show, 500) : ISSUES_PAGE,
+    source: sourceParam(search.source),
   }
 }
 
@@ -54,6 +58,7 @@ export function errorsHref(path: string, state: ErrorsState, change: Partial<Err
   if (next.sort !== 'people') params.set('sort', next.sort)
   if (next.metric !== 'events') params.set('metric', next.metric)
   if (next.show !== ISSUES_PAGE) params.set('show', String(next.show))
+  if (next.source) params.set('source', next.source)
   const query = params.toString()
   return query ? `${path}?${query}` : path
 }

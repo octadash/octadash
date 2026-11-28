@@ -17,6 +17,7 @@ import {
   searchLogs,
 } from '@octadash/db'
 import { histogramStep, LOG_PAGE, type LogsState } from '@/lib/logs'
+import { type ScopeSource, scopeSources } from '@/lib/source-scope'
 import { type TrafficPeriod, trafficPeriod } from '@/lib/traffic'
 import { services } from './context'
 
@@ -25,6 +26,8 @@ type Project = Awaited<ReturnType<typeof listProjects>>[number]
 /** A line as the browser gets it: with its product and the error in its trace. */
 export interface ShownLine extends LogLine {
   product: { name: string; slug: string }
+  /** Name of the source that sent it. */
+  source: string
   /** Errors in the same trace, with the issue to open. */
   error: { count: number; href: string } | null
 }
@@ -41,6 +44,10 @@ export interface LogsData {
   searches: LogSearch[]
   /** Days kept: one number when every product in scope keeps the same. */
   retention: { min: number; max: number }
+  /** Sources of the products in scope, for the source filter. */
+  sources: ScopeSource[]
+  /** The source the page is filtered to, when it belongs to the scope. */
+  source: ScopeSource | null
   /** Products in scope with a source that sends logs. */
   sending: number
   /** `product:` names in the search that match no product. */
@@ -78,12 +85,14 @@ export async function loadLines(
   q: string,
   period: { from: Date; to: Date },
   cursor: { before?: string; after?: string } = {},
+  sources: { id: string; name: string }[] = [],
+  sourceIds: string[] = [],
 ): Promise<ShownLine[]> {
   const { clickhouse } = services()
   const query = compileLogQuery(parseLogQuery(q), new Map(allProjects.map((p) => [p.slug, p.id])))
   const lines = await searchLogs(
     clickhouse,
-    { orgId, projectIds: projects.map((p) => p.id), from: period.from, to: period.to },
+    { orgId, projectIds: projects.map((p) => p.id), sourceIds, from: period.from, to: period.to },
     query,
     { limit: LOG_PAGE, ...cursor },
   )
@@ -93,6 +102,7 @@ export async function loadLines(
     lines.map((l) => l.traceId),
   ).catch(() => new Map())
   const byId = new Map(allProjects.map((p) => [p.id, p]))
+  const sourceName = new Map(sources.map((s) => [s.id, s.name]))
   return lines.map((line) => {
     const product = byId.get(line.projectId)
     const error = line.traceId ? errors.get(line.traceId) : undefined
@@ -100,6 +110,7 @@ export async function loadLines(
     return {
       ...line,
       product: { name: product?.name ?? '', slug: product?.slug ?? '' },
+      source: sourceName.get(line.sourceId) ?? '',
       error:
         error && errorProduct
           ? { count: error.count, href: `/p/${errorProduct.slug}/errors/${error.issueId}` }
@@ -130,7 +141,9 @@ export async function loadLogs(
   const slugs = new Map(allProjects.map((p) => [p.slug, p.id]))
   const query = compileLogQuery(terms, slugs)
   const step = histogramStep(state.period, period.to.getTime() - period.from.getTime())
-  const scope = { orgId, projectIds: ids, from: period.from, to: period.to }
+  const { sources: inScope, source } = scopeSources(sources, projects, state.source)
+  const sourceIds = source ? [source.id] : []
+  const scope = { orgId, projectIds: ids, sourceIds, from: period.from, to: period.to }
 
   let complete = true
   const safe = <T>(run: () => Promise<T>, fallback: T) =>
@@ -139,13 +152,16 @@ export async function loadLogs(
       return fallback
     })
   const [lines, histogram, seen, retention] = await Promise.all([
-    safe(() => loadLines(orgId, projects, allProjects, state.q, period), [] as ShownLine[]),
+    safe(
+      () => loadLines(orgId, projects, allProjects, state.q, period, {}, sources, sourceIds),
+      [] as ShownLine[],
+    ),
     safe(() => logHistogram(clickhouse, scope, query, step), [] as LogBucket[]),
     safe(
       () =>
         searchLogs(
           clickhouse,
-          { ...scope, from: new Date(now.getTime() - 90 * 86_400_000), to: now },
+          { ...scope, sourceIds: [], from: new Date(now.getTime() - 90 * 86_400_000), to: now },
           compileLogQuery([]),
           { limit: 1 },
         ),
@@ -174,5 +190,7 @@ export async function loadLogs(
     unknownProducts: productsIn(terms).filter((slug) => !slugs.has(slug)),
     anyLine: seen.length > 0 || lines.length > 0,
     complete,
+    sources: inScope,
+    source,
   }
 }

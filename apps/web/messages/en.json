@@ -1448,7 +1448,9 @@
       "asTable": "Show as a table",
       "time": "Time"
     },
-    "addSourceTo": "Add a source to"
+    "addSourceTo": "Add a source to",
+    "source": "Source",
+    "allSources": "All sources"
   },
   "trafficSetup": {
     "title": "Set up Traffic",
@@ -1937,7 +1939,9 @@
       "silentMore": "{count, plural, one {And # more.} other {And # more.}}",
       "openSource": "See {source}"
     },
-    "addSourceTo": "Add a source to"
+    "addSourceTo": "Add a source to",
+    "source": "Source",
+    "allSources": "All sources"
   },
   "errorsSetup": {
     "title": "Set up Errors",
@@ -2026,7 +2030,9 @@
     "scriptOnTitle": "Browser errors: already on",
     "scriptOnBody": "{source} already has the Octadash script (from Traffic). It reports uncaught errors and rejected promises by itself: nothing to install, no new deploy.",
     "serverToo": "Server errors too",
-    "serverTooBody": "The script only sees the browser. For errors in your API or server code, add the Sentry SDK there with this source’s DSN."
+    "serverTooBody": "The script only sees the browser. For errors in your API or server code, add the Sentry SDK there with this source’s DSN.",
+    "serverSource": "Errors on a server (API, worker) come from a server source with its own key and DSN, not from this site.",
+    "addServerSource": "Add a server source"
   },
   "usageArea": {
     "title": "Product usage",
@@ -2140,7 +2146,9 @@
       "week": "Week {n}",
       "weekOf": "Week of {date}"
     },
-    "addSourceTo": "Add a source to"
+    "addSourceTo": "Add a source to",
+    "source": "Source",
+    "allSources": "All sources"
   },
   "usageSetup": {
     "title": "Set up Product usage",
@@ -2298,7 +2306,9 @@
       "product": "Product",
       "message": "Message"
     },
-    "addSourceTo": "Add a source to"
+    "addSourceTo": "Add a source to",
+    "source": "Source",
+    "allSources": "All sources"
   },
   "logsSetup": {
     "title": "Set up Logs",
@@ -2306,12 +2316,13 @@
     "trail": "Where you are",
     "logs": "Logs",
     "sources": "Sources",
-    "sourcesHint": "A source that sends errors can send log lines with the same key: press “Use for Logs”.",
+    "sourcesHint": "Log lines come from code that runs on a server (API, worker, Next.js). A source that runs only in the browser, like a site with the script, cannot send them: add a server source.",
     "status": {
       "receiving": "sends log lines · last {time}",
       "waiting": "for Logs · waiting for the first line",
       "other": "sends {areas} · no log lines yet",
-      "nothing": "added · nothing received yet"
+      "nothing": "added · nothing received yet",
+      "browser": "runs in the browser · cannot send log lines"
     },
     "useForLogs": "Use for Logs",
     "show": "Show code",
@@ -3102,7 +3113,8 @@
         "productsTitle": "No product sends logs yet",
         "productsBody": "When they do, this page searches the lines of all of them at once. Start with the product that breaks most.",
         "more": "{count, plural, one {# more product can send logs} other {# more products can send logs}}",
-        "options": "Add another source, other platforms and options"
+        "options": "Add another source, other platforms and options",
+        "browserOnly": "{sources} {count, plural, one {runs} other {run}} in the browser and cannot send log lines. Log lines come from a server: add a server source (API, worker, Next.js)."
       },
       "money": {
         "name": "Money",
@@ -3308,7 +3320,9 @@
         "more": "{count, plural, one {# more product without a monitor} other {# more products without a monitor}}"
       }
     },
-    "orNewAccount": "Or connect another account:"
+    "orNewAccount": "Or connect another account:",
+    "tagSource": "Source",
+    "tagKey": "Key"
   },
   "update": {
     "label": "Update available",

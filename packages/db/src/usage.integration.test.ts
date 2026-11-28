@@ -190,6 +190,21 @@ describe.skipIf(!chUrl)('product usage queries (needs CLICKHOUSE_URL)', () => {
     expect(events.at(-1)?.last).toBeNull()
   })
 
+  it('keeps to one source when asked, and names the sources of each event', async () => {
+    const week = { ...scope, from: at(7, -60), to: at(9) }
+    const events = await usageEvents(client, week)
+    expect(events[0]?.sourceIds).toEqual([NO_SOURCE])
+    const other = { ...scope, sourceIds: ['00000000-0000-4000-8000-0000000003ff'] }
+    expect(await usageTotals(client, other, SIGNUP_EVENTS, keys)).toEqual({
+      active: 0,
+      signups: 0,
+      keyEvents: 0,
+    })
+    expect(
+      await usageTotals(client, { ...scope, sourceIds: [NO_SOURCE] }, SIGNUP_EVENTS, keys),
+    ).toEqual({ active: 3, signups: 2, keyEvents: 1 })
+  })
+
   it('reads who came back in week 1 and the weekly cohorts', async () => {
     const back = await cameBackWeek1(
       client,

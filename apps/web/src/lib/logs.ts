@@ -1,3 +1,4 @@
+import { sourceParam } from './source-scope'
 import { TRAFFIC_PERIODS, type TrafficPeriodId } from './traffic'
 
 /**
@@ -17,6 +18,8 @@ export interface LogsState {
   q: string
   /** False when the person switched Live off. */
   live: boolean
+  /** One source of the scope, or every source (null). */
+  source: string | null
 }
 
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
@@ -27,6 +30,7 @@ export function parseLogsState(search: Record<string, string | string[] | undefi
     period: LOG_PERIODS.find((p) => p === period) ?? '24h',
     q: (one(search.q) ?? '').trim().slice(0, 2000),
     live: one(search.live) !== '0',
+    source: sourceParam(search.source),
   }
 }
 
@@ -37,6 +41,7 @@ export function logsHref(path: string, state: LogsState, change: Partial<LogsSta
   if (next.period !== '24h') params.set('period', next.period)
   if (next.q) params.set('q', next.q)
   if (!next.live) params.set('live', '0')
+  if (next.source) params.set('source', next.source)
   const query = params.toString()
   return query ? `${path}?${query}` : path
 }

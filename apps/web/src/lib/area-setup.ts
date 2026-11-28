@@ -43,6 +43,11 @@ const CANNOT_START: Record<string, readonly string[]> = {
   traffic: ['node', 'python', 'dotnet', 'go', 'java', 'ruby'],
 }
 
+/** Whether a source on this platform can feed the area: a page script never sends log lines. */
+export function canFeed(area: string, platform: string): boolean {
+  return !(CANNOT_START[area] ?? []).includes(platform)
+}
+
 export function areaSetup(
   area: string,
   input: {
@@ -52,7 +57,8 @@ export function areaSetup(
     dismissed: boolean
   },
 ): AreaSetup {
-  const forArea = input.sources.find((s) => s.areas.includes(area))
+  // A browser source marked for Logs (by hand, before this rule) never sends a line: not a wait.
+  const forArea = input.sources.find((s) => s.areas.includes(area) && canFeed(area, s.platform))
   if (input.hadData) return { state: 'sending', source: forArea ?? null }
   // "I won't use this" wins over a page script that would send it anyway.
   if (input.dismissed) return { state: 'dismissed', source: null }

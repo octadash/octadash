@@ -17,9 +17,11 @@ import { addLogsToSourceAction } from '@/actions/logs'
 import { LogSourceForm } from '@/components/log-source-form'
 import { LogsInstall } from '@/components/logs-install'
 import { RouteDialog, RouteSheet } from '@/components/route-overlay'
+import { SourceTag } from '@/components/source-tag'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { canFeed } from '@/lib/area-setup'
 import { logTabOf } from '@/lib/logs-setup'
 import { services } from '@/server/context'
 import { canManage, requireOrg } from '@/server/session'
@@ -65,7 +67,10 @@ export default async function LogsSetupPage({
     getTranslations('platforms'),
     getFormatter(),
   ])
-  const sending = sources.filter((s) => s.areas.includes('logs'))
+  // A page script cannot send log lines: a browser source never counts for Logs.
+  const feeds = (s: (typeof sources)[number]) =>
+    s.areas.includes('logs') && canFeed('logs', s.platform)
+  const sending = sources.filter(feeds)
   const last = new Map(
     await Promise.all(
       sending.map(
@@ -82,7 +87,8 @@ export default async function LogsSetupPage({
   const base = `/p/${project.slug}/logs/setup`
 
   const status = (s: (typeof sources)[number]) => {
-    if (s.areas.includes('logs')) {
+    if (!canFeed('logs', s.platform)) return t('status.browser')
+    if (feeds(s)) {
       const line = last.get(s.id)
       return line
         ? t('status.receiving', { time: format.relativeTime(new Date(line.at), now) })
@@ -152,7 +158,7 @@ export default async function LogsSetupPage({
                           <span className="text-xs text-muted-foreground">{status(s)}</span>
                         </div>
                         <div className="ml-auto">
-                          {s.areas.includes('logs') ? (
+                          {feeds(s) ? (
                             <Button asChild size="sm" variant="outline">
                               <Link href={`${base}?source=${s.id}`} scroll={false}>
                                 <CodeIcon data-icon="inline-start" aria-hidden />
@@ -160,7 +166,8 @@ export default async function LogsSetupPage({
                               </Link>
                             </Button>
                           ) : (
-                            manager && (
+                            manager &&
+                            canFeed('logs', s.platform) && (
                               <form action={addLogsToSourceAction}>
                                 <input type="hidden" name="slug" value={project.slug} />
                                 <input type="hidden" name="source" value={s.id} />
@@ -210,6 +217,13 @@ export default async function LogsSetupPage({
               description={t('codeHint')}
               closeLabel={t('close')}
             >
+              <SourceTag
+                name={current.name}
+                platform={
+                  current.platform && tp.has(current.platform) ? tp(current.platform) : undefined
+                }
+                publicKey={current.public_key}
+              />
               <LogsInstall
                 key={current.id}
                 slug={project.slug}

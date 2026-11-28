@@ -32,8 +32,14 @@ That is all. On a redeploy, Coolify fetches the latest compose file from the
 repository, pulls the images of every service (the `edge` image included, even
 with the same tag), then stops the old containers and starts the new ones.
 Nothing in the environment variables needs to change unless the changelog says
-so. Expect the panel and the ingest to be down for a few seconds while the
-containers restart; SDKs and the script retry what fails to send.
+so.
+
+Coolify has no rolling updates for Docker Compose applications
+([its docs](https://coolify.io/docs/applications/deployments/rolling-updates)):
+it stops the old containers before the new ones answer. For a few seconds the
+panel shows "no available server" and the ingest is down too. The Octadash
+script does not resend, so a page view or an error sent in that window is lost.
+Redeploy when traffic is low.
 
 ## Docker Compose
 

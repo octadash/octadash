@@ -13,6 +13,8 @@ import { toClickHouseTime } from './events'
 export interface UsageScope {
   orgId: string
   projectIds: string[]
+  /** Only these sources; empty or left out, every source. */
+  sourceIds?: string[]
   from: Date
   to: Date
   /** IANA zone that days and weeks follow. Default UTC. */
@@ -24,7 +26,8 @@ export type KeyEventRef = { projectId: string; event: string }
 
 const PERSON = `if(distinct_id != '', distinct_id, visitor_id)`
 const PRODUCT_EVENT = `event NOT IN ('$pageview', '$pageleave') AND is_bot = 0`
-const IN_SCOPE = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+const IN_SOURCES = `(empty({sources:Array(UUID)}) OR source_id IN {sources:Array(UUID)})`
+const IN_SCOPE = `org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
   AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp < {to:DateTime64(3, 'UTC')}`
 const IS_KEY = `has({keys:Array(String)}, concat(toString(project_id), ':', event))`
 const IS_SIGNUP = `event IN {signups:Array(String)}`
@@ -35,6 +38,7 @@ function params(scope: UsageScope) {
   return {
     org: scope.orgId,
     projects: scope.projectIds,
+    sources: scope.sourceIds ?? [],
     from: toClickHouseTime(scope.from),
     to: toClickHouseTime(scope.to),
     tz: scope.timeZone ?? 'UTC',
@@ -144,6 +148,8 @@ export interface UsageEventRow {
   baseline: number[]
   /** The newest one in the period. */
   last: Date | null
+  /** The sources that sent it in the period. */
+  sourceIds: string[]
 }
 
 /**
@@ -172,10 +178,11 @@ export async function usageEvents(
     query: `SELECT toString(project_id) AS project, event,
         countIf(${inPeriod}) AS count,
         uniqIf(${PERSON}, ${inPeriod} AND ${PERSON} != '') AS people,
-        maxIf(timestamp, ${inPeriod}) AS last
+        maxIf(timestamp, ${inPeriod}) AS last,
+        groupUniqArrayIf(8)(toString(source_id), ${inPeriod}) AS sources
         ${baselineSql ? `, ${baselineSql}` : ''}
       FROM events
-      WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+      WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
         AND timestamp >= {earliest:DateTime64(3, 'UTC')} AND timestamp < {to:DateTime64(3, 'UTC')}
         AND ${PRODUCT_EVENT} AND NOT startsWith(event, '$')
       GROUP BY project_id, event
@@ -195,8 +202,9 @@ export async function usageEvents(
     clickhouse_settings: ISO_TIMES,
     format: 'JSONEachRow',
   })
-  const rows = await result.json<Record<string, string>>()
+  const rows = await result.json<Record<string, string> & { sources?: string[] }>()
   return rows.map((row) => ({
+    sourceIds: row.sources ?? [],
     projectId: row.project ?? '',
     event: row.event ?? '',
     count: Number(row.count ?? 0),
@@ -230,7 +238,7 @@ export async function cameBackWeek1(
       WITH signed AS (
         SELECT project_id, ${PERSON} AS p, min(timestamp) AS t
         FROM events
-        WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+        WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
           AND timestamp >= {sfrom:DateTime64(3, 'UTC')} AND timestamp < {sto:DateTime64(3, 'UTC')}
           AND ${IS_SIGNUP} AND distinct_id != '' AND is_bot = 0
         GROUP BY project_id, p
@@ -241,7 +249,7 @@ export async function cameBackWeek1(
         FROM signed AS s
         LEFT JOIN (
           SELECT project_id, ${PERSON} AS p, timestamp FROM events
-          WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+          WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
             AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp < {eto:DateTime64(3, 'UTC')}
             AND ${PRODUCT_EVENT} AND distinct_id != ''
         ) AS e ON e.project_id = s.project_id AND e.p = s.p
@@ -288,7 +296,7 @@ export async function retentionCohorts(
         SELECT project_id, ${PERSON} AS p,
           toStartOfWeek(min(timestamp), 1, {tz:String}) AS w
         FROM events
-        WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+        WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
           AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp < {to:DateTime64(3, 'UTC')}
           AND ${IS_SIGNUP} AND distinct_id != '' AND is_bot = 0
         GROUP BY project_id, p
@@ -301,7 +309,7 @@ export async function retentionCohorts(
       FROM signed AS s
       INNER JOIN (
         SELECT project_id, ${PERSON} AS p, timestamp FROM events
-        WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)}
+        WHERE org_id = {org:UUID} AND project_id IN {projects:Array(UUID)} AND ${IN_SOURCES}
           AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp < {to:DateTime64(3, 'UTC')}
           AND ${PRODUCT_EVENT} AND distinct_id != ''
       ) AS e ON e.project_id = s.project_id AND e.p = s.p

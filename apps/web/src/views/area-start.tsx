@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import { adoptSourceAction } from '@/actions/area-sources'
 import { dismissAreaAction, restoreAreaAction } from '@/actions/areas'
 import { AreaStartForm } from '@/components/area-start-form'
+import { SourceTag } from '@/components/source-tag'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { AreaSetup, AreaSetupState } from '@/lib/area-setup'
+import { type AreaSetup, type AreaSetupState, canFeed } from '@/lib/area-setup'
 import { SOURCE_AREA_PLATFORMS, type SourceArea } from '@/lib/source-areas'
 import { services } from '@/server/context'
 import { canManage, requireOrg } from '@/server/session'
@@ -282,12 +283,13 @@ export async function sourceAreaStep({
   ) => ReactNode | Promise<ReactNode>
 }) {
   const { db } = services()
-  const [{ org }, t, ta, tp, project] = await Promise.all([
+  const [{ org }, t, ta, tp, project, format] = await Promise.all([
     requireOrg(),
     getTranslations('areaStart'),
     getTranslations(`areaStart.areas.${area}` as 'areaStart.areas.errors'),
     getTranslations('platforms'),
     getProjectBySlug(db, orgId, slug),
+    getFormatter(),
   ])
   const manager = canManage(org.role)
   const sources = project ? await listSources(db, orgId, project.id) : []
@@ -316,6 +318,11 @@ export async function sourceAreaStep({
           <CheckIcon aria-hidden className="size-4 text-ok" />
           {t('waiting', { source: source.name, what })}
         </p>
+        <SourceTag
+          name={source.name}
+          platform={source.platform && tp.has(source.platform) ? tp(source.platform) : undefined}
+          publicKey={source.public_key}
+        />
         {await waiting({ ...source, public_key: source.public_key }, project, manager)}
       </div>
     )
@@ -367,7 +374,25 @@ export async function sourceAreaStep({
       </div>
     )
   } else {
-    step = form
+    // Only browser sources (a site with the script): say why none of them is offered.
+    const browserOnly = sources.filter((s) => !canFeed(area, s.platform))
+    step =
+      browserOnly.length > 0 && ta.has('browserOnly') ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            {ta('browserOnly', {
+              sources: format.list(
+                browserOnly.map((s) => s.name),
+                { type: 'conjunction' },
+              ),
+              count: browserOnly.length,
+            })}
+          </p>
+          {form}
+        </div>
+      ) : (
+        form
+      )
   }
   return { step, manager }
 }

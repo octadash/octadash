@@ -14,6 +14,7 @@ import { dismissAreaAction } from '@/actions/areas'
 import { addUsageToSourceAction } from '@/actions/usage'
 import { KeyEventsForm } from '@/components/key-events-form'
 import { RouteDialog, RouteSheet } from '@/components/route-overlay'
+import { SourceTag } from '@/components/source-tag'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -218,6 +219,13 @@ export default async function UsageSetupPage({
               description={t('codeHint')}
               closeLabel={t('close')}
             >
+              <SourceTag
+                name={current.name}
+                platform={
+                  current.platform && tp.has(current.platform) ? tp(current.platform) : undefined
+                }
+                publicKey={current.public_key}
+              />
               <UsageInstall
                 key={current.id}
                 sourceId={current.id}

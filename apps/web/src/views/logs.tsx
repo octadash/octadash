@@ -5,6 +5,7 @@ import { AddSourceAction } from '@/components/add-source-action'
 import { LogExplorer } from '@/components/log-explorer'
 import { LogHistogram } from '@/components/log-histogram'
 import { LogSearchDialog } from '@/components/log-search-dialog'
+import { SourceFilter } from '@/components/source-filter'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -135,6 +136,16 @@ export async function LogsView({
               </Link>
             ))}
           </nav>
+          <SourceFilter
+            label={t('source')}
+            all={t('allSources')}
+            allHref={logsHref(path, state, { source: null })}
+            current={data.source?.id ?? null}
+            options={data.sources.map((s) => ({
+              ...s,
+              href: logsHref(path, state, { source: s.id }),
+            }))}
+          />
           <AddSourceAction
             area="logs"
             products={data.projects.map((p) => ({ slug: p.slug, name: p.name }))}
@@ -215,6 +226,7 @@ export async function LogsView({
             scope={scope}
             q={state.q}
             period={state.period}
+            source={data.source?.id ?? null}
             path={path}
             liveDefault={state.live}
             several={several}
@@ -248,6 +260,7 @@ export async function LogsView({
               empty: state.q ? t('list.noMatch') : t('list.empty'),
               time: t('list.time'),
               level: t('list.level'),
+              source: t('source'),
               service: t('list.service'),
               product: t('list.product'),
               message: t('list.message'),

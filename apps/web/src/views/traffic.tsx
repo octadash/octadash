@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { AddSourceAction } from '@/components/add-source-action'
 import { InfoTip } from '@/components/info-tip'
 import { MetricChart } from '@/components/metric-chart'
+import { SourceFilter } from '@/components/source-filter'
 import { TrafficCard, type TrafficContext } from '@/components/traffic-lists'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,6 +16,7 @@ import {
   type TrafficMetric,
   type TrafficPeriodId,
   trafficHref,
+  withFilters,
 } from '@/lib/traffic'
 import { cn } from '@/lib/utils'
 import { loadAreaSetup } from '@/server/area-setup'
@@ -183,6 +185,22 @@ export async function TrafficView({
               {t('setUpLink')}
             </Link>
           )}
+          <SourceFilter
+            label={t('source')}
+            all={t('allSources')}
+            allHref={trafficHref(path, state, {
+              filters: filters.filter((f) => f.dimension !== 'origin'),
+            })}
+            current={filters.find((f) => f.dimension === 'origin')?.value ?? null}
+            options={data.sources.map((s) => ({
+              id: s.id,
+              name: s.name,
+              product: names[s.project_id] ?? '',
+              href: trafficHref(path, state, {
+                filters: withFilters(filters, [{ dimension: 'origin', value: s.id }]),
+              }),
+            }))}
+          />
           <AddSourceAction
             area="traffic"
             products={data.projects.map((p) => ({ slug: p.slug, name: p.name }))}
