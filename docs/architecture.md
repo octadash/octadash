@@ -416,8 +416,11 @@ decision: it would run with access to the instance's database.
 
 Next.js (App Router, standalone output), Tailwind CSS 4, shadcn/ui, next-intl
 (English and Brazilian Portuguese), Zod, Better Auth (email and password,
-OAuth, organizations, 2FA), MCP through the official TypeScript SDK on a
-streamable HTTP endpoint.
+OAuth, organizations, 2FA). The MCP server is `POST /api/mcp`: Streamable
+HTTP answered with JSON (no stream, no session), small enough to need no SDK
+(`apps/web/src/lib/mcp.ts`). It authenticates with an organization's API token
+(`oct_...`, stored as a hash, revocable) and every tool only reads; each area
+adds its tools to `apps/web/src/server/mcp-tools.ts`.
 
 ### Public docs
 

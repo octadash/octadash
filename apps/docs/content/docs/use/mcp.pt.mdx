@@ -1,0 +1,63 @@
+---
+title: Assistentes de IA (MCP)
+description: Pergunte ao Claude, ao Cursor ou a qualquer assistente que fale MCP sobre seus produtos, com um token só de leitura.
+---
+
+O Octadash serve um servidor [Model Context Protocol](https://modelcontextprotocol.io)
+em `/api/mcp`, no endereço do painel. Um assistente conectado a ele lê
+disponibilidade, emergências, tráfego e logs de uma organização, e não muda nada.
+
+## Crie um token
+
+1. Em **Configurações do Octadash** (menu da conta) > **Tokens de API**, dê ao
+   token um nome que diga onde ele é usado ("Claude no meu notebook") e crie.
+   Donos e admins podem fazer isso.
+2. Copie o token agora: ele aparece uma vez só. O Octadash guarda apenas um hash
+   dele.
+3. Revogue na mesma página quando aquele assistente não deve mais ler. Um token
+   lê todos os produtos da organização.
+
+## Conecte um assistente
+
+No Claude Code, com o comando que a página mostra:
+
+```sh
+claude mcp add --transport http octadash https://octadash.example.com/api/mcp \
+  --header "Authorization: Bearer oct_..."
+```
+
+Em qualquer outro cliente: o servidor fala Streamable HTTP (respostas em JSON,
+sem sessão) e recebe o token como `Authorization: Bearer <token>`.
+
+```json
+{
+  "mcpServers": {
+    "octadash": {
+      "type": "http",
+      "url": "https://octadash.example.com/api/mcp",
+      "headers": { "Authorization": "Bearer oct_..." }
+    }
+  }
+}
+```
+
+## Ferramentas
+
+Todas só leem. Cada uma aceita um produto opcional (o slug ou o nome); sem ele,
+responde por todos os produtos.
+
+| Ferramenta         | Responde                                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| `list_products`    | Os produtos (slug e nome) e os grupos salvos.                                                         |
+| `uptime_status`    | Cada monitor: estado agora, disponibilidade e tempo de resposta mediano em 24 horas e 30 dias, dias restantes do certificado. |
+| `open_emergencies` | O que está aberto agora: emergências e sinais, desde quando e se alguém está cuidando.                |
+| `traffic`          | Visitantes e páginas vistas nos últimos dias (7 por padrão, até 90) contra os dias anteriores, com as principais páginas, origens, canais e países. |
+| `search_logs`      | Linhas de log, das mais novas, com a mesma busca da página Logs (`level:error timeout`), até 7 dias atrás. |
+
+Cada área ganha as próprias ferramentas quando fica pronta. Perguntas que
+funcionam bem: "está tudo no ar?", "o que está aberto agora?", "como foi o
+tráfego desta semana contra a anterior?", "mostre os erros nos logs da API da
+última hora".
+
+Dados pessoais nos logs já foram mascarados quando a linha chegou, então o
+assistente nunca os vê.

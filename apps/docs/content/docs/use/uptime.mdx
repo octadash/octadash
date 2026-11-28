@@ -1,0 +1,111 @@
+---
+title: Uptime and alerts
+description: Monitors, heartbeats and certificates, the rules that raise emergencies and the channels that tell you.
+---
+
+Uptime needs nothing installed. Octadash checks each address from outside, on
+its interval, and tells you when it stops answering.
+
+## Monitors
+
+A product can have several monitors. In **Uptime**, **Add monitor** asks for a
+name, a type and an address:
+
+| Type        | What Octadash does                                                                 |
+| ----------- | ---------------------------------------------------------------------------------- |
+| Site        | GETs the page and expects a 2xx answer.                                            |
+| API or `/health` | GETs the endpoint and expects a 2xx answer that is not an HTML page.          |
+| Heartbeat   | Waits for your job (a cron, a backup, a worker) to call Octadash. Silence is an outage. |
+
+Checks run every 30 seconds up to once a day. After a failure the next check
+comes about 20 seconds later, and a site or health monitor is down after 3
+failures in a row. Before calling anything down, Octadash checks that its own
+server can reach the internet, so a network problem on its side does not read
+as every product down.
+
+About once an hour each monitor also reads the certificate (days left) and the
+http to https redirect. The monitor shows its response time, the last error in
+plain words ("No answer in time", "Answered HTTP 503") and its uptime over 24
+hours and 30 days.
+
+<Callout title="Do not wake your database">
+  Point the monitor to a `/health` endpoint that answers without querying the
+  database. A page that queries it on every check keeps a serverless database
+  (Neon, for example) awake and billed. On a home page, use a longer interval.
+</Callout>
+
+A monitor can name the source it checks ("Docs"), so Uptime tells the site,
+the docs and the app of one product apart.
+
+## Heartbeats
+
+A heartbeat expects a call either every interval or on a cron schedule
+(`0 3 * * *`, read in the organization's time zone), plus a grace for jobs that
+take a while (none up to 1 hour). The form gives the address to call:
+
+```sh
+# at the end of the job, when it worked
+curl -fsS https://ingest.example.com/o/v1/hb/<token>
+
+# when it failed: an emergency at once, without waiting for the grace
+curl -fsS https://ingest.example.com/o/v1/hb/<token>/fail
+```
+
+GET and POST both work. A POST body is kept as the job's output (the last
+100,000 characters, with personal data masked), so
+`curl --data-binary @backup.log` tells you why a backup failed.
+
+## Same server
+
+When a monitor's address points to the server Octadash runs on, Uptime warns:
+if that server goes down, Octadash goes down with it and nobody is told. Set up
+the [outside watcher](/self-hosting/outside-watcher), or monitor that product
+from another server.
+
+## Emergencies and signals
+
+Every rule raises one of two things:
+
+- **Emergency**: a message goes at once to the rule's channels, and a red strip
+  stays on top of every screen until it ends. **I'm on it** shows the team who
+  took it.
+- **Signal**: no message. Shown in its area and in the signals strip.
+
+A rule can also be off. The rules ship with these seeds, and an owner or admin
+changes them in **Octadash settings** (account menu) > **Alert rules**, for the
+whole organization or, under **Product settings**, for one product:
+
+| Rule                 | Raised when                                                                     | Seed            |
+| -------------------- | ------------------------------------------------------------------------------- | --------------- |
+| Monitor down         | a site or health monitor is down for some minutes                               | 2 minutes       |
+| Heartbeat missed     | a job did not call in time, or called `/fail`                                   | no extra wait   |
+| Certificate expiring | the certificate expires in some days or fewer                                   | 7 days          |
+| Error spike          | errors in 15 minutes reach some times the normal for that hour, with a minimum | 5 times, 20 errors |
+| Key event stopped    | a key event did not arrive in the time it usually takes, with a minimum        | 5 events, 30 minutes |
+| Log alert            | a saved Logs search with Alert on matched a line                                | ends after 15 minutes quiet |
+| Payments failing     | a share of the charges in 15 minutes failed, with a minimum                    | 20%, 10 charges |
+| Cost runaway         | one hour cost some times the normal hour, with a minimum                       | 3 times, US$ 5  |
+| New issue            | an error is seen for the first time (a notice, off by default)                 | off             |
+
+Each emergency ends on its own when the cause goes away: the site answers, the
+job calls again, the errors fall back under.
+
+## Channels
+
+Each channel uses your own credentials; Octadash has no account that sends
+anything. Add them in **Octadash settings** > **Channels**, each with a **Send
+test** button:
+
+| Channel  | Setup                                                                  |
+| -------- | ---------------------------------------------------------------------- |
+| Email    | SMTP (any server) or the Resend API. Also sends invites and password resets. |
+| Telegram | A bot token and a chat id.                                             |
+| Webhook  | A URL and an optional secret. Covers Slack, Discord, n8n and others.   |
+
+A rule sends to the channels it names, or to every channel when it names none.
+
+## Ask an assistant
+
+The `uptime_status` and `open_emergencies` tools of the
+[MCP server](/use/mcp) answer "is everything up?" and "what is open right now?"
+from Claude or any assistant that speaks MCP.

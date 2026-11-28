@@ -469,7 +469,9 @@
       "newBody": "Para outra empresa ou cliente, separada desta. Você será o dono e poderá convidar pessoas para ela.",
       "name": "Nome",
       "create": "Criar organização"
-    }
+    },
+    "apiTokens": "Tokens de API",
+    "apiTokensKeywords": "mcp claude cursor ia token api chave"
   },
   "channels": {
     "title": "Canais de alerta",
@@ -3340,5 +3342,27 @@
     "release": "A versão {version} saiu. Veja o que mudou.",
     "edge": "{count, plural, one {1 mudança} other {# mudanças}} no main desde esta versão.",
     "version": "Rodando o Octadash {version}, commit {commit}"
+  },
+  "apiTokens": {
+    "title": "Tokens de API",
+    "intro": "Tokens só de leitura desta organização. Com um, um assistente de IA como o Claude ou o Cursor lê disponibilidade, emergências, tráfego e logs pelo servidor MCP do Octadash. Um token lê todos os produtos e não muda nada.",
+    "newTitle": "Novo token",
+    "newIntro": "O servidor MCP responde em {url}.",
+    "name": "Nome",
+    "nameHint": "Onde ele é usado, para saber qual revogar: Claude no meu notebook.",
+    "namePlaceholder": "Claude no meu notebook",
+    "create": "Criar token",
+    "token": "Token",
+    "once": "Copie agora: ele aparece só uma vez.",
+    "command": "Adicionar o Octadash ao Claude Code",
+    "listTitle": "Tokens",
+    "empty": "Nenhum token ainda.",
+    "revoked": "Revogado",
+    "meta": "Criado em {created} por {by}",
+    "used": "usado {when}",
+    "neverUsed": "nunca usado",
+    "revoke": "Revogar",
+    "revokeTitle": "Revogar {name}?",
+    "revokeBody": "O que usa este token para de ler o Octadash na hora. Não dá para desfazer; crie um token novo se precisar."
   }
 }

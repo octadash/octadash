@@ -15,6 +15,7 @@ export interface Database {
   project: ProjectTable
   project_slug_alias: ProjectSlugAliasTable
   tv_link: TvLinkTable
+  api_token: ApiTokenTable
   error_issue: ErrorIssueTable
   key_event: KeyEventTable
   funnel: FunnelTable
@@ -245,6 +246,20 @@ export interface FxRateTable {
 }
 
 /** A private TV link; only the token's hash is stored. */
+/** A read-only token of an organization (MCP server, API). Only its hash is kept. */
+export interface ApiTokenTable {
+  id: string
+  org_id: string
+  name: string
+  token_hash: string
+  /** The first characters, to tell tokens apart: "oct_a1b2". */
+  prefix: string
+  created_by: string | null
+  created_at: CreatedAt
+  last_used_at: Date | null
+  revoked_at: Date | null
+}
+
 export interface TvLinkTable {
   id: string
   org_id: string

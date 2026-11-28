@@ -1,0 +1,61 @@
+---
+title: AI assistants (MCP)
+description: Ask Claude, Cursor or any assistant that speaks MCP about your products, with a read-only token.
+---
+
+Octadash serves a [Model Context Protocol](https://modelcontextprotocol.io)
+server at `/api/mcp` on the panel's address. An assistant connected to it reads
+uptime, emergencies, traffic and logs of one organization, and changes nothing.
+
+## Create a token
+
+1. In **Octadash settings** (account menu) > **API tokens**, give the token a
+   name that says where it is used ("Claude on my laptop") and create it. Owners
+   and admins can do this.
+2. Copy the token now: it is shown once. Octadash keeps only a hash of it.
+3. Revoke it on the same page when that assistant should stop reading. A token
+   reads every product of the organization.
+
+## Connect an assistant
+
+Claude Code, with the command the page shows:
+
+```sh
+claude mcp add --transport http octadash https://octadash.example.com/api/mcp \
+  --header "Authorization: Bearer oct_..."
+```
+
+Any other client: the server speaks Streamable HTTP (JSON answers, no session)
+and takes the token as `Authorization: Bearer <token>`.
+
+```json
+{
+  "mcpServers": {
+    "octadash": {
+      "type": "http",
+      "url": "https://octadash.example.com/api/mcp",
+      "headers": { "Authorization": "Bearer oct_..." }
+    }
+  }
+}
+```
+
+## Tools
+
+Every tool only reads. Each one takes an optional product (its slug or name);
+without one, it answers for every product.
+
+| Tool               | Answers                                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| `list_products`    | The products (slug and name) and the saved groups.                                                    |
+| `uptime_status`    | Every monitor: state now, uptime and median response time over 24 hours and 30 days, certificate days left. |
+| `open_emergencies` | What is open now: emergencies and signals, since when, and whether someone is on it.                  |
+| `traffic`          | Visitors and page views over the last days (7 by default, up to 90) against the days before, with the top pages, sources, channels and countries. |
+| `search_logs`      | Log lines, newest first, with the same search the Logs page takes (`level:error timeout`), up to 7 days back. |
+
+Each area adds its own tools as it is finished. Questions that work well:
+"is everything up?", "what is open right now?", "how did traffic do this week
+against last week?", "show the errors in the API logs from the last hour".
+
+Personal data in logs was already masked when the line arrived, so the
+assistant never sees it.
