@@ -378,7 +378,9 @@
     "statusUp": "No ar",
     "statusDown": "Fora do ar",
     "statusUnknown": "Esperando a primeira verificação",
-    "statusPaused": "Pausado"
+    "statusPaused": "Pausado",
+    "ofSource": "origem {source}",
+    "sameServerDismiss": "Fechar este aviso. Um ícone pequeno ao lado do título guarda o aviso."
   },
   "settings": {
     "members": "Membros",
@@ -886,8 +888,8 @@
       "site": "A página a abrir. Redirecionamentos são seguidos, até 5.",
       "health": "O endpoint a chamar. Redirecionamentos são seguidos, até 5."
     },
-    "homeTitle": "Esta é a sua página inicial. Ela lê o banco de dados?",
-    "homeBody": "Se ler, cada checagem acorda o banco, uma vez por minuto, o dia todo. No Neon e em outros bancos serverless isso mantém a cobrança ligada o tempo todo. Melhor: um endpoint /health que responde sem o banco. Adicione abaixo e cheque ele, ou cheque a página inicial a cada 5 minutos.",
+    "homeTitle": "Página inicial: se ela lê o banco, cada checagem acorda o banco.",
+    "homeBody": "No Neon e em outros bancos serverless, isso mantém a cobrança ligada o dia todo. Cheque um /health que responde sem o banco, ou cheque a página inicial a cada 5 minutos.",
     "snippetsTitle": "Um /health que não acorda o banco",
     "framework": "Framework",
     "runner": "Onde a tarefa roda",
@@ -951,7 +953,13 @@
       "body": "Um backup que para de rodar falha em silêncio: nada cai, nada dá erro, e você descobre no dia em que precisa dele. O heartbeat transforma o silêncio em emergência.",
       "good": "Bom para backups, crons, workers de fila, renovação de certificado e importações noturnas."
     },
-    "deleteTitle": "Excluir este monitor"
+    "deleteTitle": "Excluir este monitor",
+    "homeMore": "O que fazer",
+    "source": "Origem",
+    "sourceHint": "Opcional. A Disponibilidade mostra ao lado do monitor.",
+    "sourceNone": "Nenhuma",
+    "sourceInfoLabel": "Sobre Origem",
+    "sourceInfo": "Qual origem do produto este monitor checa, como Docs, para a lista de Disponibilidade diferenciar uma da outra. Apagar a origem mantém o monitor e só tira o vínculo."
   },
   "uptimeBoard": {
     "intro": "Todos os monitores, problemas primeiro. Checados deste servidor, cada um no seu intervalo.",
@@ -1439,7 +1447,8 @@
       "emergency": "Emergência",
       "asTable": "Mostrar como tabela",
       "time": "Hora"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "trafficSetup": {
     "title": "Configurar Tráfego",
@@ -1927,7 +1936,8 @@
       "silentBody": "{sources} não {count, plural, one {enviou} other {enviaram}} nada {period}. Zero erro {count, plural, one {dela} other {delas}} pode ser só silêncio: confira se o SDK ou o script continua ligado depois do último deploy.",
       "silentMore": "{count, plural, one {E mais #.} other {E mais #.}}",
       "openSource": "Ver {source}"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "errorsSetup": {
     "title": "Configurar Erros",
@@ -2125,7 +2135,8 @@
       "people": "Pessoas",
       "week": "Semana {n}",
       "weekOf": "Semana de {date}"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "usageSetup": {
     "title": "Configurar Uso do produto",
@@ -2282,7 +2293,8 @@
       "service": "Serviço",
       "product": "Produto",
       "message": "Mensagem"
-    }
+    },
+    "addSourceTo": "Adicionar origem em"
   },
   "logsSetup": {
     "title": "Configurar Logs",
@@ -3297,6 +3309,7 @@
   "update": {
     "label": "Atualização disponível",
     "release": "A versão {version} saiu. Veja o que mudou.",
-    "edge": "{count, plural, one {1 mudança} other {# mudanças}} no main desde esta versão."
+    "edge": "{count, plural, one {1 mudança} other {# mudanças}} no main desde esta versão.",
+    "version": "Rodando o Octadash {version}, commit {commit}"
   }
 }

@@ -4,6 +4,8 @@ import { migrateToLatest } from './migrate'
 import {
   createMonitor,
   deleteMonitor,
+  dismissSameServer,
+  getMonitor,
   isHeartbeatToken,
   listActiveMonitors,
   listMonitors,
@@ -11,6 +13,7 @@ import {
   updateMonitor,
 } from './monitors'
 import { createProject } from './projects'
+import { createSource, deleteSource } from './sources'
 
 const url = process.env.DATABASE_URL
 const orgA = '00000000-0000-4000-8000-0000000000a1'
@@ -67,6 +70,62 @@ describe.skipIf(!url)('monitors (needs DATABASE_URL)', () => {
     expect(await listMonitors(db, orgA, project.id)).toHaveLength(2)
     expect(await listMonitors(db, orgB, project.id)).toHaveLength(0)
     expect(await deleteMonitor(db, orgB, site?.id ?? '')).toBe(false)
+  })
+
+  it('links a monitor to a source of its own product, and keeps it when the source goes', async () => {
+    const project = await createProject(db, orgA, { name: 'Linked' })
+    const other = await createProject(db, orgA, { name: 'Other' })
+    const docs = await createSource(db, orgA, project.id, {
+      name: 'Docs',
+      platform: 'nextjs',
+      areas: ['traffic'],
+    })
+    const elsewhere = await createSource(db, orgA, other.id, {
+      name: 'Elsewhere',
+      platform: 'nextjs',
+      areas: [],
+    })
+    const input = {
+      name: 'Docs',
+      kind: 'site' as const,
+      url: 'https://docs.example.com',
+      intervalSeconds: 60,
+      graceSeconds: 0,
+    }
+    const linked = await createMonitor(db, orgA, project.id, { ...input, sourceId: docs?.id })
+    expect(linked?.source_id).toBe(docs?.id)
+    // A source of another product is not linked.
+    const stray = await createMonitor(db, orgA, project.id, { ...input, sourceId: elsewhere?.id })
+    expect(stray?.source_id).toBeNull()
+
+    // Editing without a source drops the link; with one, sets it again.
+    await updateMonitor(db, orgA, linked?.id ?? '', { ...input, sourceId: null })
+    expect((await getMonitor(db, orgA, linked?.id ?? ''))?.source_id).toBeNull()
+    await updateMonitor(db, orgA, linked?.id ?? '', { ...input, sourceId: docs?.id })
+    expect((await getMonitor(db, orgA, linked?.id ?? ''))?.source_id).toBe(docs?.id)
+
+    await deleteSource(db, orgA, docs?.id ?? '')
+    const kept = await getMonitor(db, orgA, linked?.id ?? '')
+    expect(kept?.name).toBe('Docs')
+    expect(kept?.source_id).toBeNull()
+  })
+
+  it('closes the same-server notice only for the monitors given, in the organization', async () => {
+    const project = await createProject(db, orgA, { name: 'Same server' })
+    const monitor = await createMonitor(db, orgA, project.id, {
+      name: 'Site',
+      kind: 'site',
+      url: 'https://example.com',
+      intervalSeconds: 60,
+      graceSeconds: 0,
+    })
+    await dismissSameServer(db, orgB, [monitor?.id ?? ''])
+    expect((await getMonitor(db, orgA, monitor?.id ?? ''))?.same_server_dismissed_at).toBeNull()
+    await dismissSameServer(db, orgA, [monitor?.id ?? ''])
+    expect(
+      (await getMonitor(db, orgA, monitor?.id ?? ''))?.same_server_dismissed_at,
+    ).toBeInstanceOf(Date)
+    await dismissSameServer(db, orgA, ['', 'not-an-id'])
   })
 
   it('changes status only from the expected state', async () => {

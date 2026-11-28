@@ -16,6 +16,21 @@ export interface MonitorInput {
   timeoutSeconds?: number
   /** Heartbeats only: the token already shown to the owner before saving. */
   heartbeatToken?: string
+  /** The source of the same product it checks; null unlinks, undefined keeps it. */
+  sourceId?: string | null
+}
+
+/** The source id when it belongs to this product of this organization, else null. */
+async function sourceOf(db: Db, orgId: string, projectId: string, sourceId: string | null) {
+  if (!sourceId) return null
+  const row = await db
+    .selectFrom('source')
+    .select('id')
+    .where('org_id', '=', orgId)
+    .where('project_id', '=', projectId)
+    .where('id', '=', sourceId)
+    .executeTakeFirst()
+  return row?.id ?? null
 }
 
 /** 24 random bytes in URL-safe base64: the secret part of a heartbeat URL. */
@@ -58,6 +73,7 @@ export function getMonitor(db: Db, orgId: string, monitorId: string) {
 
 export async function createMonitor(db: Db, orgId: string, projectId: string, input: MonitorInput) {
   const heartbeat = input.kind === 'heartbeat'
+  const sourceId = await sourceOf(db, orgId, projectId, input.sourceId ?? null)
   // The product must belong to the organization; the insert reads it from there.
   const row = await db
     .insertInto('monitor')
@@ -73,6 +89,7 @@ export async function createMonitor(db: Db, orgId: string, projectId: string, in
       'heartbeat_token',
       'schedule',
       'timeout_seconds',
+      'source_id',
     ])
     .expression((eb) =>
       eb
@@ -97,6 +114,7 @@ export async function createMonitor(db: Db, orgId: string, projectId: string, in
             .as('heartbeat_token'),
           eb.val(heartbeat ? (input.schedule ?? null) : null).as('schedule'),
           eb.val(input.timeoutSeconds ?? 10).as('timeout_seconds'),
+          eb.val(sourceId).as('source_id'),
         ])
         .where('org_id', '=', orgId)
         .where('id', '=', projectId),
@@ -115,6 +133,10 @@ export async function updateMonitor(
 ) {
   const current = await getMonitor(db, orgId, monitorId)
   if (!current) return null
+  const sourceId =
+    input.sourceId === undefined
+      ? undefined
+      : await sourceOf(db, orgId, current.project_id, input.sourceId)
   return db
     .updateTable('monitor')
     .set({
@@ -127,12 +149,26 @@ export async function updateMonitor(
         : { schedule: current.kind === 'heartbeat' ? input.schedule : null }),
       ...(input.timeoutSeconds === undefined ? {} : { timeout_seconds: input.timeoutSeconds }),
       ...(input.paused === undefined ? {} : { paused: input.paused }),
+      ...(sourceId === undefined ? {} : { source_id: sourceId }),
       updated_at: new Date(),
     })
     .where('org_id', '=', orgId)
     .where('id', '=', monitorId)
     .returningAll()
     .executeTakeFirst()
+}
+
+/** Closes the "same server as Octadash" notice for these monitors. */
+export async function dismissSameServer(db: Db, orgId: string, monitorIds: string[]) {
+  // Only ids that look like ids: anything else would fail the uuid cast.
+  const ids = monitorIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id))
+  if (ids.length === 0) return
+  await db
+    .updateTable('monitor')
+    .set({ same_server_dismissed_at: new Date() })
+    .where('org_id', '=', orgId)
+    .where('id', 'in', ids)
+    .execute()
 }
 
 export async function deleteMonitor(db: Db, orgId: string, monitorId: string) {

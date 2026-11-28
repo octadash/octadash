@@ -14,7 +14,7 @@ The panel, these docs and the API use these names, always as written here.
 | Area | One entry of the menu: Overview, Uptime, Traffic, Product usage, Errors, Money, Costs, Logs. Every area works for all products, a group or one product. |
 | Source | One part of a product that sends data: "Site, Next.js", "API, .NET", "Worker, Node". Has its own key and can feed several areas. |
 | Source key | Tells the ingest which product and source sent the data, also inside a Sentry DSN. Not a secret: browsers see it. |
-| Monitor | One Uptime check of a product: site, API or `/health`, heartbeat. |
+| Monitor | One Uptime check of a product: site, API or `/health`, heartbeat. Can name the source it checks ("Docs"), so Uptime tells them apart; deleting the source keeps the monitor. |
 | Heartbeat | A monitor that waits for a call from a cron job, worker or backup. Silence is the failure. |
 | Connection | A link to an outside account that Money or Costs read from: Stripe, Asaas, Paddle, OpenAI, Anthropic. |
 | Channel | Where alerts go: email, Telegram, webhook. |

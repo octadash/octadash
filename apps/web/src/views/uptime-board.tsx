@@ -1,7 +1,9 @@
 import type { ProductUptimeHistory } from '@octadash/db'
-import { PlusIcon, ServerIcon, TriangleAlertIcon } from 'lucide-react'
+import { PlusIcon, ServerIcon, TriangleAlertIcon, XIcon } from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { dismissSameServerAction } from '@/actions/monitors'
+import { InfoTip } from '@/components/info-tip'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -66,6 +68,10 @@ export async function UptimeBoardView({
     getLocale(),
   ])
   const { period, timeZone } = board
+  const sourceLabel = (id: string | null) => {
+    const name = id ? board.sources[id] : undefined
+    return name ? tu('ofSource', { source: name }) : null
+  }
   const time = new Intl.DateTimeFormat(locale, { timeStyle: 'short', timeZone })
   const number = new Intl.NumberFormat(locale)
   const seconds = new Intl.NumberFormat(locale, {
@@ -153,7 +159,11 @@ export async function UptimeBoardView({
       const lines: MonitorLine[] = monitors.map((m) => ({
         id: m.monitor.id,
         name: m.monitor.name,
-        kind: monitorDetail(m.monitor.name, kindLabel[m.monitor.kind], m.monitor.url),
+        kind: monitorDetail(
+          kindLabel[m.monitor.kind],
+          m.monitor.url,
+          sourceLabel(m.monitor.source_id),
+        ),
         paused: m.monitor.paused,
         editHref: manager ? `/p/${p.project.slug}/uptime/${m.monitor.id}/edit` : null,
         state: cell(m.state, m.monitor.kind, true),
@@ -204,6 +214,8 @@ export async function UptimeBoardView({
     .sort((a, b) => (a.stats?.certDays ?? 0) - (b.stats?.certDays ?? 0))
   const firstExpiring = expiring[0]
   const sameServer = all.filter((m) => m.sameServer)
+  // Closed notices stay closed; a new monitor on that server brings it back.
+  const sameServerOpen = sameServer.some((m) => !m.monitor.same_server_dismissed_at)
   const names = new Intl.ListFormat(locale, { type: 'conjunction' })
 
   const addAction =
@@ -236,11 +248,28 @@ export async function UptimeBoardView({
       </DropdownMenu>
     ))
 
+  const sameServerText = t('sameServer', {
+    count: sameServer.length,
+    monitors: names.format(
+      sameServer.map((m) => (single ? m.monitor.name : `${m.product.name} · ${m.monitor.name}`)),
+    ),
+  })
+
   const heading = (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div className="flex max-w-2xl flex-col gap-1">
-        <h1 className="font-display text-3xl font-semibold">
+        <h1 className="flex items-center gap-2 font-display text-3xl font-semibold">
           {title ? `${tu('title')} · ${title}` : tu('title')}
+          {sameServer.length > 0 && !sameServerOpen && (
+            <InfoTip
+              label={tu('sameServerTitle')}
+              title={sameServerText}
+              icon={<ServerIcon className="size-4" aria-hidden />}
+              className="size-7 text-warn hover:text-warn"
+            >
+              {tu('sameServerBody')}
+            </InfoTip>
+          )}
         </h1>
         <p className="text-sm text-muted-foreground">{t('intro')}</p>
       </div>
@@ -355,25 +384,32 @@ export async function UptimeBoardView({
         )
       })}
 
-      {sameServer.length > 0 && (
+      {sameServerOpen && (
         <section
           aria-label={tu('sameServerTitle')}
           className="flex gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4 text-sm"
         >
           <ServerIcon className="mt-0.5 size-4 shrink-0 text-warn" aria-hidden />
-          <div className="flex flex-col gap-1">
-            <p className="font-medium">
-              {t('sameServer', {
-                count: sameServer.length,
-                monitors: names.format(
-                  sameServer.map((m) =>
-                    single ? m.monitor.name : `${m.product.name} · ${m.monitor.name}`,
-                  ),
-                ),
-              })}
-            </p>
+          <div className="flex flex-1 flex-col gap-1">
+            <p className="font-medium">{sameServerText}</p>
             <p className="text-muted-foreground">{tu('sameServerBody')}</p>
           </div>
+          {manager && (
+            <form action={dismissSameServerAction} className="shrink-0">
+              {sameServer.map((m) => (
+                <input key={m.monitor.id} type="hidden" name="monitorId" value={m.monitor.id} />
+              ))}
+              <Button
+                type="submit"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={tu('sameServerDismiss')}
+                title={tu('sameServerDismiss')}
+              >
+                <XIcon aria-hidden />
+              </Button>
+            </form>
+          )}
         </section>
       )}
 
@@ -454,18 +490,18 @@ function Tile({
 }
 
 /**
- * What follows a monitor's name in the table: its kind, unless the name already
- * says it ("Site · Site"), and the host it checks, so two monitors of one
- * product never look the same.
+ * What follows a monitor's name in the table: the host it checks (the kind for
+ * a heartbeat, which has none), so two monitors of one product never look the
+ * same, and the source it is linked to: "docs.example.com · source Docs".
  */
-function monitorDetail(name: string, kind: string, url: string | null): string {
-  const parts = name.trim().toLowerCase() === kind.toLowerCase() ? [] : [kind]
+function monitorDetail(kind: string, url: string | null, source: string | null): string {
+  let where = kind
   if (url) {
     try {
-      parts.push(new URL(url).host)
+      where = new URL(url).host
     } catch {
-      // A stored address is always valid; nothing to add if it is not.
+      // A stored address is always valid; the kind stands in if it is not.
     }
   }
-  return parts.join(' · ')
+  return source ? `${where} · ${source}` : where
 }

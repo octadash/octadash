@@ -2,6 +2,7 @@ import {
   getOrganizationSettings,
   listOpenIncidents,
   listOrgMonitors,
+  listOrgSources,
   listProjects,
   type MonitorStats,
   monitorStats,
@@ -50,6 +51,8 @@ export interface UptimeBoard {
   totals: UptimeTotals
   previous: UptimeTotals
   sameIp: SameIpGroup[]
+  /** Source id to name, for monitors linked to a source ("Docs"). */
+  sources: Record<string, string>
   /** False when ClickHouse did not answer: numbers are missing, states still show. */
   complete: boolean
 }
@@ -69,11 +72,12 @@ export async function loadUptimeBoard(
 ): Promise<UptimeBoard> {
   const { db, clickhouse, env } = services()
   const keep = (id: string) => projectIds === null || projectIds.includes(id)
-  const [settings, allProjects, allMonitors, incidents] = await Promise.all([
+  const [settings, allProjects, allMonitors, incidents, allSources] = await Promise.all([
     getOrganizationSettings(db, orgId),
     listProjects(db, orgId),
     listOrgMonitors(db, orgId),
     listOpenIncidents(db, orgId),
+    listOrgSources(db, orgId),
   ])
   const timeZone = settings.timeZone
   const period = uptimePeriod(periodId, now)
@@ -144,6 +148,7 @@ export async function loadUptimeBoard(
     .map((i) => ({ ...i, data: (i.data ?? {}) as Record<string, unknown> }))
 
   return {
+    sources: Object.fromEntries(allSources.map((s) => [s.id, s.name])),
     period,
     timeZone,
     products,

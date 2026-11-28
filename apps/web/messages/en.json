@@ -378,7 +378,9 @@
     "statusUp": "Up",
     "statusDown": "Down",
     "statusUnknown": "Waiting for the first check",
-    "statusPaused": "Paused"
+    "statusPaused": "Paused",
+    "ofSource": "source {source}",
+    "sameServerDismiss": "Close this notice. A small icon next to the title keeps it."
   },
   "settings": {
     "members": "Members",
@@ -886,8 +888,8 @@
       "site": "The page to open. Redirects are followed, up to 5.",
       "health": "The endpoint to call. Redirects are followed, up to 5."
     },
-    "homeTitle": "This is your home page. Does it read the database?",
-    "homeBody": "If it does, every check wakes the database, once a minute, all day. On Neon and other serverless databases that keeps it billed all the time. Better: a /health endpoint that answers without the database. Add it below and check that instead, or check the home page every 5 minutes.",
+    "homeTitle": "Home page: if it reads the database, every check wakes it.",
+    "homeBody": "On Neon and other serverless databases that keeps billing on all day. Check a /health that answers without the database, or check the home page every 5 minutes.",
     "snippetsTitle": "A /health that does not wake the database",
     "framework": "Framework",
     "runner": "Where the job runs",
@@ -951,7 +953,13 @@
       "body": "A backup that stops running fails in silence: nothing is down, nothing errors, and you find out the day you need it. A heartbeat turns silence into an emergency.",
       "good": "Good for backups, cron jobs, queue workers, certificate renewals and nightly imports."
     },
-    "deleteTitle": "Delete this monitor"
+    "deleteTitle": "Delete this monitor",
+    "homeMore": "What to do",
+    "source": "Source",
+    "sourceHint": "Optional. Uptime shows it next to the monitor.",
+    "sourceNone": "None",
+    "sourceInfoLabel": "About Source",
+    "sourceInfo": "Which of the product’s sources this monitor checks, such as Docs, so the Uptime list tells them apart. Deleting the source keeps the monitor and only drops the link."
   },
   "uptimeBoard": {
     "intro": "Every monitor, problems first. Checked from this server, each on its own interval.",
@@ -1439,7 +1447,8 @@
       "emergency": "Emergency",
       "asTable": "Show as a table",
       "time": "Time"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "trafficSetup": {
     "title": "Set up Traffic",
@@ -1927,7 +1936,8 @@
       "silentBody": "{sources} sent nothing {period}. {count, plural, one {Its zero errors may be only silence} other {Their zero errors may be only silence}}: check that the SDK or the script is still on after the last deploy.",
       "silentMore": "{count, plural, one {And # more.} other {And # more.}}",
       "openSource": "See {source}"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "errorsSetup": {
     "title": "Set up Errors",
@@ -2125,7 +2135,8 @@
       "people": "People",
       "week": "Week {n}",
       "weekOf": "Week of {date}"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "usageSetup": {
     "title": "Set up Product usage",
@@ -2282,7 +2293,8 @@
       "service": "Service",
       "product": "Product",
       "message": "Message"
-    }
+    },
+    "addSourceTo": "Add a source to"
   },
   "logsSetup": {
     "title": "Set up Logs",
@@ -3297,6 +3309,7 @@
   "update": {
     "label": "Update available",
     "release": "Version {version} is out. See what changed.",
-    "edge": "{count, plural, one {1 change} other {# changes}} on main since this build."
+    "edge": "{count, plural, one {1 change} other {# changes}} on main since this build.",
+    "version": "Running Octadash {version}, commit {commit}"
   }
 }

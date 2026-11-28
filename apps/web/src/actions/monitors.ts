@@ -4,6 +4,7 @@ import { normalizeUrl } from '@octadash/core'
 import {
   createMonitor,
   deleteMonitor,
+  dismissSameServer,
   getMonitor,
   getOrganizationSettings,
   getProjectBySlug,
@@ -36,6 +37,8 @@ const monitorSchema = z.object({
     .optional(),
   cron: z.string().trim().max(120).optional(),
   token: z.string().optional(),
+  /** The source of the product this monitor checks; empty for none. */
+  source: z.string().optional().default(''),
 })
 
 async function parse(formData: FormData, timeZone: string) {
@@ -71,6 +74,7 @@ async function parse(formData: FormData, timeZone: string) {
       timeoutSeconds: timeout,
       schedule,
       heartbeatToken: parsed.data.token,
+      sourceId: parsed.data.source || null,
     },
   } as const
 }
@@ -186,6 +190,14 @@ export async function pauseMonitorAction(formData: FormData) {
     graceSeconds: current.grace_seconds,
     paused: formData.get('paused') === 'true',
   })
+  revalidatePath('/', 'layout')
+}
+
+/** The X on the "same server as Octadash" notice: closed for these monitors. */
+export async function dismissSameServerAction(formData: FormData) {
+  const { org } = await requireManager()
+  const ids = formData.getAll('monitorId').map(String).filter(Boolean)
+  await dismissSameServer(services().db, org.id, ids)
   revalidatePath('/', 'layout')
 }
 

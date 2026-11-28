@@ -1,22 +1,67 @@
 ---
 title: Upgrading
-description: Pull the new image and restart.
+description: How to know there is a new version, and how to install it on Coolify or Docker Compose.
 ---
 
-Pull the new image and restart. Each role applies pending migrations on start,
-for Postgres and ClickHouse. ClickHouse, Valkey and Garage versions are pinned
-in the compose files and move only with Octadash releases.
+Every change merged into Octadash publishes a new image,
+`ghcr.io/octadash/octadash:edge`. Upgrading means pulling that image and
+recreating the containers. Each role applies pending migrations on start, for
+Postgres and ClickHouse, so there is nothing to run by hand. Your data stays in
+the volumes.
 
 ## Knowing there is one
+
+The menu shows the running version under the name: `v1.4.0` for a release,
+`edge · 4752944` for an image built from `main` (the commit it came from).
+`/api/health` reports it too.
 
 Once a day the panel asks GitHub whether a newer version exists. When there is
 one, owners and admins see **Update available** in the menu, above Settings,
 with a link to the changelog. A release image compares with the latest release;
-an `edge` image counts the changes on `main` since it was built. On Coolify,
-**Redeploy** pulls it. Set `OCTADASH_UPDATE_CHECK=false` and the panel never
-calls GitHub.
+an `edge` image counts the changes on `main` since it was built. Set
+`OCTADASH_UPDATE_CHECK=false` and the panel never calls GitHub.
 
-From a version without file storage: pull the repository, run
-`./scripts/generate-env.sh` again (it adds `GARAGE_RPC_SECRET`,
-`STORAGE_ACCESS_KEY_ID` and `STORAGE_SECRET_ACCESS_KEY` to your `.env` and keeps
-everything else), then `docker compose up -d`.
+What changed is in the [changelog](https://octadash.com/changelog/).
+
+## Coolify
+
+1. Open the Octadash resource.
+2. Click **Redeploy**.
+
+That is all. On a redeploy, Coolify fetches the latest compose file from the
+repository, pulls the images of every service (the `edge` image included, even
+with the same tag), then stops the old containers and starts the new ones.
+Nothing in the environment variables needs to change unless the changelog says
+so. Expect the panel and the ingest to be down for a few seconds while the
+containers restart; SDKs and the script retry what fails to send.
+
+## Docker Compose
+
+In the folder where Octadash runs:
+
+```bash
+git pull
+docker compose pull
+docker compose up -d
+```
+
+`git pull` brings the compose file of the new version, `docker compose pull`
+downloads the new image (a plain `up -d` keeps an image it already has with the
+same tag), and `up -d` recreates only what changed.
+
+Installed with the [one command](/install)? Running it again does the same: it
+updates the copy, keeps the passwords and pulls the new image.
+
+## Staying on one version
+
+The compose files use `OCTADASH_VERSION`, `edge` by default. Once releases are
+published, set `OCTADASH_VERSION=1.2.0` (in `.env`, or in Coolify's environment
+variables) to stay on that release and move only when you change it. ClickHouse,
+Valkey and Garage versions are pinned in the compose files and move only with
+Octadash.
+
+## From a version without file storage
+
+Pull the repository, run `./scripts/generate-env.sh` again (it adds
+`GARAGE_RPC_SECRET`, `STORAGE_ACCESS_KEY_ID` and `STORAGE_SECRET_ACCESS_KEY` to
+your `.env` and keeps everything else), then `docker compose up -d`.
