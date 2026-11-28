@@ -7,7 +7,7 @@ import {
   listFixedCosts,
   listProjects,
 } from '@octadash/db'
-import { COST_PROVIDERS, type CostProvider, costProvider } from '@octadash/integrations'
+import { type CostProvider, costProvider } from '@octadash/integrations'
 import {
   ArrowLeftIcon,
   CircleCheckIcon,
@@ -22,7 +22,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server'
 import { dismissAreaAction } from '@/actions/areas'
-import { CostConnectForm, type CostProviderChoice } from '@/components/cost-connect-form'
+import { CostConnectForm } from '@/components/cost-connect-form'
 import {
   CostBudgetForm,
   CostKeyForm,
@@ -36,6 +36,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { digitsOf, formatMoney } from '@/lib/money'
+import { costConnectProps, costTagLabel } from '@/server/connection-setup'
 import { services } from '@/server/context'
 import { canManage, requireOrg } from '@/server/session'
 
@@ -72,10 +73,7 @@ export default async function CostsSetupPage({ params }: { params: Promise<{ slu
       getLocale(),
       getFormatter(),
     ])
-  const pt = locale === 'pt-BR'
-  /** "OpenAI project", "projeto da OpenAI". */
-  const tagLabel = (p: CostProvider) =>
-    pt ? `${p.tagName['pt-BR']} da ${p.name}` : `${p.name} ${p.tagName.en}`
+  const tagLabel = (p: CostProvider) => costTagLabel(p, locale)
   const names = new Map(projects.map((p) => [p.id, p.name]))
   const rows = connections.flatMap((c) => {
     const provider = costProvider(c.integration)
@@ -95,19 +93,6 @@ export default async function CostsSetupPage({ params }: { params: Promise<{ slu
   const mine = rows.filter((r) => r.share)
   const elsewhere = rows.filter((r) => !r.share && r.others.length > 0)
   const budget = budgets.find((b) => b.projectId === project.id)
-  const providers: CostProviderChoice[] = COST_PROVIDERS.map((p) => ({
-    id: p.id,
-    name: p.name,
-    keyPlaceholder: p.keyPlaceholder,
-    keyHelp: pt ? p.keyHelp['pt-BR'] : p.keyHelp.en,
-    tagName: tagLabel(p),
-  }))
-  const today = new Intl.DateTimeFormat('en-CA', {
-    timeZone: settings.timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now)
   const ago = (date: Date | null) => (date ? format.relativeTime(date, now) : '')
   const otherNames = (others: { projectId: string }[]) =>
     format.list(
@@ -117,15 +102,7 @@ export default async function CostsSetupPage({ params }: { params: Promise<{ slu
   const billText = (bill: { amount: number; currency: string; every: 'month' | 'year' }) =>
     t(`bill.per.${bill.every}`, { amount: formatMoney(bill.amount, bill.currency, locale) })
 
-  const form = (
-    <CostConnectForm
-      slug={project.slug}
-      product={project.name}
-      providers={providers}
-      currency={settings.currency}
-      today={today}
-    />
-  )
+  const form = <CostConnectForm {...(await costConnectProps(org.id, project.slug, project.name))} />
 
   return (
     <>

@@ -111,7 +111,9 @@ export function ExampleTiles({
           className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-border bg-card p-3"
         >
           <dt className="truncate text-xs text-muted-foreground">{tile.label}</dt>
-          <dd className="font-display text-xl font-semibold tabular-nums">{tile.value}</dd>
+          <dd className="font-display text-base font-semibold whitespace-nowrap tabular-nums sm:text-xl">
+            {tile.value}
+          </dd>
           <dd className="text-xs text-muted-foreground">{tile.note}</dd>
         </div>
       ))}
@@ -119,9 +121,9 @@ export function ExampleTiles({
   )
 }
 
-/** The usual example of a source area: three numbers and a short list. */
-export async function SourceAreaExample({ area }: { area: Exclude<SourceArea, 'errors'> }) {
-  const t = await getTranslations(`areaStart.areas.${area}`)
+/** The usual example of an area: three numbers and a short list. */
+export async function SourceAreaExample({ area }: { area: string }) {
+  const t = await getTranslations(`areaStart.areas.${area}` as 'areaStart.areas.traffic')
   const example = t.raw('example') as {
     tiles: { label: string; value: string; note: string }[]
     rowsTitle: string
@@ -154,11 +156,14 @@ export async function AreaStartShell({
   icons,
   step,
   example,
+  optionsHref,
 }: {
   area: string
   slug: string
   setup: { state: AreaSetupState }
   manager: boolean
+  /** The full setup page; `/p/<slug>/<area>/setup` when left out. */
+  optionsHref?: string
   /** One for each of the three features, in order. */
   icons: LucideIcon[]
   step: ReactNode
@@ -207,8 +212,11 @@ export async function AreaStartShell({
             {step}
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-            <Link href={`${areaPath}/setup`} className="text-brand underline underline-offset-4">
-              {t('options')}
+            <Link
+              href={optionsHref ?? `${areaPath}/setup`}
+              className="text-brand underline underline-offset-4"
+            >
+              {ta('options')}
             </Link>
             {manager && setup.state !== 'dismissed' && setup.state !== 'waiting' && (
               <form action={dismissAreaAction}>
@@ -371,9 +379,107 @@ export async function AreaProducts({
     ),
   )
 
+  const products: ProductRow[] = rows.map((s) => {
+    const href = `/p/${s.product.slug}/${area}`
+    const source = s.source?.name ?? ''
+    let status: ReactNode
+    let action: ReactNode = null
+    if (s.state === 'waiting') {
+      status = (
+        <span className="flex items-center gap-2">
+          <WaitingDot />
+          {ta('waitingStatus')}
+        </span>
+      )
+      action = (
+        <Link href={href} className="font-medium text-brand underline underline-offset-4">
+          {ta('waitingAction')}
+        </Link>
+      )
+    } else if (s.state === 'canUse' && s.source) {
+      const areas = sends.get(s.product.id)
+      status = areas
+        ? t('products.canUse', { source, areas, what })
+        : t('products.canUseKey', { source, what })
+      if (manager) {
+        action = (
+          <UseSource
+            slug={s.product.slug}
+            area={area}
+            source={s.source.id}
+            label={t('products.actions.canUse', { source })}
+          />
+        )
+      }
+    } else if (s.state === 'dismissed') {
+      status = t('products.dismissed', { area: name })
+      if (manager) action = <DismissedLink href={href} label={t('products.actions.dismissed')} />
+    } else {
+      status = t('products.none')
+      if (manager) action = <SetUpLink href={href} label={t('products.actions.none')} />
+    }
+    return {
+      id: s.product.id,
+      name: s.product.name,
+      href,
+      status,
+      action,
+      muted: s.state === 'dismissed',
+    }
+  })
+  return <ProductsTable area={area} rows={products} folded={folded} />
+}
+
+/** "Change", for a product marked as not using the area. */
+export function DismissedLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link href={href} className="text-muted-foreground underline underline-offset-4">
+      {label}
+    </Link>
+  )
+}
+
+/** "Set up", for a product with nothing yet. */
+export function SetUpLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Button asChild size="sm" variant="outline">
+      <Link href={href}>{label}</Link>
+    </Button>
+  )
+}
+
+/** One product in the table of an area: where it stands and its next step. */
+export interface ProductRow {
+  id: string
+  name: string
+  href: string
+  status: ReactNode
+  action: ReactNode
+  /** Marked as not using the area. */
+  muted?: boolean
+}
+
+/**
+ * The products of an area that still need a step. The whole page before any
+ * product has data; a folded line at the end of the page after.
+ */
+export async function ProductsTable({
+  area,
+  rows,
+  folded,
+}: {
+  area: string
+  rows: ProductRow[]
+  folded: boolean
+}) {
+  if (rows.length === 0) return null
+  const [t, ta] = await Promise.all([
+    getTranslations('areaStart'),
+    getTranslations(`areaStart.areas.${area}` as 'areaStart.areas.errors'),
+  ])
   const table = (
     <Table>
-      <caption className="sr-only">{t('products.caption', { area: name })}</caption>
+      <caption className="sr-only">{t('products.caption', { area: ta('name') })}</caption>
       <TableHeader>
         <TableRow>
           <TableHead scope="col">{t('products.product')}</TableHead>
@@ -384,77 +490,22 @@ export async function AreaProducts({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((s) => {
-          const href = `/p/${s.product.slug}/${area}`
-          const source = s.source?.name ?? ''
-          let status: ReactNode
-          let action: ReactNode = null
-          if (s.state === 'waiting') {
-            status = (
-              <span className="flex items-center gap-2">
-                <WaitingDot />
-                {ta('waitingStatus')}
-              </span>
-            )
-            action = (
-              <Link href={href} className="font-medium text-brand underline underline-offset-4">
-                {ta('waitingAction')}
+        {rows.map((row) => (
+          <TableRow key={row.id} className={row.muted ? 'text-muted-foreground' : undefined}>
+            <TableHead scope="row" className="font-semibold">
+              <Link href={row.href} className="hover:underline">
+                {row.name}
               </Link>
-            )
-          } else if (s.state === 'canUse' && s.source) {
-            const areas = sends.get(s.product.id)
-            status = areas
-              ? t('products.canUse', { source, areas, what })
-              : t('products.canUseKey', { source, what })
-            if (manager) {
-              action = (
-                <UseSource
-                  slug={s.product.slug}
-                  area={area}
-                  source={s.source.id}
-                  label={t('products.actions.canUse', { source })}
-                />
-              )
-            }
-          } else if (s.state === 'dismissed') {
-            status = t('products.dismissed', { area: name })
-            if (manager) {
-              action = (
-                <Link href={href} className="text-muted-foreground underline underline-offset-4">
-                  {t('products.actions.dismissed')}
-                </Link>
-              )
-            }
-          } else {
-            status = t('products.none')
-            if (manager) {
-              action = (
-                <Button asChild size="sm" variant="outline">
-                  <Link href={href}>{t('products.actions.none')}</Link>
-                </Button>
-              )
-            }
-          }
-          return (
-            <TableRow
-              key={s.product.id}
-              className={s.state === 'dismissed' ? 'text-muted-foreground' : undefined}
-            >
-              <TableHead scope="row" className="font-semibold">
-                <Link href={href} className="hover:underline">
-                  {s.product.name}
-                </Link>
-              </TableHead>
-              <TableCell className="whitespace-normal text-muted-foreground">
-                {status}
-                {action && <div className="flex pt-2 sm:hidden">{action}</div>}
-              </TableCell>
-              <TableCell className="hidden text-right sm:table-cell">
-                <div className="flex justify-end">{action}</div>
-              </TableCell>
-            </TableRow>
-          )
-        })}
+            </TableHead>
+            <TableCell className="whitespace-normal text-muted-foreground">
+              {row.status}
+              {row.action && <div className="flex pt-2 sm:hidden">{row.action}</div>}
+            </TableCell>
+            <TableCell className="hidden text-right sm:table-cell">
+              <div className="flex justify-end">{row.action}</div>
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   )
@@ -488,17 +539,16 @@ export async function AreaProducts({
   )
 }
 
-/** An area of several products before any sends: the title, then the table of products. */
+/** An area of several products before any has data: the title, then the table of products. */
 export function AreaProductsPage({
-  area,
   title,
   intro,
-  setup,
+  children,
 }: {
-  area: SourceArea
   title: string
   intro: string
-  setup: ProductAreaSetup[]
+  /** The table: `AreaProducts` or `ProductsTable`. */
+  children: ReactNode
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -506,7 +556,7 @@ export function AreaProductsPage({
         <h1 className="font-display text-3xl font-semibold">{title}</h1>
         <p className="text-sm text-muted-foreground">{intro}</p>
       </div>
-      <AreaProducts area={area} setup={setup} folded={false} />
+      {children}
     </div>
   )
 }

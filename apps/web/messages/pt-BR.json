@@ -336,14 +336,12 @@
     "title": "Disponibilidade",
     "intro": "O Octadash verifica cada endereço de fora, no intervalo escolhido, e avisa quando ele para de responder.",
     "add": "Adicionar monitor",
-    "addFirst": "Adicionar o primeiro monitor",
     "edit": "Editar",
     "pause": "Pausar",
     "resume": "Retomar",
     "delete": "Excluir",
     "deleteTitle": "Excluir {name}?",
     "deleteBody": "O monitor para e o histórico dele deixa de aparecer.",
-    "empty": "Nenhum monitor ainda. Comece pelo endereço do site; depois adicione um endpoint /health e um heartbeat para tarefas agendadas.",
     "name": "Nome",
     "kind": "Tipo",
     "url": "Endereço",
@@ -2282,13 +2280,6 @@
   },
   "moneyArea": {
     "title": "Dinheiro",
-    "none": {
-      "title": "Nenhum gateway de pagamento conectado",
-      "body": "Conecte Stripe, Asaas ou Paddle e esta página mostra receita, MRR, novas assinaturas, churn e pagamentos com falha, com cada produto separado.",
-      "readOnly": "O Octadash só lê seus pagamentos. Ele nunca cobra, estorna ou muda nada.",
-      "connect": "Conectar um gateway de pagamento",
-      "all": "Conecte um gateway em um produto:"
-    },
     "intro": "Receita, assinaturas e pagamentos com falha de todos os produtos, lidos dos seus gateways de pagamento. Em {currency}; outras moedas convertidas pela cotação do dia.",
     "introOne": "Receita, assinaturas e pagamentos com falha de {product}, lidos dos gateways dele. Em {currency}; outras moedas convertidas pela cotação do dia.",
     "introGroup": "Receita, assinaturas e pagamentos com falha dos produtos de {group}. Em {currency}; outras moedas convertidas pela cotação do dia.",
@@ -2498,13 +2489,6 @@
   },
   "costsArea": {
     "title": "Custos",
-    "none": {
-      "title": "Nenhum custo conectado",
-      "body": "Conecte OpenAI ou Anthropic, ou digite uma conta fixa (um servidor, uma ferramenta paga por ano), e esta página mostra quanto cada produto gasta, a previsão do mês contra um orçamento e a margem contra Dinheiro.",
-      "readOnly": "O Octadash só lê o que os provedores cobraram, com uma chave admin de leitura. Ele nunca paga nem muda nada.",
-      "connect": "Conectar um custo",
-      "all": "Conecte um custo em um produto:"
-    },
     "intro": "Quanto cada produto custa para rodar (IA, servidores, contas fixas) e sua margem contra Dinheiro. Em {currency}; outras moedas convertidas pela cotação do dia.",
     "introOne": "Quanto {product} custa para rodar (IA, servidores, contas fixas) e sua margem contra Dinheiro. Em {currency}; outras moedas convertidas pela cotação do dia.",
     "introGroup": "Quanto os produtos de {group} custam para rodar e sua margem contra Dinheiro. Em {currency}; outras moedas convertidas pela cotação do dia.",
@@ -2736,7 +2720,6 @@
     "use": "Usar {source}",
     "waiting": "{source} está configurada para enviar {what}.",
     "viewer": "Um dono ou admin configura {area} neste produto.",
-    "options": "Outras plataformas e opções",
     "wontUse": "Não vou usar {area} neste produto",
     "dismissed": "Você marcou que este produto não usa {area}.",
     "restore": "Usar {area} de novo",
@@ -2832,7 +2815,8 @@
         "waitingAction": "Enviar erro de teste",
         "productsTitle": "Nenhum produto envia erros ainda",
         "productsBody": "Quando enviarem, esta página junta os erros de todos em uma lista só, com o produto em cada issue. Comece pelo produto que mais te preocupa.",
-        "more": "{count, plural, one {Mais # produto pode enviar erros} other {Mais # produtos podem enviar erros}}"
+        "more": "{count, plural, one {Mais # produto pode enviar erros} other {Mais # produtos podem enviar erros}}",
+        "options": "Outras plataformas e opções"
       },
       "traffic": {
         "name": "Tráfego",
@@ -2902,7 +2886,8 @@
         "waitingAction": "Abrir o código",
         "productsTitle": "Nenhum produto envia visitas ainda",
         "productsBody": "Quando enviarem, esta página soma as visitas de todos, e você compara os produtos lado a lado. Comece pelo produto com mais visitas.",
-        "more": "{count, plural, one {Mais # produto pode enviar visitas} other {Mais # produtos podem enviar visitas}}"
+        "more": "{count, plural, one {Mais # produto pode enviar visitas} other {Mais # produtos podem enviar visitas}}",
+        "options": "Outras plataformas e opções"
       },
       "usage": {
         "name": "Uso do produto",
@@ -2969,7 +2954,8 @@
         "waitingAction": "Abrir o código",
         "productsTitle": "Nenhum produto envia eventos ainda",
         "productsBody": "Quando enviarem, esta página mostra os eventos de todos, e os funis cruzam produtos. Comece pelo produto em que os cadastros mais importam.",
-        "more": "{count, plural, one {Mais # produto pode enviar eventos} other {Mais # produtos podem enviar eventos}}"
+        "more": "{count, plural, one {Mais # produto pode enviar eventos} other {Mais # produtos podem enviar eventos}}",
+        "options": "Outras plataformas e opções"
       },
       "logs": {
         "name": "Logs",
@@ -3035,8 +3021,213 @@
         "waitingAction": "Abrir o código",
         "productsTitle": "Nenhum produto envia logs ainda",
         "productsBody": "Quando enviarem, esta página busca as linhas de todos de uma vez. Comece pelo produto que mais quebra.",
-        "more": "{count, plural, one {Mais # produto pode enviar logs} other {Mais # produtos podem enviar logs}}"
+        "more": "{count, plural, one {Mais # produto pode enviar logs} other {Mais # produtos podem enviar logs}}",
+        "options": "Outras plataformas e opções"
+      },
+      "money": {
+        "name": "Dinheiro",
+        "eyebrow": "Dinheiro",
+        "title": "Quanto entrou, quanto se repete e quem parou de pagar",
+        "body": "Conecte o gateway de pagamento e esta página mostra receita, MRR, novas assinaturas, churn e pagamentos com falha, com cada produto separado.",
+        "readOnly": "Só lemos. O Octadash nunca cobra, estorna ou muda nada no gateway.",
+        "canUse": "A conta {account} já serve {products}. Ela pode servir {product} também: você escolhe quais pagamentos são deste produto.",
+        "canUseMore": "{count, plural, one {Há mais # conta que pode servir.} other {Há mais # contas que podem servir.}}",
+        "canUseAction": "Usar uma conta que já existe",
+        "canUseRow": "A conta {account} de {products} pode servir este também",
+        "noneRow": "Nenhum gateway conectado",
+        "noneAction": "Conectar",
+        "options": "Ver contas e regras",
+        "example": {
+          "tiles": [
+            {
+              "label": "Receita · 30d",
+              "value": "R$ 18,2 mil",
+              "note": "↑ 9% vs mês passado"
+            },
+            {
+              "label": "MRR",
+              "value": "R$ 9.870",
+              "note": "142 assinaturas"
+            },
+            {
+              "label": "Falhas",
+              "value": "3",
+              "note": "R$ 297 para recuperar"
+            }
+          ],
+          "rowsTitle": "Últimos pagamentos",
+          "rows": [
+            {
+              "label": "Plano Pro · mensal",
+              "value": "R$ 69"
+            },
+            {
+              "label": "Pacote de 500 créditos",
+              "value": "R$ 149"
+            },
+            {
+              "label": "Plano Time · anual",
+              "value": "R$ 1.490"
+            },
+            {
+              "label": "Plano Pro · cartão recusado",
+              "value": "R$ 69"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Assinatura e venda avulsa",
+            "body": "MRR e churn para assinaturas; receita e pacotes de créditos para vendas avulsas. O Octadash percebe sozinho qual é o caso."
+          },
+          {
+            "title": "Uma conta, vários produtos",
+            "body": "Uma conta Stripe pode servir vários produtos. Você diz quais pagamentos são de cada um."
+          },
+          {
+            "title": "Só leitura",
+            "body": "Usa chave restrita de leitura quando o gateway tem. Nada é cobrado ou estornado por aqui."
+          }
+        ],
+        "productsTitle": "Nenhum produto tem gateway conectado ainda",
+        "productsBody": "Quando conectar, esta página soma a receita de todos na moeda da organização, e você compara os produtos lado a lado.",
+        "more": "{count, plural, one {Mais # produto pode conectar um gateway} other {Mais # produtos podem conectar um gateway}}"
+      },
+      "costs": {
+        "name": "Custos",
+        "eyebrow": "Custos",
+        "title": "Quanto cada produto custa e quanto sobra",
+        "body": "Conecte OpenAI ou Anthropic, ou digite uma conta fixa, e esta página mostra o gasto de cada produto, a previsão do mês contra o orçamento e a margem contra Dinheiro.",
+        "readOnly": "Só lemos o que os provedores cobraram, com uma chave admin de leitura. O Octadash nunca paga nem muda nada.",
+        "canUse": "A conta {account} já é dividida com {products}. Ela pode entrar nos custos de {product} também: você escolhe a parte deste produto.",
+        "canUseMore": "{count, plural, one {Há mais # conta que pode ser dividida.} other {Há mais # contas que podem ser divididas.}}",
+        "canUseAction": "Dividir uma conta que já existe",
+        "canUseRow": "A conta {account} de {products} pode ser dividida com este também",
+        "noneRow": "Nenhum custo conectado",
+        "noneAction": "Conectar",
+        "options": "Ver contas, divisões e orçamento",
+        "example": {
+          "tiles": [
+            {
+              "label": "Este mês",
+              "value": "R$ 1.980",
+              "note": "previsão R$ 2.160"
+            },
+            {
+              "label": "IA hoje",
+              "value": "R$ 64",
+              "note": "1,1× a média"
+            },
+            {
+              "label": "Margem",
+              "value": "78%",
+              "note": "contra Dinheiro"
+            }
+          ],
+          "rowsTitle": "Onde o dinheiro vai",
+          "rows": [
+            {
+              "label": "OpenAI",
+              "value": "R$ 1.120"
+            },
+            {
+              "label": "Anthropic",
+              "value": "R$ 540"
+            },
+            {
+              "label": "Servidor (conta fixa)",
+              "value": "R$ 250"
+            },
+            {
+              "label": "Domínio (anual, por mês)",
+              "value": "R$ 70"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "Por produto",
+            "body": "Uma conta de IA ou um servidor dividido entre produtos por projeto, por partes iguais ou por porcentagem."
+          },
+          {
+            "title": "Orçamento do mês",
+            "body": "A previsão do mês contra o orçamento de cada produto, para ver antes de passar."
+          },
+          {
+            "title": "Margem",
+            "body": "Custo contra a receita de Dinheiro: quanto sobra de cada produto."
+          }
+        ],
+        "productsTitle": "Nenhum produto tem custo conectado ainda",
+        "productsBody": "Quando conectar, esta página soma o custo de todos e mostra a margem de cada produto contra Dinheiro.",
+        "more": "{count, plural, one {Mais # produto pode conectar custos} other {Mais # produtos podem conectar custos}}"
+      },
+      "uptime": {
+        "name": "Disponibilidade",
+        "eyebrow": "Disponibilidade",
+        "title": "Saiba que caiu antes de alguém te avisar",
+        "body": "Checamos de fora, a cada minuto, sem acordar o seu banco. Se cair, o time é avisado nos canais escolhidos.",
+        "urlLabel": "Endereço do site",
+        "urlHint": "A página inicial basta. Checamos a cada minuto.",
+        "start": "Começar",
+        "others": "API com /health, tarefa agendada (heartbeat) ou outro intervalo:",
+        "othersLink": "formulário completo",
+        "options": "Outros tipos de monitor",
+        "noneRow": "Nenhum monitor",
+        "noneAction": "Começar",
+        "example": {
+          "tiles": [
+            {
+              "label": "Últimos 30 dias",
+              "value": "99,98%",
+              "note": "9 min fora do ar"
+            },
+            {
+              "label": "Resposta",
+              "value": "182 ms",
+              "note": "mediana"
+            },
+            {
+              "label": "Certificado",
+              "value": "64 dias",
+              "note": "aviso antes de vencer"
+            }
+          ],
+          "rowsTitle": "Monitores",
+          "rows": [
+            {
+              "label": "Site · pagebird.com",
+              "value": "No ar"
+            },
+            {
+              "label": "API · /health",
+              "value": "No ar"
+            },
+            {
+              "label": "Backup noturno (heartbeat)",
+              "value": "Chamou às 3:00"
+            }
+          ]
+        },
+        "features": [
+          {
+            "title": "De fora e sem custo de banco",
+            "body": "A checagem não acorda o banco do seu produto. Use um /health que responde sem consulta."
+          },
+          {
+            "title": "Aviso que chega",
+            "body": "Telegram, e-mail ou webhook. Uma emergência abre só depois de alguns minutos fora do ar, sem alarme por uma falha só."
+          },
+          {
+            "title": "Tarefas agendadas",
+            "body": "Heartbeat avisa quando um backup ou uma rotina não rodou no horário."
+          }
+        ],
+        "productsTitle": "Nenhum produto tem monitor ainda",
+        "productsBody": "Comece pelo endereço do site de cada produto: leva um minuto. Depois adicione /health e heartbeats.",
+        "more": "{count, plural, one {Mais # produto sem monitor} other {Mais # produtos sem monitor}}"
       }
-    }
+    },
+    "orNewAccount": "Ou conecte outra conta:"
   }
 }

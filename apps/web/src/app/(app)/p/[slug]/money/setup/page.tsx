@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto'
 import {
   type ConnectionRule,
   getProjectBySlug,
@@ -6,7 +5,7 @@ import {
   listConnections,
   listProjects,
 } from '@octadash/db'
-import { MONEY_GATEWAYS, moneyGateway } from '@octadash/integrations'
+import { moneyGateway } from '@octadash/integrations'
 import {
   ArrowLeftIcon,
   CircleCheckIcon,
@@ -18,10 +17,10 @@ import {
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getFormatter, getLocale, getTranslations } from 'next-intl/server'
+import { getFormatter, getTranslations } from 'next-intl/server'
 import { dismissAreaAction } from '@/actions/areas'
 import { CopyField } from '@/components/copy-field'
-import { type GatewayChoice, MoneyConnectForm } from '@/components/money-connect-form'
+import { MoneyConnectForm } from '@/components/money-connect-form'
 import {
   MoneyKeysForm,
   MoneyReuseForm,
@@ -31,6 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { moneyConnectProps } from '@/server/connection-setup'
 import { services } from '@/server/context'
 import { canManage, requireOrg } from '@/server/session'
 
@@ -52,12 +52,11 @@ export default async function MoneySetupPage({ params }: { params: Promise<{ slu
   if (!project) notFound()
   const manager = canManage(org.role)
   const now = new Date()
-  const [connections, links, projects, t, locale, format] = await Promise.all([
+  const [connections, links, projects, t, format] = await Promise.all([
     listConnections(db, org.id),
     listConnectionProjects(db, org.id),
     listProjects(db, org.id),
     getTranslations('moneySetup'),
-    getLocale(),
     getFormatter(),
   ])
   const names = new Map(projects.map((p) => [p.id, p.name]))
@@ -76,13 +75,6 @@ export default async function MoneySetupPage({ params }: { params: Promise<{ slu
   })
   const mine = rows.filter((r) => r.rule)
   const elsewhere = rows.filter((r) => !r.rule && r.others.length > 0)
-  const gateways: GatewayChoice[] = MONEY_GATEWAYS.map((g) => ({
-    id: g.id,
-    name: g.name,
-    keyPlaceholder: g.keyPlaceholder,
-    keyHelp: locale === 'pt-BR' ? g.keyHelp['pt-BR'] : g.keyHelp.en,
-    hasProducts: g.hasProducts,
-  }))
   const hooksUrl = `${env.OCTADASH_URL.replace(/\/$/, '')}/hooks`
   const ago = (date: Date | null) => (date ? format.relativeTime(date, now) : '')
   const otherNames = (others: { projectId: string }[]) =>
@@ -91,16 +83,7 @@ export default async function MoneySetupPage({ params }: { params: Promise<{ slu
       { type: 'conjunction' },
     )
 
-  const form = (
-    <MoneyConnectForm
-      slug={project.slug}
-      product={project.name}
-      gateways={gateways}
-      token={randomBytes(16).toString('hex')}
-      asaasToken={randomBytes(16).toString('hex')}
-      hooksUrl={hooksUrl}
-    />
-  )
+  const form = <MoneyConnectForm {...(await moneyConnectProps(project.slug, project.name))} />
 
   return (
     <>

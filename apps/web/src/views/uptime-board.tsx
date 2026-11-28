@@ -27,10 +27,11 @@ import {
   worstState,
 } from '@/lib/uptime-board'
 import { cn } from '@/lib/utils'
+import { loadUptimeSetup } from '@/server/connection-setup'
 import { type BoardMonitorData, loadUptimeBoard } from '@/server/uptime-board'
 import { formatUptime } from '@/server/uptime-view'
+import { AccountProducts, UptimeStartView } from './area-start-accounts'
 import { duration } from './overview-parts'
-
 /**
  * The Uptime board, as closed in the Uptime canvas (frame 3): every monitor of
  * every product, problems first. A group or a single product gets the same
@@ -248,20 +249,13 @@ export async function UptimeBoardView({
   )
 
   if (board.products.length === 0) {
+    const setup = await loadUptimeSetup(orgId, board.without)
+    const [first] = setup
+    if (single && first) return <UptimeStartView product={first.product} setup={first} />
     return (
       <>
         {heading}
-        <section className="flex flex-col items-start gap-4 rounded-xl border border-dashed border-input p-6">
-          <p className="max-w-xl text-sm leading-relaxed">{tu('empty')}</p>
-          {manager && single && (
-            <Button size="lg" className="px-4" asChild>
-              <Link href={`/p/${single.slug}/uptime/new`}>
-                <PlusIcon data-icon="inline-start" />
-                {tu('addFirst')}
-              </Link>
-            </Button>
-          )}
-        </section>
+        <AccountProducts area="uptime" setup={setup} folded={false} />
       </>
     )
   }

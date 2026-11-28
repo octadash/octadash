@@ -440,6 +440,7 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - Errors, several products: before any sends, a table of products with each one's next step, quickest first. Once one sends, the issue list takes the page and the table folds into "N more products can send errors" at the end.
 - Sent before, nothing now and nothing open: "No errors in the last 24 hours", with the last error, a wider period and the resolved issues, instead of a page of zeros.
 - A zero is only real if the source is alive: each source set for Errors shows whether it sent any data (page view, event, log or error) in the period. One that sent nothing gets a warning, since its zero may be only silence.
+- Money, Costs and Uptime follow the same model. Money and Costs show the connect form on the empty page itself, after "use an account another product already has" when there is one. Uptime starts from the site address and one click (a site monitor every minute); /health, heartbeats and other intervals stay in the full form.
 
 ## Received data, 2026-11-28
 

@@ -85,12 +85,9 @@ export async function TrafficView({
     const [first] = setup
     if (product && first) return <TrafficStartView orgId={orgId} product={product} setup={first} />
     return (
-      <AreaProductsPage
-        area="traffic"
-        title={t('title')}
-        intro={group ? t('introGroup', { group }) : t('intro')}
-        setup={setup}
-      />
+      <AreaProductsPage title={t('title')} intro={group ? t('introGroup', { group }) : t('intro')}>
+        <AreaProducts area="traffic" setup={setup} folded={false} />
+      </AreaProductsPage>
     )
   }
 

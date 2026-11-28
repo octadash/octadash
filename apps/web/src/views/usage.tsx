@@ -85,12 +85,9 @@ export async function UsageView({
     const [first] = setup
     if (product && first) return <UsageStartView orgId={orgId} product={product} setup={first} />
     return (
-      <AreaProductsPage
-        area="usage"
-        title={t('title')}
-        intro={group ? t('introGroup', { group }) : t('intro')}
-        setup={setup}
-      />
+      <AreaProductsPage title={t('title')} intro={group ? t('introGroup', { group }) : t('intro')}>
+        <AreaProducts area="usage" setup={setup} folded={false} />
+      </AreaProductsPage>
     )
   }
 
