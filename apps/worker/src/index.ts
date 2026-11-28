@@ -1,9 +1,17 @@
 import { createServer } from 'node:http'
 import { createLogger, OCTADASH_VERSION, parseEnv, workerEnvSchema } from '@octadash/core'
-import { createClickHouse, createDb } from '@octadash/db'
-import { createValkey } from '@octadash/queue'
+import {
+  createClickHouse,
+  createDb,
+  insertUptimeChecks,
+  listActiveMonitors,
+  setMonitorStatus,
+} from '@octadash/db'
+import { createValkey, ValkeyHeartbeats } from '@octadash/queue'
+import { checkUrl } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
 import { registerJobs } from './jobs'
+import { startUptime, UptimeScheduler } from './uptime'
 import { startWriters } from './writers'
 
 /**
@@ -26,6 +34,23 @@ valkey.on('error', (err) => log.warn({ err: err.message }, 'valkey connection er
 await boss.start()
 await registerJobs(boss, db, log)
 const writers = startWriters(valkey, clickhouse, log)
+const heartbeats = new ValkeyHeartbeats(valkey)
+const uptime = startUptime(
+  new UptimeScheduler({
+    loadMonitors: () => listActiveMonitors(db),
+    check: checkUrl,
+    readPings: (ids) => heartbeats.read(ids),
+    writeRows: (rows) => insertUptimeChecks(clickhouse, rows),
+    setStatus: (id, from, to, at) => setMonitorStatus(db, id, from, to, at),
+    // Alerts subscribe here in the next step; the scheduler already logs each change.
+    onTransition: async () => {},
+    isOnline: () => reachesAny(env.OCTADASH_UPTIME_REFERENCE_URLS),
+    now: Date.now,
+    log,
+    allowPrivate: env.OCTADASH_UPTIME_ALLOW_PRIVATE,
+  }),
+  log,
+)
 log.info('worker started')
 
 // Health endpoint for Docker/Coolify. It reports the process state and never queries the database.
@@ -47,10 +72,21 @@ async function shutdown(signal: string) {
   log.info({ signal }, 'shutting down')
   healthy = false
   health.close()
-  await Promise.all([writers.stop(), boss.stop({ graceful: true, timeout: 20_000 })])
+  await Promise.all([writers.stop(), uptime.stop(), boss.stop({ graceful: true, timeout: 20_000 })])
   valkey.disconnect()
   await Promise.all([clickhouse.close(), pool.end()])
   process.exit(0)
+}
+
+/** True when any of the addresses answers at all. */
+async function reachesAny(urls: string[]): Promise<boolean> {
+  if (urls.length === 0) return true
+  const attempts = urls.map(async (url) => {
+    const res = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(5_000) })
+    await res.body?.cancel()
+    return true
+  })
+  return Promise.any(attempts).catch(() => false)
 }
 
 process.on('SIGTERM', () => void shutdown('SIGTERM'))

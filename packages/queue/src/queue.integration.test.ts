@@ -1,6 +1,7 @@
 import { createLogger } from '@octadash/core'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { decodeEntries, startConsumer } from './consumer'
+import { ValkeyHeartbeats } from './heartbeats'
 import { ValkeySink } from './sink'
 import { createValkey, type Redis, STREAMS, WRITERS_GROUP } from './streams'
 
@@ -72,5 +73,14 @@ describe.skipIf(!url)('valkey streams (needs VALKEY_URL)', () => {
     await new Promise((r) => setTimeout(r, 100))
     expect(sink.isFull('events')).toBe(true)
     sink.stop()
+  })
+  it('records and reads heartbeat pings', async () => {
+    const store = new ValkeyHeartbeats(redis)
+    const id = crypto.randomUUID()
+    await store.record(id, 1_795_000_000_000)
+    const pings = await store.read([id, crypto.randomUUID()])
+    expect([...pings]).toEqual([[id, 1_795_000_000_000]])
+    expect((await store.read([])).size).toBe(0)
+    await redis.del(`octadash:hb:${id}`)
   })
 })

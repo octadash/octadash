@@ -1,10 +1,10 @@
 import { OCTADASH_VERSION } from '@octadash/core'
-import type { EventSink } from '@octadash/queue'
+import type { EventSink, HeartbeatStore } from '@octadash/queue'
 import { type Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { cors } from 'hono/cors'
 import { batchSchema, PropertiesTooLargeError, toEventRows } from './events'
-import type { KeyResolver } from './keys'
+import type { HeartbeatResolver, KeyResolver } from './keys'
 
 /** Requests bigger than this are refused before they are read. */
 export const MAX_BODY_BYTES = 1024 * 1024
@@ -14,6 +14,8 @@ const RETRY_AFTER_SECONDS = 30
 export interface IngestDeps {
   sink: EventSink
   keys: KeyResolver
+  heartbeats: { resolver: HeartbeatResolver; store: HeartbeatStore }
+  now?: () => number
   onError?: (err: unknown) => void
 }
 
@@ -26,6 +28,7 @@ export interface IngestDeps {
  *   - Sentry envelopes      /api/:projectId/envelope/          (errors step)
  *   - PostHog capture       /e/, /i/v0/e/, /batch/, /capture/   (later steps)
  *   - OpenTelemetry (OTLP)  /v1/logs, /v1/traces               (later steps)
+ * Heartbeat monitors ping /hb/<token> (GET or POST) from cron jobs and backups.
  * The health check touches nothing, so uptime probes never wake a database.
  */
 export function createApp(deps: IngestDeps) {
@@ -43,6 +46,24 @@ export function createApp(deps: IngestDeps) {
   )
 
   app.get('/health', (c) => c.json({ status: 'ok', service: 'ingest', version: OCTADASH_VERSION }))
+
+  // A cron job or backup reports that it ran. The token is the secret; the
+  // ping is kept in Valkey and the worker compares it with the monitor's interval.
+  const heartbeat = async (c: Context) => {
+    const token = c.req.param('token') ?? ''
+    let monitorId: string | null
+    try {
+      monitorId = await deps.heartbeats.resolver.resolve(token)
+      if (monitorId) await deps.heartbeats.store.record(monitorId, (deps.now ?? Date.now)())
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503)
+    }
+    if (!monitorId) return c.json({ error: 'unknown_heartbeat' }, 404)
+    return c.json({ ok: true })
+  }
+  app.get('/hb/:token', heartbeat)
+  app.post('/hb/:token', heartbeat)
 
   app.post(
     '/o/v1/events',

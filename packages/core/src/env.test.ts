@@ -32,4 +32,22 @@ describe('parseEnv', () => {
     expect(run).toThrow(/VALKEY_URL/)
     expect(run).toThrow(/CLICKHOUSE_URL/)
   })
+  it('reads the uptime reference addresses as a list', () => {
+    const base = {
+      DATABASE_URL: 'postgres://u:p@localhost:5432/octadash',
+      VALKEY_URL: 'redis://:p@localhost:6379',
+      CLICKHOUSE_URL: 'http://u:p@localhost:8123/octadash',
+    }
+    const env = parseEnv(workerEnvSchema, base)
+    expect(env.OCTADASH_UPTIME_REFERENCE_URLS).toHaveLength(2)
+    expect(env.OCTADASH_UPTIME_ALLOW_PRIVATE).toBe(false)
+    const custom = parseEnv(workerEnvSchema, {
+      ...base,
+      OCTADASH_UPTIME_REFERENCE_URLS: ' https://a.example , ,https://b.example',
+    })
+    expect(custom.OCTADASH_UPTIME_REFERENCE_URLS).toEqual([
+      'https://a.example',
+      'https://b.example',
+    ])
+  })
 })

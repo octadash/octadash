@@ -4,6 +4,11 @@ Read [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/architecture.md](docs/architecture.md) before changing code.
 [docs/product.md](docs/product.md) holds the roadmap and the backlog.
 
+- Design for the whole product, build the smallest part (first principle in
+  [docs/product.md](docs/product.md#principles)). Before any decision, list the
+  cases at full size: many products, many people, every kind of emergency,
+  several at once, long history. Build the minimum, but in a shape that holds
+  all of them.
 - Monorepo: pnpm workspaces + Turborepo. Node 24, TypeScript 6 (strict).
 - Before finishing: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
   Database tests run when `DATABASE_URL` is set (`pnpm db:up` starts Postgres).

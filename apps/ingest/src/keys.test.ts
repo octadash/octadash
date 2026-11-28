@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { cachedResolver } from './keys'
+import { cachedHeartbeatResolver, cachedResolver } from './keys'
 
 const KEY = 'c'.repeat(32)
 const scope = { org_id: 'o', project_id: 'p' }
@@ -23,6 +23,19 @@ describe('cachedResolver', () => {
     expect(await keys.resolve(KEY)).toBeNull()
     expect(await keys.resolve(KEY)).toBeNull()
     expect(await keys.resolve('drop table')).toBeNull()
+    expect(lookup).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('cachedHeartbeatResolver', () => {
+  it('skips malformed tokens and caches the monitor id', async () => {
+    const lookup = vi.fn(async (token: string) =>
+      token === 'a'.repeat(32) ? { id: 'm1' } : undefined,
+    )
+    const resolver = cachedHeartbeatResolver(lookup)
+    expect(await resolver.resolve('short')).toBeNull()
+    expect(await resolver.resolve('a'.repeat(32))).toBe('m1')
+    expect(await resolver.resolve('a'.repeat(32))).toBe('m1')
     expect(lookup).toHaveBeenCalledTimes(1)
   })
 })

@@ -86,17 +86,19 @@ Then start `apps/web` (`pnpm --filter @octadash/web start`), `apps/ingest` and
 
 ## Environment variables
 
-| Variable                    | Used by     | Description                                               |
-| --------------------------- | ----------- | --------------------------------------------------------- |
-| `DATABASE_URL`              | all         | Postgres connection string                                |
-| `OCTADASH_URL`              | web         | Public URL of the panel                                   |
-| `OCTADASH_INGEST_URL`       | web         | Public URL of the ingest service                          |
-| `OCTADASH_SECRET`           | web, worker | At least 32 characters; signs sessions, encrypts secrets  |
-| `OCTADASH_OPEN_SIGNUP`      | web         | `false` by default: only the owner and invited people     |
-| `LOG_LEVEL`                 | all         | `info` by default                                         |
-| `PORT`                      | web, ingest | 3000 for web, 4000 for ingest                             |
-| `WORKER_HEALTH_PORT`        | worker      | Internal health endpoint, 4100 by default                 |
-| `OCTADASH_MIGRATE_ON_START` | all         | `true` by default; migrations run before each role starts |
+| Variable                         | Used by     | Description                                                                                                                                                                                                                                 |
+| -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                   | all         | Postgres connection string                                                                                                                                                                                                                  |
+| `OCTADASH_URL`                   | web         | Public URL of the panel                                                                                                                                                                                                                     |
+| `OCTADASH_INGEST_URL`            | web         | Public URL of the ingest service                                                                                                                                                                                                            |
+| `OCTADASH_SECRET`                | web, worker | At least 32 characters; signs sessions, encrypts secrets                                                                                                                                                                                    |
+| `OCTADASH_OPEN_SIGNUP`           | web         | `false` by default: only the owner and invited people                                                                                                                                                                                       |
+| `LOG_LEVEL`                      | all         | `info` by default                                                                                                                                                                                                                           |
+| `PORT`                           | web, ingest | 3000 for web, 4000 for ingest                                                                                                                                                                                                               |
+| `WORKER_HEALTH_PORT`             | worker      | Internal health endpoint, 4100 by default                                                                                                                                                                                                   |
+| `OCTADASH_MIGRATE_ON_START`      | all         | `true` by default; migrations run before each role starts                                                                                                                                                                                   |
+| `OCTADASH_UPTIME_REFERENCE_URLS` | worker      | Comma-separated addresses that prove the server is online (Google and Cloudflare by default). Before calling a monitor down the worker reaches one of them, so a network failure on the Octadash server does not read as every product down |
+| `OCTADASH_UPTIME_ALLOW_PRIVATE`  | worker      | `false` by default. `true` lets monitors check private addresses (localhost, 10.x); for development                                                                                                                                         |
 
 ## First run
 

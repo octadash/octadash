@@ -1,14 +1,14 @@
 import { serve } from '@hono/node-server'
 import { createLogger, ingestEnvSchema, parseEnv } from '@octadash/core'
-import { createDb, findIngestKey } from '@octadash/db'
-import { createValkey, ValkeySink } from '@octadash/queue'
+import { createDb, findHeartbeatMonitor, findIngestKey } from '@octadash/db'
+import { createValkey, ValkeyHeartbeats, ValkeySink } from '@octadash/queue'
 import { createApp } from './app'
-import { cachedResolver } from './keys'
+import { cachedHeartbeatResolver, cachedResolver } from './keys'
 
 const env = parseEnv(ingestEnvSchema)
 const log = createLogger('ingest', env.LOG_LEVEL)
 
-// Postgres is only read to check keys, and the answers are cached.
+// Postgres is only read to check keys and heartbeat tokens, and the answers are cached.
 const { db, pool } = createDb(env.DATABASE_URL, { max: 3, applicationName: 'octadash-ingest' })
 const valkey = createValkey(env.VALKEY_URL, { name: 'octadash-ingest', failFast: true })
 valkey.on('error', (err) => log.warn({ err: err.message }, 'valkey connection error'))
@@ -17,6 +17,10 @@ const sink = new ValkeySink(valkey, { maxPending: env.OCTADASH_INGEST_QUEUE_MAX 
 const app = createApp({
   sink,
   keys: cachedResolver((publicKey) => findIngestKey(db, publicKey)),
+  heartbeats: {
+    resolver: cachedHeartbeatResolver((token) => findHeartbeatMonitor(db, token)),
+    store: new ValkeyHeartbeats(valkey),
+  },
   onError: (err) => log.error({ err }, 'request failed'),
 })
 

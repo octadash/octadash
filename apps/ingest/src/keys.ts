@@ -8,52 +8,80 @@ export interface KeyResolver {
   resolve(publicKey: string): Promise<IngestScope | null>
 }
 
-export interface CachedResolverOptions {
-  /** How long a known key is trusted without asking Postgres again. Revoking takes up to this long. */
+/** Resolves a heartbeat token to its monitor id. */
+export interface HeartbeatResolver {
+  resolve(token: string): Promise<string | null>
+}
+
+export interface CacheOptions {
+  /** How long a known value is trusted without asking Postgres again. Revoking takes up to this long. */
   ttlMs?: number
-  /** How long an unknown key is remembered, so garbage keys do not reach Postgres every time. */
+  /** How long an unknown value is remembered, so garbage does not reach Postgres every time. */
   negativeTtlMs?: number
   maxEntries?: number
   now?: () => number
 }
 
-const KEY_FORMAT = /^[0-9a-f]{32}$/
-
 /**
  * Wraps a Postgres lookup with an in-memory cache. A busy product costs one
- * query a minute, not one per request, and concurrent misses for the same key
- * share one query.
+ * query a minute, not one per request, and concurrent misses for the same
+ * value share one query. Values that fail `format` never reach the lookup.
  */
-export function cachedResolver(
-  lookup: (publicKey: string) => Promise<IngestScope | undefined>,
-  options: CachedResolverOptions = {},
-): KeyResolver {
+function cachedLookup<T>(
+  format: RegExp,
+  lookup: (value: string) => Promise<T | null>,
+  options: CacheOptions = {},
+): (value: string) => Promise<T | null> {
   const ttlMs = options.ttlMs ?? 60_000
   const negativeTtlMs = options.negativeTtlMs ?? 30_000
   const maxEntries = options.maxEntries ?? 10_000
   const now = options.now ?? Date.now
-  const cache = new Map<string, { scope: IngestScope | null; expires: number }>()
-  const inflight = new Map<string, Promise<IngestScope | null>>()
+  const cache = new Map<string, { found: T | null; expires: number }>()
+  const inflight = new Map<string, Promise<T | null>>()
 
-  return {
-    async resolve(publicKey) {
-      if (!KEY_FORMAT.test(publicKey)) return null
-      const hit = cache.get(publicKey)
-      if (hit && hit.expires > now()) return hit.scope
-      const pending = inflight.get(publicKey)
-      if (pending) return pending
-      const promise = lookup(publicKey)
-        .then((found) => {
-          const scope = found ? { org_id: found.org_id, project_id: found.project_id } : null
-          if (cache.size >= maxEntries) cache.delete(cache.keys().next().value ?? '')
-          cache.set(publicKey, { scope, expires: now() + (scope ? ttlMs : negativeTtlMs) })
-          return scope
-        })
-        .finally(() => inflight.delete(publicKey))
-      inflight.set(publicKey, promise)
-      return promise
-    },
+  return async (value) => {
+    if (!format.test(value)) return null
+    const hit = cache.get(value)
+    if (hit && hit.expires > now()) return hit.found
+    const pending = inflight.get(value)
+    if (pending) return pending
+    const promise = lookup(value)
+      .then((found) => {
+        if (cache.size >= maxEntries) cache.delete(cache.keys().next().value ?? '')
+        cache.set(value, { found, expires: now() + (found ? ttlMs : negativeTtlMs) })
+        return found
+      })
+      .finally(() => inflight.delete(value))
+    inflight.set(value, promise)
+    return promise
   }
+}
+
+export function cachedResolver(
+  lookup: (publicKey: string) => Promise<IngestScope | undefined>,
+  options: CacheOptions = {},
+): KeyResolver {
+  const resolve = cachedLookup(
+    /^[0-9a-f]{32}$/,
+    async (publicKey) => {
+      const found = await lookup(publicKey)
+      return found ? { org_id: found.org_id, project_id: found.project_id } : null
+    },
+    options,
+  )
+  return { resolve }
+}
+
+export function cachedHeartbeatResolver(
+  lookup: (token: string) => Promise<{ id: string } | undefined>,
+  options: CacheOptions = {},
+): HeartbeatResolver {
+  const resolve = cachedLookup(
+    /^[A-Za-z0-9_-]{32}$/,
+    async (token) => (await lookup(token))?.id ?? null,
+    options,
+  )
+  return { resolve }
 }
 
 /** Fixed keys. For tests. */

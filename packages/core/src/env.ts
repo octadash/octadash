@@ -43,6 +43,25 @@ export const workerEnvSchema = baseEnvSchema
     /** Internal port for the worker health endpoint. */
     WORKER_HEALTH_PORT: z.coerce.number().int().positive().default(4100),
     VALKEY_URL: valkeyUrl,
+    /** Let monitors reach private addresses (localhost, 10.x, 192.168.x). Only for development. */
+    OCTADASH_UPTIME_ALLOW_PRIVATE: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
+    /**
+     * Addresses that prove this server is online, comma separated. Before
+     * calling a monitor down the worker reaches one of them, so its own network
+     * failing does not read as every product down.
+     */
+    OCTADASH_UPTIME_REFERENCE_URLS: z
+      .string()
+      .default('https://www.google.com/generate_204,https://www.cloudflare.com/cdn-cgi/trace')
+      .transform((value) =>
+        value
+          .split(',')
+          .map((url) => url.trim())
+          .filter(Boolean),
+      ),
   })
   .extend(clickhouseEnvSchema.shape)
 

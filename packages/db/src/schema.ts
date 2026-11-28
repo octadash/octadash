@@ -14,6 +14,7 @@ export interface Database {
   project: ProjectTable
   project_key: ProjectKeyTable
   project_area: ProjectAreaTable
+  monitor: MonitorTable
   auth_user: AuthUserTable
   auth_organization: AuthOrganizationTable
   auth_member: AuthMemberTable
@@ -56,6 +57,26 @@ export interface ProjectAreaTable {
   project_id: string
   area: string
   state: ProjectAreaState
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export type MonitorKind = 'site' | 'health' | 'heartbeat'
+export type MonitorStatus = 'unknown' | 'up' | 'down'
+
+export interface MonitorTable {
+  id: string
+  org_id: string
+  project_id: string
+  name: string
+  kind: MonitorKind
+  url: string | null
+  interval_seconds: Generated<number>
+  grace_seconds: Generated<number>
+  heartbeat_token: string | null
+  paused: Generated<boolean>
+  status: Generated<MonitorStatus>
+  status_since: Date | null
+  created_at: CreatedAt
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
 
