@@ -19,6 +19,7 @@ import {
   countNewIssues,
   getIssue,
   type IssueHit,
+  lastIssues,
   listIssues,
   recentErrorProducts,
   recordIssueHits,
@@ -153,6 +154,19 @@ describe.skipIf(!url)('error issues (needs DATABASE_URL)', () => {
     expect(await countNewIssues(db, org, [product], T0, later(1))).toBe(4)
     expect(await listIssues(db, org, { ...base, projectIds: [], tab: 'new' })).toEqual([])
     expect(await recentErrorProducts(db, T0)).toContainEqual({ orgId: org, projectId: product })
+  })
+
+  it('names the last issue of each product, and none for a product without errors', async () => {
+    const quiet = (await createProject(db, org, { name: 'Quiet Shop' })).id
+    const last = await lastIssues(db, org, [product, quiet])
+    expect(last.has(quiet)).toBe(false)
+    const top = await db
+      .selectFrom('error_issue')
+      .select((eb) => eb.fn.max('last_seen').as('at'))
+      .where('project_id', '=', product)
+      .executeTakeFirstOrThrow()
+    expect(last.get(product)?.lastSeen.toISOString()).toBe(new Date(top.at).toISOString())
+    expect(await lastIssues(db, org, [])).toEqual(new Map())
   })
 })
 

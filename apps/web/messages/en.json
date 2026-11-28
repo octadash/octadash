@@ -1805,14 +1805,6 @@
       "resolved": "Resolved",
       "ignored": "Ignored"
     },
-    "none": {
-      "title": "No errors yet",
-      "body": "Errors arrive in two ways, and both work with the key of any source of the product:",
-      "script": "The Octadash script, the same one Traffic uses, already reports errors from the browser. Add data-release to the tag to know which release each one started in.",
-      "sentry": "Code that already uses a Sentry SDK (any language) sends here by changing its DSN. Set up Errors shows the DSN and the code for each platform.",
-      "sources": "Set up Errors",
-      "all": "Pick a product to set up:"
-    },
     "ignore": {
       "trigger": "Ignore",
       "title": "Ignore until",
@@ -1877,7 +1869,119 @@
       "newest": "Newest event"
     },
     "spike": "Spike",
-    "setUp": "Sources and code"
+    "setUp": "Sources and code",
+    "quiet": {
+      "title": "No errors {period}",
+      "last": "The last error was {ago}:",
+      "lastIn": "The last error was {ago}, in {product}:",
+      "wider": {
+        "7d": "See the last 7 days",
+        "30d": "See the last 30 days"
+      },
+      "openLast": "Open the issue",
+      "resolved": "See resolved issues ({count})"
+    },
+    "products": {
+      "title": "No product sends errors yet",
+      "body": "When they do, this page puts the errors of all of them in one list, with the product on each issue. Start with the product that worries you most.",
+      "caption": "Where each product stands on Errors",
+      "product": "Product",
+      "status": "Status",
+      "action": "Action",
+      "more": "{count, plural, one {# more product can send errors} other {# more products can send errors}}",
+      "state": {
+        "waiting": "Set up · waiting for the first error",
+        "canUse": "{source} sends {areas} · browser errors can come from it",
+        "none": "Not set up",
+        "dismissed": "You marked that it won’t use Errors",
+        "canUseKey": "{source} has a key · it can send errors too"
+      },
+      "actions": {
+        "waiting": "Send a test error",
+        "canUse": "Use {source}",
+        "none": "Set up",
+        "dismissed": "Change"
+      }
+    },
+    "start": {
+      "eyebrow": "Errors",
+      "title": "Know about an error before a customer complains",
+      "body": "Browser and server errors become issues: the same error in the same place counts once, with how many people it hit and the release it started in. It takes about 2 minutes.",
+      "where": "Where does the code run?",
+      "whereScript": "The Octadash script, the same one Traffic uses. It reports uncaught errors from the browser.",
+      "whereSdk": "The Sentry SDK for this platform: Octadash reads what it sends. Already use Sentry? Change only the DSN.",
+      "whereOther": "Any Sentry SDK works, in any language, with the DSN of the source.",
+      "showCode": "Show the code",
+      "canUse": "{source} already sends {areas}. Its key sends errors too, with no new code for the browser.",
+      "canUseScript": "{source} already has the Octadash script on the page. It reports browser errors as they are, with nothing to add.",
+      "use": "Use {source}",
+      "orNew": "Or start a new source:",
+      "waiting": "{source} is set to send errors.",
+      "viewer": "An owner or admin sets up Errors for this product.",
+      "options": "Other platforms and options",
+      "wontUse": "I won’t use Errors in this product",
+      "dismissed": "You marked that this product won’t use Errors.",
+      "restore": "Use Errors again",
+      "example": "What it will look like",
+      "exampleLabel": "Example of how this page will look",
+      "exampleBadge": "Example",
+      "exampleTiles": [
+        {
+          "label": "Errors · 24h",
+          "value": "214",
+          "note": "↑ 38% vs yesterday"
+        },
+        {
+          "label": "Issues",
+          "value": "12",
+          "note": "2 new"
+        },
+        {
+          "label": "People",
+          "value": "48",
+          "note": "of 3,120 today"
+        }
+      ],
+      "exampleIssues": [
+        {
+          "badge": "New",
+          "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
+          "meta": "CartTotal in app/checkout/page.tsx · 412 people · since v2.14"
+        },
+        {
+          "badge": "Regressed",
+          "title": "TimeoutError: database did not answer in 5 s",
+          "meta": "OrdersController.Create · 61 people · came back in v3.2"
+        },
+        {
+          "badge": "",
+          "title": "ChunkLoadError: Loading chunk 512 failed",
+          "meta": "webpack runtime · 201 people · 12 days ago"
+        }
+      ],
+      "exampleFile": "app/checkout/page.tsx:42",
+      "exampleCode": [
+        "41 │ const items = cart.items",
+        "42 │ const total = items.price * qty",
+        "43 │ return <Total value={total} />"
+      ],
+      "featuresLabel": "What comes with it",
+      "features": [
+        {
+          "title": "Grouped, not repeated",
+          "body": "The same error a thousand times is one issue, ordered by how many people it hits."
+        },
+        {
+          "title": "Alert in your channel",
+          "body": "An error spike becomes an emergency. A new issue can send a message too, if you turn it on."
+        },
+        {
+          "title": "Private by default",
+          "body": "The IP address is never stored. An e-mail becomes a hash. Errors are kept 90 days."
+        }
+      ],
+      "siteName": "Site"
+    }
   },
   "errorsSetup": {
     "title": "Set up Errors",
@@ -1922,13 +2026,12 @@
     "noteSdk": "This is the Sentry SDK: Octadash reads what it sends. Set the release to see which version an error started in. Tested so far: @sentry/node 9.",
     "noteScript": "The Octadash script reports uncaught errors and rejected promises (up to 10 per page). Change data-release with each deploy. It skips localhost unless the tag has data-local.",
     "noteOther": "Any Sentry SDK works with this DSN. Without an SDK, POST the same event JSON to /o/v1/errors with the key.",
-    "step2": "Send a test error",
-    "step2Body": "Sends one error from this browser with this source’s key, to check the address and the key before you deploy.",
+    "step2": "Check that it arrived",
+    "step2Body": "Send a test error from this browser with this source’s key, or trigger one in your app.",
     "sendTest": "Send test error",
     "testSent": "Sent. It shows below in a few seconds.",
     "testFailed": "This browser could not reach the ingest address. Check OCTADASH_INGEST_URL.",
-    "step3": "Wait for the first error",
-    "waitingBody": "Waiting for the first error. Send the test above or trigger one in your app; it shows here in seconds.",
+    "waitingBody": "Waiting for the first error. It shows here by itself, no reload.",
     "arrived": "Errors are arriving. The last one: {error} ({time}).",
     "openIssue": "Open the issue",
     "openErrors": "Open Errors",

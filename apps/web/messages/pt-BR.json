@@ -1805,14 +1805,6 @@
       "resolved": "Resolvida",
       "ignored": "Ignorada"
     },
-    "none": {
-      "title": "Nenhum erro ainda",
-      "body": "Os erros chegam de dois jeitos, e os dois usam a chave de qualquer origem do produto:",
-      "script": "O script do Octadash, o mesmo do Tráfego, já envia os erros do navegador. Coloque data-release na tag para saber em qual versão cada um começou.",
-      "sentry": "Código que já usa um SDK do Sentry (qualquer linguagem) envia para cá trocando o DSN. Configurar Erros mostra o DSN e o código para cada plataforma.",
-      "sources": "Configurar Erros",
-      "all": "Escolha um produto para configurar:"
-    },
     "ignore": {
       "trigger": "Ignorar",
       "title": "Ignorar até",
@@ -1877,7 +1869,119 @@
       "newest": "Evento mais recente"
     },
     "spike": "Pico",
-    "setUp": "Origens e código"
+    "setUp": "Origens e código",
+    "quiet": {
+      "title": "Nenhum erro {period}",
+      "last": "O último erro foi {ago}:",
+      "lastIn": "O último erro foi {ago}, em {product}:",
+      "wider": {
+        "7d": "Ver os últimos 7 dias",
+        "30d": "Ver os últimos 30 dias"
+      },
+      "openLast": "Abrir a issue",
+      "resolved": "Ver issues resolvidas ({count})"
+    },
+    "products": {
+      "title": "Nenhum produto envia erros ainda",
+      "body": "Quando enviarem, esta página junta os erros de todos em uma lista só, com o produto em cada issue. Comece pelo produto que mais te preocupa.",
+      "caption": "Situação de Erros em cada produto",
+      "product": "Produto",
+      "status": "Situação",
+      "action": "Ação",
+      "more": "{count, plural, one {Mais # produto pode enviar erros} other {Mais # produtos podem enviar erros}}",
+      "state": {
+        "waiting": "Configurado · esperando o primeiro erro",
+        "canUse": "{source} envia {areas} · os erros do navegador já podem vir dela",
+        "none": "Não configurado",
+        "dismissed": "Você marcou que não usa Erros",
+        "canUseKey": "{source} tem uma chave · ela pode enviar erros também"
+      },
+      "actions": {
+        "waiting": "Enviar erro de teste",
+        "canUse": "Usar {source}",
+        "none": "Configurar",
+        "dismissed": "Mudar"
+      }
+    },
+    "start": {
+      "eyebrow": "Erros",
+      "title": "Saiba do erro antes do cliente reclamar",
+      "body": "Os erros do navegador e do servidor viram issues: o mesmo erro no mesmo lugar conta uma vez, com quantas pessoas ele atingiu e em qual versão começou. Leva uns 2 minutos.",
+      "where": "Onde o código roda?",
+      "whereScript": "O script do Octadash, o mesmo do Tráfego. Ele envia os erros não tratados do navegador.",
+      "whereSdk": "O SDK do Sentry desta plataforma: o Octadash lê o que ele envia. Já usa Sentry? Troque só o DSN.",
+      "whereOther": "Qualquer SDK do Sentry funciona, em qualquer linguagem, com o DSN da origem.",
+      "showCode": "Mostrar o código",
+      "canUse": "{source} já envia {areas}. A chave dela envia erros também, sem código novo no navegador.",
+      "canUseScript": "{source} já tem o script do Octadash na página. Ele envia os erros do navegador do jeito que está, sem nada a adicionar.",
+      "use": "Usar {source}",
+      "orNew": "Ou crie uma origem nova:",
+      "waiting": "{source} está configurada para enviar erros.",
+      "viewer": "Um dono ou admin configura Erros neste produto.",
+      "options": "Outras plataformas e opções",
+      "wontUse": "Não vou usar Erros neste produto",
+      "dismissed": "Você marcou que este produto não usa Erros.",
+      "restore": "Usar Erros de novo",
+      "example": "Como vai ficar",
+      "exampleLabel": "Exemplo de como esta tela vai ficar",
+      "exampleBadge": "Exemplo",
+      "exampleTiles": [
+        {
+          "label": "Erros · 24h",
+          "value": "214",
+          "note": "↑ 38% vs ontem"
+        },
+        {
+          "label": "Issues",
+          "value": "12",
+          "note": "2 novas"
+        },
+        {
+          "label": "Pessoas",
+          "value": "48",
+          "note": "de 3.120 hoje"
+        }
+      ],
+      "exampleIssues": [
+        {
+          "badge": "Nova",
+          "title": "TypeError: Cannot read properties of undefined (reading ‘price’)",
+          "meta": "CartTotal em app/checkout/page.tsx · 412 pessoas · desde a v2.14"
+        },
+        {
+          "badge": "Voltou",
+          "title": "TimeoutError: database did not answer in 5 s",
+          "meta": "OrdersController.Create · 61 pessoas · voltou na v3.2"
+        },
+        {
+          "badge": "",
+          "title": "ChunkLoadError: Loading chunk 512 failed",
+          "meta": "webpack runtime · 201 pessoas · há 12 dias"
+        }
+      ],
+      "exampleFile": "app/checkout/page.tsx:42",
+      "exampleCode": [
+        "41 │ const items = cart.items",
+        "42 │ const total = items.price * qty",
+        "43 │ return <Total value={total} />"
+      ],
+      "featuresLabel": "O que vem junto",
+      "features": [
+        {
+          "title": "Agrupado, não repetido",
+          "body": "Mil vezes o mesmo erro é uma issue só, ordenada por quantas pessoas ele atinge."
+        },
+        {
+          "title": "Aviso no seu canal",
+          "body": "Pico de erros vira emergência. Issue nova pode mandar mensagem também, se você ligar."
+        },
+        {
+          "title": "Privado por padrão",
+          "body": "O IP nunca é guardado. E-mail vira hash. Erros ficam 90 dias."
+        }
+      ],
+      "siteName": "Site"
+    }
   },
   "errorsSetup": {
     "title": "Configurar Erros",
@@ -1922,13 +2026,12 @@
     "noteSdk": "Este é o SDK do Sentry: o Octadash lê o que ele envia. Defina a release para ver em qual versão um erro começou. Testado até agora: @sentry/node 9.",
     "noteScript": "O script do Octadash informa erros não tratados e promises rejeitadas (até 10 por página). Troque o data-release a cada deploy. Ele ignora localhost, a não ser que a tag tenha data-local.",
     "noteOther": "Qualquer SDK do Sentry funciona com este DSN. Sem SDK, faça POST do mesmo JSON de evento em /o/v1/errors com a chave.",
-    "step2": "Envie um erro de teste",
-    "step2Body": "Envia um erro deste navegador com a chave desta origem, para conferir o endereço e a chave antes do deploy.",
+    "step2": "Confira que chegou",
+    "step2Body": "Envie um erro de teste deste navegador com a chave desta origem, ou provoque um no seu app.",
     "sendTest": "Enviar erro de teste",
     "testSent": "Enviado. Aparece abaixo em alguns segundos.",
     "testFailed": "Este navegador não alcançou o endereço de ingestão. Confira o OCTADASH_INGEST_URL.",
-    "step3": "Espere o primeiro erro",
-    "waitingBody": "Esperando o primeiro erro. Envie o teste acima ou provoque um no seu app; ele aparece aqui em segundos.",
+    "waitingBody": "Esperando o primeiro erro. Ele aparece aqui sozinho, sem recarregar.",
     "arrived": "Os erros estão chegando. O último: {error} ({time}).",
     "openIssue": "Abrir a issue",
     "openErrors": "Abrir Erros",

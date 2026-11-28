@@ -434,3 +434,31 @@ export async function issueHeads(
     .where('id', 'in', ids)
     .execute()
 }
+
+/**
+ * The most recently seen issue of each product, whatever its status: the
+ * Errors page tells "nothing in this period, the last one was 3 days ago"
+ * from "never sent an error".
+ */
+export async function lastIssues(
+  db: Db,
+  orgId: string,
+  projectIds: string[],
+): Promise<Map<string, { id: string; type: string; value: string; lastSeen: Date }>> {
+  if (projectIds.length === 0) return new Map()
+  const rows = await db
+    .selectFrom('error_issue')
+    .select(['project_id', 'id', 'type', 'value', 'last_seen'])
+    .distinctOn('project_id')
+    .where('org_id', '=', orgId)
+    .where('project_id', 'in', projectIds)
+    .orderBy('project_id')
+    .orderBy('last_seen', 'desc')
+    .execute()
+  return new Map(
+    rows.map((row) => [
+      row.project_id,
+      { id: row.id, type: row.type, value: row.value, lastSeen: row.last_seen },
+    ]),
+  )
+}

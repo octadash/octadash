@@ -12,7 +12,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 /** How often step 3 asks whether an error arrived. */
 const POLL_MS = 3000
 
-function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+function Step({
+  n,
+  title,
+  level,
+  children,
+}: {
+  n: number
+  title: string
+  level: 2 | 3
+  children: React.ReactNode
+}) {
+  const Heading = level === 2 ? 'h2' : 'h3'
   return (
     <li className="flex gap-3">
       <span
@@ -22,7 +33,7 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
         {n}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <Heading className="text-sm font-semibold">{title}</Heading>
         {children}
       </div>
     </li>
@@ -32,9 +43,9 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
 type Test = 'idle' | 'sending' | 'sent' | 'failed'
 
 /**
- * Steps 1 to 3 of Set up Errors for one source: the code for each platform,
- * a test error sent from this browser to the ingest, and a live wait for the
- * first error.
+ * The two steps of Set up Errors for one source, as on the empty Errors
+ * page: the code for each platform, then a test error sent from this browser
+ * with a live wait for the first error.
  */
 export function ErrorsInstall({
   sourceId,
@@ -44,6 +55,7 @@ export function ErrorsInstall({
   platform,
   issueHref,
   errorsHref,
+  level = 3,
 }: {
   sourceId: string
   ingestUrl: string
@@ -53,6 +65,8 @@ export function ErrorsInstall({
   /** The product's issue page, without the id. */
   issueHref: string
   errorsHref: string
+  /** The steps' heading level: 2 on the empty Errors page, 3 under a card title. */
+  level?: 2 | 3
 }) {
   const t = useTranslations('errorsSetup')
   const tp = useTranslations('platforms')
@@ -114,7 +128,7 @@ export function ErrorsInstall({
 
   return (
     <ol className="flex flex-col gap-6">
-      <Step n={1} title={t('step1')}>
+      <Step n={1} title={t('step1')} level={level}>
         <Tabs value={tab} onValueChange={(v) => setTab(v as ErrorPlatform)} className="gap-2">
           <TabsList
             aria-label={t('codeLabel')}
@@ -154,22 +168,26 @@ export function ErrorsInstall({
         </Tabs>
       </Step>
 
-      <Step n={2} title={t('step2')}>
+      <Step n={2} title={t('step2')} level={level}>
         <p className="text-sm text-muted-foreground">{t('step2Body')}</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="button" variant="outline" onClick={sendTest} disabled={test === 'sending'}>
-            {test === 'sending' && (
-              <LoaderCircleIcon data-icon="inline-start" className="animate-spin" aria-hidden />
-            )}
-            {t('sendTest')}
-          </Button>
-          <p role="status" className="text-sm text-muted-foreground">
-            {test === 'sent' ? t('testSent') : test === 'failed' ? t('testFailed') : ''}
-          </p>
-        </div>
-      </Step>
-
-      <Step n={3} title={t('step3')}>
+        {!last && (
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={sendTest}
+              disabled={test === 'sending'}
+            >
+              {test === 'sending' && (
+                <LoaderCircleIcon data-icon="inline-start" className="animate-spin" aria-hidden />
+              )}
+              {t('sendTest')}
+            </Button>
+            <p role="status" className="text-sm text-muted-foreground">
+              {test === 'sent' ? t('testSent') : test === 'failed' ? t('testFailed') : ''}
+            </p>
+          </div>
+        )}
         <div
           aria-live="polite"
           className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-4 text-sm"
@@ -195,7 +213,10 @@ export function ErrorsInstall({
             </>
           ) : (
             <>
-              <LoaderCircleIcon aria-hidden className="size-4 animate-spin text-muted-foreground" />
+              <span aria-hidden className="relative flex size-2.5">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-60 motion-reduce:animate-none" />
+                <span className="relative inline-flex size-2.5 rounded-full bg-brand" />
+              </span>
               <span className="flex-1 text-muted-foreground">{t('waitingBody')}</span>
             </>
           )}
