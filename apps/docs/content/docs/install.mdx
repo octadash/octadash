@@ -1,41 +1,177 @@
 ---
 title: Install
-description: Run Octadash on any server with Docker, or on Coolify.
+description: Run Octadash on any server with Docker, with one command or step by step, or on Coolify.
 ---
 
 Octadash is one Docker image plus four stores it installs and manages. A small
-server with 4 GB of memory is the target. Check the
-[requirements](/self-hosting#requirements) first: on x86 the CPU needs AVX2.
+server with 4 GB of memory is the target. On x86 the CPU needs AVX2; the
+[requirements](/self-hosting#requirements) explain why and how to check.
 
-<Tabs items={['Docker Compose', 'Coolify']}>
-<Tab value="Docker Compose">
+There are three ways in. They end in the same place.
+
+- [One command](#one-command): the fastest. A script does every step for you.
+- [Step by step](#step-by-step): the same steps, one at a time, so you see what
+  each one does.
+- [Coolify](#coolify): if you already run Coolify.
+
+## One command
+
+On the server, run:
+
+```bash
+curl -fsSL https://docs.octadash.com/install.sh | sh
+```
+
+It checks the server, downloads Octadash into `./octadash`, creates every
+password, starts it and waits for the panel. Running it again is safe: it
+updates the copy and keeps the passwords.
+
+To set your public addresses at the same time, pass them before `sh`:
+
+```bash
+curl -fsSL https://docs.octadash.com/install.sh | \
+  OCTADASH_URL=https://octadash.example.com \
+  OCTADASH_INGEST_URL=https://ingest.example.com sh
+```
+
+<Callout title="Prefer to read it first?">
+
+Download the script, read it, then run it. It is plain shell, with a comment
+on every step.
+
+```bash
+curl -fsSL https://docs.octadash.com/install.sh -o install.sh
+less install.sh
+sh install.sh
+```
+
+</Callout>
+
+## Step by step
+
+<Steps>
+<Step>
+
+### Check the server
+
+You need Docker with Compose v2, git and openssl. On x86, the CPU needs AVX2.
+
+```bash
+docker compose version
+git --version
+openssl version
+grep -o -m1 avx2 /proc/cpuinfo || echo "no AVX2"
+```
+
+Each line should print a version, and the last one `avx2`. Missing Docker?
+Follow [Docker's guide](https://docs.docker.com/engine/install/).
+
+</Step>
+<Step>
+
+### Download Octadash
 
 ```bash
 git clone https://github.com/octadash/octadash.git
 cd octadash
-./scripts/generate-env.sh   # creates .env with every password and the secret
+```
+
+This brings the compose file, the store settings and the scripts. The
+application itself comes as a ready image; nothing is built on your server.
+
+</Step>
+<Step>
+
+### Create the passwords
+
+```bash
+./scripts/generate-env.sh
+```
+
+It copies `.env.example` to `.env` and fills every password (Postgres,
+ClickHouse, Valkey, file storage) and the secret that signs sessions, with
+random values. Keep `.env` safe and out of git. Running it again keeps what is
+already there.
+
+</Step>
+<Step>
+
+### Set your addresses
+
+Open `.env` and set where people will reach the panel and where your products
+will send data:
+
+```bash
+OCTADASH_URL=https://octadash.example.com
+OCTADASH_INGEST_URL=https://ingest.example.com
+```
+
+Trying it on your own machine? Leave the defaults, `http://localhost:3000` and
+`http://localhost:4000`. Every setting is listed in
+[Environment](/self-hosting/environment).
+
+</Step>
+<Step>
+
+### Start it
+
+```bash
 docker compose up -d
 ```
 
+The first start downloads the images and creates the databases, so give it a
+minute. Then check:
+
+```bash
+docker compose ps
+curl http://localhost:3000/api/health
+```
+
+Every service should be `running` (or `healthy`), and the health check should
+answer with `"status":"ok"`.
+
+</Step>
+<Step>
+
+### Put HTTPS in front
+
 The panel listens on port 3000 and the ingest on port 4000. In production, put
-a reverse proxy with HTTPS in front of both and set `OCTADASH_URL` and
-`OCTADASH_INGEST_URL` to their public addresses. Details in
+a reverse proxy with HTTPS in front of both (Caddy, Traefik, Nginx), at the two
+addresses you set in `.env`. Details in
 [Docker Compose](/self-hosting/docker-compose).
 
-</Tab>
-<Tab value="Coolify">
+</Step>
+</Steps>
 
-1. In your project, **+ New** > **Public Repository** >
-   `https://github.com/octadash/octadash`.
-2. Build pack: **Docker Compose**. Docker Compose Location:
-   `/docker-compose.coolify.yml`.
-3. Deploy.
+## Coolify
+
+<Steps>
+<Step>
+
+### Add the repository
+
+In your project, **+ New** > **Public Repository** >
+`https://github.com/octadash/octadash`.
+
+</Step>
+<Step>
+
+### Pick the compose file
+
+Build pack: **Docker Compose**. Docker Compose Location:
+`/docker-compose.coolify.yml`.
+
+</Step>
+<Step>
+
+### Deploy
 
 Coolify generates every password and one domain each for the panel and the
-ingest. Details in [Coolify](/self-hosting/coolify).
+ingest. Change the domains under **Domains** if you want your own. Details in
+[Coolify](/self-hosting/coolify).
 
-</Tab>
-</Tabs>
+</Step>
+</Steps>
 
 ## First run
 

@@ -14,5 +14,7 @@ RUN pnpm --filter @octadash/docs build
 FROM nginx:1.27-alpine
 COPY apps/docs/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/docs/out /usr/share/nginx/html
+# curl -fsSL https://docs.octadash.com/install.sh | sh
+COPY scripts/install.sh /usr/share/nginx/html/install.sh
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1
