@@ -8,6 +8,10 @@ Thanks for helping. A few rules keep the project easy to work on.
   approach.
 - Read [docs/architecture.md](docs/architecture.md): it explains the
   architecture and the rules every module follows.
+- Design for the whole product, build the smallest part. A change that works
+  for one product, one alert or one user must also hold for twenty products,
+  a team, every kind of emergency and several at once. Say in the pull request
+  which of those cases you considered.
 
 ## Conventions
 

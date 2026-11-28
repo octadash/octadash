@@ -10,6 +10,12 @@ what do I do about it?**
 
 ## Principles
 
+- **Design for the whole product, build the smallest part.** Every decision
+  starts from the full picture: twenty products, a team, every kind of
+  emergency, ten products down at the same moment, months of data, the hosted
+  version. The first version may build only a small part of it, but that part
+  must fit the full picture, so growing it never means redoing it. When a
+  design only works for one product, one alert or one person, it is not ready.
 - **Built for its maintainer first.** Octadash is built to run the
   maintainer's own products. It is open source, so other people can use it too:
   the stacks it serves best are documented, and everything else works through

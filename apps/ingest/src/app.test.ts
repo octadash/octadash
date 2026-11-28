@@ -1,9 +1,11 @@
-import { MemorySink } from '@octadash/queue'
+import { MemoryHeartbeats, MemorySink } from '@octadash/queue'
 import { describe, expect, it } from 'vitest'
 import { createApp, MAX_BODY_BYTES } from './app'
 import { staticResolver } from './keys'
 
 const KEY = 'a'.repeat(32)
+const TOKEN = 'T'.repeat(32)
+const MONITOR = '00000000-0000-4000-8000-0000000000c1'
 const scope = {
   org_id: '00000000-0000-4000-8000-00000000000a',
   project_id: '00000000-0000-4000-8000-0000000000b1',
@@ -11,14 +13,23 @@ const scope = {
 
 function setup() {
   const sink = new MemorySink()
-  const app = createApp({ sink, keys: staticResolver({ [KEY]: scope }) })
+  const pings = new MemoryHeartbeats()
+  const app = createApp({
+    sink,
+    keys: staticResolver({ [KEY]: scope }),
+    heartbeats: {
+      resolver: { resolve: async (token) => (token === TOKEN ? MONITOR : null) },
+      store: pings,
+    },
+    now: () => 1_795_000_000_000,
+  })
   const post = (body: unknown, headers: Record<string, string> = {}) =>
     app.request('/o/v1/events', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...headers },
       body: typeof body === 'string' ? body : JSON.stringify(body),
     })
-  return { app, sink, post }
+  return { app, sink, pings, post }
 }
 
 describe('ingest app', () => {
@@ -33,6 +44,15 @@ describe('ingest app', () => {
       headers: { origin: 'https://postato.com.br' },
     })
     expect(res.headers.get('access-control-allow-origin')).toBe('*')
+  })
+
+  it('records heartbeat pings by GET and POST, and refuses unknown tokens', async () => {
+    const { app, pings } = setup()
+    expect((await app.request(`/hb/${TOKEN}`)).status).toBe(200)
+    expect((await app.request(`/hb/${TOKEN}`, { method: 'POST', body: 'x' })).status).toBe(200)
+    expect(pings.pings.get(MONITOR)).toBe(1_795_000_000_000)
+    expect((await app.request(`/hb/${'U'.repeat(32)}`)).status).toBe(404)
+    expect(pings.pings.size).toBe(1)
   })
 
   it('returns JSON 404 for unknown routes', async () => {
