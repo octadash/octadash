@@ -15,6 +15,19 @@ export interface EventRow {
   session_id: string
   /** JSON object as a string. */
   properties: string
+  /** Daily hash, without cookies. Empty when the request carried no address or browser. */
+  visitor_id?: string
+  path?: string
+  host?: string
+  referrer_host?: string
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  browser?: string
+  os?: string
+  device?: string
+  country?: string
+  is_bot?: number
 }
 
 /** `source_id` of events sent with a product key from before sources. */

@@ -1,6 +1,7 @@
 import { uuidv7 } from '@octadash/core'
 import { type EventRow, NO_SOURCE, toClickHouseTime } from '@octadash/db'
 import { z } from 'zod'
+import { pageFields, parseUserAgent } from './context'
 import type { IngestScope } from './keys'
 
 export const MAX_EVENTS_PER_REQUEST = 1_000
@@ -43,19 +44,42 @@ export class PropertiesTooLargeError extends Error {
   override name = 'PropertiesTooLargeError'
 }
 
-/** Turns validated events into the rows the worker writes to ClickHouse. */
-export function toEventRows(
+/** What the request says about who sent it; see context.ts. */
+export interface Sender {
+  /** Set when the request came from a browser (it carried an Origin or Referer). */
+  ip: string
+  userAgent: string
+  country: string
+  /** Hash for an address and browser on the received day. */
+  visitor(ip: string, userAgent: string): Promise<string>
+}
+
+function text(value: unknown, max = 1000): string {
+  return typeof value === 'string' ? value.slice(0, max) : ''
+}
+
+/**
+ * Turns validated events into the rows the worker writes to ClickHouse. A
+ * server SDK sends on behalf of a visitor, so `$ip` and `$user_agent` in the
+ * properties (PostHog's names) win over the request's own.
+ */
+export async function toEventRows(
   scope: IngestScope,
   events: IncomingEvent[],
+  sender: Sender,
   received: Date = new Date(),
-): EventRow[] {
+): Promise<EventRow[]> {
   const receivedAt = toClickHouseTime(received)
-  return events.map((event) => {
+  const rows: EventRow[] = []
+  for (const event of events) {
     const properties = JSON.stringify(event.properties ?? {})
     if (Buffer.byteLength(properties) > MAX_PROPERTIES_BYTES) {
       throw new PropertiesTooLargeError(event.event)
     }
-    return {
+    const ip = text(event.properties?.$ip, 100) || sender.ip
+    const userAgent = text(event.properties?.$user_agent) || sender.userAgent
+    const client = parseUserAgent(userAgent)
+    rows.push({
       org_id: scope.org_id,
       project_id: scope.project_id,
       source_id: scope.source_id ?? NO_SOURCE,
@@ -66,6 +90,14 @@ export function toEventRows(
       distinct_id: event.distinct_id ?? '',
       session_id: event.session_id ?? '',
       properties,
-    }
-  })
+      visitor_id: await sender.visitor(ip, userAgent),
+      ...pageFields(event.properties),
+      browser: client.browser,
+      os: client.os,
+      device: client.device,
+      country: sender.country,
+      is_bot: client.isBot ? 1 : 0,
+    })
+  }
+  return rows
 }

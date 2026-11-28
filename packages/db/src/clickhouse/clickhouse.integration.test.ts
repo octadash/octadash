@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { createClickHouse, parseClickHouseUrl } from './client'
 import { insertEvents, toClickHouseTime } from './events'
 import { migrateClickHouse } from './migrate'
+import { trafficBreakdown, trafficSeries, trafficSummary } from './traffic'
 import { insertUptimeChecks, monitorStats } from './uptime'
 
 const url = process.env.CLICKHOUSE_URL
@@ -108,5 +109,60 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
     })
     expect(s?.uptime).toBeCloseTo(2 / 3)
     expect(Math.abs((s?.lastAt?.getTime() ?? 0) - (Date.now() - 60_000))).toBeLessThan(5_000)
+  })
+
+  it('counts traffic for all products, a list or one, without bots', async () => {
+    const a = crypto.randomUUID()
+    const b = crypto.randomUUID()
+    const day = new Date('2026-11-20T00:00:00Z')
+    const at = (hours: number) => toClickHouseTime(new Date(day.getTime() + hours * 3_600_000))
+    const base = {
+      org_id: org,
+      source_id: crypto.randomUUID(),
+      received_at: at(0),
+      distinct_id: '',
+      session_id: '',
+      properties: '{}',
+      event: '$pageview',
+      is_bot: 0,
+    }
+    const view = (project: string, hours: number, extra: Record<string, unknown>) => ({
+      ...base,
+      project_id: project,
+      uuid: crypto.randomUUID(),
+      timestamp: at(hours),
+      ...extra,
+    })
+    await insertEvents(client, [
+      view(a, 1, { visitor_id: 'v1', path: '/', referrer_host: 'google.com' }),
+      view(a, 1, { visitor_id: 'v1', path: '/precos', referrer_host: 'google.com' }),
+      view(a, 2, { visitor_id: 'v2', path: '/', utm_source: 'instagram' }),
+      view(b, 2, { visitor_id: 'v3', path: '/', distinct_id: 'user-9' }),
+      view(b, 3, { visitor_id: 'v4', path: '/', distinct_id: 'user-9' }),
+      view(a, 3, { visitor_id: 'bot', path: '/', is_bot: 1 }),
+      { ...view(a, 3, { visitor_id: 'v1' }), event: 'signup.completed' },
+    ])
+    const scope = { orgId: org, from: day, to: new Date(day.getTime() + 86_400_000) }
+    expect(await trafficSummary(client, { ...scope, projectIds: null })).toEqual({
+      pageviews: 5,
+      visitors: 3,
+      bots: 1,
+    })
+    expect(await trafficSummary(client, { ...scope, projectIds: [b] })).toMatchObject({
+      pageviews: 2,
+      visitors: 1,
+    })
+    expect(await trafficSummary(client, { ...scope, projectIds: [] })).toMatchObject({
+      pageviews: 0,
+    })
+    const sources = await trafficBreakdown(client, { ...scope, projectIds: [a] }, 'source')
+    expect(sources).toEqual([
+      { value: 'google.com', pageviews: 2, visitors: 1 },
+      { value: 'instagram', pageviews: 1, visitors: 1 },
+    ])
+    const series = await trafficSeries(client, { ...scope, projectIds: null }, 'hour')
+    expect(series).toHaveLength(24)
+    expect(series[1]).toEqual({ at: new Date('2026-11-20T01:00:00Z'), pageviews: 2, visitors: 1 })
+    expect(series[0]?.pageviews).toBe(0)
   })
 })

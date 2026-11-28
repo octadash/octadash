@@ -1,4 +1,4 @@
-import { MemoryHeartbeats, MemorySink } from '@octadash/queue'
+import { MemoryHeartbeats, MemorySalts, MemorySink } from '@octadash/queue'
 import { describe, expect, it } from 'vitest'
 import { createApp, MAX_BODY_BYTES } from './app'
 import { staticResolver } from './keys'
@@ -22,6 +22,7 @@ function setup() {
       resolver: { resolve: async (token) => (token === TOKEN ? MONITOR : null) },
       store: pings,
     },
+    salts: new MemorySalts(),
     now: () => 1_795_000_000_000,
   })
   const post = (body: unknown, headers: Record<string, string> = {}) =>
@@ -38,6 +39,15 @@ describe('ingest app', () => {
     const res = await setup().app.request('/health')
     expect(res.status).toBe(200)
     expect(await res.json()).toMatchObject({ status: 'ok', service: 'ingest' })
+  })
+
+  it('serves the browser script', async () => {
+    const res = await setup().app.request('/o/v1/script.js')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('javascript')
+    const body = await res.text()
+    expect(body).toContain('$pageview')
+    expect(body.length).toBeLessThan(2500)
   })
 
   it('allows cross-origin calls from SDKs', async () => {
@@ -71,7 +81,7 @@ describe('POST /o/v1/events', () => {
         events: [
           {
             event: 'pageview',
-            timestamp: '2026-11-27T10:00:00.000Z',
+            timestamp: '2026-11-18T10:00:00.000Z',
             distinct_id: 'u1',
             properties: { path: '/' },
           },
@@ -87,12 +97,53 @@ describe('POST /o/v1/events', () => {
     expect(sink.batches[0]?.rows[0]).toMatchObject({
       ...scope,
       event: 'pageview',
-      timestamp: '2026-11-27 10:00:00.000',
+      timestamp: '2026-11-18 10:00:00.000',
       distinct_id: 'u1',
       session_id: '',
       properties: '{"path":"/"}',
     })
     expect(sink.batches[0]?.rows[1]).toMatchObject({ event: 'signup.completed', properties: '{}' })
+  })
+
+  it('reads page, origin of the visit, browser and country, and hashes the visitor', async () => {
+    const { sink, post } = setup()
+    const browser = {
+      'x-octadash-key': KEY,
+      origin: 'https://www.postato.com.br',
+      'x-forwarded-for': '203.0.113.7, 10.0.0.1',
+      'cf-ipcountry': 'br',
+      'user-agent':
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+    }
+    const pageview = {
+      event: '$pageview',
+      properties: {
+        $current_url: 'https://www.postato.com.br/precos?utm_source=Instagram&utm_medium=social',
+        $referrer: 'https://l.instagram.com/',
+      },
+    }
+    await post({ events: [pageview] }, browser)
+    await post({ events: [pageview] }, browser)
+    await post({ events: [pageview] }, { ...browser, 'x-forwarded-for': '198.51.100.9' })
+    await post({ events: [{ event: 'signup.completed' }] }, { 'x-octadash-key': KEY })
+    const rows = sink.batches.map((batch) => batch.rows[0] as Record<string, unknown>)
+    expect(rows[0]).toMatchObject({
+      path: '/precos',
+      host: 'postato.com.br',
+      referrer_host: 'l.instagram.com',
+      utm_source: 'instagram',
+      utm_medium: 'social',
+      browser: 'Safari',
+      os: 'iOS',
+      device: 'mobile',
+      country: 'BR',
+      is_bot: 0,
+    })
+    expect(rows[0]?.visitor_id).toMatch(/^[0-9a-f]{32}$/)
+    expect(rows[1]?.visitor_id).toBe(rows[0]?.visitor_id)
+    expect(rows[2]?.visitor_id).not.toBe(rows[0]?.visitor_id)
+    // A server call without $ip speaks for nobody.
+    expect(rows[3]).toMatchObject({ visitor_id: '', browser: '', path: '' })
   })
 
   it('takes the key from a bearer header or from the body (sendBeacon)', async () => {

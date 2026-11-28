@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server'
 import { createLogger, ingestEnvSchema, parseEnv } from '@octadash/core'
 import { createDb, findHeartbeatMonitor, findIngestKey } from '@octadash/db'
-import { createValkey, ValkeyHeartbeats, ValkeySink } from '@octadash/queue'
+import { createValkey, ValkeyHeartbeats, ValkeySalts, ValkeySink } from '@octadash/queue'
 import { createApp } from './app'
 import { cachedHeartbeatResolver, cachedResolver } from './keys'
 
@@ -21,6 +21,7 @@ const app = createApp({
     resolver: cachedHeartbeatResolver((token) => findHeartbeatMonitor(db, token)),
     store: new ValkeyHeartbeats(valkey),
   },
+  salts: new ValkeySalts(valkey),
   onError: (err) => log.error({ err }, 'request failed'),
 })
 
