@@ -7,7 +7,9 @@
  *   claims its tag.
  * - Everything else (untagged, or a tag nobody claims) is the rest. It goes
  *   to the products marked `rest`, divided equally, by each product's traffic
- *   that day, or by fixed percents (scaled to add up to 100).
+ *   that day, or by fixed percents (scaled to add up to 100). A product
+ *   without a percent takes an equal part of what the typed percents leave,
+ *   so switching to percents for one product does not give it everything.
  * - With no product taking the rest, it is left unassigned: still counted in
  *   the provider's total, in no product's.
  */
@@ -40,9 +42,14 @@ export function splitCost(
   }
   const rest = shares.filter((s) => s.rest)
   if (rest.length === 0) return out
+  const typed = rest.reduce((n, s) => n + (s.percent === null ? 0 : Math.max(0, s.percent)), 0)
+  const untyped = rest.filter((s) => s.percent === null).length
+  const leftover = untyped > 0 ? Math.max(0, 100 - typed) / untyped : 0
   let weights = rest.map((s) =>
     mode === 'percent'
-      ? Math.max(0, s.percent ?? 0)
+      ? s.percent === null
+        ? leftover
+        : Math.max(0, s.percent)
       : mode === 'traffic'
         ? Math.max(0, traffic?.get(s.projectId) ?? 0)
         : 1,

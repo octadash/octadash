@@ -30,6 +30,7 @@ function areaHref(slug: string, area: string, on: boolean) {
   if (area === 'usage') return on ? `/p/${slug}/usage` : `/p/${slug}/usage/setup`
   if (area === 'logs') return on ? `/p/${slug}/logs` : `/p/${slug}/logs/setup`
   if (area === 'money') return on ? `/p/${slug}/money` : `/p/${slug}/money/setup`
+  if (area === 'costs') return on ? `/p/${slug}/costs` : `/p/${slug}/costs/setup`
   return `/p/${slug}/${area}`
 }
 

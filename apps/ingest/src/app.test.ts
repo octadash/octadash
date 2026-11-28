@@ -244,7 +244,8 @@ describe('POST /o/v1/events', () => {
     expect(await res.json()).toMatchObject({ error: 'properties_too_large' })
     const huge = await post('x'.repeat(MAX_BODY_BYTES + 1), { 'x-octadash-key': KEY })
     expect(huge.status).toBe(413)
-  })
+    // A body of several megabytes can take more than the default 5 s on a busy CI runner.
+  }, 20_000)
 
   it('answers 429 with Retry-After when the worker is far behind', async () => {
     const { sink, post } = setup()
