@@ -150,7 +150,7 @@
     "usage": {
       "name": "Usage",
       "body": "Sign-ups, logins, key actions, funnel and retention.",
-      "how": "The Octadash package in the browser and on the server."
+      "how": "The Octadash script, a POST from your server, or PostHog SDKs."
     },
     "errors": {
       "name": "Errors",
@@ -1899,9 +1899,194 @@
     "privateItems": [
       "The person is the user your app sends; without one, the daily visitor hash.",
       "The IP address is never stored.",
-      "E-mails and names only when your app sends them.",
+      "An e-mail sent as the user is kept only as a hash; a user id as sent.",
       "Errors are kept 90 days."
     ],
     "noSource": "No source sends errors yet. An owner or admin adds one here."
+  },
+  "usageArea": {
+    "title": "Product usage",
+    "intro": "What people do inside each product: the events you send, key events with what is normal for them, funnels and who comes back.",
+    "introOne": "What people do inside {product}: the events you send, key events with what is normal for them, funnels and who comes back.",
+    "introGroup": "What people do inside the products of {group}: events, key events, funnels and who comes back.",
+    "sending": "{count, plural, one {# product} other {# products}} · {sending} send events",
+    "setUp": "Sources and key events",
+    "periodLabel": "Period",
+    "periods": {
+      "today": "Today",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Some numbers are missing: the event store did not answer.",
+    "change": "{change}% compared with the period before",
+    "changePoints": "{change} percentage points compared with the period before",
+    "pts": "pts",
+    "chart": {
+      "current": "This period",
+      "previous": "Period before",
+      "emergency": "Emergency",
+      "asTable": "Show as a table",
+      "time": "Time"
+    },
+    "tiles": {
+      "label": "Numbers of the period",
+      "active": "Active people",
+      "signups": "Sign-ups",
+      "keyEvents": "Key events",
+      "cameBack": "Came back week 1",
+      "noKeys": "Mark key events in Sources and key events",
+      "cameBackOf": "of {count, plural, one {# person} other {# people}} who signed up the week before",
+      "cameBackNone": "Needs sign-ups tied to a person",
+      "cameBackInfoLabel": "About Came back week 1",
+      "cameBackInfo": "Of the people who signed up 7 days before this period, the share who did anything 7 to 14 days after signing up. It needs identify (a person id), since a visitor without one gets a new hash every day. Sign-ups are signed_up, signup.completed and the names other tools use."
+    },
+    "events": "Events",
+    "eventsInfoLabel": "About Normal?",
+    "eventsInfo": "Normal is the same stretch of time on each of the 4 weeks before (so a Monday is read against Mondays). More than 30% under or 50% over is out of normal. A key event that stopped shows here and is an emergency. Events named by SDKs ($pageview, $identify) are left out.",
+    "search": "event name",
+    "searchLabel": "Search events by name",
+    "noEvents": "No events in this period.",
+    "noMatch": "No event has “{q}” in its name.",
+    "showMore": "Show more ({shown} of {total})",
+    "table": {
+      "event": "Event",
+      "product": "Product",
+      "count": {
+        "today": "Today",
+        "24h": "24h",
+        "7d": "7 days",
+        "30d": "30 days"
+      },
+      "vsBefore": "vs before",
+      "people": "People",
+      "normal": "Normal?",
+      "key": "(key event)",
+      "newNow": "new"
+    },
+    "normal": {
+      "expected": "As expected",
+      "below": "{percent}% below expected",
+      "above": "{percent}% above expected",
+      "new": "New, nothing to compare yet",
+      "few": "Too few to tell",
+      "stopped": "Stopped · emergency",
+      "stoppedSince": "Stopped, last {ago} · emergency"
+    },
+    "funnel": {
+      "title": "Funnels",
+      "none": "A funnel counts the people who did events in order (visited, added to cart, paid) and where they left. Create one from events you already send.",
+      "new": "New funnel",
+      "newTitle": "New funnel",
+      "editTitle": "Edit funnel",
+      "edit": "Edit {name}",
+      "intro": "Events in order, one per line. A person counts for a step when they did it after the step before, within the days you choose.",
+      "product": "Product",
+      "name": "Name",
+      "namePlaceholder": "Checkout",
+      "steps": "Steps",
+      "stepsHint": "From 2 to 8 event names. $pageview counts any page view.",
+      "stepsHintSeen": "From 2 to 8 event names. Seen lately: {events}",
+      "window": "Days to finish",
+      "windowHint": "From the first step to the last, from 1 to 90.",
+      "cancel": "Cancel",
+      "create": "Create funnel",
+      "save": "Save",
+      "delete": "Delete",
+      "checkFields": "Check the fields.",
+      "twoSteps": "A funnel needs at least 2 steps.",
+      "notFound": "This product or funnel no longer exists.",
+      "named": "{name} · {product}",
+      "meta": "{days, plural, one {# day} other {# days}} to finish · {share} finished",
+      "everyone": "everyone",
+      "continued": "{share} continued",
+      "drop": "Biggest drop: {from} → {to} ({share} left).",
+      "empty": "Nobody did the first step in this period."
+    },
+    "retention": {
+      "title": "Who comes back",
+      "titleOf": "Who comes back · {scope}",
+      "note": "people who signed up, by week",
+      "infoLabel": "About Who comes back",
+      "info": "Each row is the people who signed up that week; each column is the share who did anything in the weeks after. It counts only people your app identifies.",
+      "none": "Shows once people sign up with identify: the sign-up event tied to a person id.",
+      "signedUp": "Signed up",
+      "people": "People",
+      "week": "Week {n}",
+      "weekOf": "Week of {date}"
+    },
+    "none": {
+      "title": "No events yet",
+      "body": "Product usage shows what people do inside your products: sign-ups, payments, invites, anything you send as an event. Three ways to send them:",
+      "script": "The Octadash script on your site: window.octadash.track('signed_up'). If Traffic is set up, the script is already there.",
+      "server": "From your server: POST the event with the source key.",
+      "posthog": "Already on PostHog: change only the host and the key.",
+      "setUp": "Set up Product usage",
+      "all": "Set up a product:"
+    }
+  },
+  "usageSetup": {
+    "title": "Set up Product usage",
+    "intro": "Send what people do (signed up, paid, invited someone) and Octadash shows what is normal for each event, funnels and who comes back.",
+    "trail": "Where you are",
+    "usage": "Product usage",
+    "sources": "Sources",
+    "sourcesHint": "The Traffic script on this site already collects events: add one line where something happens. No new key.",
+    "scriptHint": "A source that sends page views has the Octadash script: “Use for Product usage” and the same key sends events.",
+    "status": {
+      "receiving": "sends events · last {time}",
+      "waiting": "for Product usage · waiting for the first event",
+      "other": "sends {areas} · no events yet",
+      "nothing": "added · nothing received yet"
+    },
+    "useForUsage": "Use for Product usage",
+    "show": "Show code",
+    "addSource": "Add source",
+    "addAnother": "Add another source",
+    "codeLabel": "Platform",
+    "tabs": {
+      "browser": "Browser",
+      "node": "Next.js / Node",
+      "python": "Python",
+      "dotnet": ".NET",
+      "posthog": "Already on PostHog"
+    },
+    "where": {
+      "head": "The script in <head>, then the call where it happens",
+      "page": "Where it happens, in the page",
+      "server": "Where it happens, in your server code",
+      "posthog": "Where PostHog starts"
+    },
+    "copy": "Copy",
+    "copied": "Copied",
+    "noteNames": "Names in snake_case. Properties are optional; never send names, e-mails or documents (they are dropped anyway). signed_up counts as a sign-up with no setting.",
+    "notePosthog": "Your PostHog calls keep working: capture and identify. Autocapture, recordings and surveys stay off. Tested with posthog-js 1 and posthog-node 5.",
+    "step1": "Send an event where it happens",
+    "step2": "Tie events to a person (optional)",
+    "step2Body": "Octadash keeps only a hash of the id, so it can count the same person on phone and laptop and build who comes back, without knowing who it is. Call it on each page load once you know the user, and octadash.reset() on logout.",
+    "step3": "Mark the key events",
+    "step3Body": "A key event gets what is normal for each hour; if it stops, that is the “Key event stopped” emergency.",
+    "inWeek": "{count, plural, =0 {none in 7 days} one {# in 7 days} other {# in 7 days}}",
+    "noEventsYet": "No events seen yet. Send one (step 1), or type the name of the event below.",
+    "newKey": "Another key event",
+    "newKeyHint": "The name of an event you will send, even if none arrived yet.",
+    "saveKeys": "Save key events",
+    "keysSaved": "Saved.",
+    "step4": "Check",
+    "waitingBody": "Waiting for the first event. Do the action on the site; it shows here in seconds.",
+    "arrived": "Events are arriving. The last one: {event} ({time}).",
+    "openUsage": "Open Product usage",
+    "back": "Back to {name}",
+    "wontUse": "I won’t use Product usage in this product",
+    "noSource": "No source sends events yet. An owner or admin adds one here.",
+    "private": "Private by default",
+    "privateItems": [
+      "No cookies unless you turn on returning visitors.",
+      "Person ids are kept as hashes.",
+      "Properties that look like e-mails or documents are dropped at the door.",
+      "The IP address is never stored."
+    ],
+    "funnelsTitle": "Funnels and retention",
+    "funnelsBody": "Once events arrive, build a funnel from any events in order (visited → cart → paid), and see who comes back by the week they signed up. Both work per product or for a group."
   }
 }

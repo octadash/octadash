@@ -619,7 +619,7 @@ function AreaCard({
             <Button asChild size="lg" className="px-4">
               <Link
                 href={
-                  area.id === 'errors' || area.id === 'traffic'
+                  area.id === 'errors' || area.id === 'traffic' || area.id === 'usage'
                     ? `/p/${slug}/${area.id}/setup`
                     : `/p/${slug}/${area.id}`
                 }

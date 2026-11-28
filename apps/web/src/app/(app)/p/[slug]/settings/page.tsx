@@ -27,6 +27,7 @@ import { canManage, requireOrg } from '@/server/session'
 function areaHref(slug: string, area: string, on: boolean) {
   if (area === 'traffic') return on ? `/p/${slug}/traffic` : `/p/${slug}/traffic/setup`
   if (area === 'errors') return on ? `/p/${slug}/errors` : `/p/${slug}/errors/setup`
+  if (area === 'usage') return on ? `/p/${slug}/usage` : `/p/${slug}/usage/setup`
   return `/p/${slug}/${area}`
 }
 

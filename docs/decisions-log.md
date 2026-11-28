@@ -200,3 +200,25 @@ and why; anything here can be reversed.
   already said.
 - **The browser script grew to about 5 KB before gzip** (2 KB gzipped) with
   `identify`; the budget in the test moved from 4.5 KB to 5 KB.
+
+### Product usage screens (2026-11-28)
+
+- **"Normal?" compares with the same stretch one to four weeks before**, not
+  the period just before: a Monday is read against Mondays. A month steps back
+  in whole weeks (35 days) so it never overlaps itself. Out of normal is more
+  than 30% under or 50% over; with fewer than 5 expected and seen, the column
+  says "too few to tell" instead of a percentage.
+- **Key events stay on the list with 0 in the period**, and a key event with
+  an open "Key event stopped" goes to the top. That is when they matter.
+- **A funnel belongs to one product.** On Overview or a group the "New funnel"
+  form asks which product. Steps are typed one per line (up to 8), with the
+  names seen lately offered as a hint; a picker can come later.
+- **Retention shows whole weeks only.** A cohort that started before the
+  period showed a partial first week and looked like a drop.
+- **Retention cells use the primary color** at 50% or more; the brand tint
+  with white text failed AA contrast in the dark theme.
+- **Set up Product usage reuses a Traffic source** ("Use for Product usage")
+  instead of making a second key, since the browser script already sends both.
+- **Tables that scroll sideways on a phone are focusable regions**
+  (`scrollLabel` on `Table`), so keyboard users can scroll them; axe flagged
+  them at 390 px.
