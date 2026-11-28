@@ -1335,8 +1335,9 @@
     "chartOf": "{metric}",
     "dimensions": {
       "product": "Product",
+      "origin": "Source",
       "channel": "Channel",
-      "source": "Source",
+      "source": "Referrer",
       "campaign": "Campaign",
       "page": "Page",
       "entry": "Entry page",
@@ -1365,6 +1366,8 @@
       "devices": "Devices"
     },
     "products": "Products",
+    "origins": "Sources",
+    "originsFoot": "Each site or app of this product that sends page views. Click one to see only its numbers.",
     "productsFoot": "{shown} of {total} products",
     "productsWithout": "{count, plural, one {# doesn't use Traffic} other {# don't use Traffic}}",
     "visitors": "Visitors",
@@ -1428,6 +1431,7 @@
       "open": "Open Product usage"
     },
     "setUpLink": "Sources and setup",
+    "addSource": "Add a source",
     "incomplete": "Some numbers are missing because the events database did not answer.",
     "chart": {
       "current": "This period",
@@ -1505,7 +1509,8 @@
       "A visitor is a hash that changes every day.",
       "Bots are recognized and counted apart."
     ],
-    "noSource": "No source for Traffic yet. Add one to get its code."
+    "noSource": "No source for Traffic yet. Add one to get its code.",
+    "cancel": "Cancel"
   },
   "platforms": {
     "html": "HTML",
@@ -1897,6 +1902,7 @@
     },
     "spike": "Spike",
     "setUp": "Sources and code",
+    "addSource": "Add a source",
     "quiet": {
       "title": "No errors {period}",
       "last": "The last error was {ago}:",
@@ -1997,7 +2003,8 @@
       "An e-mail sent as the user is kept only as a hash; a user id as sent.",
       "Errors are kept 90 days."
     ],
-    "noSource": "No source sends errors yet. An owner or admin adds one here."
+    "noSource": "No source sends errors yet. An owner or admin adds one here.",
+    "cancel": "Cancel"
   },
   "usageArea": {
     "title": "Product usage",
@@ -2006,6 +2013,7 @@
     "introGroup": "What people do inside the products of {group}: events, key events, funnels and who comes back.",
     "sending": "{count, plural, one {# product} other {# products}} · {sending} send events",
     "setUp": "Sources and key events",
+    "addSource": "Add a source",
     "periodLabel": "Period",
     "periods": {
       "today": "Today",
@@ -2173,7 +2181,8 @@
       "The IP address is never stored."
     ],
     "funnelsTitle": "Funnels and retention",
-    "funnelsBody": "Once events arrive, build a funnel from any events in order (visited → cart → paid), and see who comes back by the week they signed up. Both work per product or for a group."
+    "funnelsBody": "Once events arrive, build a funnel from any events in order (visited → cart → paid), and see who comes back by the week they signed up. Both work per product or for a group.",
+    "cancel": "Cancel"
   },
   "logsArea": {
     "title": "Logs",
@@ -2195,6 +2204,7 @@
     },
     "asTable": "Show as a table",
     "setUp": "Sources and retention",
+    "addSource": "Add a source",
     "periodLabel": "Period",
     "periods": {
       "today": "Today",
@@ -2311,7 +2321,8 @@
     "notLogTitle": "What not to log",
     "notLogBody": "Passwords, tokens and documents. Octadash masks values that look like card numbers, e-mails and keys before storing, and says how many it masked.",
     "maskedWeek": "{count, plural, one {# value masked in the last 7 days.} other {# values masked in the last 7 days.}}",
-    "maskedNone": "Nothing masked in the last 7 days."
+    "maskedNone": "Nothing masked in the last 7 days.",
+    "cancel": "Cancel"
   },
   "moneyArea": {
     "title": "Money",
@@ -2753,6 +2764,7 @@
     "showCode": "Show the code",
     "orNew": "Or start a new source:",
     "use": "Use {source}",
+    "orOther": "Or start from another source of this product, also with no new key:",
     "waiting": "{source} is set to send {what}.",
     "viewer": "An owner or admin sets up {area} for this product.",
     "wontUse": "I won’t use {area} in this product",
@@ -2852,7 +2864,7 @@
         "productsTitle": "No product sends errors yet",
         "productsBody": "When they do, this page puts the errors of all of them in one list, with the product on each issue. Start with the product that worries you most.",
         "more": "{count, plural, one {# more product can send errors} other {# more products can send errors}}",
-        "options": "Other platforms and options"
+        "options": "Add another source, other platforms and options"
       },
       "traffic": {
         "name": "Traffic",
@@ -2923,7 +2935,7 @@
         "productsTitle": "No product sends page views yet",
         "productsBody": "When they do, this page adds the visits of all of them, and you can compare products side by side. Start with the product with most visits.",
         "more": "{count, plural, one {# more product can send page views} other {# more products can send page views}}",
-        "options": "Other platforms and options"
+        "options": "Add another source, other platforms and options"
       },
       "usage": {
         "name": "Product usage",
@@ -2991,7 +3003,7 @@
         "productsTitle": "No product sends events yet",
         "productsBody": "When they do, this page shows the events of all of them, and funnels can cross products. Start with the product whose sign-ups matter most.",
         "more": "{count, plural, one {# more product can send events} other {# more products can send events}}",
-        "options": "Other platforms and options"
+        "options": "Add another source, other platforms and options"
       },
       "logs": {
         "name": "Logs",
@@ -3058,7 +3070,7 @@
         "productsTitle": "No product sends logs yet",
         "productsBody": "When they do, this page searches the lines of all of them at once. Start with the product that breaks most.",
         "more": "{count, plural, one {# more product can send logs} other {# more products can send logs}}",
-        "options": "Other platforms and options"
+        "options": "Add another source, other platforms and options"
       },
       "money": {
         "name": "Money",

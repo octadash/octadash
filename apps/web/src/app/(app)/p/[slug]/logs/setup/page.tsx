@@ -7,7 +7,7 @@ import {
   logRetention,
   maskedCount,
 } from '@octadash/db'
-import { ArrowLeftIcon, CheckIcon, ShieldCheckIcon } from 'lucide-react'
+import { ArrowLeftIcon, CheckIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -39,10 +39,10 @@ export default async function LogsSetupPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ source?: string }>
+  searchParams: Promise<{ source?: string; add?: string }>
 }) {
   const { slug } = await params
-  const { source: chosen } = await searchParams
+  const { source: chosen, add } = await searchParams
   const { org } = await requireOrg()
   const { db, clickhouse, env } = services()
   const project = await getProjectBySlug(db, org.id, slug)
@@ -105,9 +105,19 @@ export default async function LogsSetupPage({
         </Link>{' '}
         / {project.name}
       </nav>
-      <div className="flex max-w-2xl flex-col gap-1">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('intro')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex max-w-2xl flex-col gap-1">
+          <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('intro')}</p>
+        </div>
+        {manager && sending.length > 0 && add !== '1' && (
+          <Button asChild>
+            <Link href={`/p/${project.slug}/logs/setup?add=1#add`}>
+              <PlusIcon data-icon="inline-start" aria-hidden />
+              {t('addSource')}
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -184,12 +194,21 @@ export default async function LogsSetupPage({
                 </CardContent>
               </Card>
             ) : (
-              <details className="group rounded-xl border border-border px-5 py-3 open:pb-5">
-                <summary className="cursor-pointer text-sm font-medium">{t('addAnother')}</summary>
-                <div className="pt-4">
-                  <LogSourceForm slug={project.slug} />
-                </div>
-              </details>
+              add === '1' && (
+                <Card id="add" className="scroll-mt-6 border-brand/40">
+                  <CardHeader className="flex flex-row items-center justify-between gap-2">
+                    <CardTitle>
+                      <h2 className="font-display text-lg font-semibold">{t('addSource')}</h2>
+                    </CardTitle>
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href={`/p/${project.slug}/logs/setup`}>{t('cancel')}</Link>
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <LogSourceForm slug={project.slug} />
+                  </CardContent>
+                </Card>
+              )
             ))}
 
           {current?.public_key ? (

@@ -57,7 +57,11 @@ describe('where a product stands on Errors', () => {
 
   it('starts from the page script first, then any source', () => {
     expect(errorsSetup({ ...base, sources: [api, site] }).source).toBe(site)
-    expect(errorsSetup({ ...base, sources: [api] })).toEqual({ state: 'canUse', source: api })
+    expect(errorsSetup({ ...base, sources: [api] })).toEqual({
+      state: 'canUse',
+      source: api,
+      candidates: [api],
+    })
   })
 
   it('tells nothing yet from a product that won’t use Errors', () => {
@@ -75,6 +79,7 @@ describe('where a product stands on Logs and Traffic', () => {
     expect(areaSetup('logs', { ...base, sources: [site] }).state).toBe('none')
     expect(areaSetup('logs', { ...base, sources: [site, api] }).source).toBe(api)
     expect(areaSetup('usage', { ...base, sources: [api, site] }).source).toBe(site)
+    expect(areaSetup('usage', { ...base, sources: [api, site] }).candidates).toEqual([site, api])
     expect(areaSetup('traffic', { ...base, sources: [api] }).state).toBe('none')
   })
 })

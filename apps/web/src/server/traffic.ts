@@ -109,6 +109,7 @@ export async function loadTraffic(
   const several = projects.length > 1
   const dimensions: TrafficDimension[] = [
     ...(several ? (['product'] as const) : []),
+    ...(!several && sources.length > 1 ? (['origin'] as const) : []),
     ...Object.values(TRAFFIC_CARDS).flat(),
   ]
 
@@ -127,7 +128,12 @@ export async function loadTraffic(
             safe(
               () =>
                 trafficBreakdown(clickhouse, scope, dimension, {
-                  limit: dimension === 'product' ? projects.length : LIST_ROWS,
+                  limit:
+                    dimension === 'product'
+                      ? projects.length
+                      : dimension === 'origin'
+                        ? sources.length
+                        : LIST_ROWS,
                   byProduct: several,
                 }),
               [],

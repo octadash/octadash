@@ -1,5 +1,5 @@
 import { getProjectBySlug, lastPageview, listSources } from '@octadash/db'
-import { ArrowLeftIcon, CheckIcon, ShieldCheckIcon } from 'lucide-react'
+import { ArrowLeftIcon, CheckIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getFormatter, getTranslations } from 'next-intl/server'
@@ -26,10 +26,10 @@ export default async function TrafficSetupPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ source?: string }>
+  searchParams: Promise<{ source?: string; add?: string }>
 }) {
   const { slug } = await params
-  const { source: chosen } = await searchParams
+  const { source: chosen, add } = await searchParams
   const { org } = await requireOrg()
   const { db, clickhouse, env } = services()
   const project = await getProjectBySlug(db, org.id, slug)
@@ -51,6 +51,8 @@ export default async function TrafficSetupPage({
     ),
   )
   const current = traffic.find((s) => s.id === chosen) ?? traffic[0]
+  // Real numbers exist: the made-up example would only confuse.
+  const receiving = [...last.values()].some(Boolean)
   const base = `/p/${project.slug}/traffic/setup`
 
   const status = (s: (typeof sources)[number]) => {
@@ -73,9 +75,19 @@ export default async function TrafficSetupPage({
 
   return (
     <>
-      <div className="flex max-w-2xl flex-col gap-1">
-        <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('intro')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex max-w-2xl flex-col gap-1">
+          <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('intro')}</p>
+        </div>
+        {manager && traffic.length > 0 && add !== '1' && (
+          <Button asChild>
+            <Link href={`/p/${project.slug}/traffic/setup?add=1#add`}>
+              <PlusIcon data-icon="inline-start" aria-hidden />
+              {t('addSource')}
+            </Link>
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -152,12 +164,21 @@ export default async function TrafficSetupPage({
                 </CardContent>
               </Card>
             ) : (
-              <details className="group rounded-xl border border-border px-5 py-3 open:pb-5">
-                <summary className="cursor-pointer text-sm font-medium">{t('addAnother')}</summary>
-                <div className="pt-4">
-                  <TrafficSourceForm slug={project.slug} />
-                </div>
-              </details>
+              add === '1' && (
+                <Card id="add" className="scroll-mt-6 border-brand/40">
+                  <CardHeader className="flex flex-row items-center justify-between gap-2">
+                    <CardTitle>
+                      <h2 className="font-display text-lg font-semibold">{t('addSource')}</h2>
+                    </CardTitle>
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href={`/p/${project.slug}/traffic/setup`}>{t('cancel')}</Link>
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <TrafficSourceForm slug={project.slug} />
+                  </CardContent>
+                </Card>
+              )
             ))}
 
           {current ? (
@@ -221,30 +242,32 @@ export default async function TrafficSetupPage({
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-2">
-              <CardTitle>
-                <h2 className="text-sm font-semibold">{t('example')}</h2>
-              </CardTitle>
-              <Badge variant="outline">{t('exampleBadge')}</Badge>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <dl className="grid grid-cols-2 gap-3">
-                {[
-                  [t('exampleVisitors'), 1284],
-                  [t('examplePageviews'), 3902],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-0.5">
-                    <dt className="text-xs text-muted-foreground">{label}</dt>
-                    <dd className="font-display text-xl font-semibold tabular-nums">
-                      {format.number(Number(value))}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <ExampleBars />
-            </CardContent>
-          </Card>
+          {!receiving && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between gap-2">
+                <CardTitle>
+                  <h2 className="text-sm font-semibold">{t('example')}</h2>
+                </CardTitle>
+                <Badge variant="outline">{t('exampleBadge')}</Badge>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <dl className="grid grid-cols-2 gap-3">
+                  {[
+                    [t('exampleVisitors'), 1284],
+                    [t('examplePageviews'), 3902],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex flex-col gap-0.5">
+                      <dt className="text-xs text-muted-foreground">{label}</dt>
+                      <dd className="font-display text-xl font-semibold tabular-nums">
+                        {format.number(Number(value))}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <ExampleBars />
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <CardTitle>

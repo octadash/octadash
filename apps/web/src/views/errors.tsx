@@ -1,5 +1,5 @@
 import { ISSUE_TABS } from '@octadash/db'
-import { DiamondIcon, SquareIcon, TriangleAlertIcon } from 'lucide-react'
+import { DiamondIcon, PlusIcon, SquareIcon, TriangleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server'
 import { IssueButton, IssueMenu } from '@/components/issue-actions'
@@ -224,9 +224,17 @@ export async function ErrorsView({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {product && (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/p/${product.slug}/errors/setup`}>{t('setUp')}</Link>
-            </Button>
+            <>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/p/${product.slug}/errors/setup?add=1#add`}>
+                  <PlusIcon data-icon="inline-start" aria-hidden />
+                  {t('addSource')}
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/p/${product.slug}/errors/setup`}>{t('setUp')}</Link>
+              </Button>
+            </>
           )}
           <nav aria-label={t('periodLabel')} className="flex rounded-lg border border-border p-0.5">
             {ERROR_PERIODS.map((id) => (

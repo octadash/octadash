@@ -59,6 +59,7 @@ export function trafficPeriod(id: TrafficPeriodId, now: Date, timeZone: string):
 /** The dimensions a row can filter by, in the order the page shows them. */
 export const FILTER_DIMENSIONS = [
   'product',
+  'origin',
   'channel',
   'source',
   'campaign',

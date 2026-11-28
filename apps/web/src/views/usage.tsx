@@ -3,6 +3,7 @@ import {
   CircleDotIcon,
   CircleIcon,
   DiamondIcon,
+  PlusIcon,
   SearchIcon,
   SparklesIcon,
   TriangleIcon,
@@ -196,9 +197,17 @@ export async function UsageView({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {product && (
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/p/${product.slug}/usage/setup`}>{t('setUp')}</Link>
-            </Button>
+            <>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/p/${product.slug}/usage/setup?add=1#add`}>
+                  <PlusIcon data-icon="inline-start" aria-hidden />
+                  {t('addSource')}
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/p/${product.slug}/usage/setup`}>{t('setUp')}</Link>
+              </Button>
+            </>
           )}
           <nav aria-label={t('periodLabel')} className="flex rounded-lg border border-border p-0.5">
             {USAGE_PERIODS.map((id) => (

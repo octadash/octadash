@@ -1,5 +1,5 @@
 import type { TrafficDimension, TrafficFilter } from '@octadash/db'
-import { ArrowRightIcon, FilterIcon, XIcon } from 'lucide-react'
+import { ArrowRightIcon, FilterIcon, PlusIcon, XIcon } from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { InfoTip } from '@/components/info-tip'
@@ -61,6 +61,7 @@ export async function TrafficView({
   const percent = new Intl.NumberFormat(locale, { style: 'percent' })
   const state = { period: periodId, metric, filters }
   const names = Object.fromEntries(data.projects.map((p) => [p.id, p.name]))
+  const origins = Object.fromEntries(data.sources.map((s) => [s.id, s.name]))
   const several = data.projects.length > 1
   const { totals, previous } = data
   const perVisitor = (s: { pageviews: number; visitors: number }) =>
@@ -71,6 +72,7 @@ export async function TrafficView({
     scope,
     state,
     products: names,
+    origins,
     several,
     totalVisitors: totals.visitors,
   }
@@ -96,16 +98,18 @@ export async function TrafficView({
     const value =
       f.dimension === 'product'
         ? (names[v] ?? v)
-        : f.dimension === 'channel' && t.has(`values.channel.${v}`)
-          ? t(`values.channel.${v}`)
-          : f.dimension === 'source' && !v
-            ? t('values.direct')
-            : f.dimension === 'country' && v
-              ? `${flagOf(v)} ${new Intl.DisplayNames([locale], { type: 'region' }).of(v) ?? v}`
-              : (f.dimension === 'device' || f.dimension === 'screen') &&
-                  t.has(`values.${f.dimension}.${v}`)
-                ? t(`values.${f.dimension}.${v}`)
-                : v || t('values.none')
+        : f.dimension === 'origin'
+          ? (origins[v] ?? t('values.unknown'))
+          : f.dimension === 'channel' && t.has(`values.channel.${v}`)
+            ? t(`values.channel.${v}`)
+            : f.dimension === 'source' && !v
+              ? t('values.direct')
+              : f.dimension === 'country' && v
+                ? `${flagOf(v)} ${new Intl.DisplayNames([locale], { type: 'region' }).of(v) ?? v}`
+                : (f.dimension === 'device' || f.dimension === 'screen') &&
+                    t.has(`values.${f.dimension}.${v}`)
+                  ? t(`values.${f.dimension}.${v}`)
+                  : v || t('values.none')
     return `${t(`dimensions.${f.dimension}`)}: ${value}`
   }
 
@@ -170,6 +174,14 @@ export async function TrafficView({
             <span aria-hidden className="size-2 rounded-full bg-ok" />
             {t('online', { count: data.online })}
           </span>
+          {product && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/p/${product.slug}/traffic/setup?add=1#add`}>
+                <PlusIcon data-icon="inline-start" aria-hidden />
+                {t('addSource')}
+              </Link>
+            </Button>
+          )}
           {product && (
             <Link
               href={`/p/${product.slug}/traffic/setup`}
@@ -330,6 +342,14 @@ export async function TrafficView({
             ]
               .filter(Boolean)
               .join(' · ')}
+          />
+        )}
+        {data.lists.origin && (
+          <TrafficCard
+            title={t('origins')}
+            lists={[listOf('origin')]}
+            context={context}
+            note={t('originsFoot')}
           />
         )}
         <TrafficCard

@@ -36,6 +36,8 @@ export interface TrafficContext {
   state: { period: TrafficPeriodId; metric: TrafficMetric; filters: TrafficFilter[] }
   /** Product id to name. */
   products: Record<string, string>
+  /** Source id to name: "Site", "Docs", "App". */
+  origins: Record<string, string>
   /** More than one product in scope: pages show whose they are. */
   several: boolean
   /** Visitors of the whole page, for the share of each row. */
@@ -66,6 +68,8 @@ function useLabel(context: TrafficContext) {
     switch (dimension) {
       case 'product':
         return context.products[v] ?? v
+      case 'origin':
+        return context.origins[v] ?? t('values.unknown')
       case 'channel':
         return known('channel', v)
       case 'source':

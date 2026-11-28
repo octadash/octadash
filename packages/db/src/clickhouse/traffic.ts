@@ -253,6 +253,8 @@ export const TRAFFIC_DIMENSIONS = {
   screen: `multiIf(${SCREEN_WIDTH} = 0, '', ${SCREEN_WIDTH} < 576, 'phone', ${SCREEN_WIDTH} < 992, 'tablet', ${SCREEN_WIDTH} < 1440, 'laptop', 'desktop')`,
   country: 'country',
   product: 'toString(project_id)',
+  /** The source (site, docs, app) that sent the page view: one product, several sites. */
+  origin: 'toString(source_id)',
 } as const
 
 export type TrafficDimension = keyof typeof TRAFFIC_DIMENSIONS | 'entry'
