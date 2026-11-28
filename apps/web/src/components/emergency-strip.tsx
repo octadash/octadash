@@ -12,6 +12,7 @@ import {
   TriangleAlertIcon,
   TriangleIcon,
   UserIcon,
+  WalletIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
@@ -69,6 +70,7 @@ const KIND_ICON: Record<StripKind, typeof ActivityIcon> = {
   error_spike: BugIcon,
   key_event_stopped: UserIcon,
   log_alert: TerminalIcon,
+  payments_failing: WalletIcon,
   other: TriangleAlertIcon,
 }
 

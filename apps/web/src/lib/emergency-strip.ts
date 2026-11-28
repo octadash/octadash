@@ -11,6 +11,7 @@ export type StripKind =
   | 'error_spike'
   | 'key_event_stopped'
   | 'log_alert'
+  | 'payments_failing'
   | 'other'
 
 export interface StripItem {

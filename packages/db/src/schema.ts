@@ -19,6 +19,9 @@ export interface Database {
   key_event: KeyEventTable
   funnel: FunnelTable
   log_search: LogSearchTable
+  connection: ConnectionTable
+  connection_project: ConnectionProjectTable
+  fx_rate: FxRateTable
   source: SourceTable
   source_key: SourceKeyTable
   project_area: ProjectAreaTable
@@ -127,6 +130,47 @@ export interface LogSearchTable {
   created_by: string | null
   created_at: CreatedAt
   updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+/** A gateway account Money (and later Costs) reads from. */
+export interface ConnectionTable {
+  id: string
+  org_id: string
+  /** stripe, asaas, paddle. */
+  integration: string
+  name: string
+  /** JSON of { key, webhookSecret? }, each value encrypted with OCTADASH_SECRET. */
+  secrets: string
+  /** The key's last characters, to tell keys apart without showing them. */
+  key_hint: Generated<string>
+  /** The random part of /hooks/<integration>/<token>. */
+  webhook_token: string
+  /** importing, ok or failing. */
+  status: Generated<string>
+  last_error: string | null
+  imported_at: Date | null
+  synced_at: Date | null
+  subscriptions_synced_at: Date | null
+  /** Last webhook that arrived with a good signature. */
+  webhook_at: Date | null
+  created_at: CreatedAt
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export interface ConnectionProjectTable {
+  connection_id: string
+  project_id: string
+  org_id: string
+  /** all, products or metadata. */
+  mode: Generated<string>
+  values: ColumnType<string[], string[] | undefined, string[]>
+  created_at: CreatedAt
+}
+
+export interface FxRateTable {
+  day: ColumnType<string, string, string>
+  currency: string
+  per_usd: number
 }
 
 /** A private TV link; only the token's hash is stored. */

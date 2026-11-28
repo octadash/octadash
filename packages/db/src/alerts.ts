@@ -33,6 +33,11 @@ export const RULE_DEFAULTS = {
    * `silence` minutes without a match. Each product gets its own emergency.
    */
   log_alert: { level: 'emergency', params: { silence: 15 } },
+  /**
+   * In the last 15 minutes at least `percent` of a product's charges failed,
+   * with at least `charges` charges. Ends when the rate falls back under.
+   */
+  payments_failing: { level: 'emergency', params: { percent: 20, charges: 10 } },
 } as const satisfies Record<string, { level: AlertLevel | 'off'; params: Record<string, number> }>
 
 export type IncidentKind = keyof typeof RULE_DEFAULTS

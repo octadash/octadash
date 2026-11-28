@@ -301,7 +301,8 @@
         "other": "Emergência",
         "error_spike": "Pico de erros",
         "key_event_stopped": "“{name}” parou",
-        "log_alert": "Alerta de log “{name}”"
+        "log_alert": "Alerta de log “{name}”",
+        "payments_failing": "Pagamentos falhando"
       },
       "more": "{count, plural, one {Mais # na página do produto} other {Mais # na página do produto}}"
     }
@@ -598,7 +599,11 @@
       "expected": "Faltando",
       "expectedUnit": "eventos que deveriam ter chegado",
       "silence": "Pelo menos",
-      "silenceUnit": "min sem nenhum"
+      "silenceUnit": "min sem nenhum",
+      "percent": "Falharam",
+      "percentUnit": "% das cobranças em 15 min",
+      "charges": "Pelo menos",
+      "chargesUnit": "cobranças em 15 min"
     },
     "allChannels": "Todos os canais",
     "noChannels": "Nenhum canal ainda. Sem canal, a emergência aparece só no painel.",
@@ -636,6 +641,11 @@
         "title": "Alerta de log",
         "body": "Uma busca salva em Logs com Alerta ligado encontra uma linha. Cada produto com uma linha encontrada ganha a própria emergência.",
         "info": "Ligue o Alerta em uma busca salva na página de Logs. O Octadash roda a busca a cada minuto nas linhas desde que o alerta foi ligado. Ela fecha quando passam os minutos definidos sem nenhuma linha encontrada (no máximo 60). Só linhas que chegam depois de ligar o Alerta disparam."
+      },
+      "payments_failing": {
+        "title": "Pagamentos falhando",
+        "body": "Cobranças recusadas no gateway bem acima do normal. Cada produto ganha a própria emergência.",
+        "info": "O Octadash lê as cobranças dos últimos 15 minutos a cada minuto. Abre quando a parte que falhou chega ao percentual definido, com pelo menos o número de cobranças definido, para duas falhas de madrugada não acordarem ninguém. Fecha quando a parte volta a ficar abaixo."
       }
     },
     "legend": "Níveis",
@@ -690,15 +700,6 @@
           "body": "As visualizações caem a zero com o site no ar: o script foi removido ou quebrou.",
           "wait": "Precisa de alguns dias de tráfego para saber o que esperar.",
           "params": "Nenhuma em 30 min quando 20 ou mais são esperadas"
-        }
-      },
-      "money": {
-        "starts": "Começa quando Dinheiro estiver configurado em um produto",
-        "paymentsFailing": {
-          "title": "Pagamentos falhando",
-          "body": "Cobranças recusadas no gateway bem acima do normal.",
-          "wait": "Nenhum gateway conectado ainda.",
-          "params": "20% recusadas em 15 min, no mínimo 10 cobranças"
         }
       },
       "costs": {
@@ -998,7 +999,8 @@
       "other": "{product} · {name}",
       "error_spike": "{product} · pico de erros",
       "key_event_stopped": "{product} · {event} parou",
-      "log_alert": "{product} · alerta de log “{search}”"
+      "log_alert": "{product} · alerta de log “{search}”",
+      "payments_failing": "{product} · pagamentos falhando"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1009,7 +1011,8 @@
       "spike": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando o normal neste horário é cerca de {normal}. Fecha sozinha quando os erros voltarem para baixo da regra.",
       "spikeNone": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando este horário normalmente não tem nenhum. Fecha sozinha quando os erros voltarem para baixo da regra.",
       "keyEvent": "Nenhum {event} desde {time}, quando o normal neste horário é cerca de {normal} por hora. Fecha sozinha quando o próximo chegar.",
-      "logAlert": "A busca salva “{search}” ({query}) encontrou uma linha. Fecha sozinha depois de {minutes} min sem nenhuma."
+      "logAlert": "A busca salva “{search}” ({query}) encontrou uma linha. Fecha sozinha depois de {minutes} min sem nenhuma.",
+      "paymentsFailing": "{failed} de {total} cobranças falharam nos últimos {minutes} min. Fecha sozinha quando a parte volta a ficar abaixo da regra."
     },
     "onIt": "{name} está cuidando · desde {time}",
     "nobody": "Ninguém cuidando ainda",
@@ -1099,7 +1102,8 @@
       "other": "{product} · {name}",
       "error_spike": "{product} · pico de erros",
       "key_event_stopped": "{product} · {event} parou",
-      "log_alert": "{product} · alerta de log “{search}”"
+      "log_alert": "{product} · alerta de log “{search}”",
+      "payments_failing": "{product} · pagamentos falhando"
     },
     "spike": {
       "title": "Issues por trás do pico",
@@ -1116,7 +1120,8 @@
       "other": "{product}: {name}",
       "error_spike": "{product}: pico de erros",
       "key_event_stopped": "{product}: {event} parou",
-      "log_alert": "{product}: alerta de log “{search}”"
+      "log_alert": "{product}: alerta de log “{search}”",
+      "payments_failing": "{product}: pagamentos falhando"
     },
     "short": {
       "monitor_down": "{product} fora do ar",
@@ -1125,7 +1130,8 @@
       "other": "{product} {name}",
       "error_spike": "{product} pico de erros",
       "key_event_stopped": "{product} {event} parou",
-      "log_alert": "{product} alerta de log"
+      "log_alert": "{product} alerta de log",
+      "payments_failing": "{product} pagamentos falhando"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
@@ -1134,7 +1140,8 @@
       "other": "{name}: {reason}",
       "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
       "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
-      "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}"
+      "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}",
+      "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” não responde",
@@ -1143,7 +1150,8 @@
       "other": "{name}",
       "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
       "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
-      "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}"
+      "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}",
+      "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})"
     },
     "kind": {
       "monitor_down": "Fora do ar",
@@ -1152,7 +1160,8 @@
       "other": "Emergência",
       "error_spike": "Pico de erros",
       "key_event_stopped": "Evento importante parou",
-      "log_alert": "Alerta de log"
+      "log_alert": "Alerta de log",
+      "payments_failing": "Pagamentos falhando"
     },
     "count": "{count, plural, one {# emergência} other {# emergências}}",
     "countProducts": "{count} emergências em {products} produtos",
@@ -1210,7 +1219,8 @@
     },
     "spikeOver": "{product}: erros voltaram ao normal",
     "keyBack": "{product}: {event} voltou a chegar",
-    "logQuiet": "{product}: “{search}” voltou ao silêncio"
+    "logQuiet": "{product}: “{search}” voltou ao silêncio",
+    "paymentsBack": "{product}: os pagamentos voltaram a passar"
   },
   "traffic": {
     "title": "Tráfego",

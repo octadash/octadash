@@ -23,6 +23,7 @@ import {
   openIncident,
   type PendingIncident,
   parseLogQuery,
+  paymentRates,
   recentErrorProducts,
   recordNotification,
   resolveIncident,
@@ -45,6 +46,8 @@ export const ALERT_QUEUES = {
   usage: 'alerts-usage',
   /** Runs the saved Logs searches that have Alert on. */
   logs: 'alerts-logs',
+  /** Payments failing, every minute. */
+  money: 'alerts-money',
 } as const
 
 /** The longest quiet spell a Log alert waits for before it closes, in minutes. */
@@ -502,7 +505,66 @@ export function createAlerts(deps: AlertsDeps) {
     }
   }
 
-  return { onTransition, notify, checkCerts, checkErrorSpikes, checkKeyEvents, checkLogAlerts }
+  /**
+   * Opens "Payments failing" in each product where at least `percent` of the
+   * charges of the last 15 minutes failed, with at least `charges` of them,
+   * and closes it when the share falls back under (or no charge is left in
+   * the window).
+   */
+  async function checkPaymentsFailing() {
+    const at = now()
+    const [rates, open] = await Promise.all([
+      paymentRates(deps.clickhouse, new Date(at.getTime() - PAYMENTS_WINDOW_MINUTES * 60_000)),
+      listOpenIncidentKeys(deps.db, 'payments_failing'),
+    ])
+    const keyOf = (projectId: string) => `money:${projectId}:failing`
+    const openKeys = new Set(open.map((row) => row.dedupe_key))
+    const seen = new Set<string>()
+    const changed = new Set<string>()
+    for (const rate of rates) {
+      const key = keyOf(rate.projectId)
+      seen.add(key)
+      const rule = await ruleFor(deps.db, rate.orgId, rate.projectId, 'payments_failing')
+      const failing = rule.level !== 'off' && paymentsFailing(rate, rule.params)
+      if (failing && !openKeys.has(key)) {
+        const total = rate.paid + rate.failed
+        const opened = await openIncident(deps.db, {
+          orgId: rate.orgId,
+          projectId: rate.projectId,
+          kind: 'payments_failing',
+          dedupeKey: key,
+          data: {
+            failed: rate.failed,
+            total,
+            percent: Math.round((rate.failed / total) * 100),
+            minutes: PAYMENTS_WINDOW_MINUTES,
+          },
+          at,
+        })
+        if (opened) changed.add(rate.orgId)
+      } else if (!failing && openKeys.has(key)) {
+        if (await resolveIncident(deps.db, key, at)) changed.add(rate.orgId)
+      }
+    }
+    for (const row of open) {
+      if (!seen.has(row.dedupe_key) && (await resolveIncident(deps.db, row.dedupe_key, at)))
+        changed.add(row.org_id)
+    }
+    if (changed.size > 0) {
+      await wake()
+      await tell(changed, 'incidents')
+    }
+  }
+
+  return {
+    onTransition,
+    notify,
+    checkCerts,
+    checkErrorSpikes,
+    checkKeyEvents,
+    checkLogAlerts,
+    checkPaymentsFailing,
+  }
 }
 
 export type Alerts = ReturnType<typeof createAlerts>
@@ -533,4 +595,25 @@ export async function registerAlertJobs(boss: PgBoss, alerts: Alerts, log: Logge
   await boss.work(ALERT_QUEUES.logs, async () => {
     await alerts.checkLogAlerts().catch((err) => log.warn({ err }, 'log alert check failed'))
   })
+  await boss.createQueue(ALERT_QUEUES.money)
+  await boss.schedule(ALERT_QUEUES.money, '* * * * *')
+  await boss.work(ALERT_QUEUES.money, async () => {
+    await alerts
+      .checkPaymentsFailing()
+      .catch((err) => log.warn({ err }, 'payments failing check failed'))
+  })
+}
+
+/** Minutes of charges "Payments failing" looks at. */
+export const PAYMENTS_WINDOW_MINUTES = 15
+
+/** True when enough charges failed: `percent` of them, and at least `charges` charges. */
+export function paymentsFailing(
+  rate: { paid: number; failed: number },
+  params: Record<string, number>,
+): boolean {
+  const total = rate.paid + rate.failed
+  const percent = params.percent ?? 20
+  const charges = params.charges ?? 10
+  return total >= charges && total > 0 && (rate.failed / total) * 100 >= percent
 }

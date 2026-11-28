@@ -6,6 +6,7 @@ import { migration as m0004 } from './0004_events_context'
 import { migration as m0005 } from './0005_errors'
 import { migration as m0006 } from './0006_logs'
 import { migration as m0007 } from './0007_errors_trace'
+import { migration as m0008 } from './0008_money'
 
 /**
  * ClickHouse migrations, applied in this order. Imported statically so they
@@ -21,4 +22,5 @@ export const clickhouseMigrations: ClickHouseMigration[] = [
   m0005,
   m0006,
   m0007,
+  m0008,
 ]
