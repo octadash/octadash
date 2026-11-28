@@ -1,4 +1,4 @@
-import { listProjects } from '@octadash/db'
+import { listOrgMonitors, listProjects } from '@octadash/db'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { AppSidebar } from '@/components/app-sidebar'
@@ -7,6 +7,7 @@ import { OrgSwitcher } from '@/components/org-switcher'
 import { ProductPicker } from '@/components/product-picker'
 import { UserMenu } from '@/components/user-menu'
 import { AREA_ITEMS } from '@/lib/areas'
+import { worstStatus } from '@/lib/monitors'
 import { services } from '@/server/context'
 import { canManage, requireOrg } from '@/server/session'
 
@@ -14,7 +15,17 @@ export const dynamic = 'force-dynamic'
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const { org, orgs, user } = await requireOrg()
-  const [projects, t] = await Promise.all([listProjects(services().db, org.id), getTranslations()])
+  const { db } = services()
+  const [projects, monitors, t] = await Promise.all([
+    listProjects(db, org.id),
+    listOrgMonitors(db, org.id),
+    getTranslations(),
+  ])
+  // The dot next to each product: the worst state among its running monitors.
+  const statusOf = (projectId: string) =>
+    worstStatus(
+      monitors.filter((m) => m.project_id === projectId && !m.paused).map((m) => m.status),
+    )
   const areaLabels = Object.fromEntries(
     AREA_ITEMS.map((area) => [area.id, t(`areas.${area.id}.name`)]),
   ) as Record<(typeof AREA_ITEMS)[number]['id'], string>
@@ -32,7 +43,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 md:px-8">
           <ProductPicker
-            products={projects.map((p) => ({ slug: p.slug, name: p.name }))}
+            products={projects.map((p) => ({ slug: p.slug, name: p.name, status: statusOf(p.id) }))}
             canCreate={canManage(org.role)}
             labels={{
               label: t('picker.label'),
