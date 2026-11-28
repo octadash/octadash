@@ -6,7 +6,13 @@ import { describeFailure } from '@/lib/monitors'
 import { statusCodeOf } from '@/lib/uptime-board'
 import { services } from './context'
 
-const KINDS: StripKind[] = ['monitor_down', 'heartbeat_missed', 'cert_expiring', 'error_spike']
+const KINDS: StripKind[] = [
+  'monitor_down',
+  'heartbeat_missed',
+  'cert_expiring',
+  'error_spike',
+  'key_event_stopped',
+]
 
 /**
  * Every open emergency of the organization, whatever the product picker
@@ -56,7 +62,8 @@ export async function loadStrip(
         reason,
         count: typeof data.count === 'number' ? data.count : 0,
         minutes: typeof data.minutes === 'number' ? data.minutes : 15,
-        normal: Math.round(typeof data.normal === 'number' ? data.normal : 0),
+        normal: roundNormal(typeof data.normal === 'number' ? data.normal : 0, kind),
+        event: typeof data.event === 'string' ? data.event : '',
       }
       const checked = data.checked as { controls?: { target: string; ms: number | null }[] }
       return {
@@ -100,10 +107,13 @@ export async function loadStrip(
                 ? 'renewed'
                 : incident.kind === 'error_spike'
                   ? 'spikeOver'
-                  : 'back',
+                  : incident.kind === 'key_event_stopped'
+                    ? 'keyBack'
+                    : 'back',
               {
                 product: incident.project_name,
                 name: typeof data.name === 'string' ? data.name : '',
+                event: typeof data.event === 'string' ? data.event : '',
               },
             ),
         lastedMs: resolvedAt - incident.started_at.getTime(),
@@ -119,4 +129,11 @@ export async function loadStrip(
     resolved,
     watcherFailing: watcher?.watcher_status === 'failing' && !!watcher.watcher_url,
   }
+}
+
+/** Errors per window read as whole numbers; a key event's normal per hour can be 0.4. */
+function roundNormal(normal: number, kind: StripKind) {
+  return kind === 'key_event_stopped' && normal < 10
+    ? Math.round(normal * 10) / 10
+    : Math.round(normal)
 }

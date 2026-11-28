@@ -9,6 +9,7 @@ export type StripKind =
   | 'heartbeat_missed'
   | 'cert_expiring'
   | 'error_spike'
+  | 'key_event_stopped'
   | 'other'
 
 export interface StripItem {

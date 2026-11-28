@@ -25,6 +25,10 @@ interface Words {
   spikeTop: (issue: string, count: number) => string
   spikeOver: (product: string) => string
   spikeLasted: (duration: string) => string
+  stopped: (product: string, event: string) => string
+  stoppedFor: (duration: string, normal: number) => string
+  stoppedBack: (product: string, event: string) => string
+  stoppedLasted: (duration: string) => string
   downFor: (duration: string) => string
   wasDownFor: (duration: string) => string
   manyDown: (count: number) => string
@@ -52,6 +56,10 @@ const words: Record<AlertLocale, Words> = {
     spikeTop: (issue, n) => `Most: ${issue} (${n}).`,
     spikeOver: (p) => `Errors on ${p} are back to normal`,
     spikeLasted: (d) => `The spike lasted ${d}.`,
+    stopped: (p, e) => `${e} stopped on ${p}`,
+    stoppedFor: (d, n) => `None for ${d}; normal for this time is about ${n} an hour.`,
+    stoppedBack: (p, e) => `${e} is arriving again on ${p}`,
+    stoppedLasted: (d) => `It was missing for ${d}.`,
     downFor: (d) => `Down for ${d}.`,
     wasDownFor: (d) => `It was down for ${d}.`,
     manyDown: (n) => `${n} monitors are down`,
@@ -88,6 +96,10 @@ const words: Record<AlertLocale, Words> = {
     spikeTop: (issue, n) => `Mais frequente: ${issue} (${n}).`,
     spikeOver: (p) => `Os erros de ${p} voltaram ao normal`,
     spikeLasted: (d) => `O pico durou ${d}.`,
+    stopped: (p, e) => `${e} parou em ${p}`,
+    stoppedFor: (d, n) => `Nenhum há ${d}; o normal para este horário é cerca de ${n} por hora.`,
+    stoppedBack: (p, e) => `${e} voltou a chegar em ${p}`,
+    stoppedLasted: (d) => `Ficou sem chegar por ${d}.`,
     downFor: (d) => `Fora do ar há ${d}.`,
     wasDownFor: (d) => `Ficou fora do ar por ${d}.`,
     manyDown: (n) => `${n} monitores fora do ar`,
@@ -133,6 +145,9 @@ interface IncidentData {
   normal?: number
   minutes?: number
   issues?: { type?: string; value?: string; count?: number }[]
+  /** Key event stopped: the event, when it last came and its normal per hour. */
+  event?: string
+  last?: string
 }
 
 export type AlertEvent = 'open' | 'resolve'
@@ -163,6 +178,24 @@ function describe(incident: PendingIncident, event: AlertEvent, now: Date, local
       ]
         .filter(Boolean)
         .join(' '),
+    }
+  }
+  if (incident.kind === 'key_event_stopped') {
+    const key = data.event ?? ''
+    const last = data.last ? new Date(data.last).getTime() : started
+    if (event === 'resolve') {
+      return {
+        title: w.stoppedBack(incident.project_name, key),
+        detail: w.stoppedLasted(duration(ended - last, locale)),
+      }
+    }
+    const normal = data.normal ?? 0
+    return {
+      title: w.stopped(incident.project_name, key),
+      detail: w.stoppedFor(
+        duration(now.getTime() - last, locale),
+        normal >= 10 ? Math.round(normal) : Math.round(normal * 10) / 10,
+      ),
     }
   }
   if (incident.kind === 'cert_expiring') {
@@ -208,7 +241,7 @@ export function alertMessage(
       body: line.detail,
       project: { id: first.project_id, name: first.project_name },
       url:
-        first.kind === 'error_spike'
+        first.kind === 'error_spike' || first.kind === 'key_event_stopped'
           ? `${base}/p/${first.project_slug}/emergencies/${first.id}`
           : `${base}/p/${first.project_slug}/uptime`,
       occurredAt: now,
@@ -228,7 +261,9 @@ export function alertMessage(
   const lines = incidents.map((incident) => {
     const line = describe(incident, event, now, locale)
     const title =
-      incident.kind === 'error_spike' ? line.title : `${incident.project_name}: ${line.title}`
+      incident.kind === 'error_spike' || incident.kind === 'key_event_stopped'
+        ? line.title
+        : `${incident.project_name}: ${line.title}`
     return `• ${title}. ${line.detail}`.trim()
   })
   return {

@@ -23,11 +23,12 @@ import { RuleForm, type RuleFormLabels } from './rule-form'
 import { Card } from './ui/card'
 
 /** Which area each rule belongs to, so the list reads area by area. */
-const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors'> = {
+const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors' | 'usage'> = {
   monitor_down: 'uptime',
   heartbeat_missed: 'uptime',
   cert_expiring: 'uptime',
   error_spike: 'errors',
+  key_event_stopped: 'usage',
 }
 
 /**
@@ -42,14 +43,7 @@ const FUTURE: {
   rules: { rule: string; level: Level }[]
 }[] = [
   { area: 'uptime', icon: ActivityIcon, rules: [{ rule: 'domainExpiring', level: 'emergency' }] },
-  {
-    area: 'usage',
-    icon: UserIcon,
-    rules: [
-      { rule: 'keyEventStopped', level: 'emergency' },
-      { rule: 'signupsDropped', level: 'signal' },
-    ],
-  },
+  { area: 'usage', icon: UserIcon, rules: [{ rule: 'signupsDropped', level: 'signal' }] },
   { area: 'traffic', icon: GlobeIcon, rules: [{ rule: 'trafficStopped', level: 'emergency' }] },
   { area: 'money', icon: WalletIcon, rules: [{ rule: 'paymentsFailing', level: 'emergency' }] },
   { area: 'costs', icon: ReceiptIcon, rules: [{ rule: 'costRunaway', level: 'emergency' }] },
@@ -103,7 +97,7 @@ export async function RulesList({
       for (const [key, value] of Object.entries(override.params)) {
         if (base && base.params[key] === value) continue
         parts.push(
-          key === 'days' || key === 'minutes'
+          key === 'days' || key === 'minutes' || key === 'silence'
             ? unit(value, key === 'days' ? 'day' : 'minute')
             : key === 'times'
               ? `${value}×`
@@ -122,6 +116,8 @@ export async function RulesList({
       days: { label: t('params.days'), unit: t('params.daysUnit') },
       times: { label: t('params.times'), unit: t('params.timesUnit') },
       events: { label: t('params.events'), unit: t('params.eventsUnit') },
+      expected: { label: t('params.expected'), unit: t('params.expectedUnit') },
+      silence: { label: t('params.silence'), unit: t('params.silenceUnit') },
     },
     sendTo: t('sendTo'),
     allChannels: t('allChannels'),
@@ -136,6 +132,7 @@ export async function RulesList({
     .map((channel) => ({ id: channel.id, name: channel.name }))
   const uptime = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'uptime')
   const errors = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'errors')
+  const usage = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'usage')
 
   /** One rule of a built area, with its form. */
   const form = (kind: IncidentKind) => {
@@ -237,18 +234,36 @@ export async function RulesList({
           <div className="divide-y">{errors.map(form)}</div>
         </section>
 
-        {FUTURE.filter((f) => f.area !== 'uptime').map(({ area, icon, rules: coming }) => (
-          <section key={area} aria-labelledby={`rules-future-${area}`} className="border-t">
-            <AreaHeader
-              id={`rules-future-${area}`}
-              as={heading}
-              icon={icon}
-              title={t(`areas.${area}`)}
-              note={t(`future.${area}.starts`)}
-            />
-            <div className="divide-y">{coming.map((r) => future(area, r))}</div>
-          </section>
-        ))}
+        <section aria-labelledby="rules-usage" className="border-t">
+          <AreaHeader
+            id="rules-usage"
+            as={heading}
+            icon={UserIcon}
+            title={t('areas.usage')}
+            note={t('rulesCount', { count: usage.length })}
+          />
+          <div className="divide-y">
+            {usage.map(form)}
+            {FUTURE.filter((f) => f.area === 'usage').flatMap(({ rules: coming }) =>
+              coming.map((r) => future('usage', r)),
+            )}
+          </div>
+        </section>
+
+        {FUTURE.filter((f) => f.area !== 'uptime' && f.area !== 'usage').map(
+          ({ area, icon, rules: coming }) => (
+            <section key={area} aria-labelledby={`rules-future-${area}`} className="border-t">
+              <AreaHeader
+                id={`rules-future-${area}`}
+                as={heading}
+                icon={icon}
+                title={t(`areas.${area}`)}
+                note={t(`future.${area}.starts`)}
+              />
+              <div className="divide-y">{coming.map((r) => future(area, r))}</div>
+            </section>
+          ),
+        )}
       </Card>
       <p className="text-sm text-muted-foreground">{t('moreAreas')}</p>
     </div>

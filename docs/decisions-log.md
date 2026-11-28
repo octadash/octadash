@@ -165,3 +165,38 @@ and why; anything here can be reversed.
   column in the products table (events and issues hit) and, on the product
   page, an Errors card with the 3 unresolved issues hit most and errors per day
   over 14 days. Deploy marks and "out of normal" signals wait for their engine.
+- **Product usage engine first, screens next.** The ingest takes PostHog SDKs
+  (checked live with posthog-js and posthog-node), the script gains
+  `identify(id)` and `reset()`, and the worker runs "Key event stopped".
+  Recent posthog-js gzips its batches without saying so in the address or a
+  header, so the ingest also recognizes gzip by its first bytes.
+- **Person ids are stored as hashes, for every event.** `distinct_id` was kept
+  as sent; now it is a hash of the product and the id, as the Product usage
+  canvas promises ("Person ids are kept as hashes"). Traffic counts the same
+  people as before, since it only needs the id to be stable.
+- **Personal data is dropped at the door, not masked later.** Properties named
+  like e-mail, phone, CPF, CNPJ, password or address, values that look like an
+  e-mail or a document number, and PostHog's person properties never reach the
+  queue. URL properties are kept as sent. Errors keep a plain user id (it finds
+  the support case) but hash an e-mail.
+- **Octadash keeps no person profiles.** PostHog's `$set`, `/engage/` and
+  person properties are accepted and dropped. Funnels and retention work on the
+  hashed id alone.
+- **PostHog's extras are switched off by our flags answer** (autocapture,
+  session recording, surveys, heatmaps), and the events they would send are
+  dropped if they come anyway. Product usage is the events the app chooses to
+  send; recordings and heatmaps are not on the roadmap.
+- **Sign-ups need no setting**: `signup.completed` (the standard name),
+  `signed_up` (the name the setup suggests) and the names other tools use all
+  count. The canvas and the roadmap differed (snake_case or dotted); both work.
+- **Key event stopped waits by the event's own pace**: the silence must pass
+  the time 5 events normally take at this hour, and at least 30 minutes. A
+  checkout that comes 60 times an hour fires after 30 minutes; one that comes
+  twice an hour after 2.5 hours; one rarer than 5 a day at that hour never
+  fires. It closes only when the next event arrives, so a night that turns
+  quiet does not say "back". The minimum is called `silence`, not `minutes`,
+  because `minutes` already means "wait before telling" on every rule.
+- **"Key event" is "evento importante" in pt-BR**, as the rules preview
+  already said.
+- **The browser script grew to about 5 KB before gzip** (2 KB gzipped) with
+  `identify`; the budget in the test moved from 4.5 KB to 5 KB.

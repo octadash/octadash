@@ -197,8 +197,9 @@ versions and passwords generated at install. Each has one job.
   an event from another one. An ignored issue comes back when its condition
   (more events, more people, a date) is met.
 - The person an error hit is the user the app sent (id, else e-mail, else
-  name), or the browser's daily visitor hash marked `v:`. The address is never
-  stored.
+  name), or the browser's daily visitor hash marked `v:`. An e-mail or a
+  document number is kept only as a hash marked `h:`; a plain user id is kept,
+  because it finds the person's support case. The address is never stored.
 - Error spike (`error_spike`): every minute the worker takes the products with
   an issue seen in the last 15 minutes (`error_issue.last_seen` is indexed) plus
   those with an open spike, and reads from ClickHouse, by the table's sort key,
@@ -207,6 +208,37 @@ versions and passwords generated at install. Each has one job.
   count reaches the rule's multiple of normal and its minimum (5× and 20 by
   default), names the top 3 issues, and closes when the last 15 minutes fall
   back under. The issues it names show "Spike" in the list.
+
+### Product usage
+
+- Events arrive in the Octadash format (`/o/v1/events`, the script's
+  `track()`) or from PostHog SDKs (`/e/`, `/i/v0/e/`, `/batch/`, `/capture/`;
+  JSON, gzip, or base64 in a form). `/flags/`, `/decide/` and
+  `/array/<key>/config` answer with no flags and every extra of posthog-js off
+  (autocapture, recordings, surveys), and `/static/*.js` sends the snippet to
+  PostHog's CDN for the library. Events about the SDK or person profiles
+  (`$autocapture`, `$set`, `$exception` and others) are dropped at the door.
+  Tested with posthog-js 1.x and posthog-node 5.x.
+- Privacy at the door, for every event: `distinct_id` is stored as a hash of
+  the product and the id, never as sent; the script's `identify(id)` and
+  PostHog's `identify` both end there. Properties whose name says e-mail,
+  phone, CPF, CNPJ, password, address and the like, or whose value looks like
+  an e-mail or a document number, are dropped, as are PostHog's person
+  properties (`$set`, `$set_once`) and the ids it repeats in properties.
+- A product event is any event but page views; a person is the hashed id, else
+  the visitor hash of the day. Sign-ups are the standard names
+  (`signup.completed`, `signed_up` and the ones other tools use), with no
+  setting. "Came back week 1" and the weekly cohorts count only identified
+  people, since a visitor hash changes every day.
+- Postgres keeps what people decide (`key_event`, `funnel`); ClickHouse keeps
+  the events. Funnels use `windowFunnel` per person within the funnel's days.
+- Key event stopped (`key_event_stopped`): every minute the worker reads, for
+  each key event, when it last came and how many come per hour at this time of
+  day (the same hour of the last 7 days). It opens when the silence passes the
+  time the rule's `expected` events normally take (5 by default), never less
+  than `silence` minutes (30); an event too rare at this hour (a wait over a
+  day) never fires. It closes with the next event, not when the hour turns
+  quiet; unmarking the key event closes it without a message.
 
 ### Integrations are plugins
 
@@ -264,8 +296,8 @@ The ingest accepts the formats people already send, so an existing app moves by
 changing one URL:
 
 - Sentry envelopes (`/api/:id/envelope/`) for errors, from any Sentry SDK.
-- PostHog capture (`/e/`, `/batch/`, `/capture/`, `/i/v1/...`) for events and
-  `$ai_generation`.
+- PostHog capture (`/e/`, `/i/v0/e/`, `/batch/`, `/capture/`) for events;
+  `$ai_generation` and the newer `/i/v1/...` endpoints come with their areas.
 - OTLP over HTTP (`/v1/logs`, `/v1/traces`, `/v1/metrics`) for logs, traces and
   `gen_ai` spans.
 

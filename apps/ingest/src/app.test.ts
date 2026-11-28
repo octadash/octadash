@@ -1,7 +1,9 @@
+import { gzipSync } from 'node:zlib'
 import { MemoryHeartbeats, MemorySalts, MemorySink } from '@octadash/queue'
 import { describe, expect, it } from 'vitest'
 import { createApp, MAX_BODY_BYTES } from './app'
 import { staticResolver } from './keys'
+import { personId } from './privacy'
 
 const KEY = 'a'.repeat(32)
 const PERSISTENT = 'd'.repeat(32)
@@ -52,7 +54,7 @@ describe('ingest app', () => {
     expect(res.headers.get('content-type')).toContain('javascript')
     const body = await res.text()
     expect(body).toContain('$pageview')
-    expect(body.length).toBeLessThan(4500)
+    expect(body.length).toBeLessThan(5000)
   })
 
   it('allows cross-origin calls from SDKs', async () => {
@@ -113,7 +115,7 @@ describe('POST /o/v1/events', () => {
       source_id: scope.source_id,
       event: 'pageview',
       timestamp: '2026-11-18 10:00:00.000',
-      distinct_id: 'u1',
+      distinct_id: personId(scope.project_id, 'u1'),
       session_id: '',
       properties: '{"path":"/"}',
     })
@@ -268,5 +270,143 @@ describe('event time', () => {
     await post({ events: [{ event: 'a', timestamp: ahead }] }, { 'x-octadash-key': KEY })
     const row = sink.batches[0]?.rows[0] as { timestamp: string; received_at: string }
     expect(row.timestamp).toBe(row.received_at)
+  })
+})
+
+describe('privacy at the door', () => {
+  it('keeps the person as a hash and drops properties that look personal', async () => {
+    const { sink, post } = setup()
+    await post(
+      {
+        events: [
+          {
+            event: 'signed_up',
+            distinct_id: 'user-42',
+            properties: {
+              plan: 'pro',
+              email: 'ana@shop.example',
+              userPhone: '+55 11 99999-0000',
+              note: 'write to ana@shop.example',
+              tax_id: '123.456.789-09',
+              company: { cnpj: '12.345.678/0001-90', size: 12 },
+            },
+          },
+        ],
+      },
+      { 'x-octadash-key': KEY },
+    )
+    const row = sink.batches[0]?.rows[0] as { distinct_id: string; properties: string }
+    expect(row.distinct_id).toMatch(/^[0-9a-f]{32}$/)
+    expect(row.distinct_id).not.toBe('user-42')
+    expect(JSON.parse(row.properties)).toEqual({ plan: 'pro', company: { size: 12 } })
+  })
+})
+
+describe('PostHog SDKs', () => {
+  const posthogEvent = (event: string, extra: Record<string, unknown> = {}) => ({
+    event,
+    timestamp: '2026-11-18T10:00:00.000Z',
+    uuid: '0193a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b',
+    properties: {
+      token: KEY,
+      distinct_id: 'anon-1',
+      $device_id: 'anon-1',
+      $session_id: 's-1',
+      $current_url: 'https://shop.example/pricing',
+      plan: 'pro',
+      ...extra,
+    },
+  })
+
+  it('takes posthog-js batches, gzipped, and drops what Octadash does not keep', async () => {
+    const { app, sink } = setup()
+    const body = gzipSync(
+      JSON.stringify([
+        posthogEvent('$pageview'),
+        posthogEvent('signed_up', { $set: { email: 'ana@shop.example' } }),
+        posthogEvent('$autocapture'),
+      ]),
+    )
+    // Recent posthog-js gzips without naming it anywhere.
+    const res = await app.request('/e/', {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain', origin: 'https://shop.example' },
+      body,
+    })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ status: 1 })
+    const rows = sink.batches[0]?.rows as {
+      event: string
+      distinct_id: string
+      session_id: string
+      uuid: string
+      properties: string
+      path: string
+    }[]
+    expect(rows.map((r) => r.event)).toEqual(['$pageview', 'signed_up'])
+    expect(rows[1]).toMatchObject({
+      distinct_id: personId(scope.project_id, 'anon-1'),
+      session_id: 's-1',
+      uuid: '0193a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b',
+      path: '/pricing',
+    })
+    const properties = JSON.parse(rows[1]?.properties ?? '{}')
+    expect(properties).toMatchObject({ plan: 'pro' })
+    expect(properties).not.toHaveProperty('$set')
+    expect(properties).not.toHaveProperty('$device_id')
+    expect(properties).not.toHaveProperty('token')
+  })
+
+  it('takes server batches with api_key, and the form posthog-js used before', async () => {
+    const { app, sink } = setup()
+    const batch = await app.request('/batch/', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        api_key: KEY,
+        batch: [{ event: 'payment.confirmed', distinct_id: 'u-9', properties: { amount: 10 } }],
+      }),
+    })
+    expect(batch.status).toBe(200)
+    expect(sink.batches[0]?.rows[0]).toMatchObject({
+      event: 'payment.confirmed',
+      distinct_id: personId(scope.project_id, 'u-9'),
+    })
+
+    const form = new URLSearchParams({
+      data: Buffer.from(JSON.stringify(posthogEvent('invite_sent'))).toString('base64'),
+    })
+    const res = await app.request('/i/v0/e/', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: form.toString(),
+    })
+    expect(res.status).toBe(200)
+    expect(sink.batches[1]?.rows[0]).toMatchObject({ event: 'invite_sent' })
+  })
+
+  it('refuses a wrong key and lz-string bodies', async () => {
+    const { app } = setup()
+    const wrong = await app.request('/capture/', {
+      method: 'POST',
+      body: JSON.stringify({ api_key: 'nope', event: 'x', distinct_id: 'a' }),
+    })
+    expect(wrong.status).toBe(401)
+    const lz = await app.request('/e/?compression=lz64', { method: 'POST', body: 'data=abc' })
+    expect(lz.status).toBe(400)
+  })
+
+  it('answers flags with everything off and points the snippet to the library', async () => {
+    const { app } = setup()
+    const flags = await app.request('/flags/?v=2', { method: 'POST', body: '{}' })
+    expect(await flags.json()).toMatchObject({
+      featureFlags: {},
+      autocapture_opt_out: true,
+      sessionRecording: false,
+    })
+    const script = await app.request('/static/array.js')
+    expect(script.status).toBe(302)
+    expect(script.headers.get('location')).toContain('/static/array.js')
+    expect((await app.request('/static/..%2Fx')).status).toBe(404)
   })
 })

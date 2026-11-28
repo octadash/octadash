@@ -19,6 +19,7 @@ import * as m0017 from './0017_product_settings'
 import * as m0018 from './0018_tv_links'
 import * as m0019 from './0019_error_issues'
 import * as m0020 from './0020_error_issue_last_seen'
+import * as m0021 from './0021_product_usage'
 
 /**
  * Migrations are imported statically (not read from disk) so they survive
@@ -45,4 +46,5 @@ export const migrations: Record<string, Migration> = {
   '0018_tv_links': m0018,
   '0019_error_issues': m0019,
   '0020_error_issue_last_seen': m0020,
+  '0021_product_usage': m0021,
 }

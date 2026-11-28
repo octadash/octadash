@@ -299,7 +299,8 @@
         "heartbeat_missed": "Heartbeat “{name}” missed",
         "cert_expiring": "Certificate of “{name}” about to expire",
         "other": "Emergency",
-        "error_spike": "Error spike"
+        "error_spike": "Error spike",
+        "key_event_stopped": "“{name}” stopped"
       },
       "more": "{count, plural, one {# more on the product page} other {# more on the product page}}"
     }
@@ -592,7 +593,11 @@
       "times": "Times normal",
       "timesUnit": "× normal",
       "events": "At least",
-      "eventsUnit": "errors in 15 min"
+      "eventsUnit": "errors in 15 min",
+      "expected": "Missing",
+      "expectedUnit": "events that should have arrived",
+      "silence": "At least",
+      "silenceUnit": "min without any"
     },
     "allChannels": "All channels",
     "noChannels": "No channels yet. Without one, the emergency shows only in the panel.",
@@ -620,6 +625,11 @@
         "title": "Error spike",
         "body": "A product’s errors in the last 15 minutes reach a multiple of its normal for this time of day, with a minimum so a quiet product does not fire on 3 errors.",
         "info": "Normal is the same hour on each of the last 7 days. Errors of ignored issues never count. It closes on its own when the last 15 minutes fall back under the rule. A product with no history fires on the minimum alone."
+      },
+      "key_event_stopped": {
+        "title": "Key event stopped",
+        "body": "An event you marked as key (a sign-up, a payment) stops arriving at an hour it usually comes.",
+        "info": "Octadash waits for the time the expected number of events normally takes at this hour (the same hour of the last 7 days), and never less than the minimum silence. Quiet hours wait longer on their own, and an event too rare at this hour (under 5 a day) never fires. It closes when the next event arrives. Mark key events in Set up Product usage."
       }
     },
     "legend": "Levels",
@@ -657,12 +667,6 @@
           "body": "Sign-ups away from what this hour and weekday usually have.",
           "wait": "Needs 4 weeks of data to learn what is normal.",
           "params": "30% below expected, at least 10 events"
-        },
-        "keyEventStopped": {
-          "title": "Key event stopped",
-          "body": "An event you mark as key (checkout, sign-up) stops at an hour it usually happens.",
-          "wait": "Needs 4 weeks of data to learn when it usually happens.",
-          "params": "None in 1 h when 10 or more are expected"
         }
       },
       "uptime": {
@@ -985,7 +989,8 @@
     "area": {
       "uptime": "Uptime",
       "other": "Octadash",
-      "errors": "Errors"
+      "errors": "Errors",
+      "usage": "Product usage"
     },
     "started": "Started {time} · {duration}",
     "titles": {
@@ -993,7 +998,8 @@
       "heartbeat_missed": "{product} · {name} did not run",
       "cert_expiring": "{product} · certificate expires in {days} days",
       "other": "{product} · {name}",
-      "error_spike": "{product} · error spike"
+      "error_spike": "{product} · error spike",
+      "key_event_stopped": "{product} · {event} stopped"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1002,7 +1008,8 @@
       "other": "It closes on its own when the check passes again.",
       "closed": "Over at {time}, after {duration}.",
       "spike": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where about {normal} is normal at this time. It closes on its own when errors fall back under the rule.",
-      "spikeNone": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where this time of day usually has none. It closes on its own when errors fall back under the rule."
+      "spikeNone": "{count, plural, one {# error} other {# errors}} in the last {minutes} min, where this time of day usually has none. It closes on its own when errors fall back under the rule.",
+      "keyEvent": "No {event} since {time}, where about {normal} an hour is normal at this time. It closes on its own when the next one arrives."
     },
     "onIt": "{name} is on it · since {time}",
     "nobody": "Nobody on it yet",
@@ -1090,7 +1097,8 @@
       "heartbeat_missed": "{product} · {name} did not run",
       "cert_expiring": "{product} · certificate was close to expiring",
       "other": "{product} · {name}",
-      "error_spike": "{product} · error spike"
+      "error_spike": "{product} · error spike",
+      "key_event_stopped": "{product} · {event} stopped"
     },
     "spike": {
       "title": "Issues behind the spike",
@@ -1105,35 +1113,40 @@
       "heartbeat_missed": "{product}: “{name}” did not run",
       "cert_expiring": "{product}: certificate expires in {days, plural, one {# day} other {# days}}",
       "other": "{product}: {name}",
-      "error_spike": "{product}: error spike"
+      "error_spike": "{product}: error spike",
+      "key_event_stopped": "{product}: {event} stopped"
     },
     "short": {
       "monitor_down": "{product} down",
       "heartbeat_missed": "{product} heartbeat missed",
       "cert_expiring": "{product} certificate expiring",
       "other": "{product} {name}",
-      "error_spike": "{product} error spike"
+      "error_spike": "{product} error spike",
+      "key_event_stopped": "{product} {event} stopped"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
       "heartbeat_missed": "“{name}”: {reason}",
       "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
       "other": "{name}: {reason}",
-      "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min"
+      "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min",
+      "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” is not answering",
       "heartbeat_missed": "“{name}” did not check in on time",
       "cert_expiring": "Monitor “{name}”: the certificate expires in {days, plural, one {# day} other {# days}}",
       "other": "{name}",
-      "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min"
+      "error_spike": "{count, plural, one {# error} other {# errors}} in {minutes} min",
+      "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour"
     },
     "kind": {
       "monitor_down": "Down",
       "heartbeat_missed": "Heartbeat missed",
       "cert_expiring": "Certificate expiring",
       "other": "Emergency",
-      "error_spike": "Error spike"
+      "error_spike": "Error spike",
+      "key_event_stopped": "Key event stopped"
     },
     "count": "{count, plural, one {# emergency} other {# emergencies}}",
     "countProducts": "{count} emergencies on {products} products",
@@ -1189,7 +1202,8 @@
       "and": "{first} and {last}",
       "submitNone": "I'm on these"
     },
-    "spikeOver": "{product}: errors back to normal"
+    "spikeOver": "{product}: errors back to normal",
+    "keyBack": "{product}: {event} is arriving again"
   },
   "traffic": {
     "title": "Traffic",

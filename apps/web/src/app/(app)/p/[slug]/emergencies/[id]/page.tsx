@@ -17,7 +17,22 @@ import { loadEmergency, type TimelineEntry } from '@/server/emergency'
 import { requireOrg } from '@/server/session'
 import { duration } from '@/views/overview-parts'
 
-const KINDS = ['monitor_down', 'heartbeat_missed', 'cert_expiring', 'error_spike'] as const
+const KINDS = [
+  'monitor_down',
+  'heartbeat_missed',
+  'cert_expiring',
+  'error_spike',
+  'key_event_stopped',
+] as const
+
+const AREA_OF: Record<Kind | 'other', string> = {
+  monitor_down: 'uptime',
+  heartbeat_missed: 'uptime',
+  cert_expiring: 'uptime',
+  error_spike: 'errors',
+  key_event_stopped: 'usage',
+  other: 'other',
+}
 type Kind = (typeof KINDS)[number]
 
 /** An issue named on an Error spike, as the worker saved it. */
@@ -79,6 +94,7 @@ export default async function EmergencyPage({
     product: incident.project_name,
     name,
     days: typeof data.days === 'number' ? data.days : 0,
+    event: typeof data.event === 'string' ? data.event : '',
   })
   const words = { ok: t('checked.ok'), fail: t('checked.fail') }
   const failureAt = emergency.timeline.find((e) => e.kind === 'firstFailure')?.at ?? null
@@ -98,7 +114,15 @@ export default async function EmergencyPage({
               minutes: spike.minutes,
               normal: spike.normal,
             })
-          : t('summary.other')
+          : kind === 'key_event_stopped'
+            ? t('summary.keyEvent', {
+                event: typeof data.event === 'string' ? data.event : '',
+                time: time.format(
+                  typeof data.last === 'string' ? new Date(data.last) : incident.started_at,
+                ),
+                normal: typeof data.normal === 'number' ? Math.round(data.normal * 10) / 10 : 0,
+              })
+            : t('summary.other')
 
   return (
     <div className="flex flex-col gap-6">
@@ -122,11 +146,7 @@ export default async function EmergencyPage({
                   )}
                   {t(`level.${incident.level}`)} · {open ? t('ongoing') : t('over')}
                 </Badge>
-                <Badge variant="secondary">
-                  {t(
-                    `area.${kind === 'other' ? 'other' : kind === 'error_spike' ? 'errors' : 'uptime'}`,
-                  )}
-                </Badge>
+                <Badge variant="secondary">{t(`area.${AREA_OF[kind]}`)}</Badge>
                 <span className="text-muted-foreground">
                   {t('started', { time: time.format(incident.started_at), duration: lasted })}
                 </span>

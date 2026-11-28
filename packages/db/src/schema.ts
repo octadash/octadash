@@ -16,6 +16,8 @@ export interface Database {
   project_slug_alias: ProjectSlugAliasTable
   tv_link: TvLinkTable
   error_issue: ErrorIssueTable
+  key_event: KeyEventTable
+  funnel: FunnelTable
   source: SourceTable
   source_key: SourceKeyTable
   project_area: ProjectAreaTable
@@ -88,6 +90,28 @@ export interface ErrorIssueTable {
   regressed_at: Date | null
   acknowledged_by: string | null
   acknowledged_at: Date | null
+}
+
+/** An event a product cannot live without; see migration 0021. */
+export interface KeyEventTable {
+  project_id: string
+  org_id: string
+  event: string
+  created_by: string | null
+  created_at: CreatedAt
+}
+
+/** Steps in order, counted per person within `window_days`. */
+export interface FunnelTable {
+  id: string
+  org_id: string
+  project_id: string
+  name: string
+  steps: Json
+  window_days: ColumnType<number, number | undefined, number>
+  created_by: string | null
+  created_at: CreatedAt
+  updated_at: ColumnType<Date, Date | undefined, Date>
 }
 
 /** A private TV link; only the token's hash is stored. */

@@ -11,6 +11,7 @@ import {
 import { parseUserAgent } from './context'
 import type { Sender } from './events'
 import type { IngestScope } from './keys'
+import { personal, personId } from './privacy'
 
 /**
  * Error events in the format of the Sentry SDKs (the JSON inside an envelope
@@ -289,7 +290,10 @@ export async function toErrorRow(
   const userAgent = header(request.headers, 'user-agent') || sender.userAgent
   const client = parseUserAgent(userAgent)
   const user = obj(event.user) ?? {}
-  const named = str(user.id, 200) || str(user.email, 200) || str(user.username, 200)
+  // A user id helps find the person's support case and is kept; an e-mail or a
+  // document number is kept only as a hash.
+  const sent = str(user.id, 200) || str(user.email, 200) || str(user.username, 200)
+  const named = personal(sent) ? `h:${personId(scope.project_id, sent)}` : sent
   const visitor = named ? '' : await sender.visitor(sender.ip, sender.userAgent)
   const sdk = obj(event.sdk)
   const level = str(event.level, 20).toLowerCase()

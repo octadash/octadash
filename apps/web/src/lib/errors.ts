@@ -81,9 +81,14 @@ export function issueTitle(issue: { type: string; value: string }): string {
   return issue.type ? (value ? `${issue.type}: ${value}` : issue.type) : value || '(no message)'
 }
 
-/** The person as people read it: what the app sent, or "anon 3f9a…" for a visitor hash. */
+/**
+ * The person as people read it: what the app sent, or "anon 3f9a…" for a
+ * visitor hash or for an e-mail the ingest kept only as a hash (`h:`).
+ */
 export function personLabel(person: string): { anonymous: boolean; label: string } {
   if (!person) return { anonymous: true, label: '' }
-  if (person.startsWith('v:')) return { anonymous: true, label: person.slice(2, 6) }
+  if (person.startsWith('v:') || person.startsWith('h:')) {
+    return { anonymous: true, label: person.slice(2, 6) }
+  }
   return { anonymous: false, label: person }
 }

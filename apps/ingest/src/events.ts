@@ -3,6 +3,7 @@ import { type EventRow, NO_SOURCE, toClickHouseTime } from '@octadash/db'
 import { z } from 'zod'
 import { pageFields, parseUserAgent } from './context'
 import type { IngestScope } from './keys'
+import { personId, withoutPersonalData } from './privacy'
 import { BROWSER_ID, persistentVisitor } from './visitor'
 
 export const MAX_EVENTS_PER_REQUEST = 1_000
@@ -64,7 +65,8 @@ function text(value: unknown, max = 1000): string {
  * server SDK sends on behalf of a visitor, so `$ip` and `$user_agent` in the
  * properties (PostHog's names) win over the request's own. `$visitor_id`, the
  * id the browser keeps, counts only when the source counts returning visitors,
- * and is never stored as it came.
+ * and is never stored as it came. Nor is the person: `distinct_id` is kept as
+ * a hash, and properties that look personal are dropped (see privacy.ts).
  */
 export async function toEventRows(
   scope: IngestScope,
@@ -75,8 +77,8 @@ export async function toEventRows(
   const receivedAt = toClickHouseTime(received)
   const rows: EventRow[] = []
   for (const event of events) {
-    const { $visitor_id: browserId, ...kept } = event.properties ?? {}
-    const properties = JSON.stringify(kept)
+    const { $visitor_id: browserId, ...sent } = event.properties ?? {}
+    const properties = JSON.stringify(withoutPersonalData(sent).properties)
     if (Buffer.byteLength(properties) > MAX_PROPERTIES_BYTES) {
       throw new PropertiesTooLargeError(event.event)
     }
@@ -91,7 +93,7 @@ export async function toEventRows(
       timestamp: toClickHouseTime(eventTime(event.timestamp, received)),
       received_at: receivedAt,
       event: event.event,
-      distinct_id: event.distinct_id ?? '',
+      distinct_id: personId(scope.project_id, event.distinct_id ?? ''),
       session_id: event.session_id ?? '',
       properties,
       visitor_id:

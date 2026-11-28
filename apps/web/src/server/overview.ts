@@ -259,10 +259,7 @@ export async function loadOverview(
           from: new Date(Math.max(i.started_at.getTime(), period.from.getTime())),
           to: i.resolved_at,
           incident: i.kind,
-          name:
-            typeof (i.data as { name?: unknown })?.name === 'string'
-              ? (i.data as { name: string }).name
-              : null,
+          name: nameOf(i.data),
         })),
     }))
     .filter((entry) => entry.items.length > 0)
@@ -306,4 +303,11 @@ export async function loadOverview(
     rows,
     timeline,
   }
+}
+
+/** What an incident is about: a monitor's name, or a key event's. */
+function nameOf(data: unknown): string | null {
+  const d = (data ?? {}) as { name?: unknown; event?: unknown }
+  if (typeof d.name === 'string') return d.name
+  return typeof d.event === 'string' ? d.event : null
 }

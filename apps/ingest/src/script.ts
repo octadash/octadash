@@ -6,6 +6,9 @@
  * It sends a page view on load and on every client-side navigation (Next.js,
  * React Router), sets no cookie and stores nothing in the browser, and gives
  * the page `window.octadash.track(name, properties)` for product events.
+ * `window.octadash.identify(userId)` ties the events after it to a person
+ * (the ingest keeps only a hash of the id); it lives in memory, so the app
+ * calls it on each page load once it knows the user, and `reset()` on logout.
  * Visits from localhost are skipped unless the tag has `data-local`.
  *
  * With `data-visitor="persistent"` (a source that counts returning visitors)
@@ -19,7 +22,7 @@
  * it started in.
  *
  * Kept as plain ES2017 in a string so the ingest bundle serves it as is; under
- * 4.5 KB before gzip.
+ * 5 KB before gzip (about 2 KB gzipped).
  */
 export const BROWSER_SCRIPT = `(function () {
   'use strict';
@@ -31,6 +34,7 @@ export const BROWSER_SCRIPT = `(function () {
   var local = /^(localhost|127\\.|\\[::1\\]|0\\.0\\.0\\.0)/.test(location.hostname);
   var off = local && !tag.hasAttribute('data-local');
   var last = null;
+  var uid = '';
   var vid = '';
   if (tag.getAttribute('data-visitor') === 'persistent') {
     try {
@@ -51,7 +55,9 @@ export const BROWSER_SCRIPT = `(function () {
     var props = { $current_url: location.href, $title: document.title, $screen_width: screen.width };
     if (vid) props.$visitor_id = vid;
     for (var k in properties) props[k] = properties[k];
-    var body = JSON.stringify({ key: key, events: [{ event: name, timestamp: Date.now(), properties: props }] });
+    var event = { event: name, timestamp: Date.now(), properties: props };
+    if (uid) event.distinct_id = uid;
+    var body = JSON.stringify({ key: key, events: [event] });
     if (navigator.sendBeacon && navigator.sendBeacon(api, body)) return;
     fetch(api, { method: 'POST', body: body, keepalive: true, credentials: 'omit' }).catch(function () {});
   }
@@ -98,6 +104,7 @@ export const BROWSER_SCRIPT = `(function () {
       environment: tag.getAttribute('data-environment') || undefined,
       sdk: { name: 'octadash.browser' },
       request: { url: location.href },
+      user: uid ? { id: uid } : undefined,
       exception: { values: [{ type: type, value: value, mechanism: { type: mechanism, handled: handled }, stacktrace: { frames: frames(error && error.stack) } }] },
     };
     var body = JSON.stringify({ key: key, events: [event] });
@@ -119,6 +126,17 @@ export const BROWSER_SCRIPT = `(function () {
     },
     captureException: function (error) {
       report(error, true, 'generic');
+    },
+    identify: function (id) {
+      if (id === undefined || id === null || id === '') return;
+      var next = String(id).slice(0, 200);
+      if (next !== uid) {
+        uid = next;
+        send('$identify', {});
+      }
+    },
+    reset: function () {
+      uid = '';
     },
   };
 
