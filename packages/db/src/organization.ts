@@ -147,3 +147,26 @@ export async function getStartedProgress(
     invite: Boolean(row.invite),
   }
 }
+
+/**
+ * Deletes everything the organization has in Postgres: products (with their
+ * sources, keys, monitors, areas and rules), channels, incidents and their
+ * notifications, groups and settings. Members and invitations go with the
+ * organization itself, in auth. Events in ClickHouse stay until their TTL;
+ * without keys or products nothing reaches them.
+ */
+export async function deleteOrganizationData(db: Db, orgId: string) {
+  await db.transaction().execute(async (tx) => {
+    for (const table of [
+      'notification',
+      'incident',
+      'alert_rule',
+      'channel',
+      'product_group',
+      'project',
+      'organization_settings',
+    ] as const) {
+      await tx.deleteFrom(table).where('org_id', '=', orgId).execute()
+    }
+  })
+}

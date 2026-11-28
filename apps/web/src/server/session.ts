@@ -60,3 +60,8 @@ export async function requireManager() {
   if (!canManage(context.org.role)) redirect('/all')
   return context
 }
+
+/** Owners only: deleting the organization and the install's settings. */
+export function isOwner(role: string): boolean {
+  return role.split(',').some((r) => r.trim() === 'owner')
+}

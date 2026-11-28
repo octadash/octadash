@@ -86,7 +86,10 @@
     "notFound": "Not found.",
     "confirmDelete": "Confirm the deletion first.",
     "invalidUrl": "Enter a full address, like https://example.com/health.",
-    "monitorName": "Give the monitor a name."
+    "monitorName": "Give the monitor a name.",
+    "ownersOnly": "Only owners can do this.",
+    "typeName": "Type the name exactly as it is to confirm.",
+    "wrongPassword": "The current password is not right."
   },
   "areas": {
     "overview": {
@@ -322,8 +325,87 @@
   "settings": {
     "members": "Members",
     "channels": "Channels",
-    "alerts": "Alerts",
-    "watcher": "Outside watcher"
+    "alerts": "Alert rules",
+    "watcher": "Outside watcher",
+    "nav": "Settings menu",
+    "search": "Search settings",
+    "none": "Nothing matches.",
+    "trail": "Where you are",
+    "sections": {
+      "organization": "Organization",
+      "alerts": "Alerts",
+      "install": "This install",
+      "you": "You"
+    },
+    "ownerOnly": "owner",
+    "general": "General",
+    "generalKeywords": "name currency time zone money delete",
+    "membersKeywords": "people invite roles admin",
+    "productGroups": "Groups",
+    "channelsKeywords": "email telegram webhook smtp resend",
+    "organizations": "Organizations",
+    "profile": "Profile",
+    "profileKeywords": "password name email account",
+    "productNote": "A product’s keys, monitors and its own alert changes are on the product, under Product settings.",
+    "generalPage": {
+      "title": "Organization",
+      "intro": "The name everyone sees and the defaults for money and time.",
+      "nameTitle": "Name",
+      "name": "Organization name",
+      "nameHint": "Shown in the product picker, invitations and alert messages.",
+      "save": "Save",
+      "saved": "Saved.",
+      "regionTitle": "Money and time",
+      "regionInfoLabel": "About money and time",
+      "regionInfo": "Money areas show totals in the main currency. Each payment keeps its own currency and value; the total converts it at the rate of the day it happened. The time zone decides where each day starts in charts, in “today” and in the daily summary.",
+      "currency": "Main currency",
+      "currencyHint": "Totals are shown in it. A payment in USD keeps its value and is converted at that day’s rate.",
+      "timeZone": "Time zone",
+      "timeZoneHint": "Decides when “today” starts and when the daily summary goes out.",
+      "dangerTitle": "Danger zone",
+      "dangerBody": "Delete {name} with its {count, plural, one {# product} other {# products}}, sources, monitors and all their data. Members lose access. This cannot be undone; you will be asked to type the name.",
+      "delete": "Delete organization",
+      "deleteTitle": "Delete {name}?",
+      "typeName": "Type {name} to confirm",
+      "ownersOnly": "Only owners see this."
+    },
+    "groupsPage": {
+      "title": "Groups",
+      "intro": "Saved sets of products, such as “Main”. Choosing a group in the picker shows only its products, in every area.",
+      "emptyTitle": "No groups yet",
+      "emptyBody": "A group saves a set of products to look at together. Create one from the product picker, under New group.",
+      "noProducts": "No products",
+      "edit": "Edit",
+      "editLabel": "Edit {name}",
+      "howToCreate": "New groups are created from the product picker at the top, under New group."
+    },
+    "profilePage": {
+      "title": "Profile",
+      "intro": "Your name, your email and your password. Only you see this.",
+      "aboutTitle": "You",
+      "name": "Your name",
+      "nameHint": "Shown to the other members, in invitations and on who is on an emergency.",
+      "email": "Email",
+      "emailHint": "You sign in with it. It can’t be changed here yet.",
+      "save": "Save",
+      "saved": "Saved.",
+      "passwordTitle": "Password",
+      "current": "Current password",
+      "next": "New password",
+      "nextHint": "At least 10 characters. Your other sessions are signed out.",
+      "change": "Change password",
+      "passwordChanged": "Password changed."
+    },
+    "organizationsPage": {
+      "title": "Organizations",
+      "intro": "The organizations you are part of in this install. Each has its own products, members, channels and settings.",
+      "current": "Open now",
+      "open": "Open {name}",
+      "newTitle": "New organization",
+      "newBody": "For another company or client, kept apart from this one. You will be its owner and can invite people to it.",
+      "name": "Name",
+      "create": "Create organization"
+    }
   },
   "channels": {
     "title": "Alert channels",

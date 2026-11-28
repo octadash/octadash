@@ -2,21 +2,57 @@ import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { SettingsNav } from '@/components/settings-nav'
 import { WatcherBanner } from '@/components/watcher-banner'
+import { isOwner, requireOrg } from '@/server/session'
 
+/** Settings: a grouped menu on the left, the page on the right. */
 export default async function SettingsLayout({ children }: { children: ReactNode }) {
-  const t = await getTranslations('settings')
+  const [{ org }, t] = await Promise.all([requireOrg(), getTranslations('settings')])
+  const owner = isOwner(org.role)
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 md:flex-row">
       <SettingsNav
-        items={[
-          { href: '/settings/members', label: t('members') },
-          { href: '/settings/channels', label: t('channels') },
-          { href: '/settings/alerts', label: t('alerts') },
-          { href: '/settings/watcher', label: t('watcher') },
+        labels={{ nav: t('nav'), search: t('search'), none: t('none') }}
+        sections={[
+          {
+            title: t('sections.organization'),
+            items: [
+              { href: '/settings/general', label: t('general'), keywords: t('generalKeywords') },
+              { href: '/settings/members', label: t('members'), keywords: t('membersKeywords') },
+              { href: '/settings/groups', label: t('productGroups') },
+            ],
+          },
+          {
+            title: t('sections.alerts'),
+            items: [
+              { href: '/settings/channels', label: t('channels'), keywords: t('channelsKeywords') },
+              { href: '/settings/alerts', label: t('alerts') },
+            ],
+          },
+          ...(owner
+            ? [
+                {
+                  title: t('sections.install'),
+                  note: t('ownerOnly'),
+                  items: [
+                    { href: '/settings/watcher', label: t('watcher') },
+                    { href: '/settings/organizations', label: t('organizations') },
+                  ],
+                },
+              ]
+            : []),
+          {
+            title: t('sections.you'),
+            items: [
+              { href: '/settings/profile', label: t('profile'), keywords: t('profileKeywords') },
+            ],
+          },
         ]}
+        footer={t('productNote')}
       />
-      <WatcherBanner />
-      {children}
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <WatcherBanner />
+        {children}
+      </div>
     </div>
   )
 }
