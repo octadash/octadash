@@ -154,3 +154,9 @@ and why; anything here can be reversed.
   a spike sends a message, so a busy product does not flood the channels.
 - **The warning badge text now uses the theme's warning color**: the amber on
   its pale background failed contrast in the light theme.
+- **Set up Errors is built** (`/p/<product>/errors/setup`, as in the Configure
+  canvas): sources with "Use for Errors", a new source, the DSN, the code for
+  11 platforms (the Octadash script for plain sites, the Sentry SDK for the
+  rest), "Send test error" from the browser and a live wait for the first one.
+  The snippets say plainly which SDKs were tested (so far `@sentry/node` 9).
+  "Set up" on a product's Errors and Traffic cards now opens their setup page.
