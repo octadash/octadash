@@ -8,6 +8,7 @@ import {
   keyEventRates,
   lastUsageEvent,
   retentionCohorts,
+  signupNormals,
   signupsByProduct,
   usageEvents,
   usageSeries,
@@ -246,5 +247,24 @@ describe.skipIf(!chUrl)('product usage queries (needs CLICKHOUSE_URL)', () => {
     )
     expect(none).toMatchObject({ last: null, normal: 0 })
     expect(await lastUsageEvent(client, org, project, NO_SOURCE)).toBeNull()
+  })
+
+  it('reads sign-ups for the Sign-ups dropped signal', async () => {
+    const rows = await signupNormals(client, at(8, 30), SIGNUP_EVENTS)
+    // a and b on Nov 2 (8 days before), c on Nov 9 (a day before): none in the last 24 hours.
+    expect(rows.find((r) => r.projectId === project)).toEqual({
+      orgId: org,
+      projectId: project,
+      last24h: 0,
+      lastWeek: 1,
+      sameHours: 0,
+      fourWeeks: 3,
+      oldest: at(0),
+    })
+    const [later] = (await signupNormals(client, at(14, 30), SIGNUP_EVENTS)).filter(
+      (r) => r.projectId === project,
+    )
+    // Nov 9 and Nov 2 are now one and two weeks back, inside the same weekday hours.
+    expect(later).toMatchObject({ last24h: 0, lastWeek: 1, sameHours: 3, fourWeeks: 3 })
   })
 })

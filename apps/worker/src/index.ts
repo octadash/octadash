@@ -160,6 +160,7 @@ const writers = startWriters(
     loadRetention: (projectIds) => logRetention(db, projectIds),
     insert: (rows, token) => insertLogs(clickhouse, rows, token),
   },
+  { loadRetention: (projectIds) => areaRetention(db, 'events', projectIds) },
   log,
   {
     receivedDays: env.OCTADASH_RECEIVED_RETENTION_DAYS,

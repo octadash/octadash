@@ -18,6 +18,27 @@ script do Tráfego, adicione uma linha onde algo acontece: sem chave nova.
 - `signed_up` conta como cadastro sem configurar nada.
 - `distinct_id` é a pessoa. O Octadash guarda só um hash dele.
 
+## Cadastros caíram
+
+Quando um produto tem 4 semanas de cadastros, o Octadash aprende o normal e
+verifica a cada hora se as últimas 24 horas ficaram bem abaixo dele. Isso é um
+sinal, não uma emergência: nenhuma mensagem, um aviso no topo de Uso e uma
+página que explica o porquê.
+
+Esperado = forma × nível. O nível são os 7 dias anteriores; a forma é a parte
+da semana que essas 24 horas da semana tiveram nas 4 semanas anteriores. Um
+domingo calmo espera poucos, e uma campanha que aumentou todos os dias aumenta
+o esperado também. Ele abre com 30% abaixo do esperado e pelo menos 10
+cadastros esperados, para um produto pequeno que vai de 2 para 1 não virar
+"−50%". Os dois números, e transformar em emergência que manda mensagem, ficam
+em **Regras de alerta**.
+
+## Quanto tempo os eventos ficam
+
+13 meses por padrão; 3, 6 ou 25 meses em **Configurações do produto** >
+**Quanto tempo guardar** (uma escolha para Tráfego e Uso). Um tempo menor apaga
+na hora o que for mais antigo.
+
 ## PostHog
 
 Suas chamadas do PostHog continuam funcionando: `capture` e `identify`.

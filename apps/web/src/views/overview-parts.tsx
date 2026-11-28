@@ -320,6 +320,7 @@ function kindKey(kind: string) {
     'log_alert',
     'payments_failing',
     'cost_runaway',
+    'signups_dropped',
   ].includes(kind)
     ? kind
     : 'other'

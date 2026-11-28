@@ -1,4 +1,5 @@
 import type { ClickHouseClient } from '@clickhouse/client'
+import { trimRetention } from './trim'
 
 /** One row of the `events` table, as the ingest queues it and the worker writes it. */
 export interface EventRow {
@@ -28,6 +29,8 @@ export interface EventRow {
   device?: string
   country?: string
   is_bot?: number
+  /** Days the product keeps it, stamped by the worker; 395 when left out. */
+  retention_days?: number
 }
 
 /** `source_id` of events sent with a product key from before sources. */
@@ -50,4 +53,17 @@ export async function insertEvents(client: ClickHouseClient, rows: EventRow[], t
     format: 'JSONEachRow',
     clickhouse_settings: token ? { insert_deduplication_token: token } : {},
   })
+}
+
+/**
+ * Shortens what a product keeps of its events, which Traffic and Product
+ * usage read (see `trimRetention`).
+ */
+export function trimEvents(
+  client: ClickHouseClient,
+  orgId: string,
+  projectId: string,
+  days: number,
+) {
+  return trimRetention(client, 'events', orgId, projectId, days)
 }

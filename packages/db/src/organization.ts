@@ -1,3 +1,4 @@
+import { AREAS } from './areas'
 import type { Db } from './client'
 
 export interface OrganizationSettings {
@@ -108,6 +109,7 @@ export async function getStartedProgress(
               .selectFrom('project_area')
               .select('project_id')
               .where('org_id', '=', orgId)
+              .where('area', 'in', AREAS)
               .where('state', '=', 'set_up'),
           ),
         ])

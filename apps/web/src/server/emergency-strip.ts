@@ -17,6 +17,7 @@ const KINDS: StripKind[] = [
   'log_alert',
   'payments_failing',
   'cost_runaway',
+  'signups_dropped',
 ]
 
 /**
@@ -75,6 +76,7 @@ export async function loadStrip(
         failed: typeof data.failed === 'number' ? data.failed : 0,
         total: typeof data.total === 'number' ? data.total : 0,
         times: typeof data.times === 'number' ? data.times : 0,
+        expected: typeof data.expected === 'number' ? data.expected : 0,
         spent: `US$ ${((typeof data.spent === 'number' ? data.spent : 0) / 100).toFixed(2)}`,
       }
       const checked = data.checked as { controls?: { target: string; ms: number | null }[] }
@@ -127,7 +129,9 @@ export async function loadStrip(
                         ? 'paymentsBack'
                         : incident.kind === 'cost_runaway'
                           ? 'runawayOver'
-                          : 'back',
+                          : incident.kind === 'signups_dropped'
+                            ? 'signupsBack'
+                            : 'back',
               {
                 product: incident.project_name,
                 name: typeof data.name === 'string' ? data.name : '',

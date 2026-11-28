@@ -35,6 +35,7 @@ const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors' | 'usage' | 'logs' | '
     payments_failing: 'money',
     cost_runaway: 'costs',
     new_issue: 'errors',
+    signups_dropped: 'usage',
   }
 
 /**
@@ -49,7 +50,6 @@ const FUTURE: {
   rules: { rule: string; level: Level }[]
 }[] = [
   { area: 'uptime', icon: ActivityIcon, rules: [{ rule: 'domainExpiring', level: 'emergency' }] },
-  { area: 'usage', icon: UserIcon, rules: [{ rule: 'signupsDropped', level: 'signal' }] },
   { area: 'traffic', icon: GlobeIcon, rules: [{ rule: 'trafficStopped', level: 'emergency' }] },
 ]
 
@@ -104,7 +104,7 @@ export async function RulesList({
             ? unit(value, key === 'days' ? 'day' : 'minute')
             : key === 'times'
               ? `${value}×`
-              : key === 'percent'
+              : key === 'percent' || key === 'drop'
                 ? `${value}%`
                 : key === 'dollars'
                   ? `US$ ${value}`
@@ -128,6 +128,8 @@ export async function RulesList({
       percent: { label: t('params.percent'), unit: t('params.percentUnit') },
       charges: { label: t('params.charges'), unit: t('params.chargesUnit') },
       dollars: { label: t('params.dollars'), unit: t('params.dollarsUnit') },
+      drop: { label: t('params.drop'), unit: t('params.dropUnit') },
+      signups: { label: t('params.signups'), unit: t('params.signupsUnit') },
     },
     sendTo: t('sendTo'),
     allChannels: t('allChannels'),

@@ -44,6 +44,10 @@ interface Words {
   runawaySpent: (spent: string, normal: string) => string
   runawayOver: (product: string) => string
   runawayLasted: (duration: string) => string
+  signupsDropped: (product: string, percent: number) => string
+  signupsCount: (count: number, expected: number) => string
+  signupsBack: (product: string) => string
+  signupsLasted: (duration: string) => string
   downFor: (duration: string) => string
   wasDownFor: (duration: string) => string
   manyDown: (count: number) => string
@@ -91,6 +95,10 @@ const words: Record<AlertLocale, Words> = {
     runawaySpent: (s, n) => `${s} spent in one hour; a normal hour is ${n}.`,
     runawayOver: (p) => `Spend is back to normal on ${p}`,
     runawayLasted: (d) => `It ran high for ${d}.`,
+    signupsDropped: (p, x) => `Sign-ups dropped on ${p}: ${x}% under expected`,
+    signupsCount: (c, e) => `${c} in the last 24 hours; about ${e} were expected.`,
+    signupsBack: (p) => `Sign-ups are back to normal on ${p}`,
+    signupsLasted: (d) => `They were low for ${d}.`,
     downFor: (d) => `Down for ${d}.`,
     wasDownFor: (d) => `It was down for ${d}.`,
     manyDown: (n) => `${n} monitors are down`,
@@ -148,6 +156,10 @@ const words: Record<AlertLocale, Words> = {
     runawaySpent: (s, n) => `${s} gastos em uma hora; uma hora normal é ${n}.`,
     runawayOver: (p) => `O gasto voltou ao normal em ${p}`,
     runawayLasted: (d) => `Ficou alto por ${d}.`,
+    signupsDropped: (p, x) => `Cadastros caíram em ${p}: ${x}% abaixo do esperado`,
+    signupsCount: (c, e) => `${c} nas últimas 24 horas; eram esperados cerca de ${e}.`,
+    signupsBack: (p) => `Os cadastros voltaram ao normal em ${p}`,
+    signupsLasted: (d) => `Ficaram baixos por ${d}.`,
     downFor: (d) => `Fora do ar há ${d}.`,
     wasDownFor: (d) => `Ficou fora do ar por ${d}.`,
     manyDown: (n) => `${n} monitores fora do ar`,
@@ -207,6 +219,8 @@ interface IncidentData {
   spent?: number
   times?: number
   hour?: string
+  /** Sign-ups dropped: sign-ups expected in the 24 hours (`count` has the real ones). */
+  expected?: number
   /** New issue: the issue and its first event's type, message and place. */
   issueId?: string
   type?: string
@@ -305,6 +319,17 @@ function describe(incident: PendingIncident, event: AlertEvent, now: Date, local
           detail: w.runawaySpent(usd(data.spent ?? 0), usd(data.normal ?? 0)),
         }
   }
+  if (incident.kind === 'signups_dropped') {
+    return event === 'resolve'
+      ? {
+          title: w.signupsBack(incident.project_name),
+          detail: w.signupsLasted(duration(ended - started, locale)),
+        }
+      : {
+          title: w.signupsDropped(incident.project_name, data.percent ?? 0),
+          detail: w.signupsCount(data.count ?? 0, data.expected ?? 0),
+        }
+  }
   if (incident.kind === 'cert_expiring') {
     return event === 'open'
       ? { title: w.cert(name, data.days ?? 0), detail: data.url ?? '' }
@@ -355,7 +380,8 @@ export function alertMessage(
               first.kind === 'key_event_stopped' ||
               first.kind === 'log_alert' ||
               first.kind === 'payments_failing' ||
-              first.kind === 'cost_runaway'
+              first.kind === 'cost_runaway' ||
+              first.kind === 'signups_dropped'
             ? `${base}/p/${first.project_slug}/emergencies/${first.id}`
             : `${base}/p/${first.project_slug}/uptime`,
       occurredAt: now,
@@ -382,7 +408,8 @@ export function alertMessage(
       incident.kind === 'key_event_stopped' ||
       incident.kind === 'log_alert' ||
       incident.kind === 'payments_failing' ||
-      incident.kind === 'cost_runaway'
+      incident.kind === 'cost_runaway' ||
+      incident.kind === 'signups_dropped'
         ? line.title
         : `${incident.project_name}: ${line.title}`
     return `• ${title}. ${line.detail}`.trim()

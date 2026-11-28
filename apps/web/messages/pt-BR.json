@@ -329,7 +329,8 @@
         "key_event_stopped": "“{name}” parou",
         "log_alert": "Alerta de log “{name}”",
         "payments_failing": "Pagamentos falhando",
-        "cost_runaway": "Custo disparado"
+        "cost_runaway": "Custo disparado",
+        "signups_dropped": "Cadastros caíram"
       },
       "more": "{count, plural, one {Mais # na página do produto} other {Mais # na página do produto}}"
     }
@@ -637,7 +638,11 @@
       "charges": "Pelo menos",
       "chargesUnit": "cobranças em 15 min",
       "dollars": "Pelo menos",
-      "dollarsUnit": "dólares em uma hora"
+      "dollarsUnit": "dólares em uma hora",
+      "drop": "Abaixo do esperado",
+      "dropUnit": "% a menos que o esperado em 24 h",
+      "signups": "Pelo menos",
+      "signupsUnit": "cadastros esperados em 24 h"
     },
     "allChannels": "Todos os canais",
     "noChannels": "Nenhum canal ainda. Sem canal, a emergência aparece só no painel.",
@@ -691,6 +696,11 @@
         "body": "Uma mensagem cada vez que um erro aparece pela primeira vez. Desligada por padrão: o Pico de erros já avisa quando os erros sobem, e um produto movimentado cria issues novas todo dia.",
         "info": "Ela só manda mensagem: nunca abre uma emergência nem deixa a faixa vermelha. Issues novas no mesmo minuto vão juntas, uma mensagem por canal. Uma issue que volta depois de resolvida aparece em Voltaram, na área de Erros.",
         "note": "Várias issues novas no mesmo minuto chegam em uma mensagem só."
+      },
+      "signups_dropped": {
+        "title": "Cadastros caíram",
+        "body": "Um sinal, sem mensagem: os cadastros de um produto nas últimas 24 horas bem abaixo do que essas horas da semana costumam ter.",
+        "info": "Esperado = forma × nível. O nível são os 7 dias anteriores; a forma é a parte da semana que essas 24 horas da semana tiveram nas 4 semanas anteriores, então um domingo calmo espera poucos e uma campanha aumenta o esperado. Precisa de 4 semanas de cadastros e de pelo menos os cadastros que você definir esperados, para um produto pequeno que vai de 2 para 1 não virar “−50%”. Verificado a cada hora; fecha quando os cadastros voltam para dentro. Transforme em emergência para receber mensagem."
       }
     },
     "legend": "Níveis",
@@ -719,15 +729,6 @@
           "body": "Erros por minuto bem acima do normal deste produto para a hora.",
           "wait": "Nenhum produto envia erros ainda.",
           "params": "5× o normal, no mínimo 20 erros"
-        }
-      },
-      "usage": {
-        "starts": "Começa quando Uso do produto estiver configurado",
-        "signupsDropped": {
-          "title": "Cadastros caíram",
-          "body": "Cadastros longe do que esta hora e este dia da semana costumam ter.",
-          "wait": "Precisa de 4 semanas de dados para aprender o normal.",
-          "params": "30% abaixo do esperado, no mínimo 10 eventos"
         }
       },
       "uptime": {
@@ -1074,7 +1075,8 @@
       "key_event_stopped": "{product} · {event} parou",
       "log_alert": "{product} · alerta de log “{search}”",
       "payments_failing": "{product} · pagamentos falhando",
-      "cost_runaway": "{product} · custo disparado"
+      "cost_runaway": "{product} · custo disparado",
+      "signups_dropped": "{product} · cadastros caíram"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1087,7 +1089,8 @@
       "keyEvent": "Nenhum {event} desde {time}, quando o normal neste horário é cerca de {normal} por hora. Fecha sozinha quando o próximo chegar.",
       "logAlert": "A busca salva “{search}” ({query}) encontrou uma linha. Fecha sozinha depois de {minutes} min sem nenhuma.",
       "paymentsFailing": "{failed} de {total} cobranças falharam nos últimos {minutes} min. Fecha sozinha quando a parte volta a ficar abaixo da regra.",
-      "costRunaway": "{spent} gastos em uma hora, {times}× uma hora normal ({normal}). Fecha sozinha quando uma hora volta para baixo da regra."
+      "costRunaway": "{spent} gastos em uma hora, {times}× uma hora normal ({normal}). Fecha sozinha quando uma hora volta para baixo da regra.",
+      "signupsDropped": "{count} cadastros nas últimas 24 horas, {percent}% abaixo dos {expected} esperados. Os 7 dias anteriores tiveram cerca de {lastWeek, number} por dia; as mesmas horas da semana nas 4 semanas anteriores, {sameHours, number}. Fecha sozinho quando os cadastros voltam para dentro da regra."
     },
     "onIt": "{name} está cuidando · desde {time}",
     "nobody": "Ninguém cuidando ainda",
@@ -1179,7 +1182,8 @@
       "key_event_stopped": "{product} · {event} parou",
       "log_alert": "{product} · alerta de log “{search}”",
       "payments_failing": "{product} · pagamentos falhando",
-      "cost_runaway": "{product} · custo disparado"
+      "cost_runaway": "{product} · custo disparado",
+      "signups_dropped": "{product} · cadastros caíram"
     },
     "spike": {
       "title": "Issues por trás do pico",
@@ -1198,7 +1202,8 @@
       "key_event_stopped": "{product}: {event} parou",
       "log_alert": "{product}: alerta de log “{search}”",
       "payments_failing": "{product}: pagamentos falhando",
-      "cost_runaway": "{product}: custo disparado"
+      "cost_runaway": "{product}: custo disparado",
+      "signups_dropped": "{product}: cadastros caíram"
     },
     "short": {
       "monitor_down": "{product} fora do ar",
@@ -1209,7 +1214,8 @@
       "key_event_stopped": "{product} {event} parou",
       "log_alert": "{product} alerta de log",
       "payments_failing": "{product} pagamentos falhando",
-      "cost_runaway": "{product} custo disparado"
+      "cost_runaway": "{product} custo disparado",
+      "signups_dropped": "{product} cadastros caíram"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
@@ -1220,7 +1226,8 @@
       "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
       "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}",
       "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})",
-      "cost_runaway": "{spent} em uma hora, {times}× o normal"
+      "cost_runaway": "{spent} em uma hora, {times}× o normal",
+      "signups_dropped": "{count} em 24 h, {percent}% abaixo dos {expected} esperados"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” não responde",
@@ -1231,7 +1238,8 @@
       "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
       "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}",
       "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})",
-      "cost_runaway": "{spent} em uma hora, {times}× o normal"
+      "cost_runaway": "{spent} em uma hora, {times}× o normal",
+      "signups_dropped": "{count} em 24 h, {percent}% abaixo dos {expected} esperados"
     },
     "kind": {
       "monitor_down": "Fora do ar",
@@ -1242,7 +1250,8 @@
       "key_event_stopped": "Evento importante parou",
       "log_alert": "Alerta de log",
       "payments_failing": "Pagamentos falhando",
-      "cost_runaway": "Custo disparado"
+      "cost_runaway": "Custo disparado",
+      "signups_dropped": "Cadastros caíram"
     },
     "count": "{count, plural, one {# emergência} other {# emergências}}",
     "countProducts": "{count} emergências em {products} produtos",
@@ -1304,7 +1313,8 @@
     "keyBack": "{product}: {event} voltou a chegar",
     "logQuiet": "{product}: “{search}” voltou ao silêncio",
     "paymentsBack": "{product}: os pagamentos voltaram a passar",
-    "runawayOver": "{product}: o gasto voltou ao normal"
+    "runawayOver": "{product}: o gasto voltou ao normal",
+    "signupsBack": "Os cadastros voltaram ao normal em {product}"
   },
   "traffic": {
     "title": "Tráfego",
@@ -1677,11 +1687,14 @@
       "title": "Quanto tempo guardar",
       "infoLabel": "Sobre quanto tempo guardar",
       "info": "Por quanto tempo cada área guarda os dados deste produto. Um tempo maior vale para o que chega daqui em diante. Um menor também apaga, na hora, o que ficou mais antigo que ele. Os problemas continuam na lista; só os eventos deles saem.",
+      "events": "Tráfego e uso do produto",
+      "eventsHint": "Cada visita e cada evento que o produto envia. Os gráficos dos meses passados leem esses dados.",
       "errors": "Erros",
       "errorsHint": "Cada evento de erro, com stack trace e contexto.",
       "logs": "Logs",
       "logsHint": "Cada linha de log.",
       "days": "{count, plural, one {# dia} other {# dias}}",
+      "months": "{count, plural, one {# mês} other {# meses}}",
       "shorter": "Ao salvar, o que for mais antigo que isso é apagado agora.",
       "save": "Salvar",
       "saved": "Salvo."
@@ -2174,7 +2187,12 @@
     },
     "addSourceTo": "Adicionar origem em",
     "source": "Origem",
-    "allSources": "Todas as origens"
+    "allSources": "Todas as origens",
+    "signals": {
+      "label": "Fora do normal",
+      "signupsDropped": "Cadastros caíram em {product}: {count} nas últimas 24 horas, {percent}% abaixo dos {expected} esperados.",
+      "see": "Ver por quê"
+    }
   },
   "usageSetup": {
     "title": "Configurar Uso do produto",

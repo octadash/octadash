@@ -445,3 +445,76 @@ export async function lastUsageEvent(
   const [row] = await result.json<{ at: string; event: string }>()
   return row ? { at: new Date(row.at), event: row.event } : null
 }
+
+/** What "Sign-ups dropped" reads for one product: the last 24 hours and what they usually have. */
+export interface SignupNormal {
+  orgId: string
+  projectId: string
+  /** Sign-ups in the last 24 hours. */
+  last24h: number
+  /** Sign-ups in the 7 days before them: the level. */
+  lastWeek: number
+  /** Sign-ups in the same 24 weekday hours of each of the 4 weeks before. */
+  sameHours: number
+  /** Sign-ups in those 4 weeks: `sameHours` over this is the shape. */
+  fourWeeks: number
+  /** The oldest sign-up in the last 35 days. */
+  oldest: Date
+}
+
+/**
+ * Sign-ups of every product that had any in the last 35 days, all
+ * organizations at once, for the Sign-ups dropped signal: the last 24 hours,
+ * the 7 days before them, and the same 24 weekday hours of the 4 weeks before.
+ */
+export async function signupNormals(
+  client: ClickHouseClient,
+  at: Date,
+  signups: string[],
+): Promise<SignupNormal[]> {
+  const ms = (days: number) => toClickHouseTime(new Date(at.getTime() - days * DAY_S * 1000))
+  const result = await client.query({
+    query: `SELECT toString(org_id) AS org, toString(project_id) AS project,
+        countIf(timestamp >= {d1:DateTime64(3, 'UTC')}) AS last24h,
+        countIf(timestamp >= {d8:DateTime64(3, 'UTC')} AND timestamp < {d1:DateTime64(3, 'UTC')})
+          AS lastWeek,
+        countIf(timestamp >= {d29:DateTime64(3, 'UTC')} AND timestamp < {d1:DateTime64(3, 'UTC')}
+          AND (toUnixTimestamp({at:DateTime64(3, 'UTC')}) - toUnixTimestamp(timestamp))
+            % ${7 * DAY_S} < ${DAY_S}) AS sameHours,
+        countIf(timestamp >= {d29:DateTime64(3, 'UTC')} AND timestamp < {d1:DateTime64(3, 'UTC')})
+          AS fourWeeks,
+        min(timestamp) AS oldest
+      FROM events
+      WHERE ${IS_SIGNUP} AND is_bot = 0
+        AND timestamp >= {d35:DateTime64(3, 'UTC')} AND timestamp <= {at:DateTime64(3, 'UTC')}
+      GROUP BY org_id, project_id`,
+    query_params: {
+      signups,
+      at: toClickHouseTime(at),
+      d1: ms(1),
+      d8: ms(8),
+      d29: ms(29),
+      d35: ms(35),
+    },
+    clickhouse_settings: ISO_TIMES,
+    format: 'JSONEachRow',
+  })
+  const rows = await result.json<{
+    org: string
+    project: string
+    last24h: string
+    lastWeek: string
+    sameHours: string
+    fourWeeks: string
+    oldest: string
+  }>()
+  return rows.map((r) => ({
+    orgId: r.org,
+    projectId: r.project,
+    last24h: Number(r.last24h),
+    lastWeek: Number(r.lastWeek),
+    sameHours: Number(r.sameHours),
+    fourWeeks: Number(r.fourWeeks),
+    oldest: new Date(r.oldest),
+  }))
+}

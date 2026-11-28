@@ -29,6 +29,14 @@ export const RULE_DEFAULTS = {
    */
   key_event_stopped: { level: 'emergency', params: { expected: 5, silence: 30 } },
   /**
+   * A signal, not an emergency: a product's sign-ups in the last 24 hours are
+   * `drop` percent or more below what is expected, and at least `signups` were
+   * expected. Expected = shape × level: the 7 days before (the level) times the
+   * part of a week these 24 weekday hours usually hold (the shape, from the 4
+   * weeks before). Needs 4 weeks of sign-ups. Ends when they come back within.
+   */
+  signups_dropped: { level: 'signal', params: { drop: 30, signups: 10 } },
+  /**
    * A saved Logs search with Alert on matched a line in a product. Ends after
    * `silence` minutes without a match. Each product gets its own emergency.
    */

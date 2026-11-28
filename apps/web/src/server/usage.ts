@@ -41,6 +41,17 @@ export interface FunnelResult extends Funnel {
   counts: number[]
 }
 
+/** An open "Sign-ups dropped" signal of a product in scope. */
+export interface SignupSignal {
+  id: string
+  href: string
+  product: string
+  /** Sign-ups in the last 24 hours, those expected, and how far under (percent). */
+  count: number
+  expected: number
+  percent: number
+}
+
 export interface UsageData {
   period: TrafficPeriod
   timeZone: string
@@ -64,6 +75,7 @@ export interface UsageData {
   sources: ScopeSource[]
   /** The source the page is filtered to, when it belongs to the scope. */
   source: ScopeSource | null
+  signals: SignupSignal[]
 }
 
 const NONE: UsageTotals = { active: 0, signups: 0, keyEvents: 0 }
@@ -219,5 +231,19 @@ export async function loadUsage(
     complete,
     sources: inScope,
     source,
+    signals: incidents
+      .filter((i) => i.kind === 'signups_dropped' && byId.has(i.project_id))
+      .map((i) => {
+        const d = (i.data ?? {}) as Record<string, unknown>
+        const num = (v: unknown) => (typeof v === 'number' ? v : 0)
+        return {
+          id: i.id,
+          href: `/p/${i.project_slug}/emergencies/${i.id}`,
+          product: i.project_name,
+          count: num(d.count),
+          expected: num(d.expected),
+          percent: num(d.percent),
+        }
+      }),
   }
 }

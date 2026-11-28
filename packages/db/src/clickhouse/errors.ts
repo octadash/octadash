@@ -1,6 +1,7 @@
 import type { ClickHouseClient } from '@clickhouse/client'
 import { type Bucket, bucketSql, ISO_TIMES } from './buckets'
 import { toClickHouseTime } from './events'
+import { trimRetention } from './trim'
 
 /** One frame of a stack trace, innermost last (the order Sentry uses). */
 export interface ErrorFrame {
@@ -500,22 +501,12 @@ export async function errorsByProduct(
   )
 }
 
-/**
- * Shortens what a product keeps: events older than `days` are deleted now
- * instead of waiting for the retention they arrived with. ClickHouse runs it
- * in the background.
- */
-export async function trimErrors(
+/** Shortens what a product keeps of its error events (see `trimRetention`). */
+export function trimErrors(
   client: ClickHouseClient,
   orgId: string,
   projectId: string,
   days: number,
 ) {
-  await client.command({
-    query: `
-      ALTER TABLE errors DELETE
-      WHERE org_id = {org:UUID} AND project_id = {project:UUID}
-        AND timestamp < now() - toIntervalDay({days:UInt16})`,
-    query_params: { org: orgId, project: projectId, days },
-  })
+  return trimRetention(client, 'errors', orgId, projectId, days)
 }

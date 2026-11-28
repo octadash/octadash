@@ -32,6 +32,7 @@ export function startWriters(
     loadRetention(projectIds: string[]): Promise<Map<string, number>>
   },
   logs: Omit<LogWriterDeps, 'router' | 'log'>,
+  events: { loadRetention(projectIds: string[]): Promise<Map<string, number>> },
   log: Logger,
   retention: { receivedDays: number; traceDays: number; metricDays: number },
 ) {
@@ -42,6 +43,7 @@ export function startWriters(
     router,
     log,
   }
+  const eventRetention = cachedRetention(events.loadRetention, AREA_RETENTION.events.defaultDays)
   const consumers = [
     startConsumer(
       valkey,
@@ -50,7 +52,15 @@ export function startWriters(
         // A batch retried after a failed insert counts its discarded events again;
         // the count is a hint on the card, not billing.
         const kept = await router.route(rows as EventRow[])
-        await insertEvents(clickhouse, kept, token)
+        const days = await eventRetention(kept.map((row) => row.project_id))
+        await insertEvents(
+          clickhouse,
+          kept.map((row) => ({
+            ...row,
+            retention_days: days.get(row.project_id) ?? AREA_RETENTION.events.defaultDays,
+          })),
+          token,
+        )
         log.debug({ rows: kept.length, discarded: rows.length - kept.length }, 'events written')
       },
       { log },
