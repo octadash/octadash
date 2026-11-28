@@ -155,7 +155,66 @@
     "soonGroup": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra a área para os produtos deste grupo."
   },
   "overview": {
-    "count": "{count, plural, one {# produto} other {# produtos}}."
+    "count": "{count, plural, one {# produto} other {# produtos}}.",
+    "subtitle": "{count, plural, one {# produto} other {# produtos}} · {period}, até {time}",
+    "period": "Período",
+    "periods": {
+      "24h": "24 horas",
+      "7d": "7 dias",
+      "30d": "30 dias"
+    },
+    "last": {
+      "24h": "Últimas 24 horas",
+      "7d": "Últimos 7 dias",
+      "30d": "Últimos 30 dias"
+    },
+    "vsPrevious": "contra o período anterior",
+    "online": "{count} online agora",
+    "change": "{change}%",
+    "incomplete": "Alguns números estão faltando porque o banco de eventos não respondeu. O estado do uptime e as emergências estão em dia.",
+    "totals": "Totais",
+    "tiles": {
+      "uptime": "No ar",
+      "upNow": "{up} de {total}",
+      "uptimeSub": "no ar agora · {ratio} em {period}",
+      "visitors": "Visitantes"
+    },
+    "chart": {
+      "visitors": "Visitantes",
+      "previous": "Período anterior",
+      "emergency": "Emergência",
+      "asTable": "Ver como tabela",
+      "time": "Horário"
+    },
+    "table": {
+      "title": "Produtos",
+      "order": "Emergências primeiro, depois por visitantes",
+      "product": "Produto",
+      "uptime": "Uptime · {period}",
+      "visitors": "Visitantes",
+      "down": "Fora do ar agora",
+      "downFor": "Fora do ar há {duration}",
+      "takenBy": "{name} está cuidando",
+      "notUsed": "Não usa esta área",
+      "noChecks": "Ainda sem checagens",
+      "hoursSummary": "Fora do ar em {down} de {total} intervalos",
+      "footnote": "“—” quer dizer que o produto não usa aquela área. Clique em uma linha para abrir o produto.",
+      "shown": "{count, plural, one {# produto} other {# produtos}}"
+    },
+    "timeline": {
+      "title": "O que aconteceu · {period}",
+      "nothing": "Nada aconteceu neste período: nenhuma queda, nenhuma emergência.",
+      "quiet": "{count, plural, one {O outro produto não teve} other {Os outros # produtos não tiveram}} nada neste período.",
+      "open": "{what} desde {from}, {duration} até agora",
+      "closed": "{what} de {from} a {to}, {duration}",
+      "kinds": {
+        "monitor_down": "“{name}” fora do ar",
+        "heartbeat_missed": "Heartbeat “{name}” não chegou",
+        "cert_expiring": "Certificado de “{name}” perto de vencer",
+        "other": "Emergência"
+      },
+      "more": "{count, plural, one {Mais # na página do produto} other {Mais # na página do produto}}"
+    }
   },
   "uptime": {
     "title": "No ar",

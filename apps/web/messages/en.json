@@ -155,7 +155,66 @@
     "soonGroup": "{area} arrives in an upcoming version of Octadash. When it does, this screen shows it for the products of this group."
   },
   "overview": {
-    "count": "{count, plural, one {# product} other {# products}}."
+    "count": "{count, plural, one {# product} other {# products}}.",
+    "subtitle": "{count, plural, one {# product} other {# products}} · {period}, until {time}",
+    "period": "Period",
+    "periods": {
+      "24h": "24 hours",
+      "7d": "7 days",
+      "30d": "30 days"
+    },
+    "last": {
+      "24h": "Last 24 hours",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days"
+    },
+    "vsPrevious": "vs previous {period}",
+    "online": "{count} online now",
+    "change": "{change}%",
+    "incomplete": "Some numbers are missing because the events database did not answer. Uptime states and emergencies are up to date.",
+    "totals": "Totals",
+    "tiles": {
+      "uptime": "Uptime",
+      "upNow": "{up} of {total}",
+      "uptimeSub": "up now · {ratio} in {period}",
+      "visitors": "Visitors"
+    },
+    "chart": {
+      "visitors": "Visitors",
+      "previous": "Previous period",
+      "emergency": "Emergency",
+      "asTable": "Show as a table",
+      "time": "Time"
+    },
+    "table": {
+      "title": "Products",
+      "order": "Emergencies first, then by visitors",
+      "product": "Product",
+      "uptime": "Uptime · {period}",
+      "visitors": "Visitors",
+      "down": "Down now",
+      "downFor": "Down for {duration}",
+      "takenBy": "{name} is on it",
+      "notUsed": "Doesn't use this area",
+      "noChecks": "No checks yet",
+      "hoursSummary": "Down in {down} of {total} intervals",
+      "footnote": "“—” means the product doesn't use that area. Click a row to open the product.",
+      "shown": "{count, plural, one {# product} other {# products}}"
+    },
+    "timeline": {
+      "title": "What happened · {period}",
+      "nothing": "Nothing happened in these {period}: no outage, no emergency.",
+      "quiet": "The other {count, plural, one {product} other {# products}} had nothing in these {period}.",
+      "open": "{what} since {from}, {duration} so far",
+      "closed": "{what} from {from} to {to}, {duration}",
+      "kinds": {
+        "monitor_down": "“{name}” down",
+        "heartbeat_missed": "Heartbeat “{name}” missed",
+        "cert_expiring": "Certificate of “{name}” about to expire",
+        "other": "Emergency"
+      },
+      "more": "{count, plural, one {# more on the product page} other {# more on the product page}}"
+    }
   },
   "uptime": {
     "title": "Uptime",

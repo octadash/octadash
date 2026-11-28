@@ -306,24 +306,34 @@ and email, the daily summary only by email.
 ## Overview ("All products")
 
 The screen the owner looks at all day. It is not a copy of each product page:
-it puts every product side by side, area by area, and crosses areas.
+it puts every product side by side, area by area, and crosses areas. A group
+shows the same page filtered to its products; the product page follows the
+same pattern for one product, with the area cards after it. Closed with
+Luciano on 2026-11-28 in the panel canvas.
 
 From top to bottom:
 
-0. **Emergency strip** (only when there is one) and **signals strip** ("3 things
-   out of normal today", clickable).
-1. **Uptime:** one row per product with a status dot, 30-day uptime, response
-   time and days until the certificate expires.
-2. **Traffic:** visitors today per product, against yesterday, with a 7-day
-   sparkline. The total is at the top of the block.
-3. **Product usage:** sign-ups and logins today per product against normal.
-   This is where "sign-ups on Tribunal dropped" shows up.
-4. **Errors:** new errors in the last 24 hours and people affected, per product.
-5. **Money:** today's revenue and MRR per product, with the total.
-6. **Costs:** AI and infra cost per product and the margin (revenue minus cost).
+0. **Emergency strip** (only when there is one, ignores the filter) and
+   **signals** ("3 things out of normal", clickable).
+1. **Header:** period 24 hours, 7 days, 30 days or custom, always compared with
+   the period right before, and "N online now".
+2. **Numbers at the top**, one per area some product uses, each with its trend
+   against the previous period and a sparkline: Uptime ("9 of 10 up now"),
+   Visitors, Sign-ups, New errors, Revenue, Margin. Each opens its area.
+3. **Big chart** with a tab per metric (Visitors, Sign-ups, Errors, Revenue,
+   Costs), the previous period as a dashed line and marks for deploys and
+   emergencies. "Show as a table" gives the same numbers as text.
+4. **Products table**, one row per product: emergencies and signals first, then
+   by visitors. Columns by area (uptime as a bar of hours, visitors with trend
+   and sparkline, sign-ups, new errors, revenue and MRR, margin); "—" means the
+   product doesn't use that area. Columns are configurable. A row opens the
+   product.
+5. **What happened**, a timeline of the period with only the products that had
+   something (down, out of normal, deploy). The others are counted in one line.
 
-Logs are not on the overview (they are for investigating), but the Logs area
-works for all products at once like every other area.
+Days and "today" follow the organization's time zone. Logs are not on the
+overview (they are for investigating), but the Logs area works for all
+products at once like every other area.
 
 ## Roadmap to 1.0
 

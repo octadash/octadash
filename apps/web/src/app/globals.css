@@ -71,6 +71,10 @@
     --input: #d5dae4;
     --ring: #a32c69;
     --brand: #a32c69;
+    /* Status colors dark enough for text on white (WCAG AA, 4.5:1). */
+    --color-ok: #157347;
+    --color-warn: #8a5300;
+    --color-error: #b23a0a;
   }
 }
 

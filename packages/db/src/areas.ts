@@ -22,6 +22,23 @@ export async function listProjectAreas(db: Db, orgId: string, projectId: string)
   )
 }
 
+/** The same, for every product of the organization at once: product id, then area. */
+export async function listOrgAreas(db: Db, orgId: string) {
+  const rows = await db
+    .selectFrom('project_area')
+    .select(['project_id', 'area', 'state'])
+    .where('org_id', '=', orgId)
+    .execute()
+  const byProduct = new Map<string, Map<AreaId, ProjectAreaState>>()
+  for (const row of rows) {
+    if (!isArea(row.area)) continue
+    const areas = byProduct.get(row.project_id) ?? new Map<AreaId, ProjectAreaState>()
+    areas.set(row.area, row.state)
+    byProduct.set(row.project_id, areas)
+  }
+  return byProduct
+}
+
 /** Sets an area's state, or clears it with null (back to "not set up"). */
 export async function setProjectArea(
   db: Db,
