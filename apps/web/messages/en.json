@@ -2700,6 +2700,21 @@
       "failing": "Failing to read",
       "importing": "Reading the last 90 days…",
       "unassigned": "{amount} no product takes (a project or bill without a product for its rest). Counted in no product’s cost."
+    },
+    "aiCalls": {
+      "title": "AI calls from your apps",
+      "infoLabel": "About AI calls from your apps",
+      "info": "Each model call your apps report with OpenTelemetry (gen_ai spans) or PostHog AI events, priced at the provider’s list price (LiteLLM’s price list of {date}) unless the app sent its own cost. Cached tokens are priced at their own rate. It is an estimate in US dollars, apart from the bills of connected accounts, which stay the total.",
+      "total": "{calls, plural, one {# call} other {# calls}} · {cost}",
+      "product": "Product",
+      "model": "Model",
+      "calls": "Calls",
+      "input": "Input tokens",
+      "output": "Output tokens",
+      "cost": "Cost (US$)",
+      "errors": "{count, plural, one {# failed} other {# failed}}",
+      "noPrice": "no price",
+      "unpriced": "{count, plural, one {# call} other {# calls}} of models without a list price: their tokens count, their cost does not."
     }
   },
   "costsSetup": {

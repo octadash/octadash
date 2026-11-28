@@ -1,0 +1,56 @@
+---
+title: Chamadas de IA
+description: Quanto cada produto gasta com modelos de IA, a partir das chamadas que o app informa por OpenTelemetry.
+---
+
+Cada chamada que o seu app faz a um modelo (um chat, um embedding) pode
+informar o modelo e os tokens. O Octadash lê, coloca preço e mostra em
+[Custos](/pt/use/costs) por produto e modelo. Nada para embrulhar: os SDKs de
+IA de costume já informam isso.
+
+## Envie as chamadas
+
+Use qualquer instrumentação que siga as convenções `gen_ai` do OpenTelemetry e
+exporte os traces para o Octadash com a chave da origem do produto:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=https://ingest.example.com/otlp
+OTEL_EXPORTER_OTLP_HEADERS=x-octadash-key=YOUR_SOURCE_KEY
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+```
+
+- **Vercel AI SDK**: ligue a telemetria em cada chamada,
+  `experimental_telemetry: { isEnabled: true }`, com o OpenTelemetry
+  configurado no app (no Next.js, `registerOTel` do `@vercel/otel` no
+  `instrumentation.ts`).
+- **Python, Java, .NET e outros**: a instrumentação OpenTelemetry do cliente
+  da OpenAI, Anthropic ou Gemini, ou o OpenLLMetry.
+- **SDKs do Sentry** com integração de IA enviam os mesmos spans dentro das
+  transações; eles contam também.
+
+Os spans em si ficam guardados com os outros traces.
+
+## Eventos de IA do PostHog
+
+Eventos `$ai_generation` e `$ai_embedding` enviados para os endereços
+clássicos do PostHog também contam como chamadas, com o custo que o SDK do
+PostHog enviou, quando enviou. Os SDKs de servidor mais novos do PostHog
+enviam para um endereço novo que o Octadash ainda não lê, então em servidores
+prefira OpenTelemetry.
+
+## Como o preço é calculado
+
+- O modelo e os tokens vêm da chamada: entrada, saída e entrada em cache (lida
+  ou gravada no cache do provedor), cada um com o seu preço.
+- Os preços são os de tabela dos provedores, da lista de preços do LiteLLM,
+  atualizada junto com o Octadash. Um modelo que a lista não tem mantém os
+  tokens e aparece "sem preço".
+- Um custo enviado pelo app (o `$ai_total_cost_usd` do PostHog) vale mais que
+  a lista.
+- É uma estimativa em dólares. A conta de uma conta de IA conectada em Custos
+  continua sendo o total; as chamadas mostram qual produto e modelo gastou.
+
+## Pergunte à sua IA
+
+Com um token que lê Custos, o [servidor MCP](/pt/use/mcp) responde `ai_usage`:
+chamadas, tokens e custo por produto e modelo nos últimos dias.

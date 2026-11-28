@@ -2700,6 +2700,21 @@
       "failing": "Falhando ao ler",
       "importing": "Lendo os últimos 90 dias…",
       "unassigned": "{amount} sem produto (um projeto ou conta sem produto para o resto). Não entra no custo de nenhum produto."
+    },
+    "aiCalls": {
+      "title": "Chamadas de IA dos seus apps",
+      "infoLabel": "Sobre chamadas de IA dos seus apps",
+      "info": "Cada chamada de modelo que os seus apps informam por OpenTelemetry (spans gen_ai) ou eventos de IA do PostHog, com o preço de tabela do provedor (lista de preços do LiteLLM de {date}), a menos que o app tenha enviado o próprio custo. Tokens em cache têm o preço deles. É uma estimativa em dólares, à parte das contas das contas conectadas, que continuam sendo o total.",
+      "total": "{calls, plural, one {# chamada} other {# chamadas}} · {cost}",
+      "product": "Produto",
+      "model": "Modelo",
+      "calls": "Chamadas",
+      "input": "Tokens de entrada",
+      "output": "Tokens de saída",
+      "cost": "Custo (US$)",
+      "errors": "{count, plural, one {# falhou} other {# falharam}}",
+      "noPrice": "sem preço",
+      "unpriced": "{count, plural, one {# chamada} other {# chamadas}} de modelos sem preço de tabela: os tokens contam, o custo não."
     }
   },
   "costsSetup": {

@@ -4,6 +4,7 @@ import {
   areaOfReceived,
   type ClickHouseClient,
   type EventRow,
+  insertAiCalls,
   insertEvents,
   insertMetrics,
   insertReceived,
@@ -15,6 +16,7 @@ import {
   type QueuedSpan,
 } from '@octadash/db'
 import { type Redis, startConsumer } from '@octadash/queue'
+import { aiCallsFromEvents, aiCallsFromSpans } from './ai'
 import { type ErrorWriterDeps, writeErrors } from './errors'
 import { createLogWriter, type LogWriterDeps } from './logs'
 import { cachedRetention } from './retention'
@@ -61,6 +63,8 @@ export function startWriters(
           })),
           token,
         )
+        // PostHog's AI events also feed AI cost; the event itself stays in `events`.
+        await insertAiCalls(clickhouse, aiCallsFromEvents(kept), token)
         log.debug({ rows: kept.length, discarded: rows.length - kept.length }, 'events written')
       },
       { log },
@@ -96,6 +100,8 @@ export function startWriters(
           (rows as QueuedSpan[]).map((row) => ({ ...row, retention_days: retention.traceDays })),
           token,
         )
+        // Model calls (`gen_ai` spans) also feed AI cost, kept longer than the spans.
+        await insertAiCalls(clickhouse, aiCallsFromSpans(rows as QueuedSpan[]), token)
         log.debug({ rows: rows.length }, 'spans written')
       },
       { log },

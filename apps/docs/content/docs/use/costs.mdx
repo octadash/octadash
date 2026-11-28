@@ -50,6 +50,13 @@ margins do not move.
 Amounts are in the organization's currency; other currencies are converted at
 the day's rate.
 
+## AI calls from your apps
+
+Apps that report their model calls (OpenTelemetry `gen_ai` spans, PostHog AI
+events) get one more table: calls, tokens and cost per product and model, at
+list price. It is how a shared AI account shows which product and model spent
+it. See [AI calls](/send-data/ai).
+
 ## Ask your AI
 
 With a token that reads Costs, the [MCP server](/use/mcp) answers `costs`:

@@ -531,9 +531,11 @@ changing one URL:
 
 - Sentry envelopes (`/api/:id/envelope/`) for errors, from any Sentry SDK.
 - PostHog capture (`/e/`, `/i/v0/e/`, `/batch/`, `/capture/`) for events;
-  `$ai_generation` and the newer `/i/v1/...` endpoints come with their areas.
+  `$ai_generation` also feeds AI cost (`ai_calls`); the newer `/i/v1/...`
+  endpoints come with their areas.
 - OTLP over HTTP (`/v1/logs`, `/v1/traces`, `/v1/metrics`) for logs, traces and
-  `gen_ai` spans. All three are kept.
+  `gen_ai` spans. All three are kept; each `gen_ai` model call also becomes a
+  row in `ai_calls` with its tokens and cost.
 
 Octadash writes its own SDKs only where it adds something: one browser script
 (traffic, errors and events) and a Node.js and Next.js package. Every other

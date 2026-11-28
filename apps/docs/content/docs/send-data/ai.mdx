@@ -1,0 +1,54 @@
+---
+title: AI calls
+description: What each product spends on AI models, from the calls your app reports with OpenTelemetry.
+---
+
+Each call your app makes to a model (a chat, an embedding) can report its
+model and tokens. Octadash reads them, prices them and shows them in
+[Costs](/use/costs) per product and model. Nothing to wrap: the usual AI SDKs
+already report them.
+
+## Send the calls
+
+Use any instrumentation that follows the OpenTelemetry `gen_ai` conventions
+and export traces to Octadash with the product's source key:
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=https://ingest.example.com/otlp
+OTEL_EXPORTER_OTLP_HEADERS=x-octadash-key=YOUR_SOURCE_KEY
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+```
+
+- **Vercel AI SDK**: turn telemetry on in each call,
+  `experimental_telemetry: { isEnabled: true }`, with an OpenTelemetry setup
+  in the app (in Next.js, `registerOTel` from `@vercel/otel` in
+  `instrumentation.ts`).
+- **Python, Java, .NET and others**: the OpenTelemetry instrumentation for the
+  OpenAI, Anthropic or Gemini client, or OpenLLMetry.
+- **Sentry SDKs** with an AI integration send the same spans inside their
+  transactions; they count too.
+
+The spans themselves are kept with the other traces.
+
+## PostHog AI events
+
+`$ai_generation` and `$ai_embedding` events sent to the classic PostHog
+endpoints count as calls too, with the cost PostHog's SDK sent when it sent
+one. The newest PostHog server SDKs send them to a new endpoint Octadash does
+not read yet, so for servers prefer OpenTelemetry.
+
+## How it is priced
+
+- The model and the tokens come from the call: input, output and cached input
+  (read from or written to the provider's cache), each at its own price.
+- The prices are the providers' list prices, from LiteLLM's price list,
+  updated with Octadash. A model the list does not have keeps its tokens and
+  shows "no price".
+- A cost the app sent (PostHog's `$ai_total_cost_usd`) wins over the list.
+- It is an estimate in US dollars. The bill of an AI account connected in
+  Costs stays the total; the calls show which product and model spent it.
+
+## Ask your AI
+
+With a token that reads Costs, the [MCP server](/use/mcp) answers `ai_usage`:
+calls, tokens and cost per product and model over the last days.

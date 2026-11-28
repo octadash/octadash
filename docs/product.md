@@ -372,19 +372,19 @@ octadash/skills`) uses the setup tools to put Octadash in a codebase, app by
 app, and migrates from PostHog, Sentry and Plausible (docs at
 `/use/install-with-ai`). Each step's write tools join it as the step ships.
 
-| #   | Step                  | Delivers                                                                                                                                                                                         | State       |
-| --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| 0   | Foundation            | accounts, organizations, products, API keys, setup wizard                                                                                                                                        | done        |
-| 1   | New base              | ClickHouse and Valkey in the install, ingest that answers at once and queues in Valkey, area menu and product picker, product created by name, product page in setup mode, URL diagnosis removed | done        |
-| 2   | Uptime and alerts     | monitors, heartbeats, certificate, seeded rules, emergency strip, channels (email with SMTP and Resend, Telegram, webhook), outside watcher                                                      | done        |
-| 3   | Traffic               | Octadash browser script; first data in ClickHouse; overview starts                                                                                                                               | done        |
-| 4   | Errors                | Octadash SDK (browser and Node), Sentry SDK compatibility, retention per product (30 days to a year), MCP `list_issues` and `issue_details`; `@octadash/node` on npm waits for the token         | done        |
-| 5   | Product usage         | events, sign-ups, logins, key events, funnels; retention per product (13 months by default, Traffic and usage together); the first signal, Sign-ups dropped (shape × level); MCP `usage`         | done        |
-| 6   | Money                 | Stripe, Asaas, Paddle                                                                                                                                                                            | done        |
-| 7   | AI cost               | OpenTelemetry `gen_ai`                                                                                                                                                                           | in progress |
-| 8   | Infra cost and margin | provider APIs or manual entries                                                                                                                                                                  | done        |
-| 9   | Logs                  | OTLP over HTTP                                                                                                                                                                                   | done        |
-| 10  | Daily summary         | what changed since yesterday, by email and the alert channels                                                                                                                                    | next        |
+| #   | Step                  | Delivers                                                                                                                                                                                         | State |
+| --- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| 0   | Foundation            | accounts, organizations, products, API keys, setup wizard                                                                                                                                        | done  |
+| 1   | New base              | ClickHouse and Valkey in the install, ingest that answers at once and queues in Valkey, area menu and product picker, product created by name, product page in setup mode, URL diagnosis removed | done  |
+| 2   | Uptime and alerts     | monitors, heartbeats, certificate, seeded rules, emergency strip, channels (email with SMTP and Resend, Telegram, webhook), outside watcher                                                      | done  |
+| 3   | Traffic               | Octadash browser script; first data in ClickHouse; overview starts                                                                                                                               | done  |
+| 4   | Errors                | Octadash SDK (browser and Node), Sentry SDK compatibility, retention per product (30 days to a year), MCP `list_issues` and `issue_details`; `@octadash/node` on npm waits for the token         | done  |
+| 5   | Product usage         | events, sign-ups, logins, key events, funnels; retention per product (13 months by default, Traffic and usage together); the first signal, Sign-ups dropped (shape × level); MCP `usage`         | done  |
+| 6   | Money                 | Stripe, Asaas, Paddle                                                                                                                                                                            | done  |
+| 7   | AI cost               | OpenTelemetry `gen_ai` spans and PostHog `$ai_generation` priced from LiteLLM's list, per product and model in Costs; MCP `ai_usage`                                                             | done  |
+| 8   | Infra cost and margin | provider APIs or manual entries                                                                                                                                                                  | done  |
+| 9   | Logs                  | OTLP over HTTP                                                                                                                                                                                   | done  |
+| 10  | Daily summary         | what changed since yesterday, by email and the alert channels                                                                                                                                    | next  |
 
 Rules that apply to every step:
 

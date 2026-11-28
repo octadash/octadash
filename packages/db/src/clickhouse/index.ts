@@ -1,3 +1,4 @@
+export * from './ai'
 export * from './buckets'
 export * from './client'
 export * from './errors'
