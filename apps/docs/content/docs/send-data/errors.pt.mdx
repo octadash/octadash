@@ -32,6 +32,10 @@ Primeiro onde o código roda, depois a linguagem, como no painel. O Next.js est�
 - **Limites do script.** Erros não tratados e promises rejeitadas, até 10 por
   página. Ignora `localhost`, a não ser que a tag tenha `data-local`.
 - **Sem SDK.** Faça um POST do mesmo JSON de evento para `/o/v1/errors` com a chave.
+- **Por quanto tempo os eventos ficam.** 90 dias por padrão; 30, 180 ou 365 em
+  **Configurações do produto** > **Quanto tempo guardar**. Um tempo menor apaga
+  na hora os eventos mais antigos. Os problemas continuam na lista; só os
+  eventos deles saem.
 - **O que mais é guardado.** Sessões, check-ins, feedback e transações que o SDK
   envia são guardados mesmo antes de uma tela mostrá-los, por
   `OCTADASH_RECEIVED_RETENTION_DAYS` e `OCTADASH_TRACE_RETENTION_DAYS`. Veja

@@ -1672,6 +1672,19 @@
       "deleteBody": "Data already received stays. From then on, data with this key is refused.",
       "deleteConfirmTitle": "Delete {name}?",
       "delete": "Delete source"
+    },
+    "retention": {
+      "title": "Data kept",
+      "infoLabel": "About data kept",
+      "info": "How long each area keeps this product's data. A longer time applies to what arrives from now on. A shorter one also deletes, right away, what is now older than it. Issues stay listed; only their events go.",
+      "errors": "Errors",
+      "errorsHint": "Each error event, with its stack trace and context.",
+      "logs": "Logs",
+      "logsHint": "Every log line.",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "shorter": "Saving deletes what is older than this now.",
+      "save": "Save",
+      "saved": "Saved."
     }
   },
   "tv": {

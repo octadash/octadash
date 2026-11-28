@@ -83,13 +83,16 @@ describe('writeErrors', () => {
         insert: async (rows) => {
           written.push(...rows)
         },
+        retentionOf: async (ids) => new Map(ids.map((id) => [id, 30])),
         onChange: async (list) => {
           changes.push(...list)
         },
         log: createLogger('test', 'silent'),
       },
     )
-    expect(written.map((row) => [row.project_id, row.issue_id])).toEqual([['p1', 'i1']])
+    expect(written.map((row) => [row.project_id, row.issue_id, row.retention_days])).toEqual([
+      ['p1', 'i1', 30],
+    ])
     expect(changes).toEqual([{ orgId: 'o', projectId: 'p1', issueId: 'i1', outcome: 'new' }])
   })
 })

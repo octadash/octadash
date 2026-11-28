@@ -32,6 +32,9 @@ First where the code runs, then the language, as in the panel. Next.js is in bot
 - **Script limits.** Uncaught errors and rejected promises, up to 10 per page.
   It skips `localhost` unless the tag has `data-local`.
 - **No SDK.** POST the same event JSON to `/o/v1/errors` with the key.
+- **How long events are kept.** 90 days by default; 30, 180 or 365 in
+  **Product settings** > **Data kept**. A shorter time deletes older events at
+  once. Issues stay listed; only their events go.
 - **What else is kept.** Sessions, check-ins, feedback and transactions the SDK
   sends are stored even before a screen shows them, for
   `OCTADASH_RECEIVED_RETENTION_DAYS` and `OCTADASH_TRACE_RETENTION_DAYS`. See

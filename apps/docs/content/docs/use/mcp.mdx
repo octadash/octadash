@@ -94,6 +94,8 @@ assistant sees.
 | `open_emergencies` | Alerts: read | What is open now: emergencies and signals, since when, and whether someone is on it.                  |
 | `traffic`          | Traffic: read | Visitors and page views over the last days (7 by default, up to 90) against the days before, with the top pages, sources, channels and countries. |
 | `search_logs`      | Logs: read | Log lines, newest first, with the same search the Logs page takes (`level:error timeout`), up to 7 days back. |
+| `list_issues`      | Errors: read | Error issues, most recently seen first (unresolved, new, regressed, resolved or ignored), with events and people in the period. |
+| `issue_details`    | Errors: read | One issue with its newest event: exception chain and stack trace, the last breadcrumbs, tags, release and browser. |
 | `list_sources`     | Sources: read | A product's sources, the areas each feeds and when each last sent a page view, an event, an error or a log line. |
 | `source_setup`     | Sources and keys: read | A source's public key, DSN and the exact install code per area, the same code the panel shows. |
 | `create_product`   | Products: write | Creates a product by name, or returns the one with that name. |

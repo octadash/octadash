@@ -1,9 +1,7 @@
 import type { Logger } from '@octadash/core'
-import type { LogRow, QueuedLog } from '@octadash/db'
+import { DEFAULT_LOG_RETENTION_DAYS, type LogRow, type QueuedLog } from '@octadash/db'
+import { cachedRetention } from './retention'
 import type { EventRouter } from './routing'
-
-/** A product's retention is read again after this long; a new choice reaches new lines within it. */
-const RETENTION_TTL_MS = 60_000
 
 export interface LogWriterDeps {
   router: EventRouter
@@ -19,24 +17,14 @@ export interface LogWriterDeps {
  * TTL reads.
  */
 export function createLogWriter(deps: LogWriterDeps) {
-  const now = deps.now ?? Date.now
-  const retention = new Map<string, { days: number; expires: number }>()
+  const retentionOf = cachedRetention(deps.loadRetention, DEFAULT_LOG_RETENTION_DAYS, deps.now)
   return async (rows: QueuedLog[], token: string) => {
     const kept = await deps.router.route(rows, () => 'logs')
     if (kept.length === 0) return
-    const at = now()
-    const stale = [...new Set(kept.map((row) => row.project_id))].filter(
-      (id) => (retention.get(id)?.expires ?? 0) <= at,
-    )
-    if (stale.length > 0) {
-      const fresh = await deps.loadRetention(stale)
-      for (const id of stale) {
-        retention.set(id, { days: fresh.get(id) ?? 14, expires: at + RETENTION_TTL_MS })
-      }
-    }
+    const days = await retentionOf(kept.map((row) => row.project_id))
     const written = kept.map((row) => ({
       ...row,
-      retention_days: retention.get(row.project_id)?.days ?? 14,
+      retention_days: days.get(row.project_id) ?? DEFAULT_LOG_RETENTION_DAYS,
     }))
     await deps.insert(written, token)
     deps.log.debug({ rows: written.length, discarded: rows.length - kept.length }, 'logs written')

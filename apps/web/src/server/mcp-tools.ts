@@ -3,8 +3,12 @@ import {
   compileLogQuery,
   createProject,
   createSource,
+  getIssue,
   hasPageScript,
+  issueEvent,
+  issueStats,
   listGroups,
+  listIssues,
   listOpenIncidents,
   listOrgMonitors,
   listProjects,
@@ -262,6 +266,140 @@ export const MCP_TOOLS: Tool[] = [
           ...(l.traceId ? { traceId: l.traceId } : {}),
           attributes: l.attributes,
         })),
+      }
+    },
+  },
+  {
+    name: 'list_issues',
+    needs: [['errors', 'read']],
+    title: 'Error issues',
+    description:
+      'Error issues (events grouped by where they happen), most recently seen first, with how many events and people each had in the period. Use issue_details for the stack trace of one.',
+    input: z.object({
+      product,
+      status: z
+        .enum(['unresolved', 'new', 'regressed', 'resolved', 'ignored'])
+        .default('unresolved')
+        .describe(
+          'unresolved by default; new = began in the period; regressed = came back after resolved.',
+        ),
+      hours: z
+        .number()
+        .int()
+        .min(1)
+        .max(720)
+        .default(24)
+        .describe('The period for event counts (and for "new"), in hours. 24 by default.'),
+      limit: z.number().int().min(1).max(100).default(25).describe('Most issues, 25 by default.'),
+    }),
+    async run(input, { orgId }) {
+      const { db, clickhouse, env } = services()
+      const { all, scope } = await productsOf(orgId, input.product as string | undefined)
+      const to = new Date()
+      const from = new Date(to.getTime() - Number(input.hours) * 3_600_000)
+      const projectIds = scope.map((p) => p.id)
+      const [issues, stats] = await Promise.all([
+        listIssues(db, orgId, {
+          projectIds,
+          tab: input.status as 'unresolved',
+          since: from,
+          userId: '',
+          limit: Number(input.limit),
+        }),
+        issueStats(clickhouse, { orgId, projectIds, from, to }, 1).catch(
+          () => new Map<string, { events: number; people: number }>(),
+        ),
+      ])
+      return {
+        period: { from, to },
+        issues: issues.map((issue) => {
+          const slug = slugOf(all, issue.project_id)
+          return {
+            id: issue.id,
+            product: slug,
+            type: issue.type,
+            message: issue.value,
+            culprit: issue.culprit,
+            level: issue.level,
+            handled: issue.handled,
+            status: issue.status,
+            firstSeen: issue.first_seen,
+            lastSeen: issue.last_seen,
+            timesSeen: issue.times_seen,
+            eventsInPeriod: stats.get(issue.id)?.events ?? 0,
+            peopleInPeriod: stats.get(issue.id)?.people ?? 0,
+            ...(issue.regressed_at ? { regressedAt: issue.regressed_at } : {}),
+            ...(issue.last_release ? { lastRelease: issue.last_release } : {}),
+            url: `${panelUrl(env.OCTADASH_URL)}/p/${slug}/errors/${issue.id}`,
+          }
+        }),
+      }
+    },
+  },
+  {
+    name: 'issue_details',
+    needs: [['errors', 'read']],
+    title: 'One error issue',
+    description:
+      'One issue with its newest event: the exception chain with the stack trace (the app’s own frames marked inApp), the last breadcrumbs, tags, release, environment, page and browser. Personal data was already masked when the event arrived.',
+    input: z.object({
+      issue: z.string().uuid().describe('The issue id, from list_issues.'),
+    }),
+    async run(input, { orgId }) {
+      const { db, clickhouse, env } = services()
+      const issue = await getIssue(db, orgId, String(input.issue))
+      if (!issue) throw new Error('No such issue in this organization.')
+      const { all } = await productsOf(orgId, undefined)
+      const event = await issueEvent(clickhouse, orgId, issue.id)
+      const slug = slugOf(all, issue.project_id)
+      return {
+        id: issue.id,
+        product: slug,
+        type: issue.type,
+        message: issue.value,
+        culprit: issue.culprit,
+        level: issue.level,
+        handled: issue.handled,
+        status: issue.status,
+        firstSeen: issue.first_seen,
+        lastSeen: issue.last_seen,
+        timesSeen: issue.times_seen,
+        firstRelease: issue.first_release,
+        lastRelease: issue.last_release,
+        url: `${panelUrl(env.OCTADASH_URL)}/p/${slug}/errors/${issue.id}`,
+        latestEvent: event && {
+          id: event.event_id,
+          at: event.timestamp,
+          release: event.release,
+          environment: event.environment,
+          platform: event.platform,
+          sdk: event.sdk,
+          url: event.url,
+          browser: event.browser,
+          os: event.os,
+          traceId: event.trace_id || undefined,
+          exceptions: event.exception.map((e) => ({
+            type: e.type,
+            value: e.value,
+            handled: e.mechanism?.handled,
+            // Innermost frames last, as SDKs send them; the last 40 are where it broke.
+            frames: e.frames.slice(-40).map((f) => ({
+              function: f.function,
+              file: f.filename || f.module,
+              line: f.lineno,
+              column: f.colno,
+              inApp: f.in_app,
+              ...(f.context_line ? { code: f.context_line.trim() } : {}),
+            })),
+          })),
+          breadcrumbs: event.breadcrumbs.slice(-20).map((b) => ({
+            at: b.timestamp ? new Date(b.timestamp).toISOString() : undefined,
+            category: b.category,
+            level: b.level,
+            message: b.message,
+          })),
+          tags: event.tags,
+        },
       }
     },
   },

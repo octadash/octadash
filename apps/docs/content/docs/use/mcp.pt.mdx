@@ -97,6 +97,8 @@ ferramentas o assistente vê.
 | `open_emergencies` | Alertas: leitura | O que está aberto agora: emergências e sinais, desde quando e se alguém está cuidando.                |
 | `traffic`          | Tráfego: leitura | Visitantes e páginas vistas nos últimos dias (7 por padrão, até 90) contra os dias anteriores, com as principais páginas, origens, canais e países. |
 | `search_logs`      | Logs: leitura | Linhas de log, das mais novas, com a mesma busca da página Logs (`level:error timeout`), até 7 dias atrás. |
+| `list_issues`      | Erros: leitura | Problemas de erro, dos vistos mais recentemente (não resolvidos, novos, que voltaram, resolvidos ou ignorados), com eventos e pessoas no período. |
+| `issue_details`    | Erros: leitura | Um problema com o evento mais novo: cadeia de exceções e stack trace, os últimos breadcrumbs, tags, release e navegador. |
 | `list_sources`     | Origens: leitura | As origens de um produto, as áreas que cada uma alimenta e quando cada uma enviou por último uma página vista, um evento, um erro ou uma linha de log. |
 | `source_setup`     | Origens e chaves: leitura | A chave pública, o DSN e o código exato de instalação de uma origem por área, o mesmo código do painel. |
 | `create_product`   | Produtos: escrita | Cria um produto pelo nome, ou devolve o que já tem esse nome. |
