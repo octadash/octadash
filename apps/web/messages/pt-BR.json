@@ -129,7 +129,10 @@
     "search": "Buscar produto",
     "none": "Nenhum produto encontrado",
     "new": "Novo produto",
-    "label": "Produto"
+    "label": "Produto",
+    "groups": "Grupos",
+    "products": "Produtos",
+    "newGroup": "Novo grupo"
   },
   "newProduct": {
     "title": "Novo produto",
@@ -148,7 +151,8 @@
   "areaPage": {
     "soon": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra como configurar neste produto.",
     "soonAll": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra a área para todos os produtos de uma vez.",
-    "back": "Voltar para {name}"
+    "back": "Voltar para {name}",
+    "soonGroup": "{area} chega em uma próxima versão do Octadash. Quando chegar, esta tela mostra a área para os produtos deste grupo."
   },
   "overview": {
     "count": "{count, plural, one {# produto} other {# produtos}}."
@@ -347,6 +351,27 @@
         "title": "Certificado vencendo",
         "body": "O certificado HTTPS de um monitor vence em poucos dias."
       }
+    }
+  },
+  "groups": {
+    "newTitle": "Novo grupo",
+    "newIntro": "Um grupo junta produtos para ver só eles: a visão geral e cada área passam a mostrar os produtos do grupo. Um produto pode estar em vários grupos.",
+    "create": "Criar grupo",
+    "name": "Nome",
+    "placeholder": "Clientes",
+    "products": "Produtos",
+    "selected": "Escolhidos: {count}",
+    "edit": "Editar grupo",
+    "empty": "Nenhum produto neste grupo ainda. Escolha os produtos em Editar grupo.",
+    "settingsTitle": "Grupo",
+    "settingsIntro": "O nome do grupo e os produtos que ele mostra.",
+    "deleteTitle": "Excluir grupo",
+    "deleteBody": "Exclui só o grupo. Os produtos e os dados deles continuam.",
+    "delete": "Excluir grupo",
+    "deleteDialog": "Excluir o grupo {name}?",
+    "errors": {
+      "name": "Dê um nome ao grupo.",
+      "notFound": "Grupo não encontrado."
     }
   }
 }

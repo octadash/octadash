@@ -19,6 +19,8 @@ export interface Database {
   alert_rule: AlertRuleTable
   incident: IncidentTable
   notification: NotificationTable
+  product_group: ProductGroupTable
+  product_group_member: ProductGroupMemberTable
   auth_user: AuthUserTable
   auth_organization: AuthOrganizationTable
   auth_member: AuthMemberTable
@@ -178,4 +180,18 @@ export interface AuthInvitationTable {
   expiresAt: Date
   inviterId: string
   createdAt: Date
+}
+
+export interface ProductGroupTable {
+  id: string
+  org_id: string
+  name: string
+  slug: string
+  created_at: CreatedAt
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export interface ProductGroupMemberTable {
+  group_id: string
+  project_id: string
 }

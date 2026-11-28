@@ -8,14 +8,25 @@ describe('areas', () => {
   })
 
   it('reads the scope from the path', () => {
-    expect(scopeOf('/p/trinca/errors')).toEqual({ base: '/p/trinca', slug: 'trinca' })
-    expect(scopeOf('/all/uptime')).toEqual({ base: '/all', slug: null })
-    expect(scopeOf('/settings/members')).toEqual({ base: '/all', slug: null })
+    expect(scopeOf('/p/trinca/errors')).toEqual({
+      kind: 'product',
+      base: '/p/trinca',
+      slug: 'trinca',
+    })
+    expect(scopeOf('/g/clientes/uptime')).toEqual({
+      kind: 'group',
+      base: '/g/clientes',
+      slug: 'clientes',
+    })
+    expect(scopeOf('/all/uptime')).toEqual({ kind: 'all', base: '/all', slug: null })
+    expect(scopeOf('/settings/members')).toEqual({ kind: 'all', base: '/all', slug: null })
   })
 
   it('reads the open area from the path', () => {
     expect(areaOf('/p/trinca/errors')).toBe('errors')
     expect(areaOf('/all/money')).toBe('money')
+    expect(areaOf('/g/clientes/money')).toBe('money')
+    expect(areaOf('/g/clientes/settings')).toBeNull()
     expect(areaOf('/p/trinca/settings')).toBeNull()
     expect(areaOf('/p/trinca')).toBeNull()
     expect(areaOf('/all')).toBeNull()

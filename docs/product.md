@@ -49,9 +49,16 @@ what do I do about it?**
 
 ## Areas
 
-Every area works for **all products at once** or for **one product**, on the
-same screen. The panel has a menu with one entry per area and a product picker
-at the top whose first option is "All products".
+Every area works for **all products at once**, for **a group of products** or
+for **one product**, on the same screen. The panel has a menu with one entry per
+area and a product picker at the top: "All products" first, then the groups,
+then the products, then "New product" and "New group".
+
+A group ("Clients", "My SaaS") is a name and a set of products; a product can
+be in several groups. Opening a group shows the same pages as "All products",
+filtered to its products and with their totals. A TV screen can show one group.
+The emergency strip ignores the filter: an outage anywhere shows on every
+screen.
 
 | Area            | Answers                                           | Runs in                 |
 | --------------- | ------------------------------------------------- | ----------------------- |

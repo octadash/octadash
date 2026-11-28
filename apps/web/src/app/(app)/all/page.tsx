@@ -3,14 +3,11 @@ import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { services } from '@/server/context'
 import { requireOrg } from '@/server/session'
+import { ProductsOverview } from '@/views/products-overview'
 
-/**
- * Overview of every product. The blocks by area (uptime, traffic, errors...)
- * arrive with each area's data; until then this lists the products.
- */
+/** Overview of every product. */
 export default async function AllPage() {
   const { org } = await requireOrg()
   const [projects, t] = await Promise.all([listProjects(services().db, org.id), getTranslations()])
@@ -34,28 +31,10 @@ export default async function AllPage() {
   }
 
   return (
-    <>
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-3xl font-semibold">{t('areas.overview.name')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t('overview.count', { count: projects.length })}
-        </p>
-      </div>
-      <Card className="py-0">
-        <Table>
-          <TableBody>
-            {projects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell className="px-4">
-                  <Link href={`/p/${project.slug}`} className="font-medium hover:text-brand">
-                    {project.name}
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
-    </>
+    <ProductsOverview
+      title={t('areas.overview.name')}
+      subtitle={t('overview.count', { count: projects.length })}
+      projects={projects}
+    />
   )
 }
