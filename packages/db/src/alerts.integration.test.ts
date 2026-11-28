@@ -100,7 +100,6 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
     expect(await acknowledgeIncidents(db, org, [first?.id ?? ''], 'user-2', T0)).toEqual([])
     expect((await listOpenIncidents(db, org)).find((i) => i.id === first?.id)).toMatchObject({
       acknowledged_by: 'user-1',
-      acknowledged_by_name: null,
     })
 
     await resolveIncident(db, input.dedupeKey, new Date(T0.getTime() + 300_000))

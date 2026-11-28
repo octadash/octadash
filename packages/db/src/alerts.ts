@@ -196,35 +196,28 @@ export async function resolveIncident(db: Db, dedupeKey: string, at: Date) {
 
 /** Open incidents of an organization, newest first, with the product name. */
 export function listOpenIncidents(db: Db, orgId: string) {
-  return (
-    db
-      .selectFrom('incident')
-      .innerJoin('project', 'project.id', 'incident.project_id')
-      // Better Auth keys users by uuid; acknowledged_by is text.
-      .leftJoin('auth_user', (join) =>
-        join.on(sql<boolean>`auth_user.id::text = incident.acknowledged_by`),
-      )
-      .select([
-        'incident.id',
-        'incident.kind',
-        'incident.level',
-        'incident.data',
-        'incident.started_at',
-        'incident.notify_after',
-        'incident.acknowledged_at',
-        'incident.acknowledged_by',
-        'auth_user.name as acknowledged_by_name',
-        'incident.parent_id',
-        'incident.monitor_id',
-        'project.id as project_id',
-        'project.name as project_name',
-        'project.slug as project_slug',
-      ])
-      .where('incident.org_id', '=', orgId)
-      .where('incident.resolved_at', 'is', null)
-      .orderBy('incident.started_at', 'desc')
-      .execute()
-  )
+  return db
+    .selectFrom('incident')
+    .innerJoin('project', 'project.id', 'incident.project_id')
+    .select([
+      'incident.id',
+      'incident.kind',
+      'incident.level',
+      'incident.data',
+      'incident.started_at',
+      'incident.notify_after',
+      'incident.acknowledged_at',
+      'incident.acknowledged_by',
+      'incident.parent_id',
+      'incident.monitor_id',
+      'project.id as project_id',
+      'project.name as project_name',
+      'project.slug as project_slug',
+    ])
+    .where('incident.org_id', '=', orgId)
+    .where('incident.resolved_at', 'is', null)
+    .orderBy('incident.started_at', 'desc')
+    .execute()
 }
 
 /**
