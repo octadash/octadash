@@ -35,9 +35,10 @@ export default async function TrafficSetupPage({
   const project = await getProjectBySlug(db, org.id, slug)
   if (!project) notFound()
   const manager = canManage(org.role)
-  const [sources, t, format] = await Promise.all([
+  const [sources, t, tp, format] = await Promise.all([
     listSources(db, org.id, project.id),
     getTranslations('trafficSetup'),
+    getTranslations('platforms'),
     getFormatter(),
   ])
   const traffic = sources.filter((s) => s.areas.includes('traffic'))
@@ -102,7 +103,7 @@ export default async function TrafficSetupPage({
                           <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                             {s.name}
                             {s.platform && isTrafficPlatform(s.platform) && (
-                              <Badge variant="secondary">{t(`platforms.${s.platform}`)}</Badge>
+                              <Badge variant="secondary">{tp(s.platform)}</Badge>
                             )}
                           </span>
                           <span className="text-xs text-muted-foreground">{status(s)}</span>
@@ -172,6 +173,7 @@ export default async function TrafficSetupPage({
                     <span className="text-sm font-medium">{t('key')}</span>
                     <CopyField
                       value={current.public_key}
+                      label={t('key')}
                       copyLabel={t('copy')}
                       copiedLabel={t('copied')}
                     />

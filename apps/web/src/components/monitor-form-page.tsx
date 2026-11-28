@@ -141,7 +141,7 @@ export async function MonitorFormPage({
           <li>
             {t('how.three', { minutes: wait })}{' '}
             <Link
-              href={`/p/${project.slug}/settings#alerts`}
+              href={`/p/${project.slug}/settings/rules`}
               className="text-brand underline underline-offset-2"
             >
               {t('how.rules')}

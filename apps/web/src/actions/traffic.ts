@@ -76,5 +76,5 @@ export async function setVisitorModeAction(formData: FormData) {
   const sources = await listSources(db, found.org.id, found.project.id)
   if (!sources.some((s) => s.id === id)) return
   await setSourceVisitorMode(db, found.org.id, id, mode)
-  revalidatePath(`/p/${found.project.slug}/traffic`, 'layout')
+  revalidatePath(`/p/${found.project.slug}`, 'layout')
 }

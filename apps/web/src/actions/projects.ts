@@ -1,6 +1,6 @@
 'use server'
 
-import { createProject, deleteProject, updateProject } from '@octadash/db'
+import { createProject, deleteProject, listProjects, updateProject } from '@octadash/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
@@ -38,17 +38,26 @@ export async function updateProjectAction(_: FormState, formData: FormData): Pro
   if ('error' in input) return { error: input.error }
   const { db } = services()
   const projectId = String(formData.get('projectId') ?? '')
+  const before = String(formData.get('slug') ?? '')
   const project = await updateProject(db, org.id, projectId, input.value)
   if (!project) return { error: t('notFound') }
   revalidatePath('/', 'layout')
-  redirect(`/p/${project.slug}`)
+  // A new name moves the address: open settings there, so the page shows it.
+  if (project.slug !== before) redirect(`/p/${project.slug}/settings`)
+  return { done: true }
 }
 
 export async function deleteProjectAction(_: FormState, formData: FormData): Promise<FormState> {
   const t = await getTranslations('errors')
   const { org } = await requireManager()
-  if (formData.get('confirm') !== 'on') return { error: t('confirmDelete') }
-  await deleteProject(services().db, org.id, String(formData.get('projectId') ?? ''))
+  const { db } = services()
+  const projectId = String(formData.get('projectId') ?? '')
+  const project = (await listProjects(db, org.id)).find((p) => p.id === projectId)
+  if (!project) return { error: t('notFound') }
+  if (String(formData.get('confirm') ?? '').trim() !== project.name) {
+    return { error: t('nameMismatch') }
+  }
+  await deleteProject(db, org.id, project.id)
   revalidatePath('/', 'layout')
   redirect('/all')
 }

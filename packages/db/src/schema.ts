@@ -13,6 +13,7 @@ export interface Database {
   octadash_instance: OctadashInstanceTable
   organization_settings: OrganizationSettingsTable
   project: ProjectTable
+  project_slug_alias: ProjectSlugAliasTable
   source: SourceTable
   source_key: SourceKeyTable
   project_area: ProjectAreaTable
@@ -44,6 +45,14 @@ export interface OctadashInstanceTable {
   watcher_status: ColumnType<WatcherStatus, WatcherStatus | undefined, WatcherStatus>
   watcher_checked_at: ColumnType<Date | null, Date | null | undefined, Date | null>
   watcher_error: ColumnType<string | null, string | null | undefined, string | null>
+}
+
+/** An old address of a product, kept after a rename so links keep working. */
+export interface ProjectSlugAliasTable {
+  org_id: string
+  slug: string
+  project_id: string
+  created_at: CreatedAt
 }
 
 export interface ProjectTable {

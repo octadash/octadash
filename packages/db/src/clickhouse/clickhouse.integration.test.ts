@@ -3,6 +3,7 @@ import { bucketStarts } from './buckets'
 import { createClickHouse, parseClickHouseUrl } from './client'
 import { insertEvents, toClickHouseTime } from './events'
 import { migrateClickHouse } from './migrate'
+import { sourceActivity } from './sources'
 import {
   fillSeries,
   lastPageview,
@@ -313,6 +314,16 @@ describe.skipIf(!url)('clickhouse (needs CLICKHOUSE_URL)', () => {
       path: '/',
     })
     expect(await lastPageview(client, org, crypto.randomUUID(), nextDay)).toBeNull()
+
+    const activity = await sourceActivity(
+      client,
+      org,
+      shop,
+      new Date(day.getTime() + 12 * 3_600_000),
+    )
+    expect(activity.get(persistent)).toMatchObject({ last: day, events: 0 })
+    expect(activity.get(persistent)?.pageviews).toBeGreaterThan(0)
+    expect(activity.has(crypto.randomUUID())).toBe(false)
   })
 
   it('cuts days at local midnight, daylight saving time included', async () => {

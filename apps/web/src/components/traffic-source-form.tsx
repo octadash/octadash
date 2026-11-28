@@ -13,6 +13,7 @@ import { Input } from './ui/input'
 /** "Add source" on Set up Traffic: a name and where it runs. */
 export function TrafficSourceForm({ slug }: { slug: string }) {
   const t = useTranslations('trafficSetup')
+  const tp = useTranslations('platforms')
   const [platform, setPlatform] = useState<TrafficPlatform>('html')
   return (
     <ActionForm action={addTrafficSourceAction}>
@@ -29,7 +30,7 @@ export function TrafficSourceForm({ slug }: { slug: string }) {
             checked={platform === p}
             onChange={() => setPlatform(p)}
           >
-            {t(`platforms.${p}`)}
+            {tp(p)}
           </Option>
         ))}
       </OptionGroup>

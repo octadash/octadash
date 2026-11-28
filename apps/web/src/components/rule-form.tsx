@@ -116,7 +116,7 @@ export function RuleForm({
                 {overrides.map((o, i) => (
                   <span key={o.slug}>
                     {i > 0 && ', '}
-                    <Link href={`/p/${o.slug}/settings#alerts`} className="hover:underline">
+                    <Link href={`/p/${o.slug}/settings/rules`} className="hover:underline">
                       {o.name}
                     </Link>{' '}
                     {o.summary && `(${o.summary})`}

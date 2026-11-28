@@ -1,16 +1,20 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { setProjectArea } from './areas'
+import { listAreaDetails, setProjectArea } from './areas'
 import { createDb } from './client'
 import { migrateToLatest } from './migrate'
-import { createProject, findIngestKey, listProjectKeys } from './projects'
+import { createProject, findIngestKey } from './projects'
 import { addSourceAreas, listDismissedAreas, recordDiscarded } from './routing'
 import {
   addSourceArea,
   createSource,
   deleteSource,
+  getSource,
+  listSourceKeys,
   listSources,
+  renameSource,
   rotateSourceKey,
   setSourceVisitorMode,
+  stopOldKey,
   updateSource,
 } from './sources'
 
@@ -54,12 +58,6 @@ describe.skipIf(!url)('sources (needs DATABASE_URL)', () => {
     expect(await findIngestKey(db, site?.public_key ?? '')).toMatchObject({
       visitor_mode: 'persistent',
     })
-    // The product key from before sources still resolves, without a source.
-    const [legacy] = await listProjectKeys(db, org, project.id)
-    expect(await findIngestKey(db, legacy?.public_key ?? '')).toMatchObject({
-      source_id: null,
-      visitor_mode: 'daily',
-    })
     expect((await listSources(db, org, project.id)).map((s) => s.public_key)).toEqual([
       site?.public_key,
     ])
@@ -78,6 +76,19 @@ describe.skipIf(!url)('sources (needs DATABASE_URL)', () => {
     expect(fresh).toMatch(/^[0-9a-f]{32}$/)
     expect(await findIngestKey(db, old)).toBeDefined()
     expect((await listSources(db, org, project.id))[0]?.public_key).toBe(fresh)
+    expect((await getSource(db, org, api?.id ?? ''))?.public_key).toBe(fresh)
+    expect(await getSource(db, other, api?.id ?? '')).toBeUndefined()
+    const keys = await listSourceKeys(db, org, api?.id ?? '')
+    expect(keys.map((k) => [k.public_key, k.revoked_at])).toEqual([
+      [fresh, null],
+      [old, later],
+    ])
+    // "Stop now" on the old key; the current one cannot be stopped that way.
+    expect(await stopOldKey(db, org, keys[0]?.id ?? '')).toBe(false)
+    expect(await stopOldKey(db, other, keys[1]?.id ?? '')).toBe(false)
+    expect(await stopOldKey(db, org, keys[1]?.id ?? '')).toBe(true)
+    expect(await findIngestKey(db, old)).toBeUndefined()
+    expect(await listSourceKeys(db, org, api?.id ?? '')).toHaveLength(1)
     await rotateSourceKey(db, org, api?.id ?? '')
     expect(await findIngestKey(db, fresh ?? '')).toBeUndefined()
 
@@ -92,6 +103,11 @@ describe.skipIf(!url)('sources (needs DATABASE_URL)', () => {
         areas: [],
       }),
     ).toBe(true)
+    expect(await renameSource(db, other, api?.id ?? '', { name: 'X', platform: 'go' })).toBe(false)
+    expect(await renameSource(db, org, api?.id ?? '', { name: ' Core ', platform: 'go' })).toBe(
+      true,
+    )
+    expect((await getSource(db, org, api?.id ?? ''))?.name).toBe('Core')
 
     expect(await deleteSource(db, other, api?.id ?? '')).toBe(false)
     expect(await deleteSource(db, org, api?.id ?? '')).toBe(true)
@@ -112,5 +128,10 @@ describe.skipIf(!url)('sources (needs DATABASE_URL)', () => {
       .where('project_id', '=', project.id)
       .executeTakeFirstOrThrow()
     expect(row).toEqual({ discarded_events: '5', discarded_at: at })
+    expect((await listAreaDetails(db, org, project.id)).get('usage')).toMatchObject({
+      state: 'dismissed',
+      discarded: 5,
+      discardedAt: at,
+    })
   })
 })

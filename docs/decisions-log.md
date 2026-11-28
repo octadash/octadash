@@ -78,3 +78,23 @@ and why; anything here can be reversed.
 - **Set up Traffic** reuses a product's existing source ("Use for Traffic")
   before asking for a new one, so the same key sends errors, events and page
   views. Step 3 asks every 3 seconds whether a page view arrived.
+- **Product settings** follow the ProductSettings canvas: General (name,
+  address, every area with its state, rules, danger zone), Sources (list, one
+  page per source) and Alert rules (the rules list moved there from the
+  General page).
+- **Old product keys became a source named "Main"**, with platform "Other",
+  so every key belongs to a source and shows on the Sources page. Products
+  that never used that key show "Main · Never received"; delete it there.
+  New products start with no key.
+- **Renaming keeps old links working** through an alias table. If another
+  product later takes the old address, that product wins.
+- **Deleting a product asks for its name**, typed, as the canvas says.
+- **Key rotation** offers Now, 1 hour, 24 hours (default) and 7 days. Old keys
+  still working show with when they stop and a "Stop now" button.
+- **Not built yet from the canvas**: the OpenTelemetry endpoint (the ingest
+  does not take OTLP yet), counting data sent with an old or deleted key, who
+  marked an area "not used" and when, and payment connections under "Also
+  sending data". Each comes with its engine. "What it sends" shows Errors and
+  Logs as "coming later".
+- **A source "went quiet"** after 24 hours without data: the Sources page then
+  says "Nothing for 3 days" with a diamond, instead of the green dot.

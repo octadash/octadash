@@ -54,7 +54,7 @@ export default async function AlertsPage() {
                   </DropdownMenuLabel>
                   {products.map((product) => (
                     <DropdownMenuItem key={product.id} asChild>
-                      <Link href={`/p/${product.slug}/settings#alerts`}>{product.name}</Link>
+                      <Link href={`/p/${product.slug}/settings/rules`}>{product.name}</Link>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

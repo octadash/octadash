@@ -6,7 +6,6 @@ import {
   deleteProject,
   findIngestKey,
   getProjectBySlug,
-  listProjectKeys,
   listProjects,
   sentryDsn,
   updateProject,
@@ -36,22 +35,30 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
     await pool.end()
   })
 
-  it('creates a product with a unique slug and an ingest key', async () => {
+  it('creates a product with a unique slug and no key until it has sources', async () => {
     const first = await createProject(db, orgA, { name: 'Postato' })
     const second = await createProject(db, orgA, { name: 'Postato' })
     expect(first.slug).toBe('postato')
     expect(second.slug).toBe('postato-2')
     expect(Number(first.ingest_id)).toBeGreaterThan(0)
-    const keys = await listProjectKeys(db, orgA, first.id)
-    expect(keys).toHaveLength(1)
-    expect(keys[0]?.public_key).toMatch(/^[0-9a-f]{32}$/)
-    expect(await findIngestKey(db, keys[0]?.public_key ?? '')).toEqual({
-      org_id: orgA,
-      project_id: first.id,
-      source_id: null,
-      visitor_mode: 'daily',
-    })
+    const keys = await db.selectFrom('source_key').where('project_id', '=', first.id).execute()
+    expect(keys).toHaveLength(0)
     expect(await findIngestKey(db, 'f'.repeat(32))).toBeUndefined()
+  })
+
+  it('keeps old addresses working after a rename', async () => {
+    const product = await createProject(db, orgA, { name: 'Renamed Shop' })
+    const renamed = await updateProject(db, orgA, product.id, { name: 'New Shop' })
+    expect(renamed?.slug).toBe('new-shop')
+    expect((await getProjectBySlug(db, orgA, 'renamed-shop'))?.id).toBe(product.id)
+    expect((await getProjectBySlug(db, orgB, 'renamed-shop'))?.id).toBeUndefined()
+    // Back to the first name: the address is its own again, not an alias.
+    await updateProject(db, orgA, product.id, { name: 'Renamed Shop' })
+    expect((await getProjectBySlug(db, orgA, 'new-shop'))?.id).toBe(product.id)
+    // A product created with the old address of another holds it.
+    const taker = await createProject(db, orgA, { name: 'New Shop' })
+    expect((await getProjectBySlug(db, orgA, 'new-shop'))?.id).toBe(taker.id)
+    expect(await updateProject(db, orgB, product.id, { name: 'X' })).toBeUndefined()
   })
 
   it('keeps tenants apart', async () => {
@@ -68,6 +75,6 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
     const renamed = await updateProject(db, orgA, project?.id ?? '', { name: 'Intelibot' })
     expect(renamed?.slug).toBe('intelibot')
     expect(await deleteProject(db, orgA, project?.id ?? '')).toBe(true)
-    expect(await listProjectKeys(db, orgA, project?.id ?? '')).toEqual([])
+    expect(await getProjectBySlug(db, orgA, 'intelibot')).toBeUndefined()
   })
 })

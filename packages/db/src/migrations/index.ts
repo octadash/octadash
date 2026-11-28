@@ -15,6 +15,7 @@ import * as m0013 from './0013_get_started'
 import * as m0014 from './0014_members'
 import * as m0015 from './0015_monitor_schedule'
 import * as m0016 from './0016_incident_events'
+import * as m0017 from './0017_product_settings'
 
 /**
  * Migrations are imported statically (not read from disk) so they survive
@@ -37,4 +38,5 @@ export const migrations: Record<string, Migration> = {
   '0014_members': m0014,
   '0015_monitor_schedule': m0015,
   '0016_incident_events': m0016,
+  '0017_product_settings': m0017,
 }

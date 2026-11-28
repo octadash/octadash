@@ -14,7 +14,7 @@ async function setArea(formData: FormData, state: 'dismissed' | null) {
   const project = await getProjectBySlug(db, org.id, slug)
   if (!project) return
   await setProjectArea(db, org.id, project.id, area, state)
-  revalidatePath(`/p/${project.slug}`)
+  revalidatePath(`/p/${project.slug}`, 'layout')
 }
 
 /** "I won't use this": the card moves to "Also available for this product". */

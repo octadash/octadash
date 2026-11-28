@@ -34,7 +34,7 @@ export async function saveRuleAction(_: FormState, formData: FormData): Promise<
     if (!project) return { error: t('notFound') }
     projectId = project.id
   }
-  const path = slug ? `/p/${slug}/settings` : '/settings/alerts'
+  const path = slug ? `/p/${slug}/settings/rules` : '/settings/alerts'
 
   if (projectId && formData.get('intent') === 'reset') {
     await resetRule(db, org.id, projectId, kind)

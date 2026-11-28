@@ -10,8 +10,11 @@ export function CopyField({
   copyLabel,
   copiedLabel,
   multiline = false,
+  label,
 }: {
   value: string
+  /** What the field holds, for screen readers: "Key". Defaults to the copy label. */
+  label?: string
   copyLabel: string
   copiedLabel: string
   /** Shows the whole text (a prompt, a snippet) instead of a one-line field. */
@@ -28,7 +31,7 @@ export function CopyField({
         <Input
           value={value}
           readOnly
-          aria-label={copyLabel}
+          aria-label={label ?? copyLabel}
           className="font-mono text-xs md:text-xs"
           onFocus={(event) => event.currentTarget.select()}
         />
