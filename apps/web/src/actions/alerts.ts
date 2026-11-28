@@ -49,7 +49,7 @@ export async function saveRuleAction(_: FormState, formData: FormData): Promise<
   for (const key of Object.keys(RULE_DEFAULTS[kind].params)) {
     const value = Number(formData.get(`param.${key}`))
     // A multiple or a minimum of 0 would fire on every error.
-    const min = key === 'times' || key === 'events' ? 1 : 0
+    const min = ['times', 'events', 'expected', 'silence'].includes(key) ? 1 : 0
     if (!Number.isInteger(value) || value < min || value > 1440) return { error: t('checkFields') }
     params[key] = value
   }

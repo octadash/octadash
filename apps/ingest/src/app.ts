@@ -7,8 +7,22 @@ import { bodyLimit } from 'hono/body-limit'
 import { cors } from 'hono/cors'
 import { requestContext } from './context'
 import { parseEnvelope, sentryKey, toErrorRow } from './errors'
-import { batchSchema, PropertiesTooLargeError, type Sender, toEventRows } from './events'
+import {
+  batchSchema,
+  type IncomingEvent,
+  MAX_EVENTS_PER_REQUEST,
+  PropertiesTooLargeError,
+  type Sender,
+  toEventRows,
+} from './events'
 import type { HeartbeatResolver, KeyResolver } from './keys'
+import {
+  POSTHOG_ASSETS,
+  POSTHOG_FLAGS,
+  parsePostHogBody,
+  readPostHogBatch,
+  UnsupportedCompression,
+} from './posthog'
 import { BROWSER_SCRIPT } from './script'
 import { visitorHash } from './visitor'
 
@@ -40,7 +54,7 @@ export interface IngestDeps {
  * one URL:
  *   - Octadash script/SDK   /o/v1/events                       (step 1)
  *   - Sentry envelopes      /api/:projectId/envelope/          (errors step)
- *   - PostHog capture       /e/, /i/v0/e/, /batch/, /capture/   (later steps)
+ *   - PostHog capture       /e/, /i/v0/e/, /batch/, /capture/, /flags/
  *   - OpenTelemetry (OTLP)  /v1/logs, /v1/traces               (later steps)
  * Heartbeat monitors ping /hb/<token> (GET or POST) from cron jobs and backups.
  * The health check touches nothing, so uptime probes never wake a database.
@@ -103,6 +117,58 @@ export function createApp(deps: IngestDeps) {
     app.post(`${prefix}/:token/fail`, heartbeat(true))
   }
 
+  /** Who sent the request, as `toEventRows` and `toErrorRow` read it. */
+  const senderOf = (c: Context, projectId: string, received: Date): Sender => {
+    const request = requestContext((name) => c.req.header(name))
+    // Only a browser speaks for a visitor; a server's own address is nobody.
+    const fromBrowser = Boolean(c.req.header('origin') || c.req.header('referer'))
+    return {
+      ip: fromBrowser ? request.ip : '',
+      userAgent: fromBrowser ? request.userAgent : '',
+      country: request.country,
+      visitor: (ip, ua) => visitorHash(deps.salts, received, projectId, ip, ua),
+    }
+  }
+
+  /**
+   * Validates the key and queues the events: the same path for the Octadash
+   * format and PostHog's. Answers with a Response on failure, or the count.
+   */
+  const acceptEvents = async (
+    c: Context,
+    key: string,
+    events: IncomingEvent[],
+  ): Promise<Response | number> => {
+    let scope: Awaited<ReturnType<KeyResolver['resolve']>>
+    try {
+      scope = await deps.keys.resolve(key)
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503)
+    }
+    if (!scope) return c.json({ error: 'invalid_key' }, 401)
+    if (events.length === 0) return 0
+
+    const received = new Date(now())
+    let rows: EventRow[]
+    try {
+      rows = await toEventRows(scope, events, senderOf(c, scope.project_id, received), received)
+    } catch (err) {
+      if (err instanceof PropertiesTooLargeError) {
+        return c.json({ error: 'properties_too_large', event: err.message }, 400)
+      }
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
+    }
+    try {
+      await deps.sink.write('events', rows)
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
+    }
+    return rows.length
+  }
+
   app.post(
     '/o/v1/events',
     bodyLimit({
@@ -132,64 +198,68 @@ export function createApp(deps: IngestDeps) {
           400,
         )
       }
-
-      const key = keyFrom(c) ?? parsed.data.key ?? ''
-      let scope: Awaited<ReturnType<KeyResolver['resolve']>>
-      try {
-        scope = await deps.keys.resolve(key)
-      } catch (err) {
-        deps.onError?.(err)
-        return c.json({ error: 'unavailable' }, 503)
-      }
-      if (!scope) return c.json({ error: 'invalid_key' }, 401)
-
-      const request = requestContext((name) => c.req.header(name))
-      // Only a browser speaks for a visitor; a server's own address is nobody.
-      const fromBrowser = Boolean(c.req.header('origin') || c.req.header('referer'))
-      const received = new Date(now())
-      const projectId = scope.project_id
-      let rows: EventRow[]
-      try {
-        rows = await toEventRows(
-          scope,
-          parsed.data.events,
-          {
-            ip: fromBrowser ? request.ip : '',
-            userAgent: fromBrowser ? request.userAgent : '',
-            country: request.country,
-            visitor: (ip, ua) => visitorHash(deps.salts, received, projectId, ip, ua),
-          },
-          received,
-        )
-      } catch (err) {
-        if (err instanceof PropertiesTooLargeError) {
-          return c.json({ error: 'properties_too_large', event: err.message }, 400)
-        }
-        deps.onError?.(err)
-        return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
-      }
-
-      try {
-        await deps.sink.write('events', rows)
-      } catch (err) {
-        deps.onError?.(err)
-        return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
-      }
-      return c.json({ accepted: rows.length }, 202)
+      const accepted = await acceptEvents(
+        c,
+        keyFrom(c) ?? parsed.data.key ?? '',
+        parsed.data.events,
+      )
+      return typeof accepted === 'number' ? c.json({ accepted }, 202) : accepted
     },
   )
 
-  /** Who sent the request, as `toEventRows` and `toErrorRow` read it. */
-  const senderOf = (c: Context, projectId: string, received: Date): Sender => {
-    const request = requestContext((name) => c.req.header(name))
-    const fromBrowser = Boolean(c.req.header('origin') || c.req.header('referer'))
-    return {
-      ip: fromBrowser ? request.ip : '',
-      userAgent: fromBrowser ? request.userAgent : '',
-      country: request.country,
-      visitor: (ip, ua) => visitorHash(deps.salts, received, projectId, ip, ua),
+  /**
+   * PostHog SDKs, by changing only the host (see posthog.ts). They read
+   * `{ status: 1 }` as accepted.
+   */
+  const posthog = async (c: Context) => {
+    if (deps.sink.isFull('events')) return queueFull(c)
+    let body: unknown
+    try {
+      body = parsePostHogBody({
+        body: new Uint8Array(await c.req.arrayBuffer()),
+        contentType: c.req.header('content-type'),
+        contentEncoding: c.req.header('content-encoding'),
+        compression: c.req.query('compression'),
+      })
+    } catch (err) {
+      if (err instanceof UnsupportedCompression) {
+        return c.json({ error: 'unsupported_compression' }, 400)
+      }
+      return c.json({ error: 'invalid_body' }, 400)
     }
+    const batch = readPostHogBatch(body, new Date(now()))
+    if (batch.events.length > MAX_EVENTS_PER_REQUEST) {
+      return c.json({ error: 'too_many_events' }, 400)
+    }
+    const accepted = await acceptEvents(c, keyFrom(c) ?? batch.key ?? '', batch.events)
+    return typeof accepted === 'number' ? c.json({ status: 1 }) : accepted
   }
+  const posthogLimit = bodyLimit({
+    maxSize: MAX_BODY_BYTES,
+    onError: (c) => c.json({ error: 'body_too_large' }, 413),
+  })
+  for (const path of ['/e', '/i/v0/e', '/batch', '/capture', '/track']) {
+    app.post(path, posthogLimit, posthog)
+    app.post(`${path}/`, posthogLimit, posthog)
+  }
+  // Person updates: Octadash keeps no profiles, so they are taken and dropped.
+  for (const path of ['/engage', '/engage/']) app.post(path, (c) => c.json({ status: 1 }))
+  for (const path of ['/flags', '/flags/', '/decide', '/decide/']) {
+    app.on(['GET', 'POST'], path, (c) => c.json(POSTHOG_FLAGS))
+  }
+  app.get('/array/:token/config', (c) => c.json(POSTHOG_FLAGS))
+  app.get('/array/:token/config.js', (c) =>
+    c.body('window._POSTHOG_REMOTE_CONFIG=window._POSTHOG_REMOTE_CONFIG||{};', 200, {
+      'content-type': 'application/javascript; charset=utf-8',
+      'cache-control': 'public, max-age=300',
+    }),
+  )
+  // The PostHog snippet loads the library from the host it sends to.
+  app.get('/static/:file', (c) => {
+    const file = c.req.param('file')
+    if (!/^[\w.-]+\.js$/.test(file)) return c.json({ error: 'not_found' }, 404)
+    return c.redirect(`${POSTHOG_ASSETS}${file}`, 302)
+  })
 
   /**
    * Errors, from any Sentry SDK (`/api/<id>/envelope/` and the older

@@ -2,7 +2,7 @@ import { encryptSecret } from '@octadash/core'
 import type { ChannelRow, PendingIncident } from '@octadash/db'
 import { describe, expect, it } from 'vitest'
 import { alertMessage, duration, failureText } from './alert-text'
-import { channelConfig, isSpike, planDeliveries } from './alerts'
+import { channelConfig, isSpike, planDeliveries, stoppedAfter } from './alerts'
 
 const NOW = new Date('2026-11-28T12:10:00Z')
 const SECRET = 'a'.repeat(40)
@@ -146,6 +146,44 @@ describe('alert text', () => {
     expect(isSpike(20, 0, rule)).toBe(true)
     expect(isSpike(40, 10, rule)).toBe(false)
     expect(isSpike(50, 10, rule)).toBe(true)
+  })
+
+  it('says a key event stopped, since when and its normal', () => {
+    const stopped = incident({
+      kind: 'key_event_stopped',
+      data: {
+        event: 'purchase_completed',
+        last: '2026-11-28T11:10:00Z',
+        normal: 12.3,
+        minutes: 30,
+      },
+    })
+    const open = alertMessage([stopped], 'open', {
+      now: NOW,
+      locale: 'en',
+      panelUrl: 'https://x.dev',
+    })
+    expect(open.title).toBe('purchase_completed stopped on Tribunal de Ideias')
+    expect(open.body).toBe('None for 1 h; normal for this time is about 12 an hour.')
+    expect(open.url).toBe('https://x.dev/p/tribunal/emergencies/i1')
+    const back = alertMessage([{ ...stopped, resolved_at: NOW }], 'resolve', {
+      now: NOW,
+      locale: 'pt-BR',
+      panelUrl: 'https://x.dev',
+    })
+    expect(back.title).toBe('purchase_completed voltou a chegar em Tribunal de Ideias')
+    expect(back.body).toBe('Ficou sem chegar por 1 h.')
+  })
+
+  it('waits for the time a key event normally takes, never less than the minimum', () => {
+    const rule = { expected: 5, silence: 30 }
+    // 60 an hour: 5 take 5 minutes, so the 30-minute minimum applies.
+    expect(stoppedAfter(60, rule)).toBe(30)
+    // 2 an hour: 5 take 150 minutes.
+    expect(stoppedAfter(2, rule)).toBe(150)
+    // Under 5 a day at this hour: too rare to tell.
+    expect(stoppedAfter(0.2, rule)).toBeNull()
+    expect(stoppedAfter(0, rule)).toBeNull()
   })
 
   it('formats durations and failures', () => {

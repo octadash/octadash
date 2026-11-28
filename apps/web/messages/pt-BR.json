@@ -299,7 +299,8 @@
         "heartbeat_missed": "Heartbeat “{name}” não chegou",
         "cert_expiring": "Certificado de “{name}” perto de vencer",
         "other": "Emergência",
-        "error_spike": "Pico de erros"
+        "error_spike": "Pico de erros",
+        "key_event_stopped": "“{name}” parou"
       },
       "more": "{count, plural, one {Mais # na página do produto} other {Mais # na página do produto}}"
     }
@@ -592,7 +593,11 @@
       "times": "Vezes o normal",
       "timesUnit": "× o normal",
       "events": "Pelo menos",
-      "eventsUnit": "erros em 15 min"
+      "eventsUnit": "erros em 15 min",
+      "expected": "Faltando",
+      "expectedUnit": "eventos que deveriam ter chegado",
+      "silence": "Pelo menos",
+      "silenceUnit": "min sem nenhum"
     },
     "allChannels": "Todos os canais",
     "noChannels": "Nenhum canal ainda. Sem canal, a emergência aparece só no painel.",
@@ -620,6 +625,11 @@
         "title": "Pico de erros",
         "body": "Os erros de um produto nos últimos 15 minutos chegam a um múltiplo do normal para o horário, com um mínimo para um produto quieto não disparar com 3 erros.",
         "info": "O normal é a mesma hora em cada um dos últimos 7 dias. Erros de issues ignoradas nunca contam. Fecha sozinha quando os últimos 15 minutos voltam para baixo da regra. Um produto sem histórico dispara só pelo mínimo."
+      },
+      "key_event_stopped": {
+        "title": "Evento importante parou",
+        "body": "Um evento que você marcou como importante (um cadastro, um pagamento) para de chegar em uma hora em que costuma vir.",
+        "info": "O Octadash espera o tempo que o número esperado de eventos normalmente leva neste horário (a mesma hora dos últimos 7 dias), e nunca menos que o silêncio mínimo. Horas calmas esperam mais sozinhas, e um evento raro demais neste horário (menos de 5 por dia) nunca dispara. Fecha quando o próximo evento chega. Marque os eventos importantes em Configurar Uso do produto."
       }
     },
     "legend": "Níveis",
@@ -657,12 +667,6 @@
           "body": "Cadastros longe do que esta hora e este dia da semana costumam ter.",
           "wait": "Precisa de 4 semanas de dados para aprender o normal.",
           "params": "30% abaixo do esperado, no mínimo 10 eventos"
-        },
-        "keyEventStopped": {
-          "title": "Evento importante parou",
-          "body": "Um evento que você marca como importante (checkout, cadastro) para em uma hora em que costuma acontecer.",
-          "wait": "Precisa de 4 semanas de dados para aprender quando costuma acontecer.",
-          "params": "Nenhum em 1 h quando 10 ou mais são esperados"
         }
       },
       "uptime": {
@@ -985,7 +989,8 @@
     "area": {
       "uptime": "No ar",
       "other": "Octadash",
-      "errors": "Erros"
+      "errors": "Erros",
+      "usage": "Uso do produto"
     },
     "started": "Começou às {time} · {duration}",
     "titles": {
@@ -993,7 +998,8 @@
       "heartbeat_missed": "{product} · {name} não rodou",
       "cert_expiring": "{product} · certificado vence em {days} dias",
       "other": "{product} · {name}",
-      "error_spike": "{product} · pico de erros"
+      "error_spike": "{product} · pico de erros",
+      "key_event_stopped": "{product} · {event} parou"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1002,7 +1008,8 @@
       "other": "Fecha sozinha quando a checagem passar de novo.",
       "closed": "Encerrada às {time}, depois de {duration}.",
       "spike": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando o normal neste horário é cerca de {normal}. Fecha sozinha quando os erros voltarem para baixo da regra.",
-      "spikeNone": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando este horário normalmente não tem nenhum. Fecha sozinha quando os erros voltarem para baixo da regra."
+      "spikeNone": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando este horário normalmente não tem nenhum. Fecha sozinha quando os erros voltarem para baixo da regra.",
+      "keyEvent": "Nenhum {event} desde {time}, quando o normal neste horário é cerca de {normal} por hora. Fecha sozinha quando o próximo chegar."
     },
     "onIt": "{name} está cuidando · desde {time}",
     "nobody": "Ninguém cuidando ainda",
@@ -1090,7 +1097,8 @@
       "heartbeat_missed": "{product} · {name} não rodou",
       "cert_expiring": "{product} · certificado estava perto de vencer",
       "other": "{product} · {name}",
-      "error_spike": "{product} · pico de erros"
+      "error_spike": "{product} · pico de erros",
+      "key_event_stopped": "{product} · {event} parou"
     },
     "spike": {
       "title": "Issues por trás do pico",
@@ -1105,35 +1113,40 @@
       "heartbeat_missed": "{product}: “{name}” não rodou",
       "cert_expiring": "{product}: certificado vence em {days, plural, one {# dia} other {# dias}}",
       "other": "{product}: {name}",
-      "error_spike": "{product}: pico de erros"
+      "error_spike": "{product}: pico de erros",
+      "key_event_stopped": "{product}: {event} parou"
     },
     "short": {
       "monitor_down": "{product} fora do ar",
       "heartbeat_missed": "{product} sem heartbeat",
       "cert_expiring": "{product} certificado vencendo",
       "other": "{product} {name}",
-      "error_spike": "{product} pico de erros"
+      "error_spike": "{product} pico de erros",
+      "key_event_stopped": "{product} {event} parou"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
       "heartbeat_missed": "“{name}”: {reason}",
       "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
       "other": "{name}: {reason}",
-      "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min"
+      "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
+      "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” não responde",
       "heartbeat_missed": "“{name}” não chamou no horário",
       "cert_expiring": "Monitor “{name}”: o certificado vence em {days, plural, one {# dia} other {# dias}}",
       "other": "{name}",
-      "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min"
+      "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
+      "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora"
     },
     "kind": {
       "monitor_down": "Fora do ar",
       "heartbeat_missed": "Heartbeat perdido",
       "cert_expiring": "Certificado vencendo",
       "other": "Emergência",
-      "error_spike": "Pico de erros"
+      "error_spike": "Pico de erros",
+      "key_event_stopped": "Evento importante parou"
     },
     "count": "{count, plural, one {# emergência} other {# emergências}}",
     "countProducts": "{count} emergências em {products} produtos",
@@ -1189,7 +1202,8 @@
       "and": "{first} e {last}",
       "submitNone": "Estou cuidando destas"
     },
-    "spikeOver": "{product}: erros voltaram ao normal"
+    "spikeOver": "{product}: erros voltaram ao normal",
+    "keyBack": "{product}: {event} voltou a chegar"
   },
   "traffic": {
     "title": "Tráfego",

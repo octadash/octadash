@@ -9,9 +9,11 @@ import {
   errorRates,
   ignoredIssueIds,
   issueHeads,
+  keyEventRates,
   latestCertDays,
   listActiveMonitors,
   listEnabledChannels,
+  listKeyEvents,
   listOpenIncidentKeys,
   markNotified,
   openIncident,
@@ -34,6 +36,8 @@ export const ALERT_QUEUES = {
   certs: 'alerts-certs',
   /** Compares each product's errors with its normal. */
   errors: 'alerts-errors',
+  /** Looks for key events that stopped arriving. */
+  usage: 'alerts-usage',
 } as const
 
 /** The Error spike rule looks at this many minutes. */
@@ -42,6 +46,20 @@ export const SPIKE_WINDOW_MINUTES = 15
 /** A spike: at least `events` errors and `times` the normal. */
 export function isSpike(count: number, normal: number, params: Record<string, number>) {
   return count >= (params.events ?? 20) && count >= (params.times ?? 5) * normal
+}
+
+/** The longest silence the rule waits for; an event rarer than that at this hour never counts as stopped. */
+const LONGEST_WAIT_MINUTES = 24 * 60
+
+/**
+ * Minutes of silence after which a key event counts as stopped: the time
+ * `expected` of them normally take at this hour, and at least `silence`. Null
+ * when the event is too rare at this hour to tell.
+ */
+export function stoppedAfter(normalPerHour: number, params: Record<string, number>) {
+  if (normalPerHour <= 0) return null
+  const wait = Math.max(params.silence ?? 30, ((params.expected ?? 5) / normalPerHour) * 60)
+  return wait > LONGEST_WAIT_MINUTES ? null : Math.ceil(wait)
 }
 
 const SEND_TIMEOUT_MS = 15_000
@@ -334,7 +352,65 @@ export function createAlerts(deps: AlertsDeps) {
     }
   }
 
-  return { onTransition, notify, checkCerts, checkErrorSpikes }
+  /**
+   * Opens "Key event stopped" for each key event silent longer than its rule
+   * allows at this hour, and closes it when the next one arrives (not when the
+   * hour turns quiet). An unmarked key event's emergency closes without a
+   * message.
+   */
+  async function checkKeyEvents() {
+    const at = now()
+    const [keys, open] = await Promise.all([
+      listKeyEvents(deps.db, null),
+      listOpenIncidentKeys(deps.db, 'key_event_stopped'),
+    ])
+    const keyOf = (projectId: string, event: string) => `usage:${projectId}:${event}:stopped`
+    const openByKey = new Map(open.map((row) => [row.dedupe_key, row]))
+    const changed = new Set<string>()
+    const marked = new Set(keys.map((k) => keyOf(k.projectId, k.event)))
+    for (const row of open) {
+      if (!marked.has(row.dedupe_key)) {
+        await resolveIncident(deps.db, row.dedupe_key, at, { silent: true })
+      }
+    }
+    if (keys.length === 0) return
+    const rates = await keyEventRates(deps.clickhouse, keys, at)
+    for (const rate of rates) {
+      const key = keyOf(rate.projectId, rate.event)
+      const incident = openByKey.get(key)
+      if (incident) {
+        if (rate.last && rate.last > new Date(incident.started_at)) {
+          if (await resolveIncident(deps.db, key, at)) changed.add(rate.orgId)
+        }
+        continue
+      }
+      const rule = await ruleFor(deps.db, rate.orgId, rate.projectId, 'key_event_stopped')
+      if (rule.level === 'off' || !rate.last) continue
+      const wait = stoppedAfter(rate.normal, rule.params)
+      const silent = (at.getTime() - rate.last.getTime()) / 60_000
+      if (wait === null || silent < wait) continue
+      const opened = await openIncident(deps.db, {
+        orgId: rate.orgId,
+        projectId: rate.projectId,
+        kind: 'key_event_stopped',
+        dedupeKey: key,
+        data: {
+          event: rate.event,
+          last: rate.last.toISOString(),
+          normal: Math.round(rate.normal * 10) / 10,
+          minutes: wait,
+        },
+        at,
+      })
+      if (opened) changed.add(rate.orgId)
+    }
+    if (changed.size > 0) {
+      await wake()
+      await tell(changed, 'incidents')
+    }
+  }
+
+  return { onTransition, notify, checkCerts, checkErrorSpikes, checkKeyEvents }
 }
 
 export type Alerts = ReturnType<typeof createAlerts>
@@ -354,5 +430,10 @@ export async function registerAlertJobs(boss: PgBoss, alerts: Alerts, log: Logge
   await boss.schedule(ALERT_QUEUES.errors, '* * * * *')
   await boss.work(ALERT_QUEUES.errors, async () => {
     await alerts.checkErrorSpikes().catch((err) => log.warn({ err }, 'error spike check failed'))
+  })
+  await boss.createQueue(ALERT_QUEUES.usage)
+  await boss.schedule(ALERT_QUEUES.usage, '* * * * *')
+  await boss.work(ALERT_QUEUES.usage, async () => {
+    await alerts.checkKeyEvents().catch((err) => log.warn({ err }, 'key event check failed'))
   })
 }

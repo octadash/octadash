@@ -21,6 +21,13 @@ export const RULE_DEFAULTS = {
    * this time of day and at least `events`. Ends when they fall back under.
    */
   error_spike: { level: 'emergency', params: { times: 5, events: 20 } },
+  /**
+   * A key event stopped: none arrived in the time `expected` of them normally
+   * take at this time of day (the same hour of the last 7 days), and never in
+   * less than `silence` minutes (not `minutes`, which delays the alert). Quiet
+   * hours wait longer on their own. Ends with the next event.
+   */
+  key_event_stopped: { level: 'emergency', params: { expected: 5, silence: 30 } },
 } as const satisfies Record<string, { level: AlertLevel | 'off'; params: Record<string, number> }>
 
 export type IncidentKind = keyof typeof RULE_DEFAULTS
@@ -182,10 +189,16 @@ export async function openIncident(db: Db, input: OpenIncidentInput) {
 }
 
 /** Closes the open incident with this key, and the ones grouped under it. */
-export async function resolveIncident(db: Db, dedupeKey: string, at: Date) {
+export async function resolveIncident(
+  db: Db,
+  dedupeKey: string,
+  at: Date,
+  /** Closed because what it watched is gone (a key event unmarked): no "resolved" message. */
+  options: { silent?: boolean } = {},
+) {
   const resolved = await db
     .updateTable('incident')
-    .set({ resolved_at: at })
+    .set(options.silent ? { resolved_at: at, notified_resolve_at: at } : { resolved_at: at })
     .where('dedupe_key', '=', dedupeKey)
     .where('resolved_at', 'is', null)
     .returning(['id'])
@@ -414,7 +427,7 @@ export async function recordNotification(
 export function listOpenIncidentKeys(db: Db, kind: IncidentKind) {
   return db
     .selectFrom('incident')
-    .select(['dedupe_key', 'monitor_id', 'org_id', 'project_id'])
+    .select(['dedupe_key', 'monitor_id', 'org_id', 'project_id', 'started_at'])
     .where('kind', '=', kind)
     .where('resolved_at', 'is', null)
     .execute()

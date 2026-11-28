@@ -66,6 +66,7 @@ const KIND_ICON: Record<StripKind, typeof ActivityIcon> = {
   heartbeat_missed: ClockIcon,
   cert_expiring: ShieldAlertIcon,
   error_spike: BugIcon,
+  key_event_stopped: UserIcon,
   other: TriangleAlertIcon,
 }
 

@@ -139,6 +139,13 @@ describe('error events', () => {
     const row = await toErrorRow(scope, event, browser)
     expect(row?.person).toBe('u_77')
     expect(JSON.stringify(row)).not.toContain('203.0.113.9')
+    const byEmail = await toErrorRow(
+      scope,
+      { ...sentryEvent(), user: { email: 'ana@shop.example' } },
+      browser,
+    )
+    expect(byEmail?.person).toMatch(/^h:[0-9a-f]{32}$/)
+    expect(JSON.stringify(byEmail)).not.toContain('ana@shop.example')
   })
 
   it('reads message events and drops empty ones', async () => {
