@@ -31,8 +31,33 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      clickhouse:
+        image: clickhouse/clickhouse-server:26.8.49.6-alpine
+        env:
+          CLICKHOUSE_DB: octadash
+          CLICKHOUSE_USER: octadash
+          CLICKHOUSE_PASSWORD: octadash
+          CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 0
+        ports:
+          - 8123:8123
+        options: >-
+          --health-cmd "wget -q --spider http://127.0.0.1:8123/ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      valkey:
+        image: valkey/valkey:9.2.1-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgres://octadash:octadash@localhost:5432/octadash
+      CLICKHOUSE_URL: http://octadash:octadash@localhost:8123/octadash
+      VALKEY_URL: redis://localhost:6379
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v7

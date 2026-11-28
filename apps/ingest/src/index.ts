@@ -1,17 +1,37 @@
 import { serve } from '@hono/node-server'
 import { createLogger, ingestEnvSchema, parseEnv } from '@octadash/core'
+import { createDb, findIngestKey } from '@octadash/db'
+import { createValkey, ValkeySink } from '@octadash/queue'
 import { createApp } from './app'
+import { cachedResolver } from './keys'
 
 const env = parseEnv(ingestEnvSchema)
 const log = createLogger('ingest', env.LOG_LEVEL)
 
-const server = serve({ fetch: createApp().fetch, port: env.PORT, hostname: '0.0.0.0' }, (info) => {
+// Postgres is only read to check keys, and the answers are cached.
+const { db, pool } = createDb(env.DATABASE_URL, { max: 3, applicationName: 'octadash-ingest' })
+const valkey = createValkey(env.VALKEY_URL, { name: 'octadash-ingest', failFast: true })
+valkey.on('error', (err) => log.warn({ err: err.message }, 'valkey connection error'))
+const sink = new ValkeySink(valkey, { maxPending: env.OCTADASH_INGEST_QUEUE_MAX })
+
+const app = createApp({
+  sink,
+  keys: cachedResolver((publicKey) => findIngestKey(db, publicKey)),
+  onError: (err) => log.error({ err }, 'request failed'),
+})
+
+const server = serve({ fetch: app.fetch, port: env.PORT, hostname: '0.0.0.0' }, (info) => {
   log.info({ port: info.port }, 'ingest listening')
 })
 
 function shutdown(signal: string) {
   log.info({ signal }, 'shutting down')
-  server.close(() => process.exit(0))
+  server.close(async () => {
+    sink.stop()
+    valkey.disconnect()
+    await pool.end()
+    process.exit(0)
+  })
   setTimeout(() => process.exit(1), 10_000).unref()
 }
 

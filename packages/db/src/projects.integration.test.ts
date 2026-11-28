@@ -4,6 +4,7 @@ import { migrateToLatest } from './migrate'
 import {
   createProject,
   deleteProject,
+  findIngestKey,
   getProjectBySlug,
   listProjectKeys,
   listProjects,
@@ -44,6 +45,11 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
     const keys = await listProjectKeys(db, orgA, first.id)
     expect(keys).toHaveLength(1)
     expect(keys[0]?.public_key).toMatch(/^[0-9a-f]{32}$/)
+    expect(await findIngestKey(db, keys[0]?.public_key ?? '')).toEqual({
+      org_id: orgA,
+      project_id: first.id,
+    })
+    expect(await findIngestKey(db, 'f'.repeat(32))).toBeUndefined()
   })
 
   it('keeps tenants apart', async () => {

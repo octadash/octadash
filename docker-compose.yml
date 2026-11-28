@@ -1,5 +1,5 @@
 # Octadash: self-hosted install with Docker Compose.
-#   cp .env.example .env   # then fill POSTGRES_PASSWORD and OCTADASH_SECRET
+#   ./scripts/generate-env.sh   # creates .env with every password and the secret
 #   docker compose up -d
 # Panel on :3000, ingest on :4000. Put a reverse proxy with HTTPS in front of both.
 # Using Coolify? Deploy docker-compose.coolify.yml instead.
@@ -10,13 +10,21 @@ x-octadash: &octadash
   restart: unless-stopped
   environment:
     DATABASE_URL: postgres://octadash:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/octadash
+    CLICKHOUSE_URL: http://octadash:${CLICKHOUSE_PASSWORD:?set CLICKHOUSE_PASSWORD in .env}@clickhouse:8123/octadash
+    VALKEY_URL: redis://:${VALKEY_PASSWORD:?set VALKEY_PASSWORD in .env}@valkey:6379
     OCTADASH_URL: ${OCTADASH_URL:-http://localhost:3000}
     OCTADASH_INGEST_URL: ${OCTADASH_INGEST_URL:-http://localhost:4000}
     OCTADASH_SECRET: ${OCTADASH_SECRET:?set OCTADASH_SECRET in .env}
     LOG_LEVEL: ${LOG_LEVEL:-info}
+  # ClickHouse and Valkey only need to be started: each role waits for them
+  # itself and logs a clear error (for example, a CPU without AVX2).
   depends_on:
     postgres:
       condition: service_healthy
+    clickhouse:
+      condition: service_started
+    valkey:
+      condition: service_started
 
 services:
   postgres:
@@ -33,6 +41,51 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U octadash -d octadash"]
       interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Raw events, errors, logs and their rollups. Created, migrated and trimmed by
+  # Octadash. The official amd64 image needs an x86-64-v3 CPU (AVX2); arm64 works.
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.49.6-alpine
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: octadash
+      CLICKHOUSE_USER: octadash
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?set CLICKHOUSE_PASSWORD in .env}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 0
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./docker/clickhouse/octadash.xml:/etc/clickhouse-server/config.d/octadash.xml:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Buffer between the ingest and the worker (one stream per kind of data).
+  # Append-only persistence, and no eviction: queued data is never dropped.
+  valkey:
+    image: valkey/valkey:9.2.1-alpine
+    restart: unless-stopped
+    environment:
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD:?set VALKEY_PASSWORD in .env}
+    command:
+      [
+        "sh",
+        "-c",
+        'exec valkey-server --appendonly yes --maxmemory-policy noeviction --requirepass "$$VALKEY_PASSWORD"',
+      ]
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", 'valkey-cli -a "$$VALKEY_PASSWORD" --no-auth-warning ping | grep -q PONG']
+      interval: 10s
       timeout: 5s
       retries: 10
 
@@ -90,3 +143,5 @@ services:
 
 volumes:
   postgres-data:
+  clickhouse-data:
+  valkey-data:

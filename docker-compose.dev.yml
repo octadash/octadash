@@ -1,4 +1,4 @@
-# Local development: only Postgres. Run the apps with `pnpm dev`.
+# Local development: Postgres, ClickHouse and Valkey. Run the apps with `pnpm dev`.
 name: octadash-dev
 
 services:
@@ -19,5 +19,28 @@ services:
       timeout: 5s
       retries: 20
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.49.6-alpine
+    environment:
+      CLICKHOUSE_DB: octadash
+      CLICKHOUSE_USER: octadash
+      CLICKHOUSE_PASSWORD: octadash
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 0
+    ports:
+      - "8123:8123"
+    volumes:
+      - clickhouse-dev:/var/lib/clickhouse
+      - ./docker/clickhouse/octadash.xml:/etc/clickhouse-server/config.d/octadash.xml:ro
+
+  valkey:
+    image: valkey/valkey:9.2.1-alpine
+    command: ["valkey-server", "--appendonly", "yes", "--requirepass", "octadash"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey-dev:/data
+
 volumes:
   postgres-dev:
+  clickhouse-dev:
+  valkey-dev:

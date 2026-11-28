@@ -39,7 +39,7 @@ host yourself, and tells you what each product is missing.
 ```bash
 git clone https://github.com/octadash/octadash.git
 cd octadash
-cp .env.example .env   # fill POSTGRES_PASSWORD and OCTADASH_SECRET
+./scripts/generate-env.sh   # creates .env with every password and the secret
 docker compose up -d
 ```
 
@@ -52,8 +52,10 @@ Requires Node.js 22.12+ (24 recommended), pnpm 10 and Docker.
 
 ```bash
 pnpm install
-pnpm db:up                 # Postgres on localhost:5432
+pnpm db:up                 # Postgres :5432, ClickHouse :8123, Valkey :6379
 export DATABASE_URL=postgres://octadash:octadash@localhost:5432/octadash
+export CLICKHOUSE_URL=http://octadash:octadash@localhost:8123/octadash
+export VALKEY_URL=redis://:octadash@localhost:6379
 pnpm db:migrate
 cp .env.example apps/web/.env.local   # set DATABASE_URL and OCTADASH_SECRET there
 pnpm dev                   # web :3000, ingest :4000, worker
@@ -61,13 +63,13 @@ pnpm dev                   # web :3000, ingest :4000, worker
 
 Open http://localhost:3000: the first visit creates the owner account.
 
-| Command          | Does                                      |
-| ---------------- | ----------------------------------------- |
-| `pnpm lint`      | Biome lint and format check               |
-| `pnpm format`    | Apply Biome fixes                         |
-| `pnpm typecheck` | TypeScript in every package               |
-| `pnpm test`      | Vitest (database tests need DATABASE_URL) |
-| `pnpm build`     | Build every app                           |
+| Command          | Does                                     |
+| ---------------- | ---------------------------------------- |
+| `pnpm lint`      | Biome lint and format check              |
+| `pnpm format`    | Apply Biome fixes                        |
+| `pnpm typecheck` | TypeScript in every package              |
+| `pnpm test`      | Vitest (store tests need the URLs above) |
+| `pnpm build`     | Build every app                          |
 
 ## Repository
 
@@ -79,8 +81,9 @@ apps/
 packages/
   auth/           Better Auth setup: accounts, organizations, sign-up policy
   core/           Env parsing, logger, ids
-  db/             Kysely client and migrations
+  db/             Postgres (Kysely) and ClickHouse clients and migrations
   integrations/   Plugin contract for alert channels and data sources
+  queue/          Valkey streams between the ingest and the worker
   uptime/         One uptime check: status, response time, redirects, HTTPS, certificate
 docs/             product.md (what and when), architecture.md (how), self-hosting.md
 ```

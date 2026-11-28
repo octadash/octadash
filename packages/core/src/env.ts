@@ -9,6 +9,14 @@ export const baseEnvSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
 })
 
+/** ClickHouse over HTTP, database in the path: http://user:pass@clickhouse:8123/octadash */
+export const clickhouseEnvSchema = z.object({
+  CLICKHOUSE_URL: z.url({ protocol: /^https?$/ }),
+})
+
+/** Valkey (or Redis) holding the ingest streams: redis://:pass@valkey:6379 */
+const valkeyUrl = z.url({ protocol: /^rediss?$/ })
+
 export const webEnvSchema = baseEnvSchema.extend({
   /** Public URL of the panel, e.g. https://octadash.example.com */
   OCTADASH_URL: z.url(),
@@ -25,12 +33,18 @@ export const webEnvSchema = baseEnvSchema.extend({
 
 export const ingestEnvSchema = baseEnvSchema.extend({
   PORT: z.coerce.number().int().positive().default(4000),
+  VALKEY_URL: valkeyUrl,
+  /** Entries waiting in a stream before the ingest answers 429 (the worker is far behind). */
+  OCTADASH_INGEST_QUEUE_MAX: z.coerce.number().int().positive().default(100_000),
 })
 
-export const workerEnvSchema = baseEnvSchema.extend({
-  /** Internal port for the worker health endpoint. */
-  WORKER_HEALTH_PORT: z.coerce.number().int().positive().default(4100),
-})
+export const workerEnvSchema = baseEnvSchema
+  .extend({
+    /** Internal port for the worker health endpoint. */
+    WORKER_HEALTH_PORT: z.coerce.number().int().positive().default(4100),
+    VALKEY_URL: valkeyUrl,
+  })
+  .extend(clickhouseEnvSchema.shape)
 
 export type BaseEnv = z.infer<typeof baseEnvSchema>
 export type WebEnv = z.infer<typeof webEnvSchema>
