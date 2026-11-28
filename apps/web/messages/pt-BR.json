@@ -1516,5 +1516,82 @@
       "deleteConfirmTitle": "Excluir {name}?",
       "delete": "Excluir origem"
     }
+  },
+  "tv": {
+    "title": "Modo TV",
+    "stopped": "Este link de TV foi parado. Peça um novo a quem gerencia.",
+    "missing": "Nada para mostrar aqui. O grupo ou o produto pode ter mudado de nome ou sido removido.",
+    "ms": "{value} ms",
+    "strip": {
+      "title": "{count, plural, one {# produto fora do ar} other {# produtos fora do ar}}: {names}",
+      "label": "Emergências",
+      "taker": "{name} está em {product} · {time}",
+      "nobody": "Ninguém em {product} ainda"
+    },
+    "all": "Todos os produtos",
+    "down": "{count, plural, one {# fora} other {# fora}}",
+    "allUp": "{count, plural, one {O produto está no ar} other {Todos os # produtos no ar}}",
+    "up": "{count} no ar",
+    "signals": "{count, plural, one {# sinal} other {# sinais}}",
+    "allowSound": "Permitir som",
+    "online": "{count, plural, =0 {Ninguém online} one {# pessoa online} other {# pessoas online}}",
+    "empty": "Nenhum produto aqui ainda. Crie um no Octadash e ele aparece nesta tela.",
+    "happened": "O que aconteceu",
+    "nothingHappened": "Nada nas últimas 24 horas.",
+    "event": {
+      "down": "{product} caiu: {name}",
+      "signal": "Sinal em {product}: {name}",
+      "back": "{product} voltou: {name}",
+      "took": "{person} assumiu {product}: {name}"
+    },
+    "page": "Página {page} de {pages}",
+    "incomplete": "Os números não estão atualizando agora",
+    "state": {
+      "down": "Fora do ar",
+      "up": "No ar",
+      "signal": "Sinal",
+      "waiting": "Esperando a primeira checagem",
+      "none": "Sem checagens ativas"
+    },
+    "onIt": "{name} está cuidando · {time}",
+    "nobodyOnIt": "Ninguém cuidando ainda",
+    "downFor": "Fora há",
+    "lastCheck": "Última checagem",
+    "metric": {
+      "visitorsNow": "Online agora",
+      "pageviewsToday": "Páginas vistas hoje",
+      "eventsToday": "Eventos hoje",
+      "responseMs": "Resposta"
+    },
+    "checksLabel": "Checagens nas últimas 4 horas: {ups} no ar, {downs} fora"
+  },
+  "tvDialog": {
+    "allProducts": "Todos os produtos",
+    "open": "Modo TV",
+    "title": "Modo TV",
+    "body": "Uma tela cheia para a TV na parede: quem caiu, quem está cuidando e os números que você escolher. Atualiza sozinha.",
+    "show": "Mostrar",
+    "showBody": "Todos os produtos, um grupo salvo ou um produto. Emergências de qualquer produto aparecem na faixa do topo mesmo assim.",
+    "numbers": "Números em cada produto",
+    "numbersBody": "Escolha até {count}. Um produto fora do ar mostra há quanto tempo está fora no lugar.",
+    "perPage": "Mais produtos do que cabem",
+    "perPageBody": "A tela vira a página a cada 20 segundos. Produtos com problema ficam em todas as páginas.",
+    "perPageValue": "{count} por página",
+    "sound": "Som em uma nova emergência",
+    "soundBody": "Um bipe curto quando um produto cai. A TV pede uma vez permissão para tocar som.",
+    "link": "Link privado",
+    "linkInfoLabel": "Sobre o link privado",
+    "linkInfo": "Para uma TV sem login. Quem tem o link vê esta tela, e nada mais. Ao criar um link novo, o antigo deixa de funcionar. Pare o link se ele vazar.",
+    "linkOnce": "Copie agora. Ele aparece só uma vez.",
+    "linkMade": "Criado por {name} em {date}",
+    "linkOpened": "aberto pela última vez {time}",
+    "linkNeverOpened": "nunca aberto",
+    "linkNone": "Nenhum link ainda. Quem tem login abre o modo TV sem link.",
+    "linkNew": "Criar um link novo",
+    "linkCreate": "Criar link",
+    "linkStop": "Parar link",
+    "linkManagers": "Só quem gerencia pode criar ou parar o link.",
+    "linkReady": "O link privado está pronto para copiar.",
+    "start": "Abrir modo TV"
   }
 }

@@ -1516,5 +1516,82 @@
       "deleteConfirmTitle": "Delete {name}?",
       "delete": "Delete source"
     }
+  },
+  "tv": {
+    "title": "TV mode",
+    "stopped": "This TV link was stopped. Ask a manager for a new one.",
+    "missing": "Nothing to show here. The group or product may have been renamed or removed.",
+    "ms": "{value} ms",
+    "strip": {
+      "title": "{count, plural, one {# product is down} other {# products are down}}: {names}",
+      "label": "Emergencies",
+      "taker": "{name} is on {product} · {time}",
+      "nobody": "Nobody on {product} yet"
+    },
+    "all": "All products",
+    "down": "{count, plural, one {# down} other {# down}}",
+    "allUp": "{count, plural, one {The product is up} other {All # products are up}}",
+    "up": "{count} up",
+    "signals": "{count, plural, one {# signal} other {# signals}}",
+    "allowSound": "Allow sound",
+    "online": "{count, plural, =0 {Nobody online} one {# person online} other {# people online}}",
+    "empty": "No products here yet. Add one in Octadash and it shows up on this screen.",
+    "happened": "What happened",
+    "nothingHappened": "Nothing in the last 24 hours.",
+    "event": {
+      "down": "{product} went down: {name}",
+      "signal": "Signal on {product}: {name}",
+      "back": "{product} is back: {name}",
+      "took": "{person} took {product}: {name}"
+    },
+    "page": "Page {page} of {pages}",
+    "incomplete": "Numbers are not updating right now",
+    "state": {
+      "down": "Down",
+      "up": "Up",
+      "signal": "Signal",
+      "waiting": "Waiting for the first check",
+      "none": "No checks running"
+    },
+    "onIt": "{name} is on it · {time}",
+    "nobodyOnIt": "Nobody on it yet",
+    "downFor": "Down for",
+    "lastCheck": "Last check",
+    "metric": {
+      "visitorsNow": "Online now",
+      "pageviewsToday": "Pageviews today",
+      "eventsToday": "Events today",
+      "responseMs": "Response"
+    },
+    "checksLabel": "Checks in the last 4 hours: {ups} up, {downs} down"
+  },
+  "tvDialog": {
+    "allProducts": "All products",
+    "open": "TV mode",
+    "title": "TV mode",
+    "body": "A full screen for a TV on the wall: who is down, who is on it, and the numbers you pick. It updates by itself.",
+    "show": "Show",
+    "showBody": "All products, a saved group or one product. Emergencies of every product reach the strip at the top anyway.",
+    "numbers": "Numbers on each product",
+    "numbersBody": "Pick up to {count}. A product that is down shows how long it has been down instead.",
+    "perPage": "More products than fit",
+    "perPageBody": "The screen turns the page every 20 seconds. Products in trouble stay on every page.",
+    "perPageValue": "{count} per page",
+    "sound": "Sound on a new emergency",
+    "soundBody": "A short beep when a product goes down. The TV asks once for permission to play sound.",
+    "link": "Private link",
+    "linkInfoLabel": "About the private link",
+    "linkInfo": "For a TV that is not signed in. Anyone with the link sees this screen, and nothing else. Making a new link stops the old one. Stop it if the link leaks.",
+    "linkOnce": "Copy it now. It is shown only once.",
+    "linkMade": "Made by {name} on {date}",
+    "linkOpened": "last opened {time}",
+    "linkNeverOpened": "never opened",
+    "linkNone": "No link yet. Signed-in people can open TV mode without one.",
+    "linkNew": "Make a new link",
+    "linkCreate": "Make link",
+    "linkStop": "Stop link",
+    "linkManagers": "Only managers can make or stop the link.",
+    "linkReady": "The private link is ready to copy.",
+    "start": "Open TV mode"
   }
 }

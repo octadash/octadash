@@ -170,6 +170,12 @@ versions and passwords generated at install. Each has one job.
   Events name what changed, never the data, so nothing reaches a viewer who may
   not see it. Several panel processes all receive every event. TV mode uses the
   same stream. A lost event costs only freshness: the next load is right.
+- TV mode (`/tv`) is a signed-in screen; its settings live in the address
+  (`scope`, `m`, `per`, `sound`). A TV that is not signed in uses a private link
+  (`/tv/<token>`, table `tv_link`): one per organization, the token is shown
+  once and stored as a SHA-256 hash, and `/api/live?tv=<token>` streams the
+  same events for that organization. The screen also reloads every 30 seconds,
+  so its numbers move without any event.
 
 ### Integrations are plugins
 

@@ -458,3 +458,125 @@ export async function listRuleOverrides(db: Db, orgId: string) {
     product: { name: row.name, slug: row.slug },
   }))
 }
+
+export interface Happening {
+  at: Date
+  /** `down`: an emergency began; `signal`: a signal began; `back`: it ended; `took`: someone is on it. */
+  kind: 'down' | 'signal' | 'back' | 'took'
+  incident: string
+  projectId: string
+  product: string
+  /** The monitor's name, when the incident has one. */
+  name: string | null
+  /** Who took it, for `took`; who closed it by hand, for `back`. */
+  person: string | null
+}
+
+/**
+ * What happened since a moment, newest first, for the TV's "What happened"
+ * line: emergencies and signals that began (once their wait was over), ended
+ * and were taken.
+ */
+export async function listHappenings(
+  db: Db,
+  orgId: string,
+  since: Date,
+  limit = 12,
+  now = new Date(),
+): Promise<Happening[]> {
+  const base = db
+    .selectFrom('incident')
+    .innerJoin('project', 'project.id', 'incident.project_id')
+    .where('incident.org_id', '=', orgId)
+    .where('incident.parent_id', 'is', null)
+    .where('incident.notify_after', '<=', now)
+  const [started, ended, took] = await Promise.all([
+    base
+      .select([
+        'incident.started_at as at',
+        'incident.kind',
+        'incident.level',
+        'incident.data',
+        'project.id as project_id',
+        'project.name as product',
+      ])
+      .where('incident.started_at', '>=', since)
+      .orderBy('incident.started_at', 'desc')
+      .limit(limit)
+      .execute(),
+    base
+      .select([
+        'incident.resolved_at as at',
+        'incident.kind',
+        'incident.data',
+        'project.id as project_id',
+        'project.name as product',
+        (eb) =>
+          eb
+            .selectFrom('incident_event')
+            .innerJoin('auth_user', 'auth_user.id', 'incident_event.user_id')
+            .select('auth_user.name')
+            .whereRef('incident_event.incident_id', '=', 'incident.id')
+            .where('incident_event.kind', '=', 'closed')
+            .limit(1)
+            .as('closer'),
+      ])
+      .where('incident.resolved_at', '>=', since)
+      .orderBy('incident.resolved_at', 'desc')
+      .limit(limit)
+      .execute(),
+    db
+      .selectFrom('incident_event')
+      .innerJoin('incident', 'incident.id', 'incident_event.incident_id')
+      .innerJoin('project', 'project.id', 'incident.project_id')
+      .leftJoin('auth_user', 'auth_user.id', 'incident_event.user_id')
+      .select([
+        'incident_event.at',
+        'incident.kind',
+        'incident.data',
+        'project.id as project_id',
+        'project.name as product',
+        'auth_user.name as person',
+      ])
+      .where('incident_event.org_id', '=', orgId)
+      .where('incident_event.kind', '=', 'took')
+      .where('incident_event.at', '>=', since)
+      .orderBy('incident_event.at', 'desc')
+      .limit(limit)
+      .execute(),
+  ])
+  const nameOf = (data: unknown) => {
+    const name = (data as { name?: unknown } | null)?.name
+    return typeof name === 'string' ? name : null
+  }
+  const all: Happening[] = [
+    ...started.map((r) => ({
+      at: r.at,
+      kind: r.level === 'emergency' ? ('down' as const) : ('signal' as const),
+      incident: r.kind,
+      projectId: r.project_id,
+      product: r.product,
+      name: nameOf(r.data),
+      person: null,
+    })),
+    ...ended.map((r) => ({
+      at: r.at as Date,
+      kind: 'back' as const,
+      incident: r.kind,
+      projectId: r.project_id,
+      product: r.product,
+      name: nameOf(r.data),
+      person: r.closer ?? null,
+    })),
+    ...took.map((r) => ({
+      at: r.at,
+      kind: 'took' as const,
+      incident: r.kind,
+      projectId: r.project_id,
+      product: r.product,
+      name: nameOf(r.data),
+      person: r.person ?? null,
+    })),
+  ]
+  return all.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit)
+}

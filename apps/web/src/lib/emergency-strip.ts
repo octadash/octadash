@@ -12,6 +12,8 @@ export interface StripItem {
   href: string
   projectId: string
   product: string
+  /** A signal, not an emergency: only TV mode asks for these. */
+  signal?: boolean
   kind: StripKind
   /** "Acme Shop is down": the strip with one emergency. */
   title: string

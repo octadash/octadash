@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
+import { TvButton } from '@/components/tv-button'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { parsePeriod } from '@/lib/period'
@@ -43,7 +44,12 @@ export default async function GroupPage({
       title={group.name}
       base={`/g/${group.slug}`}
       overview={overview}
-      action={edit || undefined}
+      action={
+        <>
+          <TvButton scope={`g:${group.slug}`} />
+          {edit}
+        </>
+      }
     />
   )
 }

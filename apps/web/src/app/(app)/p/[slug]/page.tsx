@@ -7,6 +7,7 @@ import { dismissAreaAction, restoreAreaAction } from '@/actions/areas'
 import { GetStarted } from '@/components/get-started'
 import { MetricChart } from '@/components/metric-chart'
 import { StatusDot } from '@/components/status-dot'
+import { TvButton } from '@/components/tv-button'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AREA_ITEMS } from '@/lib/areas'
@@ -115,12 +116,15 @@ export default async function ProductPage({
         period={period}
         online={traffic ? traffic.online : null}
         actions={
-          <Button asChild variant="outline">
-            <Link href={`${base}/settings`}>
-              <SettingsIcon data-icon="inline-start" />
-              {t('productPage.settings')}
-            </Link>
-          </Button>
+          <>
+            <TvButton scope={`p:${project.slug}`} />
+            <Button asChild variant="outline">
+              <Link href={`${base}/settings`}>
+                <SettingsIcon data-icon="inline-start" />
+                {t('productPage.settings')}
+              </Link>
+            </Button>
+          </>
         }
         t={tOverview}
       />
