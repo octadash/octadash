@@ -1,3 +1,4 @@
+import { brotliDecompressSync, gunzipSync, inflateSync } from 'node:zlib'
 import { OCTADASH_VERSION } from '@octadash/core'
 import type { EventRow } from '@octadash/db'
 import type { EventSink, HeartbeatStore, SaltStore } from '@octadash/queue'
@@ -5,13 +6,20 @@ import { type Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { cors } from 'hono/cors'
 import { requestContext } from './context'
-import { batchSchema, PropertiesTooLargeError, toEventRows } from './events'
+import { parseEnvelope, sentryKey, toErrorRow } from './errors'
+import { batchSchema, PropertiesTooLargeError, type Sender, toEventRows } from './events'
 import type { HeartbeatResolver, KeyResolver } from './keys'
 import { BROWSER_SCRIPT } from './script'
 import { visitorHash } from './visitor'
 
 /** Requests bigger than this are refused before they are read. */
 export const MAX_BODY_BYTES = 1024 * 1024
+/** Sentry envelopes may carry attachments, which are read and dropped. */
+export const MAX_ENVELOPE_BYTES = 10 * 1024 * 1024
+/** At most this much after decompression. */
+const MAX_INFLATED_BYTES = 20 * 1024 * 1024
+/** Error events taken from one request. */
+const MAX_ERRORS_PER_REQUEST = 100
 /** Seconds an SDK should wait when the queue is full. */
 const RETRY_AFTER_SECONDS = 30
 
@@ -47,7 +55,13 @@ export function createApp(deps: IngestDeps) {
     cors({
       origin: '*',
       allowMethods: ['GET', 'POST', 'OPTIONS'],
-      allowHeaders: ['content-type', 'authorization', 'x-octadash-key'],
+      allowHeaders: [
+        'content-type',
+        'content-encoding',
+        'authorization',
+        'x-octadash-key',
+        'x-sentry-auth',
+      ],
       maxAge: 86_400,
     }),
   )
@@ -165,6 +179,101 @@ export function createApp(deps: IngestDeps) {
     },
   )
 
+  /** Who sent the request, as `toEventRows` and `toErrorRow` read it. */
+  const senderOf = (c: Context, projectId: string, received: Date): Sender => {
+    const request = requestContext((name) => c.req.header(name))
+    const fromBrowser = Boolean(c.req.header('origin') || c.req.header('referer'))
+    return {
+      ip: fromBrowser ? request.ip : '',
+      userAgent: fromBrowser ? request.userAgent : '',
+      country: request.country,
+      visitor: (ip, ua) => visitorHash(deps.salts, received, projectId, ip, ua),
+    }
+  }
+
+  /**
+   * Errors, from any Sentry SDK (`/api/<id>/envelope/` and the older
+   * `/api/<id>/store/`) and from the Octadash script (`/o/v1/errors`, the same
+   * event JSON, one or a list). The id in the address is ignored: the key
+   * names the product and the source. Other envelope items (sessions,
+   * transactions, replays, attachments) are accepted and dropped until their
+   * areas exist, so the SDK does not retry them.
+   */
+  const errors = (format: 'envelope' | 'store' | 'octadash') => async (c: Context) => {
+    if (deps.sink.isFull('errors')) return queueFull(c)
+    let body: Uint8Array
+    try {
+      body = inflate(new Uint8Array(await c.req.arrayBuffer()), c.req.header('content-encoding'))
+    } catch {
+      return c.json({ error: 'invalid_body' }, 400)
+    }
+
+    let events: unknown[]
+    let dsn: string | undefined
+    try {
+      if (format === 'envelope') {
+        const envelope = parseEnvelope(body)
+        dsn = typeof envelope.header.dsn === 'string' ? envelope.header.dsn : undefined
+        events = envelope.items
+          .filter((item) => item.type === 'event')
+          .map((item) => JSON.parse(new TextDecoder().decode(item.payload)))
+      } else {
+        const parsed = JSON.parse(new TextDecoder().decode(body))
+        if (format === 'octadash' && parsed && typeof parsed === 'object' && 'events' in parsed) {
+          dsn = typeof parsed.key === 'string' ? parsed.key : undefined
+          events = Array.isArray(parsed.events) ? parsed.events : []
+        } else {
+          events = Array.isArray(parsed) ? parsed : [parsed]
+        }
+      }
+    } catch {
+      return c.json({ error: 'invalid_json' }, 400)
+    }
+
+    const key =
+      sentryKey(
+        c.req.query('sentry_key'),
+        c.req.header('x-sentry-auth'),
+        c.req.header('authorization'),
+        dsn,
+      ) ?? keyFrom(c)
+    let scope: Awaited<ReturnType<KeyResolver['resolve']>>
+    try {
+      scope = await deps.keys.resolve(key ?? '')
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503)
+    }
+    if (!scope) return c.json({ error: 'invalid_key' }, 401)
+
+    const received = new Date(now())
+    const sender = senderOf(c, scope.project_id, received)
+    const rows = []
+    for (const event of events.slice(0, MAX_ERRORS_PER_REQUEST)) {
+      const row = await toErrorRow(scope, event, sender, received)
+      if (row) rows.push(row)
+    }
+    try {
+      if (rows.length > 0) await deps.sink.write('errors', rows)
+    } catch (err) {
+      deps.onError?.(err)
+      return c.json({ error: 'unavailable' }, 503, { 'retry-after': '5' })
+    }
+    // Sentry SDKs read the event id back.
+    return c.json(
+      format === 'octadash' ? { accepted: rows.length } : { id: rows[0]?.event_id ?? null },
+    )
+  }
+  const errorLimit = (max: number) =>
+    bodyLimit({ maxSize: max, onError: (c) => c.json({ error: 'body_too_large' }, 413) })
+  for (const path of ['/api/:id/envelope/', '/api/:id/envelope']) {
+    app.post(path, errorLimit(MAX_ENVELOPE_BYTES), errors('envelope'))
+  }
+  for (const path of ['/api/:id/store/', '/api/:id/store']) {
+    app.post(path, errorLimit(MAX_BODY_BYTES), errors('store'))
+  }
+  app.post('/o/v1/errors', errorLimit(MAX_BODY_BYTES), errors('octadash'))
+
   app.notFound((c) => c.json({ error: 'not_found' }, 404))
 
   app.onError((err, c) => {
@@ -180,6 +289,21 @@ function keyFrom(c: Context): string | undefined {
   if (header) return header.trim()
   const auth = c.req.header('authorization')
   return auth?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim()
+}
+
+/** The body as sent, decompressed when the SDK compressed it (Sentry's Python and others do). */
+function inflate(body: Uint8Array, encoding: string | undefined): Uint8Array {
+  const options = { maxOutputLength: MAX_INFLATED_BYTES }
+  switch (encoding?.trim().toLowerCase()) {
+    case 'gzip':
+      return gunzipSync(body, options)
+    case 'deflate':
+      return inflateSync(body, options)
+    case 'br':
+      return brotliDecompressSync(body, options)
+    default:
+      return body
+  }
 }
 
 function queueFull(c: Context) {

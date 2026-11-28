@@ -6,8 +6,8 @@ import { createProject } from './projects'
 import { createTvLink, getTvLink, openTvLink, stopTvLink } from './tv'
 
 const url = process.env.DATABASE_URL
-const org = '00000000-0000-4000-8000-0000000000e1'
-const other = '00000000-0000-4000-8000-0000000000e2'
+const org = '00000000-0000-4000-8000-0000000002e1'
+const other = '00000000-0000-4000-8000-0000000002e2'
 
 describe.skipIf(!url)('TV mode (needs DATABASE_URL)', () => {
   const { db, pool } = createDb(url ?? '', { max: 2 })

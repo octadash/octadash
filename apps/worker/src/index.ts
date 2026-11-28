@@ -12,10 +12,13 @@ import {
   createClickHouse,
   createDb,
   getWatcher,
+  insertErrors,
   insertUptimeChecks,
+  issuePeople,
   listActiveMonitors,
   listDismissedAreas,
   recordDiscarded,
+  recordIssueHits,
   recordWatcherPing,
   setMonitorStatus,
 } from '@octadash/db'
@@ -77,7 +80,24 @@ const router = new EventRouter({
   addSourceAreas: (pairs) => addSourceAreas(db, pairs),
   now: Date.now,
 })
-const writers = startWriters(streams, clickhouse, router, log)
+const writers = startWriters(
+  streams,
+  clickhouse,
+  router,
+  {
+    recordHits: (hits) =>
+      recordIssueHits(db, hits, new Date(), (issueId, since) =>
+        issuePeople(clickhouse, issueId, since),
+      ),
+    insert: (rows, token) => insertErrors(clickhouse, rows, token),
+    onChange: async (changes) => {
+      for (const orgId of new Set(changes.map((change) => change.orgId))) {
+        await live.publish(orgId, 'errors').catch(() => {})
+      }
+    },
+  },
+  log,
+)
 const heartbeats = new ValkeyHeartbeats(valkey)
 const uptime = startUptime(
   new UptimeScheduler({

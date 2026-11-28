@@ -13,7 +13,7 @@ import type { Redis } from 'ioredis'
  */
 const PREFIX = 'octadash:live:'
 
-export type LiveTopic = 'incidents' | 'monitors' | 'watcher'
+export type LiveTopic = 'incidents' | 'monitors' | 'watcher' | 'errors'
 
 export interface LiveEvent {
   topic: LiveTopic
@@ -123,7 +123,7 @@ export class MemoryLive implements LivePublisher, LiveSubscriber {
   }
 }
 
-const TOPICS = new Set<string>(['incidents', 'monitors', 'watcher'])
+const TOPICS = new Set<string>(['incidents', 'monitors', 'watcher', 'errors'])
 
 function parseEvent(message: string): LiveEvent | null {
   try {

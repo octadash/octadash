@@ -177,6 +177,29 @@ versions and passwords generated at install. Each has one job.
   same events for that organization. The screen also reloads every 30 seconds,
   so its numbers move without any event.
 
+### Errors
+
+- The ingest reads Sentry events (envelopes, gzip or not, and the old
+  `/store/`) and the same JSON from the Octadash script at `/o/v1/errors`, and
+  queues one row per event on the `errors` stream with its fingerprint. Other
+  envelope items (sessions, transactions, replays, attachments) are accepted
+  and dropped until their areas exist.
+- Grouping: the app's `fingerprint` wins (`{{ default }}` stands for the usual
+  one). Otherwise the main exception's type and the app's own frames (module or
+  file without the build hash, and function), or every frame when none is the
+  app's; with no stack, the message with numbers, ids and addresses taken out.
+  A new build or a moved line keeps the same issue.
+- The worker groups each batch by product and fingerprint, finds or creates the
+  issue in Postgres (`error_issue`, one transaction per issue, row locked) and
+  writes every event to ClickHouse (`errors`, 90 days) with the issue's id.
+  A resolved issue comes back as Regressed with its next event; "Resolve in
+  next release" keeps the release it was last seen in and comes back only with
+  an event from another one. An ignored issue comes back when its condition
+  (more events, more people, a date) is met.
+- The person an error hit is the user the app sent (id, else e-mail, else
+  name), or the browser's daily visitor hash marked `v:`. The address is never
+  stored.
+
 ### Integrations are plugins
 
 Alert channels and data sources share one contract (`packages/integrations`):

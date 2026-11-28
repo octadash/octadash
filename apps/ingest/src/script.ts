@@ -12,8 +12,14 @@
  * it keeps a random id in the site's localStorage and sends it as
  * `$visitor_id`; the ingest uses it only when the source allows it.
  *
+ * It also reports uncaught errors and rejected promises to /o/v1/errors in the
+ * Sentry event format (at most 10 per page, each message once), and gives
+ * `window.octadash.captureException(error)` for handled ones. `data-release`
+ * and `data-environment` on the tag mark them, so an issue knows the release
+ * it started in.
+ *
  * Kept as plain ES2017 in a string so the ingest bundle serves it as is; under
- * 2.5 KB before gzip.
+ * 4.5 KB before gzip.
  */
 export const BROWSER_SCRIPT = `(function () {
   'use strict';
@@ -68,9 +74,51 @@ export const BROWSER_SCRIPT = `(function () {
   });
   window.addEventListener('popstate', page);
 
+  var errors = api.replace(/events$/, 'errors');
+  var reported = 0;
+  var seen = {};
+  function frames(stack) {
+    var out = [];
+    String(stack || '').split('\\n').forEach(function (line) {
+      var m = /^\\s*at (?:(.+?) \\()?(.+?):(\\d+):(\\d+)\\)?$/.exec(line) || /^(.*?)@(.+?):(\\d+):(\\d+)$/.exec(line);
+      if (m) out.unshift({ function: m[1] || '', filename: m[2], lineno: +m[3], colno: +m[4] });
+    });
+    return out.slice(-50);
+  }
+  function report(error, handled, mechanism) {
+    var type = (error && error.name) || 'Error';
+    var value = String((error && error.message) || error || '');
+    if (off || reported >= 10 || !value || value === 'Script error.' || seen[type + value]) return;
+    seen[type + value] = 1;
+    reported++;
+    var event = {
+      timestamp: Date.now() / 1000,
+      platform: 'javascript',
+      release: tag.getAttribute('data-release') || undefined,
+      environment: tag.getAttribute('data-environment') || undefined,
+      sdk: { name: 'octadash.browser' },
+      request: { url: location.href },
+      exception: { values: [{ type: type, value: value, mechanism: { type: mechanism, handled: handled }, stacktrace: { frames: frames(error && error.stack) } }] },
+    };
+    var body = JSON.stringify({ key: key, events: [event] });
+    if (navigator.sendBeacon && navigator.sendBeacon(errors, body)) return;
+    fetch(errors, { method: 'POST', body: body, keepalive: true, credentials: 'omit' }).catch(function () {});
+  }
+  window.addEventListener('error', function (e) {
+    // Images and scripts that fail to load fire this too, without a message.
+    if (e.error || e.message) report(e.error || { message: e.message }, false, 'onerror');
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var reason = e.reason;
+    report(reason instanceof Error ? reason : { name: 'UnhandledRejection', message: String(reason) }, false, 'onunhandledrejection');
+  });
+
   window.octadash = {
     track: function (name, properties) {
       if (typeof name === 'string' && name) send(name, properties || {});
+    },
+    captureException: function (error) {
+      report(error, true, 'generic');
     },
   };
 

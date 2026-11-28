@@ -15,6 +15,7 @@ export interface Database {
   project: ProjectTable
   project_slug_alias: ProjectSlugAliasTable
   tv_link: TvLinkTable
+  error_issue: ErrorIssueTable
   source: SourceTable
   source_key: SourceKeyTable
   project_area: ProjectAreaTable
@@ -46,6 +47,47 @@ export interface OctadashInstanceTable {
   watcher_status: ColumnType<WatcherStatus, WatcherStatus | undefined, WatcherStatus>
   watcher_checked_at: ColumnType<Date | null, Date | null | undefined, Date | null>
   watcher_error: ColumnType<string | null, string | null | undefined, string | null>
+}
+
+export type IssueStatus = 'unresolved' | 'resolved' | 'ignored'
+
+/** When an ignored issue comes back: after `count` more events, `people` more people, or at `until` (ms). */
+export interface IgnoreUntil {
+  count?: number
+  people?: number
+  until?: number
+}
+
+/** The same error in the same place; each occurrence is a row in ClickHouse. */
+export interface ErrorIssueTable {
+  id: string
+  org_id: string
+  project_id: string
+  fingerprint: string
+  type: string
+  value: string
+  culprit: string
+  platform: string
+  level: string
+  handled: boolean
+  first_seen: Date
+  last_seen: Date
+  first_release: string
+  last_release: string
+  times_seen: ColumnType<string, number | string | undefined, number | string>
+  status: ColumnType<IssueStatus, IssueStatus | undefined, IssueStatus>
+  status_at: Date | null
+  status_by: string | null
+  resolved_release: string | null
+  ignore_until: Json | null
+  ignored_times_seen: ColumnType<
+    string | null,
+    number | string | null | undefined,
+    number | string | null
+  >
+  regressed_at: Date | null
+  acknowledged_by: string | null
+  acknowledged_at: Date | null
 }
 
 /** A private TV link; only the token's hash is stored. */
