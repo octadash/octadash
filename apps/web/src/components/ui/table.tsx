@@ -3,9 +3,21 @@
 import { cn } from 'cn'
 import type * as React from 'react'
 
-function Table({ className, ...props }: React.ComponentProps<'table'>) {
+/**
+ * `scrollLabel` names a table that can scroll sideways on a narrow screen: the
+ * container becomes a focusable region, so keyboard users can scroll it too.
+ */
+function Table({
+  className,
+  scrollLabel,
+  ...props
+}: React.ComponentProps<'table'> & { scrollLabel?: string }) {
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto focus-visible:outline-2 focus-visible:outline-ring"
+      {...(scrollLabel ? { role: 'region', 'aria-label': scrollLabel, tabIndex: 0 } : {})}
+    >
       <table
         data-slot="table"
         className={cn('w-full caption-bottom text-sm', className)}

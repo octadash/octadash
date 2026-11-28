@@ -253,13 +253,14 @@ export interface Cohort {
 
 /**
  * "Who comes back": people by the week they signed up, and how many did
- * anything in each week after. Covers `weeks` weeks up to the scope's end.
+ * anything in each week after. Covers the whole weeks among the last `weeks`
+ * up to the scope's end.
  */
 export async function retentionCohorts(
   client: ClickHouseClient,
   scope: Omit<UsageScope, 'from'>,
   signups: string[],
-  weeks = 5,
+  weeks = 6,
 ): Promise<Cohort[]> {
   if (scope.projectIds.length === 0) return []
   const since = new Date(scope.to.getTime() - weeks * 7 * 86_400_000)
@@ -273,6 +274,8 @@ export async function retentionCohorts(
           AND timestamp >= {from:DateTime64(3, 'UTC')} AND timestamp < {to:DateTime64(3, 'UTC')}
           AND ${IS_SIGNUP} AND distinct_id != '' AND is_bot = 0
         GROUP BY project_id, p
+        -- The first week is cut by the start of the range: only whole weeks.
+        HAVING w > toStartOfWeek(toDateTime({from:DateTime64(3, 'UTC')}, 'UTC'), 1, {tz:String})
       )
       SELECT toString(s.w) AS week,
         dateDiff('week', s.w, toStartOfWeek(e.timestamp, 1, {tz:String})) AS k,

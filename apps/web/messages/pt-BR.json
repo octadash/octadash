@@ -150,7 +150,7 @@
     "usage": {
       "name": "Uso",
       "body": "Cadastros, logins, ações principais, funil e retenção.",
-      "how": "O pacote do Octadash no navegador e no servidor."
+      "how": "O script do Octadash, um POST do seu servidor ou os SDKs do PostHog."
     },
     "errors": {
       "name": "Erros",
@@ -1899,9 +1899,194 @@
     "privateItems": [
       "A pessoa é o usuário que seu app envia; sem ele, o hash diário do visitante.",
       "O endereço IP nunca é guardado.",
-      "E-mails e nomes só quando seu app envia.",
+      "Um e-mail enviado como usuário fica só como hash; um id de usuário fica como veio.",
       "Os erros ficam guardados por 90 dias."
     ],
     "noSource": "Nenhuma origem envia erros ainda. Um dono ou administrador adiciona aqui."
+  },
+  "usageArea": {
+    "title": "Uso do produto",
+    "intro": "O que as pessoas fazem dentro de cada produto: os eventos que você envia, eventos importantes com o normal de cada um, funis e quem volta.",
+    "introOne": "O que as pessoas fazem dentro de {product}: os eventos que você envia, eventos importantes com o normal de cada um, funis e quem volta.",
+    "introGroup": "O que as pessoas fazem dentro dos produtos de {group}: eventos, eventos importantes, funis e quem volta.",
+    "sending": "{count, plural, one {# produto} other {# produtos}} · {sending} enviam eventos",
+    "setUp": "Fontes e eventos importantes",
+    "periodLabel": "Período",
+    "periods": {
+      "today": "Hoje",
+      "24h": "24h",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Faltam alguns números: o banco de eventos não respondeu.",
+    "change": "{change}% em relação ao período anterior",
+    "changePoints": "{change} pontos percentuais em relação ao período anterior",
+    "pts": "pts",
+    "chart": {
+      "current": "Este período",
+      "previous": "Período anterior",
+      "emergency": "Emergência",
+      "asTable": "Mostrar como tabela",
+      "time": "Horário"
+    },
+    "tiles": {
+      "label": "Números do período",
+      "active": "Pessoas ativas",
+      "signups": "Cadastros",
+      "keyEvents": "Eventos importantes",
+      "cameBack": "Voltaram na semana 1",
+      "noKeys": "Marque eventos importantes em Fontes e eventos importantes",
+      "cameBackOf": "de {count, plural, one {# pessoa} other {# pessoas}} que se cadastraram na semana anterior",
+      "cameBackNone": "Precisa de cadastros ligados a uma pessoa",
+      "cameBackInfoLabel": "Sobre Voltaram na semana 1",
+      "cameBackInfo": "Das pessoas que se cadastraram 7 dias antes deste período, a parte que fez qualquer coisa de 7 a 14 dias depois do cadastro. Precisa do identify (um id da pessoa), porque um visitante sem ele ganha um hash novo a cada dia. Cadastros são signed_up, signup.completed e os nomes que outras ferramentas usam."
+    },
+    "events": "Eventos",
+    "eventsInfoLabel": "Sobre Normal?",
+    "eventsInfo": "O normal é o mesmo trecho de tempo em cada uma das 4 semanas anteriores (uma segunda é comparada com segundas). Mais de 30% abaixo ou 50% acima está fora do normal. Um evento importante que parou aparece aqui e é uma emergência. Eventos com nome dos SDKs ($pageview, $identify) ficam de fora.",
+    "search": "nome do evento",
+    "searchLabel": "Buscar eventos pelo nome",
+    "noEvents": "Nenhum evento neste período.",
+    "noMatch": "Nenhum evento tem “{q}” no nome.",
+    "showMore": "Mostrar mais ({shown} de {total})",
+    "table": {
+      "event": "Evento",
+      "product": "Produto",
+      "count": {
+        "today": "Hoje",
+        "24h": "24h",
+        "7d": "7 dias",
+        "30d": "30 dias"
+      },
+      "vsBefore": "vs antes",
+      "people": "Pessoas",
+      "normal": "Normal?",
+      "key": "(evento importante)",
+      "newNow": "novo"
+    },
+    "normal": {
+      "expected": "Dentro do esperado",
+      "below": "{percent}% abaixo do esperado",
+      "above": "{percent}% acima do esperado",
+      "new": "Novo, ainda sem comparação",
+      "few": "Poucos para dizer",
+      "stopped": "Parou · emergência",
+      "stoppedSince": "Parou, último {ago} · emergência"
+    },
+    "funnel": {
+      "title": "Funis",
+      "none": "Um funil conta as pessoas que fizeram eventos em ordem (visitou, pôs no carrinho, pagou) e onde elas saíram. Crie um com eventos que você já envia.",
+      "new": "Novo funil",
+      "newTitle": "Novo funil",
+      "editTitle": "Editar funil",
+      "edit": "Editar {name}",
+      "intro": "Eventos em ordem, um por linha. Uma pessoa conta em um passo quando fez o passo depois do anterior, dentro dos dias que você escolher.",
+      "product": "Produto",
+      "name": "Nome",
+      "namePlaceholder": "Checkout",
+      "steps": "Passos",
+      "stepsHint": "De 2 a 8 nomes de eventos. $pageview conta qualquer visualização de página.",
+      "stepsHintSeen": "De 2 a 8 nomes de eventos. Vistos há pouco: {events}",
+      "window": "Dias para concluir",
+      "windowHint": "Do primeiro passo ao último, de 1 a 90.",
+      "cancel": "Cancelar",
+      "create": "Criar funil",
+      "save": "Salvar",
+      "delete": "Excluir",
+      "checkFields": "Confira os campos.",
+      "twoSteps": "Um funil precisa de pelo menos 2 passos.",
+      "notFound": "Este produto ou funil não existe mais.",
+      "named": "{name} · {product}",
+      "meta": "{days, plural, one {# dia} other {# dias}} para concluir · {share} concluíram",
+      "everyone": "todos",
+      "continued": "{share} continuaram",
+      "drop": "Maior queda: {from} → {to} ({share} saíram).",
+      "empty": "Ninguém fez o primeiro passo neste período."
+    },
+    "retention": {
+      "title": "Quem volta",
+      "titleOf": "Quem volta · {scope}",
+      "note": "pessoas que se cadastraram, por semana",
+      "infoLabel": "Sobre Quem volta",
+      "info": "Cada linha são as pessoas que se cadastraram naquela semana; cada coluna é a parte que fez qualquer coisa nas semanas seguintes. Conta só pessoas que o seu app identifica.",
+      "none": "Aparece quando as pessoas se cadastram com identify: o evento de cadastro ligado a um id da pessoa.",
+      "signedUp": "Cadastro",
+      "people": "Pessoas",
+      "week": "Semana {n}",
+      "weekOf": "Semana de {date}"
+    },
+    "none": {
+      "title": "Nenhum evento ainda",
+      "body": "Uso do produto mostra o que as pessoas fazem dentro dos seus produtos: cadastros, pagamentos, convites, qualquer coisa que você envie como evento. Três jeitos de enviar:",
+      "script": "O script do Octadash no seu site: window.octadash.track('signed_up'). Se o Tráfego estiver configurado, o script já está lá.",
+      "server": "Do seu servidor: um POST com o evento e a chave da fonte.",
+      "posthog": "Já usa PostHog: troque só o host e a chave.",
+      "setUp": "Configurar Uso do produto",
+      "all": "Configure um produto:"
+    }
+  },
+  "usageSetup": {
+    "title": "Configurar Uso do produto",
+    "intro": "Envie o que as pessoas fazem (cadastrou, pagou, convidou alguém) e o Octadash mostra o normal de cada evento, funis e quem volta.",
+    "trail": "Onde você está",
+    "usage": "Uso do produto",
+    "sources": "Fontes",
+    "sourcesHint": "O script do Tráfego neste site já coleta eventos: adicione uma linha onde algo acontece. Sem chave nova.",
+    "scriptHint": "Uma fonte que envia visualizações de página já tem o script do Octadash: “Usar para Uso do produto” e a mesma chave envia eventos.",
+    "status": {
+      "receiving": "envia eventos · último {time}",
+      "waiting": "para Uso do produto · esperando o primeiro evento",
+      "other": "envia {areas} · nenhum evento ainda",
+      "nothing": "adicionada · nada recebido ainda"
+    },
+    "useForUsage": "Usar para Uso do produto",
+    "show": "Mostrar código",
+    "addSource": "Adicionar fonte",
+    "addAnother": "Adicionar outra fonte",
+    "codeLabel": "Plataforma",
+    "tabs": {
+      "browser": "Navegador",
+      "node": "Next.js / Node",
+      "python": "Python",
+      "dotnet": ".NET",
+      "posthog": "Já uso PostHog"
+    },
+    "where": {
+      "head": "O script no <head>, depois a chamada onde acontece",
+      "page": "Onde acontece, na página",
+      "server": "Onde acontece, no código do servidor",
+      "posthog": "Onde o PostHog é iniciado"
+    },
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "noteNames": "Nomes em snake_case. Propriedades são opcionais; nunca envie nomes, e-mails ou documentos (são descartados de qualquer jeito). signed_up conta como cadastro sem configurar nada.",
+    "notePosthog": "Suas chamadas do PostHog continuam funcionando: capture e identify. Autocapture, gravações e pesquisas ficam desligados. Testado com posthog-js 1 e posthog-node 5.",
+    "step1": "Envie um evento onde ele acontece",
+    "step2": "Ligue os eventos a uma pessoa (opcional)",
+    "step2Body": "O Octadash guarda só um hash do id, então consegue contar a mesma pessoa no celular e no notebook e montar quem volta, sem saber quem ela é. Chame em cada carregamento de página quando souber o usuário, e octadash.reset() ao sair.",
+    "step3": "Marque os eventos importantes",
+    "step3Body": "Um evento importante ganha o normal de cada hora; se ele parar, é a emergência “Evento importante parou”.",
+    "inWeek": "{count, plural, =0 {nenhum em 7 dias} one {# em 7 dias} other {# em 7 dias}}",
+    "noEventsYet": "Nenhum evento visto ainda. Envie um (passo 1) ou digite o nome do evento abaixo.",
+    "newKey": "Outro evento importante",
+    "newKeyHint": "O nome de um evento que você vai enviar, mesmo que nenhum tenha chegado ainda.",
+    "saveKeys": "Salvar eventos importantes",
+    "keysSaved": "Salvo.",
+    "step4": "Conferir",
+    "waitingBody": "Esperando o primeiro evento. Faça a ação no site; aparece aqui em segundos.",
+    "arrived": "Os eventos estão chegando. O último: {event} ({time}).",
+    "openUsage": "Abrir Uso do produto",
+    "back": "Voltar para {name}",
+    "wontUse": "Não vou usar Uso do produto neste produto",
+    "noSource": "Nenhuma fonte envia eventos ainda. Um dono ou admin adiciona aqui.",
+    "private": "Privado por padrão",
+    "privateItems": [
+      "Sem cookies, a menos que você ligue visitantes recorrentes.",
+      "Ids de pessoas ficam guardados como hash.",
+      "Propriedades que parecem e-mails ou documentos são descartadas na entrada.",
+      "O endereço IP nunca é guardado."
+    ],
+    "funnelsTitle": "Funis e retenção",
+    "funnelsBody": "Quando os eventos chegarem, monte um funil com quaisquer eventos em ordem (visitou → carrinho → pagou) e veja quem volta pela semana em que se cadastrou. Os dois funcionam por produto ou para um grupo."
   }
 }
