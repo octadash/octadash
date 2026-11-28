@@ -395,3 +395,27 @@ export async function closeStaleMonitorIncidents(db: Db, at: Date) {
     .execute()
   return rows.map((row) => row.org_id)
 }
+
+/** The products that changed a rule of the organization, with their own setting, by name. */
+export async function listRuleOverrides(db: Db, orgId: string) {
+  const rows = await db
+    .selectFrom('alert_rule')
+    .innerJoin('project', 'project.id', 'alert_rule.project_id')
+    .select([
+      'alert_rule.kind',
+      'alert_rule.level',
+      'alert_rule.params',
+      'project.name',
+      'project.slug',
+    ])
+    .where('alert_rule.org_id', '=', orgId)
+    .where('alert_rule.project_id', 'is not', null)
+    .orderBy('project.name')
+    .execute()
+  return rows.map((row) => ({
+    kind: row.kind,
+    level: row.level,
+    params: (row.params as Record<string, number>) ?? {},
+    product: { name: row.name, slug: row.slug },
+  }))
+}

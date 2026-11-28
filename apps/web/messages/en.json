@@ -9,7 +9,8 @@
     "settings": "Settings",
     "language": "Language",
     "organization": "Organization",
-    "account": "Account"
+    "account": "Account",
+    "close": "Close"
   },
   "auth": {
     "setupTitle": "Welcome to Octadash",
@@ -62,20 +63,52 @@
   },
   "members": {
     "title": "Members",
-    "intro": "People who can see every product in {org}.",
+    "intro": "People who can open {org}. Every member sees every product of the organization.",
     "name": "Name",
     "invite": "Invite",
-    "inviteTitle": "Invite someone",
-    "inviteIntro": "Octadash creates a link for you to send. Email delivery arrives with the alerts module.",
+    "inviteTitle": "Invite to {org}",
     "role": "Role",
     "roleMember": "Member",
     "roleAdmin": "Admin",
     "roleOwner": "Owner",
     "pending": "Pending invitations",
-    "inviteLink": "Invitation link",
     "cancelInvite": "Cancel",
     "you": "you",
-    "expires": "Expires {date}"
+    "inviteIntroEmail": "The invitation goes by email through “{channel}”. You can also copy the link from the list.",
+    "inviteIntroLink": "There is no email channel yet, so Octadash makes a link for you to send. Add an email channel and invitations go out on their own.",
+    "inviteRoleHint": "Admins set up products, channels and rules. Members see everything and can press “I’m on it”.",
+    "email": "Email",
+    "sendInvite": "Send invitation",
+    "invitedSent": "Invitation sent to {email}.",
+    "invitedCopy": "Invitation created. Copy its link from Pending invitations and send it.",
+    "invitedFailed": "Invitation created, but the email did not go out: {error}. Copy its link from Pending invitations.",
+    "search": "Search by name or email",
+    "lastSeen": "Last seen",
+    "now": "Now",
+    "never": "Never",
+    "actions": "Actions",
+    "remove": "Remove from {org}",
+    "removeTitle": "Remove {name} from {org}?",
+    "removeBody": "They lose access at once. Incidents they were on stay as they are. You can invite them again later.",
+    "nobody": "Nobody matches this search.",
+    "rolesInfoLabel": "About roles",
+    "rolesTitle": "Roles",
+    "roleInfo": {
+      "owner": "everything, including deleting the organization and the install settings. At least one per organization.",
+      "admin": "sets up products, areas, channels and rules, and invites people.",
+      "member": "sees everything and can press “I’m on it”. Cannot change settings."
+    },
+    "expiresIn": "expires {when}",
+    "emailSent": "Email sent",
+    "emailFailed": "Email failed: {error}",
+    "emailNotSent": "Not emailed, copy the link",
+    "copyLink": "Copy link",
+    "mail": {
+      "subject": "{inviter} invited you to {org} on Octadash",
+      "body": "{inviter} invited you to {org} on Octadash, where the team follows uptime, traffic and emergencies of its products.\n\nOpen this link to create your account and join:\n{link}\n\nThe link works until {date}. If you did not expect this, ignore this email."
+    },
+    "countOne": "# member",
+    "countOther": "# members"
   },
   "errors": {
     "generic": "Something went wrong. Try again.",
@@ -89,7 +122,9 @@
     "monitorName": "Give the monitor a name.",
     "ownersOnly": "Only owners can do this.",
     "typeName": "Type the name exactly as it is to confirm.",
-    "wrongPassword": "The current password is not right."
+    "wrongPassword": "The current password is not right.",
+    "lastOwner": "The organization needs at least one owner. Make someone else owner first.",
+    "notYourself": "You can’t remove yourself here."
   },
   "areas": {
     "overview": {
@@ -533,13 +568,14 @@
       "email": "Team email",
       "telegram": "On-call Telegram",
       "webhook": "Automation"
-    }
+    },
+    "sendsInvites": "Also sends invites"
   },
   "alerts": {
     "title": "Alert rules",
-    "intro": "What becomes an emergency and how long to wait before telling anyone. Applies to every product; each product can have its own setting on its settings page. Messages go to the <channels>channels</channels>.",
+    "intro": "What becomes an emergency, what is only a signal, and how long to wait. These are the organization’s rules; any product can change its own.",
     "productTitle": "Alerts for this product",
-    "productIntro": "By default this product follows the organization's rules. Changes here apply to it only.",
+    "productIntro": "By default this product follows the organization’s rules. Changes here apply to it only.",
     "level": "Level",
     "levels": {
       "emergency": "Emergency",
@@ -547,9 +583,9 @@
       "off": "Off"
     },
     "levelHint": {
-      "emergency": "Tells the channels and shows the red strip in the panel until someone resolves or acknowledges it.",
-      "signal": "No message. Highlighted in the panel and listed in the daily summary.",
-      "off": "Neither tells nor highlights."
+      "emergency": "Needs action now. Message to the channels and the red strip on every screen until resolved.",
+      "signal": "Out of normal. No message: highlighted in its area and in the daily summary.",
+      "off": "Neither tells nor highlights. The data is still recorded."
     },
     "params": {
       "minutes": "Wait",
@@ -557,27 +593,64 @@
       "days": "Tell",
       "daysUnit": "days ahead"
     },
-    "channels": "Channels",
-    "allChannels": "None checked: tells every channel.",
+    "allChannels": "All channels",
     "noChannels": "No channels yet. Without one, the emergency shows only in the panel.",
-    "save": "Save",
     "saved": "Saved",
     "reset": "Back to the organization's rule",
     "custom": "Adjusted",
     "kinds": {
       "monitor_down": {
         "title": "Site or API down",
-        "body": "A site or /health monitor failed 3 times in a row. If it comes back before the wait, nobody is told."
+        "body": "A site or /health monitor failed 3 checks in a row. If it comes back before the wait, nobody is told.",
+        "info": "Octadash checks every minute. One failure can be the network; three in a row is the site. Then it waits the minutes you set and, if it is still down, tells the channels and opens the red strip. Use 0 for checkout or login, where every minute counts."
       },
       "heartbeat_missed": {
         "title": "Heartbeat missed",
-        "body": "A cron job, backup or worker did not check in within its interval plus grace."
+        "body": "A cron job, backup or worker did not check in within its interval plus grace.",
+        "info": "Each heartbeat has its own interval and grace. When both pass without a check-in, the job is late and this rule decides what happens.",
+        "note": "Grace is set on each heartbeat."
       },
       "cert_expiring": {
         "title": "Certificate expiring",
-        "body": "A monitor's HTTPS certificate expires in a few days."
+        "body": "The HTTPS certificate of a monitor expires soon.",
+        "info": "Octadash reads the certificate on every check. Most certificates renew on their own about 30 days before they expire; if one is still old this close, the renewal failed."
       }
-    }
+    },
+    "legend": "Levels",
+    "rulesFor": "Rules for",
+    "allProducts": "All products (organization)",
+    "oneProduct": "One product’s own rules",
+    "sendTo": "Send to",
+    "channelsCount": "# channels",
+    "about": "About {name}",
+    "changedOn": "Changed on {count, plural, one {# product} other {# products}}:",
+    "rulesCount": "{count, plural, one {# rule} other {# rules}}",
+    "areas": {
+      "uptime": "Uptime",
+      "errors": "Errors",
+      "usage": "Product usage"
+    },
+    "future": {
+      "errors": {
+        "starts": "Starts when Errors is set up on a product",
+        "errorSpike": {
+          "title": "Error spike",
+          "body": "Errors per minute well above this product’s normal for the hour.",
+          "wait": "No product sends errors yet.",
+          "params": "5× normal, at least 20 errors"
+        }
+      },
+      "usage": {
+        "starts": "Starts when Product usage is set up",
+        "signupsDropped": {
+          "title": "Sign-ups dropped",
+          "body": "Sign-ups away from what this hour and weekday usually have.",
+          "wait": "Needs 4 weeks of data to learn what is normal.",
+          "params": "30% below expected, at least 10 events"
+        }
+      }
+    },
+    "moreAreas": "Each area brings its own rules when it ships (Money: payments failing; Costs: spend above normal). They appear here already set, so nothing needs to be written from zero."
   },
   "groups": {
     "newTitle": "New group",

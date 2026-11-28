@@ -165,8 +165,14 @@ for the organization (first product, one area, where alerts go, the outside
 watcher, invite people), each opening where it is done. It goes away when all
 are done or when someone hides it, for everyone and for good.
 
-An invited person sets name and password (the email comes from the invitation)
-and lands on that organization's Overview, with no setup steps. An organization
+Invitations go by email through the organization's first email channel, in
+that channel's language; without one, the admin copies the link from Pending
+invitations. The list says whether each email went out. An invited person sets
+name and password (the email comes from the invitation) and lands on that
+organization's Overview, with no setup steps. Settings › Members shows when
+each person last opened the organization (per organization, written at most
+every 5 minutes); owners alone give or take the owner role, and the last owner
+can't step down or be removed. An organization
 with no products (someone left step 2 halfway, or every product was removed)
 shows the step 2 form in place of the Overview, never an empty dashboard;
 members, who can't create products, are told to ask an admin.

@@ -1,6 +1,15 @@
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
-import { builtinIntegrations, findTelegramChats, resend, smtp, telegram, webhook } from './builtin'
+import {
+  builtinIntegrations,
+  findTelegramChats,
+  isEmailIntegration,
+  resend,
+  sendDirectEmail,
+  smtp,
+  telegram,
+  webhook,
+} from './builtin'
 import { emailSubject, splitAddresses } from './builtin/email'
 import { signBody } from './builtin/webhook'
 import { formFields, splitSecrets } from './form'
@@ -68,6 +77,28 @@ describe('webhook', () => {
     const fetchFn = vi.fn(async () => new Response('', { status: 500 })) as unknown as typeof fetch
     const result = await webhook.test({ url: 'https://hooks.example.com/x' }, { fetch: fetchFn })
     expect(result).toEqual({ ok: false, message: 'Webhook answered 500' })
+  })
+})
+
+describe('direct email', () => {
+  it('writes to one person through the channel account, not to its recipients', async () => {
+    const fetchFn = okFetch()
+    await sendDirectEmail(
+      'resend',
+      { apiKey: 're_123', from: 'Octadash <alerts@acme.test>', to: 'ops@acme.test' },
+      { to: 'new@acme.test', subject: 'Join', text: 'Link' },
+      { fetch: fetchFn },
+    )
+    const [url, init] = fetchFn.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('https://api.resend.com/emails')
+    expect(JSON.parse(init.body as string)).toEqual({
+      from: 'Octadash <alerts@acme.test>',
+      to: ['new@acme.test'],
+      subject: 'Join',
+      text: 'Link',
+    })
+    expect(isEmailIntegration('smtp')).toBe(true)
+    expect(isEmailIntegration('telegram')).toBe(false)
   })
 })
 

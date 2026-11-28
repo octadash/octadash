@@ -5,6 +5,7 @@ import {
   closeStaleMonitorIncidents,
   listIncidentsBetween,
   listOpenIncidents,
+  listRuleOverrides,
   listRules,
   markNotified,
   openIncident,
@@ -59,6 +60,12 @@ describe.skipIf(!url)('alerts (needs DATABASE_URL)', () => {
     expect((await listRules(db, org, null)).find((r) => r.kind === 'monitor_down')?.params).toEqual(
       { minutes: 2 },
     )
+    expect(await listRuleOverrides(db, org)).toContainEqual({
+      kind: 'monitor_down',
+      level: 'emergency',
+      params: { minutes: 5 },
+      product: { name: 'Rules', slug: project.slug },
+    })
     // Another organization cannot override this product.
     expect(
       await saveRule(db, other, project.id, 'monitor_down', {
