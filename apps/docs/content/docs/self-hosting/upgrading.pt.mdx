@@ -7,6 +7,15 @@ Baixe a imagem nova e reinicie. Cada papel aplica as migrações pendentes ao
 iniciar, no Postgres e no ClickHouse. As versões de ClickHouse, Valkey e Garage
 ficam fixas nos arquivos compose e só mudam com as versões do Octadash.
 
+## Saber que existe uma
+
+Uma vez por dia o painel pergunta ao GitHub se há versão nova. Quando há, donos
+e admins veem **Atualização disponível** no menu, acima de Configurações, com
+link para o changelog. Uma imagem de versão compara com a última versão
+publicada; uma imagem `edge` conta as mudanças no `main` desde que foi gerada.
+No Coolify, **Redeploy** baixa a nova. Com `OCTADASH_UPDATE_CHECK=false` o
+painel nunca chama o GitHub.
+
 Vindo de uma versão sem armazenamento de arquivos: atualize o repositório, rode
 `./scripts/generate-env.sh` de novo (ele adiciona `GARAGE_RPC_SECRET`,
 `STORAGE_ACCESS_KEY_ID` e `STORAGE_SECRET_ACCESS_KEY` ao seu `.env` e mantém o

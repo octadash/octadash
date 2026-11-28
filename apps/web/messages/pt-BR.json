@@ -1510,7 +1510,11 @@
       "Bots são reconhecidos e contados à parte."
     ],
     "noSource": "Ainda não há origem para Tráfego. Adicione uma para ver o código.",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha código e chave próprios.",
+    "addSourceHint": "Um site ou app deste produto, como Docs ou App. Ganha código e chave próprios.",
+    "codeHint": "O código desta origem, as opções e a conferência ao vivo de que as visitas chegam.",
+    "close": "Fechar"
   },
   "platforms": {
     "html": "HTML",
@@ -2004,7 +2008,11 @@
       "Os erros ficam guardados por 90 dias."
     ],
     "noSource": "Nenhuma origem envia erros ainda. Um dono ou administrador adiciona aqui.",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha um DSN próprio.",
+    "addSourceHint": "Um site, app ou servidor deste produto. Ganha um DSN próprio.",
+    "codeHint": "O DSN desta origem, o código de cada plataforma e um erro de teste.",
+    "close": "Fechar"
   },
   "usageArea": {
     "title": "Uso do produto",
@@ -2182,7 +2190,11 @@
     ],
     "funnelsTitle": "Funis e retenção",
     "funnelsBody": "Quando os eventos chegarem, monte um funil com quaisquer eventos em ordem (visitou → carrinho → pagou) e veja quem volta pela semana em que se cadastrou. Os dois funcionam por produto ou para um grupo.",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha código e chave próprios.",
+    "addSourceHint": "Um site, app ou servidor deste produto. Ganha código e chave próprios.",
+    "codeHint": "O código para mandar eventos desta origem, e a conferência ao vivo de que chegam.",
+    "close": "Fechar"
   },
   "logsArea": {
     "title": "Logs",
@@ -2322,7 +2334,11 @@
     "notLogBody": "Senhas, tokens e documentos. O Octadash mascara valores que parecem números de cartão, e-mails e chaves antes de guardar, e diz quantos mascarou.",
     "maskedWeek": "{count, plural, one {# valor mascarado nos últimos 7 dias.} other {# valores mascarados nos últimos 7 dias.}}",
     "maskedNone": "Nada mascarado nos últimos 7 dias.",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha chave própria.",
+    "addSourceHint": "Um servidor ou worker deste produto. Ganha chave própria.",
+    "codeHint": "O código para mandar linhas de log desta origem, e por quanto tempo ficam guardadas.",
+    "close": "Fechar"
   },
   "moneyArea": {
     "title": "Dinheiro",
@@ -3277,5 +3293,10 @@
       }
     },
     "orNewAccount": "Ou conecte outra conta:"
+  },
+  "update": {
+    "label": "Atualização disponível",
+    "release": "A versão {version} saiu. Veja o que mudou.",
+    "edge": "{count, plural, one {1 mudança} other {# mudanças}} no main desde esta versão."
   }
 }

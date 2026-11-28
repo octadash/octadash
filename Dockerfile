@@ -14,9 +14,11 @@ RUN pnpm turbo run build --filter=!@octadash/docs
 
 FROM node:24-bookworm-slim AS runtime
 ARG OCTADASH_VERSION=0.0.0-dev
+ARG OCTADASH_COMMIT=
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    OCTADASH_VERSION=$OCTADASH_VERSION
+    OCTADASH_VERSION=$OCTADASH_VERSION \
+    OCTADASH_COMMIT=$OCTADASH_COMMIT
 WORKDIR /app
 
 # web: Next.js standalone server (brings its own minimal node_modules)

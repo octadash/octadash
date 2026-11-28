@@ -1,6 +1,6 @@
 'use client'
 
-import { SlidersVerticalIcon } from 'lucide-react'
+import { ArrowUpCircleIcon, SlidersVerticalIcon } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AREA_ITEMS, OverviewIcon, scopeOf } from '@/lib/areas'
@@ -14,11 +14,24 @@ export interface SidebarLabels {
   areas: Record<(typeof AREA_ITEMS)[number]['id'], string>
 }
 
+/** A newer Octadash exists: shown to owners and admins above Settings. */
+export interface SidebarUpdate {
+  label: string
+  detail: string
+  href: string
+}
+
 /**
  * The menu is the area; the product picker in the header is the product. The
  * same item opens the area for the chosen product or for every product.
  */
-export function AppSidebar({ labels }: { labels: SidebarLabels }) {
+export function AppSidebar({
+  labels,
+  update,
+}: {
+  labels: SidebarLabels
+  update?: SidebarUpdate | null
+}) {
   const pathname = usePathname()
   const scope = scopeOf(pathname)
   const settingsHref = scope.kind === 'all' ? '/settings/general' : `${scope.base}/settings`
@@ -52,6 +65,20 @@ export function AppSidebar({ labels }: { labels: SidebarLabels }) {
           />
         ))}
         <div className="hidden md:block md:flex-1" />
+        {update && (
+          <a
+            href={update.href}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden shrink-0 flex-col gap-0.5 rounded-lg border border-brand/40 bg-brand/5 px-3 py-2 text-sm transition-colors hover:bg-brand/10 md:flex"
+          >
+            <span className="flex items-center gap-2 font-medium">
+              <ArrowUpCircleIcon aria-hidden className="size-4 text-brand" />
+              {update.label}
+            </span>
+            <span className="text-xs text-muted-foreground">{update.detail}</span>
+          </a>
+        )}
         <SidebarLink
           href={settingsHref}
           label={labels.settings}

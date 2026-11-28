@@ -11,9 +11,11 @@ import { ProductPicker } from '@/components/product-picker'
 import { UserMenu } from '@/components/user-menu'
 import { AREA_ITEMS } from '@/lib/areas'
 import { worstStatus } from '@/lib/monitors'
+import { CHANGELOG_URL } from '@/lib/updates'
 import { services } from '@/server/context'
 import { loadStrip } from '@/server/emergency-strip'
 import { canManage, requireOrg } from '@/server/session'
+import { updateInfo } from '@/server/updates'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +39,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     worstStatus(
       monitors.filter((m) => projectIds.includes(m.project_id) && !m.paused).map((m) => m.status),
     )
+  // Owners and admins are the ones who update the install.
+  const update = canManage(org.role) ? updateInfo() : null
   const areaLabels = Object.fromEntries(
     AREA_ITEMS.map((area) => [area.id, t(`areas.${area.id}.name`)]),
   ) as Record<(typeof AREA_ITEMS)[number]['id'], string>
@@ -53,6 +57,16 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             settings: t('nav.settings'),
             areas: areaLabels,
           }}
+          update={
+            update && {
+              label: t('update.label'),
+              detail:
+                update.kind === 'release'
+                  ? t('update.release', { version: update.latest })
+                  : t('update.edge', { count: update.behind }),
+              href: CHANGELOG_URL,
+            }
+          }
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 md:px-8">

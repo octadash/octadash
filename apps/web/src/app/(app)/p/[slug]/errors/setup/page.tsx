@@ -1,5 +1,5 @@
 import { getProjectBySlug, lastError, listSources, sentryDsn } from '@octadash/db'
-import { ArrowLeftIcon, CheckIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
+import { ArrowLeftIcon, CheckIcon, CodeIcon, PlusIcon, ShieldCheckIcon } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -10,6 +10,7 @@ import { CopyField } from '@/components/copy-field'
 import { ErrorSourceForm } from '@/components/error-source-form'
 import { ErrorsInstall } from '@/components/errors-install'
 import { InfoTip } from '@/components/info-tip'
+import { RouteDialog, RouteSheet } from '@/components/route-overlay'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -57,7 +58,8 @@ export default async function ErrorsSetupPage({
       ),
     ),
   )
-  const current = sending.find((s) => s.id === chosen) ?? sending[0]
+  // The code opens in a panel over the list, for the source in the address.
+  const current = chosen ? sending.find((s) => s.id === chosen) : undefined
   const base = `/p/${project.slug}/errors/setup`
   const ingest = env.OCTADASH_INGEST_URL
 
@@ -90,14 +92,14 @@ export default async function ErrorsSetupPage({
         </Link>{' '}
         / {project.name}
       </nav>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex max-w-2xl flex-col gap-1">
           <h1 className="font-display text-3xl font-semibold">{t('title')}</h1>
           <p className="text-sm text-muted-foreground">{t('intro')}</p>
         </div>
-        {manager && sending.length > 0 && add !== '1' && (
+        {manager && (
           <Button asChild>
-            <Link href={`/p/${project.slug}/errors/setup?add=1#add`}>
+            <Link href={`/p/${project.slug}/errors/setup?add=1`}>
               <PlusIcon data-icon="inline-start" aria-hidden />
               {t('addSource')}
             </Link>
@@ -120,7 +122,6 @@ export default async function ErrorsSetupPage({
               <CardContent>
                 <ul className="flex flex-col divide-y divide-border">
                   {sources.map((s) => {
-                    const isCurrent = s.id === current?.id
                     return (
                       <li
                         key={s.id}
@@ -137,12 +138,9 @@ export default async function ErrorsSetupPage({
                         </div>
                         <div className="ml-auto">
                           {s.areas.includes('errors') ? (
-                            <Button asChild size="sm" variant={isCurrent ? 'secondary' : 'outline'}>
-                              <Link
-                                href={`${base}?source=${s.id}`}
-                                aria-current={isCurrent ? 'true' : undefined}
-                              >
-                                {isCurrent && <CheckIcon data-icon="inline-start" aria-hidden />}
+                            <Button asChild size="sm" variant="outline">
+                              <Link href={`${base}?source=${s.id}`} scroll={false}>
+                                <CodeIcon data-icon="inline-start" aria-hidden />
                                 {t('show')}
                               </Link>
                             </Button>
@@ -166,77 +164,65 @@ export default async function ErrorsSetupPage({
             </Card>
           )}
 
-          {manager &&
-            (sending.length === 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    <h2 className="font-display text-lg font-semibold">{t('addSource')}</h2>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ErrorSourceForm slug={project.slug} />
-                </CardContent>
-              </Card>
-            ) : (
-              add === '1' && (
-                <Card id="add" className="scroll-mt-6 border-brand/40">
-                  <CardHeader className="flex flex-row items-center justify-between gap-2">
-                    <CardTitle>
-                      <h2 className="font-display text-lg font-semibold">{t('addSource')}</h2>
-                    </CardTitle>
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href={`/p/${project.slug}/errors/setup`}>{t('cancel')}</Link>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <ErrorSourceForm slug={project.slug} />
-                  </CardContent>
-                </Card>
-              )
-            ))}
-
-          {current?.public_key ? (
+          {sources.length === 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle>
-                  <h2 className="font-display text-lg font-semibold">{current.name}</h2>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-6">
-                <div className="flex flex-col gap-1.5">
-                  <span className="flex items-center gap-1 text-sm font-medium">
-                    {t('dsn')}
-                    <InfoTip label={t('dsnInfoLabel')} title={t('dsn')}>
-                      {t('dsnInfo')}
-                    </InfoTip>
-                  </span>
-                  <CopyField
-                    value={sentryDsn(ingest, current.public_key, String(project.ingest_id))}
-                    label={t('dsn')}
-                    copyLabel={t('copy')}
-                    copiedLabel={t('copied')}
-                  />
-                  <span className="text-xs text-muted-foreground">{t('dsnHint')}</span>
-                </div>
-                <ErrorsInstall
-                  key={current.id}
-                  sourceId={current.id}
-                  ingestUrl={ingest}
-                  publicKey={current.public_key}
-                  dsn={sentryDsn(ingest, current.public_key, String(project.ingest_id))}
-                  platform={
-                    current.platform && isErrorPlatform(current.platform)
-                      ? current.platform
-                      : 'other'
-                  }
-                  issueHref={`/p/${project.slug}/errors`}
-                  errorsHref={`/p/${project.slug}/errors`}
-                />
+              <CardContent className="flex flex-col items-start gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {manager ? t('empty') : t('noSource')}
+                </p>
+                {manager && (
+                  <Button asChild>
+                    <Link href={`${base}?add=1`} scroll={false}>
+                      <PlusIcon data-icon="inline-start" aria-hidden />
+                      {t('addSource')}
+                    </Link>
+                  </Button>
+                )}
               </CardContent>
             </Card>
-          ) : (
-            !manager && <p className="text-sm text-muted-foreground">{t('noSource')}</p>
+          )}
+
+          {manager && add === '1' && (
+            <RouteDialog closeHref={base} title={t('addSource')} description={t('addSourceHint')}>
+              <ErrorSourceForm slug={project.slug} />
+            </RouteDialog>
+          )}
+
+          {current?.public_key && (
+            <RouteSheet
+              closeHref={base}
+              title={current.name}
+              description={t('codeHint')}
+              closeLabel={t('close')}
+            >
+              <div className="flex flex-col gap-1.5">
+                <span className="flex items-center gap-1 text-sm font-medium">
+                  {t('dsn')}
+                  <InfoTip label={t('dsnInfoLabel')} title={t('dsn')}>
+                    {t('dsnInfo')}
+                  </InfoTip>
+                </span>
+                <CopyField
+                  value={sentryDsn(ingest, current.public_key, String(project.ingest_id))}
+                  label={t('dsn')}
+                  copyLabel={t('copy')}
+                  copiedLabel={t('copied')}
+                />
+                <span className="text-xs text-muted-foreground">{t('dsnHint')}</span>
+              </div>
+              <ErrorsInstall
+                key={current.id}
+                sourceId={current.id}
+                ingestUrl={ingest}
+                publicKey={current.public_key}
+                dsn={sentryDsn(ingest, current.public_key, String(project.ingest_id))}
+                platform={
+                  current.platform && isErrorPlatform(current.platform) ? current.platform : 'other'
+                }
+                issueHref={`/p/${project.slug}/errors`}
+                errorsHref={`/p/${project.slug}/errors`}
+              />
+            </RouteSheet>
           )}
 
           <div className="flex flex-wrap gap-2">

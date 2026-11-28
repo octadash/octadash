@@ -199,7 +199,7 @@ export async function UsageView({
           {product && (
             <>
               <Button asChild variant="outline" size="sm">
-                <Link href={`/p/${product.slug}/usage/setup?add=1#add`}>
+                <Link href={`/p/${product.slug}/usage/setup?add=1`}>
                   <PlusIcon data-icon="inline-start" aria-hidden />
                   {t('addSource')}
                 </Link>

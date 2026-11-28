@@ -7,6 +7,15 @@ Pull the new image and restart. Each role applies pending migrations on start,
 for Postgres and ClickHouse. ClickHouse, Valkey and Garage versions are pinned
 in the compose files and move only with Octadash releases.
 
+## Knowing there is one
+
+Once a day the panel asks GitHub whether a newer version exists. When there is
+one, owners and admins see **Update available** in the menu, above Settings,
+with a link to the changelog. A release image compares with the latest release;
+an `edge` image counts the changes on `main` since it was built. On Coolify,
+**Redeploy** pulls it. Set `OCTADASH_UPDATE_CHECK=false` and the panel never
+calls GitHub.
+
 From a version without file storage: pull the repository, run
 `./scripts/generate-env.sh` again (it adds `GARAGE_RPC_SECRET`,
 `STORAGE_ACCESS_KEY_ID` and `STORAGE_SECRET_ACCESS_KEY` to your `.env` and keeps

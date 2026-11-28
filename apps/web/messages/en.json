@@ -1510,7 +1510,11 @@
       "Bots are recognized and counted apart."
     ],
     "noSource": "No source for Traffic yet. Add one to get its code.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "empty": "This product has no source yet. Add one: it gets its own code and key.",
+    "addSourceHint": "A site or app of this product, such as Docs or App. It gets its own code and key.",
+    "codeHint": "The code for this source, its options and a live check that page views arrive.",
+    "close": "Close"
   },
   "platforms": {
     "html": "HTML",
@@ -2004,7 +2008,11 @@
       "Errors are kept 90 days."
     ],
     "noSource": "No source sends errors yet. An owner or admin adds one here.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "empty": "This product has no source yet. Add one: it gets its own DSN.",
+    "addSourceHint": "A site, app or server of this product. It gets its own DSN.",
+    "codeHint": "The DSN for this source, the code for each platform and a test error.",
+    "close": "Close"
   },
   "usageArea": {
     "title": "Product usage",
@@ -2182,7 +2190,11 @@
     ],
     "funnelsTitle": "Funnels and retention",
     "funnelsBody": "Once events arrive, build a funnel from any events in order (visited → cart → paid), and see who comes back by the week they signed up. Both work per product or for a group.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "empty": "This product has no source yet. Add one: it gets its own code and key.",
+    "addSourceHint": "A site, app or server of this product. It gets its own code and key.",
+    "codeHint": "The code to send events from this source, and a live check that they arrive.",
+    "close": "Close"
   },
   "logsArea": {
     "title": "Logs",
@@ -2322,7 +2334,11 @@
     "notLogBody": "Passwords, tokens and documents. Octadash masks values that look like card numbers, e-mails and keys before storing, and says how many it masked.",
     "maskedWeek": "{count, plural, one {# value masked in the last 7 days.} other {# values masked in the last 7 days.}}",
     "maskedNone": "Nothing masked in the last 7 days.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "empty": "This product has no source yet. Add one: it gets its own key.",
+    "addSourceHint": "A server or worker of this product. It gets its own key.",
+    "codeHint": "The code to send log lines from this source, and how long they are kept.",
+    "close": "Close"
   },
   "moneyArea": {
     "title": "Money",
@@ -3277,5 +3293,10 @@
       }
     },
     "orNewAccount": "Or connect another account:"
+  },
+  "update": {
+    "label": "Update available",
+    "release": "Version {version} is out. See what changed.",
+    "edge": "{count, plural, one {1 change} other {# changes}} on main since this build."
   }
 }

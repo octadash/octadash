@@ -133,6 +133,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             OCTADASH_VERSION=${{ steps.meta.outputs.version }}
+            OCTADASH_COMMIT=${{ github.sha }}
           outputs: ${{ github.event_name != 'pull_request' && 'type=image,name=ghcr.io/octadash/octadash,push-by-digest=true,name-canonical=true,push=true' || 'type=cacheonly' }}
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}

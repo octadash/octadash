@@ -9,6 +9,7 @@ description: Cada configuração que o Octadash lê, e qual papel a lê.
 | `OCTADASH_URL` | web, worker | Endereço público do painel |
 | `OCTADASH_INGEST_URL` | web | Endereço público do ingest |
 | `OCTADASH_BEHIND_PROXY` | web, worker | `true` quando um proxy atende nas portas 80 e 443 (o compose do Coolify já liga): a porta nos dois endereços públicos é a do contêiner e sai |
+| `OCTADASH_UPDATE_CHECK` | web | `true` por padrão: uma vez por dia o painel pergunta ao GitHub se há versão nova e avisa donos e admins. `false`: nunca chama o GitHub |
 | `OCTADASH_SECRET` | web, worker | No mínimo 32 caracteres; assina sessões e cifra segredos |
 | `OCTADASH_OPEN_SIGNUP` | web | `false` por padrão: só o dono e quem for convidado |
 | `LOG_LEVEL` | todos | `info` por padrão |
