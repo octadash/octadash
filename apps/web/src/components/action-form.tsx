@@ -10,7 +10,17 @@ import {
 } from 'react'
 
 /** `done` tells a form that stays on the page (a dialog) that the action succeeded. */
-export type FormState = { error?: string; done?: boolean } | undefined
+export type FormState =
+  | {
+      error?: string
+      done?: boolean
+      /** A result that keeps the form open, such as a test message: shown by FormNotice. */
+      notice?: { ok: boolean; text: string }
+    }
+  | undefined
+
+/** The last answer of the surrounding ActionForm's action. */
+export const FormStateContext = createContext<FormState>(undefined)
 
 /** True while the surrounding ActionForm waits for its server action. */
 export const PendingContext = createContext(false)
@@ -56,17 +66,19 @@ export function ActionForm({
       className={className ?? 'flex flex-col gap-4'}
     >
       <PendingContext value={pending}>
-        {children}
-        {state?.error && (
-          <p role="alert" className="text-sm text-destructive">
-            {state.error}
-          </p>
-        )}
-        {doneMessage && (
-          <p role="status" className="text-sm text-ok">
-            {state?.done && !pending ? doneMessage : ''}
-          </p>
-        )}
+        <FormStateContext value={pending ? undefined : state}>
+          {children}
+          {state?.error && (
+            <p role="alert" className="text-sm text-destructive">
+              {state.error}
+            </p>
+          )}
+          {doneMessage && (
+            <p role="status" className="text-sm text-ok">
+              {state?.done && !pending ? doneMessage : ''}
+            </p>
+          )}
+        </FormStateContext>
       </PendingContext>
     </form>
   )
