@@ -105,6 +105,16 @@ export function listProjectKeys(db: Db, orgId: string, projectId: string) {
     .execute()
 }
 
+/** The product an ingest key belongs to, or undefined when the key is unknown or revoked. */
+export function findIngestKey(db: Db, publicKey: string) {
+  return db
+    .selectFrom('project_key')
+    .select(['org_id', 'project_id'])
+    .where('public_key', '=', publicKey)
+    .where('revoked_at', 'is', null)
+    .executeTakeFirst()
+}
+
 /** Builds a Sentry-compatible DSN for a product: https://<public_key>@<ingest host>/<ingest_id>. */
 export function sentryDsn(ingestUrl: string, publicKey: string, ingestId: string): string {
   const url = new URL(ingestUrl)

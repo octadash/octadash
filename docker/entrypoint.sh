@@ -5,9 +5,11 @@ set -e
 
 role="${1:-web}"
 
+# Postgres and ClickHouse. The ingest passes "postgres": it must start and
+# accept data even while ClickHouse is down (Valkey holds it).
 migrate() {
   if [ "${OCTADASH_MIGRATE_ON_START:-true}" = "true" ]; then
-    node /app/worker/migrate.js
+    node /app/worker/migrate.js "$@"
   fi
 }
 
@@ -19,7 +21,7 @@ case "$role" in
     exec node apps/web/server.js
     ;;
   ingest)
-    migrate
+    migrate postgres
     exec node /app/ingest/index.js
     ;;
   worker)

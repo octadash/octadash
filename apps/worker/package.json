@@ -17,6 +17,7 @@
     "@octadash/core": "workspace:*",
     "@octadash/db": "workspace:*",
     "@octadash/integrations": "workspace:*",
+    "@octadash/queue": "workspace:*",
     "pg-boss": "^12.40.0"
   },
   "devDependencies": {

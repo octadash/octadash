@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { EnvError, ingestEnvSchema, parseEnv, webEnvSchema } from './env'
+import { EnvError, ingestEnvSchema, parseEnv, webEnvSchema, workerEnvSchema } from './env'
 
 describe('parseEnv', () => {
   it('applies defaults', () => {
     const env = parseEnv(ingestEnvSchema, {
       DATABASE_URL: 'postgres://u:p@localhost:5432/octadash',
+      VALKEY_URL: 'redis://:p@localhost:6379',
     })
     expect(env.PORT).toBe(4000)
+    expect(env.OCTADASH_INGEST_QUEUE_MAX).toBe(100_000)
     expect(env.LOG_LEVEL).toBe('info')
   })
 
@@ -22,5 +24,12 @@ describe('parseEnv', () => {
       expect(message).toContain('OCTADASH_URL')
       expect(message).toContain('OCTADASH_SECRET')
     }
+  })
+
+  it('needs ClickHouse and Valkey for the worker', () => {
+    const run = () =>
+      parseEnv(workerEnvSchema, { DATABASE_URL: 'postgres://u:p@localhost:5432/octadash' })
+    expect(run).toThrow(/VALKEY_URL/)
+    expect(run).toThrow(/CLICKHOUSE_URL/)
   })
 })
