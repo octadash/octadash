@@ -1,0 +1,14 @@
+{
+  "title": "Docs",
+  "pages": [
+    "---Get started---",
+    "index",
+    "install",
+    "first-product",
+    "concepts",
+    "---Send data---",
+    "...send-data",
+    "---Self-hosting---",
+    "...self-hosting"
+  ]
+}

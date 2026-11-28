@@ -1,0 +1,21 @@
+---
+title: Logs
+description: Logs and traces over OpenTelemetry, searchable and tied to their error.
+---
+
+Octadash takes logs over OpenTelemetry (OTLP over HTTP), the open standard
+almost every language has. The key goes in the `x-octadash-key` header.
+
+## Point your logs to Octadash
+
+<Snippets area="logs" />
+
+## Notes
+
+- `service.name` says which part of the product a line came from: `api`,
+  `worker`, `payments`.
+- Lines with a trace id link to the error and the request they belong to.
+- Traces (`/v1/traces`) and metrics (`/v1/metrics`) go to the same address and
+  are kept too.
+- How long to keep lines is set per product in **Logs** > **Set up**. Older
+  lines are deleted every night.

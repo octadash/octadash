@@ -1,0 +1,35 @@
+---
+title: Como os dados chegam
+description: Origens, chaves e o código que cada área precisa.
+---
+
+Cada parte de um produto que envia dados é uma [origem](/pt/concepts#origem)
+com a própria chave. O painel preenche a chave no código quando você adiciona
+uma origem; nestas páginas o código mostra `YOUR_SOURCE_KEY` e
+`ingest.example.com` no lugar.
+
+| Área | Caminho principal | Outras linguagens e ferramentas |
+| --- | --- | --- |
+| [Tráfego](/pt/send-data/traffic) | script do Octadash no navegador | qualquer site pode adicionar o script |
+| [Erros](/pt/send-data/errors) | script do Octadash no navegador, SDK do Sentry nos servidores | todos os SDKs do Sentry |
+| [Uso](/pt/send-data/product-usage) | script do Octadash no navegador, um POST dos servidores | SDKs do PostHog |
+| [Logs](/pt/send-data/logs) | OpenTelemetry (OTLP por HTTP) | qualquer SDK do OpenTelemetry ou o Collector |
+| Disponibilidade, Dinheiro | nada para instalar | |
+
+Um script no site envia visualizações, erros e eventos com uma chave só. Ligue
+só o que quiser: dados de uma área marcada com **Não vou usar** são contados e
+não são guardados.
+
+## O ingest
+
+Tudo vai para o endereço do ingest (`OCTADASH_INGEST_URL`). Ele confere a
+chave, põe o dado na fila e responde `202` na hora, então um banco lento nunca
+deixa o seu app lento. Quando o worker fica muito atrasado, o ingest responde
+`429` com `Retry-After` e os SDKs tentam de novo depois.
+
+## Chaves
+
+A chave não é segredo: navegadores a veem. Ela só permite enviar dados para
+aquela origem. Uma origem pode ter uma chave nova e uma antiga com hora para
+ser revogada, para você publicar o app antes de a antiga parar. Troque chaves
+em **Configurações do produto** > **Origens**.

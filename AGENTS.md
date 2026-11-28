@@ -24,6 +24,12 @@ Read [README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
   `received`; a new route or kind of data declares its fate in
   `apps/ingest/src/fates.ts`; a discard needs a reason in `DISCARDS` and a
   `dropped:` count ([architecture](docs/architecture.md#nothing-received-is-thrown-away)).
+- Public docs live in `apps/docs` (docs.octadash.com): their own app, image and
+  deploy, nothing shared with the panel but `packages/snippets`. A change people
+  see (a screen, a setting, an environment variable, an endpoint) updates its
+  page in `apps/docs/content/docs` in the same pull request, in English
+  (`page.mdx`) and Portuguese (`page.pt.mdx`). The code people paste lives in
+  `packages/snippets`, so the panel's Set up and the docs never differ.
 - UI strings go in `apps/web/messages/en.json` and `pt-BR.json`.
 - Brand: magenta `#C04482` (dark-theme accent `#E875AF`, light-theme accent
   `#A32C69`), Outfit for display text, Inter for body text.

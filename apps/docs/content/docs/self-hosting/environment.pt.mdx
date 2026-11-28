@@ -1,0 +1,23 @@
+---
+title: Variáveis de ambiente
+description: Cada configuração que o Octadash lê, e qual papel a lê.
+---
+
+| Variável | Usada por | Descrição |
+| --- | --- | --- |
+| `DATABASE_URL` | todos | Endereço de conexão do Postgres |
+| `OCTADASH_URL` | web, worker | Endereço público do painel |
+| `OCTADASH_INGEST_URL` | web | Endereço público do ingest |
+| `OCTADASH_SECRET` | web, worker | No mínimo 32 caracteres; assina sessões e cifra segredos |
+| `OCTADASH_OPEN_SIGNUP` | web | `false` por padrão: só o dono e quem for convidado |
+| `LOG_LEVEL` | todos | `info` por padrão |
+| `PORT` | web, ingest | 3000 para o web, 4000 para o ingest |
+| `WORKER_HEALTH_PORT` | worker | Endpoint interno de saúde, 4100 por padrão |
+| `OCTADASH_MIGRATE_ON_START` | todos | `true` por padrão; as migrações rodam antes de cada papel iniciar |
+| `OCTADASH_UPTIME_REFERENCE_URLS` | worker | Endereços separados por vírgula que provam que o servidor está online (Google e Cloudflare por padrão). Antes de dizer que um monitor caiu, o worker alcança um deles, para uma falha de rede no servidor do Octadash não parecer que todos os produtos caíram |
+| `OCTADASH_RECEIVED_RETENTION_DAYS` | worker | Dias para guardar dados que nenhuma área lê ainda (sessões, check-ins e feedback do Sentry, autocapture e atualizações de perfil do PostHog). 30 por padrão |
+| `OCTADASH_TRACE_RETENTION_DAYS` | worker | Dias para guardar spans de traces do OpenTelemetry e transações do Sentry. 14 por padrão |
+| `OCTADASH_METRIC_RETENTION_DAYS` | worker | Dias para guardar pontos de métricas enviados por OpenTelemetry. 30 por padrão |
+| `OCTADASH_STORAGE_LIMIT_GB` | worker | Espaço máximo que os arquivos podem usar (20 por padrão, 0 para sem limite). Veja [Armazenamento de arquivos](/pt/self-hosting/file-storage) |
+| `STORAGE_*` | ingest, worker | Onde os arquivos ficam. Veja [Armazenamento de arquivos](/pt/self-hosting/file-storage) |
+| `OCTADASH_UPTIME_ALLOW_PRIVATE` | worker | `false` por padrão. `true` deixa monitores checarem endereços privados (localhost, 10.x); para desenvolvimento |

@@ -41,7 +41,7 @@ export async function waitForClickHouse(client: ClickHouseClient, url: string, t
     `ClickHouse did not answer at ${host} within ${Math.round(timeoutMs / 1000)}s (${String(last)}). ` +
       'If the clickhouse container keeps restarting on an x86 server, its CPU probably lacks AVX2: ' +
       'the official ClickHouse image needs x86-64-v3 (most CPUs since 2015; arm64 also works). ' +
-      'See docs/self-hosting.md, "Requirements".',
+      'See https://docs.octadash.com/self-hosting#requirements.',
   )
 }
 

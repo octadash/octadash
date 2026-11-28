@@ -1,0 +1,44 @@
+---
+title: Conceitos
+description: Os nomes que o painel, os docs e a API usam.
+---
+
+O painel, estes docs e a API usam estes nomes, sempre como estão aqui.
+
+| Nome | O que é |
+| --- | --- |
+| Organização | Quem tem os produtos e convida membros. Uma instalação pode ter várias. |
+| Produto | Algo que você mantém: um site, um app, um SaaS. Criado só com o nome. |
+| Todos os produtos | A primeira opção do seletor de produtos: todos os produtos da organização. |
+| Grupo | Um conjunto salvo de produtos, como "Principais" ou "Clientes". Abre as mesmas páginas de Todos os produtos, filtradas. Um produto pode estar em vários. |
+| Área | Uma entrada do menu: Visão geral, Disponibilidade, Tráfego, Uso, Erros, Dinheiro, Custos, Logs. Cada área funciona para todos os produtos, um grupo ou um produto. |
+| Origem | Uma parte do produto que envia dados: "Site, Next.js", "API, .NET", "Worker, Node". Tem a própria chave e pode alimentar várias áreas. |
+| Chave da origem | Diz ao ingest qual produto e qual origem enviou o dado, também dentro de um DSN do Sentry. Não é segredo: navegadores a veem. |
+| Monitor | Uma checagem de Disponibilidade de um produto: site, API ou `/health`, heartbeat. |
+| Heartbeat | Um monitor que espera uma chamada de um cron, worker ou backup. O silêncio é a falha. |
+| Conexão | Uma ligação com uma conta de fora de onde Dinheiro ou Custos leem: Stripe, Asaas, Paddle, OpenAI, Anthropic. |
+| Canal | Para onde vão os alertas: e-mail, Telegram, webhook. |
+| Vigia externo | Um serviço de fora que o Octadash chama a cada minuto, para alguém saber quando o próprio Octadash cair. |
+
+## Emergência, sinal, dado
+
+Tudo que o Octadash mostra é uma de três coisas:
+
+- **Emergência:** precisa de ação agora. Vai para os canais e para a faixa
+  vermelha no topo de todas as telas, qualquer que seja o produto escolhido.
+  **Estou cuidando** para as mensagens repetidas e mostra a todos quem está
+  resolvendo.
+- **Sinal:** fora do normal, sem mensagem. Fica em destaque na área. Um produto
+  com menos de 4 semanas de dados ainda está aprendendo o normal.
+- **Dado:** todo o resto, mostrado de forma neutra.
+
+## Origem
+
+Uma origem é do produto, não de uma área, porque o mesmo código envia mais de
+um tipo de dado. O script do navegador envia visualizações (Tráfego) e eventos
+como `signed_up` (Uso) com uma chave só. Um SDK do Sentry envia erros e, depois,
+traces. A área de cada dado vem do tipo dele, nunca da chave, então um site
+nunca precisa de duas chaves ou dois scripts.
+
+Quando chega dado de uma área ainda não configurada, essa área passa a receber
+sozinha.

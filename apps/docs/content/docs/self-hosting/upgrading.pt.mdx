@@ -1,0 +1,13 @@
+---
+title: Atualizar
+description: Baixe a imagem nova e reinicie.
+---
+
+Baixe a imagem nova e reinicie. Cada papel aplica as migrações pendentes ao
+iniciar, no Postgres e no ClickHouse. As versões de ClickHouse, Valkey e Garage
+ficam fixas nos arquivos compose e só mudam com as versões do Octadash.
+
+Vindo de uma versão sem armazenamento de arquivos: atualize o repositório, rode
+`./scripts/generate-env.sh` de novo (ele adiciona `GARAGE_RPC_SECRET`,
+`STORAGE_ACCESS_KEY_ID` e `STORAGE_SECRET_ACCESS_KEY` ao seu `.env` e mantém o
+resto) e depois `docker compose up -d`.

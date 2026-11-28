@@ -1,0 +1,13 @@
+---
+title: Upgrading
+description: Pull the new image and restart.
+---
+
+Pull the new image and restart. Each role applies pending migrations on start,
+for Postgres and ClickHouse. ClickHouse, Valkey and Garage versions are pinned
+in the compose files and move only with Octadash releases.
+
+From a version without file storage: pull the repository, run
+`./scripts/generate-env.sh` again (it adds `GARAGE_RPC_SECRET`,
+`STORAGE_ACCESS_KEY_ID` and `STORAGE_SECRET_ACCESS_KEY` to your `.env` and keeps
+everything else), then `docker compose up -d`.

@@ -1,0 +1,32 @@
+---
+title: Traffic
+description: Visitors, pages, where they come from and their country, from one small script.
+---
+
+No cookies and, by default, no consent banner needed. The script is under
+2.5 KB, follows client-side navigation in single-page apps and skips visits
+from `localhost`.
+
+## Add the script
+
+<Snippets area="traffic" />
+
+## Options
+
+- `data-visitor="persistent"`: the browser keeps a random id, so a returning
+  visitor counts once. Off by default; turning it on is your choice, consent
+  included where the law asks for it. Set it per source in the panel.
+- `data-local`: counts visits from `localhost`, for testing.
+
+## What is stored
+
+Path, referrer, UTM tags, browser, system, device and country. The visitor's
+address is never stored: a visitor id is a hash of a salt of the day, the
+product, the address and the browser, and once the salt expires no one can link
+two days. Bots are kept and shown apart.
+
+The country comes from a header your proxy adds (Cloudflare, CloudFront,
+Vercel). Without one it stays empty.
+
+Already on PostHog? Its web SDK sends `$pageview` with the same names, so it
+fills Traffic too. See [Coming from PostHog](/send-data/migrate#posthog).

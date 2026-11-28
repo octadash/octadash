@@ -1,0 +1,26 @@
+---
+title: Errors
+description: Browser and server errors, grouped, with how many people each one hit and since when.
+---
+
+Octadash speaks the Sentry protocol. Every server and app platform uses the
+Sentry SDK with the source's DSN; the browser can use the Octadash script,
+which reports uncaught errors without an SDK.
+
+## Add the code
+
+<Snippets area="errors" />
+
+## Notes
+
+- **DSN.** The address a Sentry SDK sends to. It holds the source's key, so each
+  part of the product (site, API, worker) has its own.
+- **Release.** Set it with each deploy to see which version an error started in.
+  With the script, change `data-release`.
+- **Script limits.** Uncaught errors and rejected promises, up to 10 per page.
+  It skips `localhost` unless the tag has `data-local`.
+- **No SDK.** POST the same event JSON to `/o/v1/errors` with the key.
+- **What else is kept.** Sessions, check-ins, feedback and transactions the SDK
+  sends are stored even before a screen shows them, for
+  `OCTADASH_RECEIVED_RETENTION_DAYS` and `OCTADASH_TRACE_RETENTION_DAYS`. See
+  [Environment variables](/self-hosting/environment).

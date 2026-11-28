@@ -1,0 +1,44 @@
+---
+title: Backups
+description: O que copiar e os comandos de cada banco.
+---
+
+Os arquivos compose guardam os dados em cinco volumes:
+
+| Volume | Guarda | Fazer backup |
+| --- | --- | --- |
+| `postgres-data` | contas, produtos, chaves, regras de alerta | sim: `pg_dump` (abaixo) ou snapshot do volume |
+| `clickhouse-data` | eventos, erros, logs, gráficos | sim: `BACKUP` (abaixo) ou snapshot do volume |
+| `garage-meta` | a lista dos arquivos e onde estão as partes | sim, junto com `garage-data` (abaixo) |
+| `garage-data` | os arquivos (anexos, replays, profiles) | sim, junto com `garage-meta` (abaixo) |
+| `valkey-data` | dados de passagem entre ingest e worker | não: ele se esvazia em segundos |
+
+Postgres, na pasta do `docker-compose.yml`:
+
+```bash
+docker compose exec -T postgres pg_dump -U octadash -Fc octadash > octadash-postgres.dump
+```
+
+ClickHouse, para `/var/lib/clickhouse/backups` dentro do volume
+`clickhouse-data` (copie o arquivo para fora da máquina depois):
+
+```bash
+set -a; . ./.env; set +a   # carrega CLICKHOUSE_PASSWORD
+docker compose exec clickhouse clickhouse-client --user octadash --password "$CLICKHOUSE_PASSWORD" \
+  --query "BACKUP DATABASE octadash TO File('octadash-$(date +%F).zip')"
+```
+
+Garage: tire uma cópia limpa dos metadados e depois copie os dois volumes (ele
+também tira uma sozinho a cada 6 horas, guardada em `garage-meta/snapshots`):
+
+```bash
+docker compose exec garage /garage meta snapshot
+docker run --rm -v octadash_garage-meta:/meta -v octadash_garage-data:/data -v "$PWD":/out \
+  alpine tar czf /out/octadash-garage-$(date +%F).tgz /meta /data
+```
+
+Os caminhos de `File()` são relativos àquela pasta, que a configuração que vem
+junto permite (`docker/clickhouse/octadash.xml`). No Coolify, rode os mesmos
+comandos no servidor com `docker exec` em cada container, ou tire snapshots dos
+volumes pelo seu fornecedor. Restaurar é o caminho inverso: `pg_restore` e
+`RESTORE DATABASE octadash FROM File(...)` em uma instalação nova da mesma versão.

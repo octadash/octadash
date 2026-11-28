@@ -1,0 +1,20 @@
+---
+title: Vigia externo
+description: Para alguém saber quando o próprio servidor do Octadash cair.
+---
+
+Se o servidor que roda o Octadash cair, nenhum alerta sai. Configure um vigia
+externo para alguém ser avisado:
+
+1. Crie uma conta grátis no [Healthchecks.io](https://healthchecks.io) (ou rode
+   o seu próprio Healthchecks).
+2. Crie uma checagem com período de 1 minuto e tolerância de 5 minutos, e
+   escolha onde ela avisa você (e-mail, Telegram) em um canal que não dependa
+   deste servidor.
+3. No Octadash, em **Configurações** > **Vigia externo**, cole a URL de ping da
+   checagem. O Octadash chama uma vez para testar e depois a cada minuto, pelo
+   worker.
+
+Enquanto isso não for feito, toda página de configurações mostra um aviso, em
+vermelho quando um monitor roda no mesmo servidor do Octadash. Qualquer URL que
+responda 2xx a um GET funciona, então outros serviços de heartbeat também servem.

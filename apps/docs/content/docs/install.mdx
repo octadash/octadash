@@ -1,0 +1,48 @@
+---
+title: Install
+description: Run Octadash on any server with Docker, or on Coolify.
+---
+
+Octadash is one Docker image plus four stores it installs and manages. A small
+server with 4 GB of memory is the target. Check the
+[requirements](/self-hosting#requirements) first: on x86 the CPU needs AVX2.
+
+<Tabs items={['Docker Compose', 'Coolify']}>
+<Tab value="Docker Compose">
+
+```bash
+git clone https://github.com/octadash/octadash.git
+cd octadash
+./scripts/generate-env.sh   # creates .env with every password and the secret
+docker compose up -d
+```
+
+The panel listens on port 3000 and the ingest on port 4000. In production, put
+a reverse proxy with HTTPS in front of both and set `OCTADASH_URL` and
+`OCTADASH_INGEST_URL` to their public addresses. Details in
+[Docker Compose](/self-hosting/docker-compose).
+
+</Tab>
+<Tab value="Coolify">
+
+1. In your project, **+ New** > **Public Repository** >
+   `https://github.com/octadash/octadash`.
+2. Build pack: **Docker Compose**. Docker Compose Location:
+   `/docker-compose.coolify.yml`.
+3. Deploy.
+
+Coolify generates every password and one domain each for the panel and the
+ingest. Details in [Coolify](/self-hosting/coolify).
+
+</Tab>
+</Tabs>
+
+## First run
+
+Open the panel. The first visit creates the owner account and the organization
+in one screen, with the main currency and the time zone filled from your
+browser. After that sign-up is closed: the owner invites people from
+**Settings** > **Members**.
+
+Then set up the [outside watcher](/self-hosting/outside-watcher), so someone
+hears about it if the Octadash server itself goes down.

@@ -1,0 +1,18 @@
+---
+title: Coolify
+description: Publique a partir do repositório público com o compose do Coolify.
+---
+
+1. No seu projeto, **+ New** > **Public Repository** >
+   `https://github.com/octadash/octadash`.
+2. Build pack: **Docker Compose**. Docker Compose Location:
+   `/docker-compose.coolify.yml`.
+3. Deploy. O Coolify gera todas as senhas (Postgres, ClickHouse, Valkey,
+   Garage), o segredo e um domínio para o painel (`web`) e outro para o ingest
+   (`ingest`). Troque os domínios em **Domains** se quiser usar os seus.
+
+## Primeiro acesso
+
+Abra o painel. A primeira visita mostra um formulário que cria a conta do dono
+e a organização. Depois disso o cadastro fecha: o dono convida pessoas em
+**Membros**, que gera um link para enviar a elas.

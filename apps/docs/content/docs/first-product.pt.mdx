@@ -1,0 +1,52 @@
+---
+title: Criar o primeiro produto
+description: Do nome até o primeiro dado, uma área por vez.
+---
+
+<Steps>
+<Step>
+
+### Crie o produto com o nome
+
+Escolha **Novo produto** no seletor de produtos e digite um nome, por exemplo
+"Pagebird". Sem URL e sem plataforma: um produto costuma ter partes em
+linguagens diferentes, então a plataforma é escolhida dentro de cada área.
+
+</Step>
+<Step>
+
+### Abra a página do produto
+
+A página do produto tem um card por área. Um card ainda não configurado diz o
+que a área faz e tem **Configurar** e **Não vou usar**. Deixar o card como está
+já quer dizer "agora não".
+
+</Step>
+<Step>
+
+### Configure uma área
+
+**Configurar** abre a área: o que ela faz, as [origens](/pt/concepts#origem) do
+produto e **Adicionar origem**. Uma origem é uma parte do produto que envia
+dados, como "Site, Next.js" ou "API, .NET". Adicionar uma pede nome e
+plataforma e mostra o código daquela plataforma com a chave da origem
+preenchida. O mesmo código está em [Enviar dados](/pt/send-data).
+
+</Step>
+<Step>
+
+### Veja o card mudar
+
+Depois de configurado, o card mostra dados de exemplo, desfocados, com o selo
+**Exemplo**. Quando chega o primeiro dado, ele vira o resumo da área: o número
+principal, um gráfico pequeno e o link para a tela completa.
+
+</Step>
+</Steps>
+
+## Para onde vão os alertas
+
+Adicione um canal em **Configurações** > **Canais** (e-mail, Telegram ou
+webhook) e clique em **Enviar teste**. Emergências, como um site fora do ar em
+3 checagens seguidas, vão para os canais e para a faixa vermelha no topo de
+todas as telas.

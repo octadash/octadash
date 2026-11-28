@@ -11,6 +11,7 @@ const config: NextConfig = {
   outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
   transpilePackages: [
     '@octadash/core',
+    '@octadash/snippets',
     '@octadash/db',
     '@octadash/auth',
     '@octadash/integrations',

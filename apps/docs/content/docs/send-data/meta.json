@@ -1,0 +1,4 @@
+{
+  "title": "Send data",
+  "pages": ["index", "traffic", "errors", "product-usage", "logs", "migrate"]
+}

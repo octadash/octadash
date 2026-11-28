@@ -1,0 +1,26 @@
+---
+title: Erros
+description: Erros do navegador e do servidor, agrupados, com quantas pessoas cada um atingiu e desde quando.
+---
+
+O Octadash fala o protocolo do Sentry. Toda plataforma de servidor e de app usa
+o SDK do Sentry com o DSN da origem; o navegador pode usar o script do
+Octadash, que relata erros não tratados sem SDK.
+
+## Adicione o código
+
+<Snippets area="errors" />
+
+## Observações
+
+- **DSN.** O endereço para onde um SDK do Sentry envia. Ele leva a chave da
+  origem, então cada parte do produto (site, API, worker) tem o seu.
+- **Release.** Preencha a cada deploy para ver em qual versão um erro começou.
+  Com o script, troque `data-release`.
+- **Limites do script.** Erros não tratados e promises rejeitadas, até 10 por
+  página. Ignora `localhost`, a não ser que a tag tenha `data-local`.
+- **Sem SDK.** Faça um POST do mesmo JSON de evento para `/o/v1/errors` com a chave.
+- **O que mais é guardado.** Sessões, check-ins, feedback e transações que o SDK
+  envia são guardados mesmo antes de uma tela mostrá-los, por
+  `OCTADASH_RECEIVED_RETENTION_DAYS` e `OCTADASH_TRACE_RETENTION_DAYS`. Veja
+  [Variáveis de ambiente](/pt/self-hosting/environment).

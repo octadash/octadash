@@ -1,0 +1,32 @@
+---
+title: Tráfego
+description: Visitantes, páginas, de onde vêm e o país, com um script pequeno.
+---
+
+Sem cookies e, por padrão, sem banner de consentimento. O script tem menos de
+2,5 KB, acompanha a navegação em apps de página única e ignora visitas de
+`localhost`.
+
+## Adicione o script
+
+<Snippets area="traffic" />
+
+## Opções
+
+- `data-visitor="persistent"`: o navegador guarda um id aleatório, então quem
+  volta conta uma vez só. Desligado por padrão; ligar é decisão sua, inclusive
+  o consentimento onde a lei pedir. Configure por origem no painel.
+- `data-local`: conta visitas de `localhost`, para testes.
+
+## O que é guardado
+
+Caminho, site de onde a pessoa veio (referrer), UTMs, navegador, sistema, aparelho e país. O
+endereço IP nunca é guardado: o id do visitante é um hash de um sal do dia, do
+produto, do endereço e do navegador, e quando o sal expira ninguém consegue
+ligar dois dias. Robôs são guardados e mostrados à parte.
+
+O país vem de um cabeçalho que o seu proxy adiciona (Cloudflare, CloudFront,
+Vercel). Sem ele, fica vazio.
+
+Já usa PostHog? O SDK web dele envia `$pageview` com os mesmos nomes, então
+também preenche Tráfego. Veja [Vindo do PostHog](/pt/send-data/migrate#posthog).

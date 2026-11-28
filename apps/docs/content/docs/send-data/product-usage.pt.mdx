@@ -1,0 +1,25 @@
+---
+title: Uso
+description: Cadastros, logins, ações principais, funis e quem volta.
+---
+
+Envie o que as pessoas fazem (cadastrou, pagou, convidou alguém) e o Octadash
+mostra o normal de cada evento, funis e quem volta. Em um site que já tem o
+script do Tráfego, adicione uma linha onde algo acontece: sem chave nova.
+
+## Envie um evento
+
+<Snippets area="usage" />
+
+## Regras
+
+- Nomes de evento em `snake_case`. Propriedades são opcionais.
+- Nunca envie nomes, e-mails ou documentos. Eles são descartados de qualquer jeito.
+- `signed_up` conta como cadastro sem configurar nada.
+- `distinct_id` é a pessoa. O Octadash guarda só um hash dele.
+
+## PostHog
+
+Suas chamadas do PostHog continuam funcionando: `capture` e `identify`.
+Autocapture, gravações e pesquisas ficam desligados. Veja
+[Vindo do PostHog](/pt/send-data/migrate#posthog).
