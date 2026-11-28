@@ -62,7 +62,7 @@ translation). A new concept gets its row here before it reaches a screen.
 | All products    | Todos os produtos | The first option of the product picker: every product of the organization.                                                   |
 | Group           | Grupo             | A saved set of products ("Main", "Clients"). Opens the same pages as All products, filtered. A product can be in several.    |
 | Area            | Área              | One entry of the menu (below). Every area works for all products, a group or one product.                                    |
-| Source          | Origem            | One part of a product that sends data to an area: "Site, Next.js", "API, .NET", "Worker, Node". Each source has its own key. |
+| Source          | Origem            | One part of a product that sends data: "Site, Next.js", "API, .NET", "Worker, Node". Own key; can feed several areas.        |
 | Source key      | Chave da origem   | Identifies product and source at the ingest, also inside a Sentry DSN. The install snippet comes with it filled in.          |
 | Monitor         | Monitor           | One Uptime check of a product: Site, API or /health, Heartbeat.                                                              |
 | Heartbeat       | Heartbeat         | A monitor that waits for a call from a cron job, worker or backup; silence is the failure.                                   |
@@ -182,6 +182,17 @@ without any extra setting in the code, and it works with any Sentry SDK, which
 has no field for it. A product with one part has one source; the Intelibot has
 four. The area's card on the product page shows each source with its state
 ("Next.js receiving, .NET no data yet").
+
+A source belongs to the product, not to one area, because the same code sends
+more than one kind of data: the browser script sends pageviews (Traffic) and
+events such as signup (Product usage) with one key, and a Sentry SDK sends
+errors (Errors) and later traces (Logs). The area of each piece of data comes
+from its type, never from the key, so a site never needs two keys or two
+scripts. In a second area, setup offers "Use existing source: Site, Next.js"
+next to "Add source". When data of a type arrives for an area that is not set
+up yet, the area starts receiving on its own. Data for an area marked "I won't
+use this" is dropped at the ingest and counted, and the strip "Also available
+for this product" says the area is receiving data that is turned off.
 
 ## Getting data in
 
