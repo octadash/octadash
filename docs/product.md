@@ -55,20 +55,20 @@ translation). A new concept gets its row here before it reaches a screen.
 
 ### Structure
 
-| Name            | Portuguese        | Meaning                                                                                                                      |
-| --------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Organization    | Organização       | Who owns products and invites members. One install can hold several.                                                         |
-| Product         | Produto           | Something the owner runs (a site, an app, a SaaS). Created with a name only.                                                 |
-| All products    | Todos os produtos | The first option of the product picker: every product of the organization.                                                   |
-| Group           | Grupo             | A saved set of products ("Main", "Clients"). Opens the same pages as All products, filtered. A product can be in several.    |
-| Area            | Área              | One entry of the menu (below). Every area works for all products, a group or one product.                                    |
-| Source          | Origem            | One part of a product that sends data: "Site, Next.js", "API, .NET", "Worker, Node". Own key; can feed several areas.        |
-| Source key      | Chave da origem   | Identifies product and source at the ingest, also inside a Sentry DSN. The install snippet comes with it filled in.          |
-| Monitor         | Monitor           | One Uptime check of a product: Site, API or /health, Heartbeat.                                                              |
-| Heartbeat       | Heartbeat         | A monitor that waits for a call from a cron job, worker or backup; silence is the failure.                                   |
-| Connection      | Conexão           | A link to an outside account that Money or Costs read from: Stripe, Asaas, Paddle, OpenAI, a VPS provider.                   |
-| Channel         | Canal             | Where alerts go: Email, Telegram, Webhook.                                                                                   |
-| Outside watcher | Vigia externo     | The outside service Octadash pings every minute, so someone hears when Octadash itself goes down.                            |
+| Name            | Portuguese        | Meaning                                                                                                                   |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Organization    | Organização       | Who owns products and invites members. One install can hold several.                                                      |
+| Product         | Produto           | Something the owner runs (a site, an app, a SaaS). Created with a name only.                                              |
+| All products    | Todos os produtos | The first option of the product picker: every product of the organization.                                                |
+| Group           | Grupo             | A saved set of products ("Main", "Clients"). Opens the same pages as All products, filtered. A product can be in several. |
+| Area            | Área              | One entry of the menu (below). Every area works for all products, a group or one product.                                 |
+| Source          | Origem            | One part of a product that sends data: "Site, Next.js", "API, .NET", "Worker, Node". Own key; can feed several areas.     |
+| Source key      | Chave da origem   | Identifies product and source at the ingest, also inside a Sentry DSN. The install snippet comes with it filled in.       |
+| Monitor         | Monitor           | One Uptime check of a product: Site, API or /health, Heartbeat.                                                           |
+| Heartbeat       | Heartbeat         | A monitor that waits for a call from a cron job, worker or backup; silence is the failure.                                |
+| Connection      | Conexão           | A link to an outside account that Money or Costs read from: Stripe, Asaas, Paddle, OpenAI, a VPS provider.                |
+| Channel         | Canal             | Where alerts go: Email, Telegram, Webhook.                                                                                |
+| Outside watcher | Vigia externo     | The outside service Octadash pings every minute, so someone hears when Octadash itself goes down.                         |
 
 There is no "service" entity: the parts of a product are the sources of each
 area, the monitors of Uptime and the connections of Money and Costs. Logs take
