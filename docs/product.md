@@ -108,6 +108,7 @@ the service name OpenTelemetry already sends.
 | Still learning what is normal   | Aprendendo o normal             | A product with less than 4 weeks of data: no signals yet.                                                                                   |
 | Unassigned spend                | Gasto sem produto               | Cost seen on a provider account that no product claims.                                                                                     |
 | TV mode                         | Modo TV                         | Full screen Overview for All products or a group, updated live.                                                                             |
+| Finding                         | Achado                          | A security problem found on a product: severity, since when, how to fix. Stays open until fixed or accepted.                                |
 
 ## Areas
 
@@ -542,20 +543,75 @@ spare.
 | Service map                                             | SigNoz            | low      |
 | Profiling                                               | Sentry, Pyroscope | low      |
 
+### Security (new area)
+
+Seen in Unxpose (attack surface), Mozilla Observatory and Have I Been Pwned. It
+gets its own menu entry ("Security", "Segurança") instead of living inside
+Uptime, because a finding is not up or down: it stays open until it is fixed.
+
+- **Finding.** Every check produces findings with the product, the asset
+  (domain, subdomain, URL, port), a severity (critical, high, medium, low),
+  first seen, last seen and a state: open, resolved, reopened, or accepted risk
+  with a reason. Each finding says what it means for the business and how to fix
+  it, step by step, in words someone without security training can follow. A
+  finding that comes back after it was resolved is "reopened" and notifies
+  again.
+- **Severity and alerts.** Critical findings (an exposed `.env` or `.git`, a
+  database port open to the internet, an orphan subdomain) are emergencies. The
+  rest are signals or data. One seeded rule per severity, editable per product
+  like every rule.
+- **At full size.** Twenty products with a hundred findings: the list groups by
+  check, and the same problem on eight products is one line ("HSTS missing on 8
+  products") that opens the list. The product page gets a Security card with the
+  count by severity. All products, a group and one product are the same query.
+- **Cadence and cost.** Checks run once a day, spread over the day in the worker
+  queue, never every minute. Headers and cookies come from the response the
+  uptime check already receives, with no extra request, and no check touches a
+  product's database.
+- **Whose domain.** Passive checks (headers, TLS, DNS, certificate
+  transparency) run for any monitored domain. Active probes (exposed files,
+  ports) run only on domains the owner proved are theirs with a DNS TXT record;
+  on a self-hosted install the owner can confirm it instead. Without this, the
+  hosted version becomes a tool to scan other people's sites.
+- **Tell, do not guess.** Subdomains found in certificate transparency logs show
+  as "found, not assigned" until the owner says which product each belongs to,
+  the same way as unassigned spend.
+
+Domain expiry and DNS changes stay in the Base table; their findings also show
+here.
+
+| Item                                                                                                                                                       | Source                                       | Priority |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------- |
+| Security headers (HSTS, CSP, X-Content-Type-Options, X-Frame-Options or frame-ancestors, Referrer-Policy) and cookies without Secure, HttpOnly or SameSite | the response the uptime check already gets   | high     |
+| Full TLS: TLS 1.0 or 1.1 accepted, weak cipher or key, self-signed, incomplete chain, revoked                                                              | one TLS handshake per version                | high     |
+| Domain email: SPF, DMARC, MX                                                                                                                               | DNS                                          | high     |
+| Subdomain inventory from certificate transparency; a new subdomain is a signal                                                                             | certificate transparency logs (crt.sh)       | high     |
+| Orphan subdomain: a CNAME pointing to a Vercel, Heroku, S3, GitHub Pages or similar resource that no longer exists, which anyone can claim                 | DNS and known provider answers               | high     |
+| Exposed files: `/.env`, `/.git/config`, `.sql` dumps, public source maps, `/server-status`                                                                 | a few GET requests, verified domains only    | high     |
+| Database and admin ports open to the internet (5432, 3306, 6379, 27017, 8123, 9000)                                                                        | TCP connect, verified domains only           | medium   |
+| Email addresses of the domain in data breaches                                                                                                             | Have I Been Pwned, with the owner's paid key | medium   |
+| Vulnerable dependencies                                                                                                                                    | OSV.dev, GitHub Dependabot connector         | medium   |
+| Failed logins, auth spikes, rate limits hit                                                                                                                | product usage events                         | medium   |
+| Security report per product or group, as PDF                                                                                                               | the findings                                 | low      |
+
+Out of scope: cloud account benchmarks (CIS for AWS, Azure, GCP), employee MFA
+in Google Workspace or Microsoft 365, security questionnaires, supplier risk, a
+pentest marketplace, phishing simulation, and CVE scanners in the style of
+Nuclei (heavy, many false positives, legal risk).
+
 ### New areas (each can become an optional module)
 
-| Area                    | Items                                                                                                                                                                                | Seen in                            | Priority                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- | -------------------------------------------- |
-| Data quality            | last event received, ingest delay, invalid, duplicate and dropped events, missing properties, test data in production, instrumentation coverage                                      | PostHog, Segment                   | high                                         |
-| SEO                     | Search Console impressions, clicks, CTR and position; sitemap, robots.txt, noindex, canonical; broken links; meta and Open Graph tags; structured data                               | Search Console, Ahrefs, Semrush    | high                                         |
-| Webhooks                | received, processed, failed, duplicated, out of order, bad signature, expired credentials, sync history, replay                                                                      | Hookdeck, Svix                     | high                                         |
-| Agents                  | MCP with ready questions ("what changed today?") and safe actions (mute an alert, open an incident)                                                                                  | Sentry, Umami, PostHog             | high                                         |
-| Email and messages      | sent, delivered, bounces, spam complaints, unsubscribes; SPF, DKIM, DMARC; welcome and password-reset emails arriving; WhatsApp and SMS delivery                                     | Resend, Postmark, SES              | high for SPF/DKIM/DMARC, medium for the rest |
-| Security                | security headers, insecure cookies, vulnerable dependencies, exposed secrets, failed logins, auth spikes, rate limits hit                                                            | Mozilla Observatory, Trivy, GitHub | high for headers, medium for the rest        |
-| Marketing               | UTM builder, tracked links, first and last touch attribution, leads, ad spend, CPC, CPA, ROAS, referrals and affiliates                                                              | GA, Meta Ads, Google Ads           | medium                                       |
-| Customers and support   | per-customer profile and timeline, last activity, plan, revenue and cost per customer, tickets, response time, NPS, store reviews, churn risk, account health, upgrade opportunities | Intercom, Chatwoot, Vitally        | medium                                       |
-| Mobile and desktop apps | installs, active versions, ratings, App Store and Google Play revenue                                                                                                                | App Store Connect, RevenueCat      | medium                                       |
-| Accessibility           | contrast, images without alt text, unlabeled form fields, WCAG checks per release                                                                                                    | Lighthouse, axe                    | low                                          |
+| Area                    | Items                                                                                                                                                                                | Seen in                         | Priority                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- | ---------------------------------- |
+| Data quality            | last event received, ingest delay, invalid, duplicate and dropped events, missing properties, test data in production, instrumentation coverage                                      | PostHog, Segment                | high                               |
+| SEO                     | Search Console impressions, clicks, CTR and position; sitemap, robots.txt, noindex, canonical; broken links; meta and Open Graph tags; structured data                               | Search Console, Ahrefs, Semrush | high                               |
+| Webhooks                | received, processed, failed, duplicated, out of order, bad signature, expired credentials, sync history, replay                                                                      | Hookdeck, Svix                  | high                               |
+| Agents                  | MCP with ready questions ("what changed today?") and safe actions (mute an alert, open an incident)                                                                                  | Sentry, Umami, PostHog          | high                               |
+| Email and messages      | sent, delivered, bounces, spam complaints, unsubscribes; DKIM on sent mail (SPF and DMARC live in Security); welcome and password-reset emails arriving; WhatsApp and SMS delivery   | Resend, Postmark, SES           | high for DKIM, medium for the rest |
+| Marketing               | UTM builder, tracked links, first and last touch attribution, leads, ad spend, CPC, CPA, ROAS, referrals and affiliates                                                              | GA, Meta Ads, Google Ads        | medium                             |
+| Customers and support   | per-customer profile and timeline, last activity, plan, revenue and cost per customer, tickets, response time, NPS, store reviews, churn risk, account health, upgrade opportunities | Intercom, Chatwoot, Vitally     | medium                             |
+| Mobile and desktop apps | installs, active versions, ratings, App Store and Google Play revenue                                                                                                                | App Store Connect, RevenueCat   | medium                             |
+| Accessibility           | contrast, images without alt text, unlabeled form fields, WCAG checks per release                                                                                                    | Lighthouse, axe                 | low                                |
 
 ## Connectors
 
@@ -608,6 +664,7 @@ causation: the text says "may be", never "caused".
 | Bounced emails + incomplete onboarding           | email is blocking activation           | email + events        |
 | Disk growing + logs spiking                      | the server will fill up                | infra + logs          |
 | Certificate expiring + high traffic              | a predictable outage                   | base + web            |
+| Deploy + new critical security finding           | the new version exposed something      | infra + security      |
 | Same vendor failing on several products          | shared incident                        | base ("All products") |
 | Several products without events at the same time | shared collection or infra is down     | data quality          |
 | Product with no revenue + recurring cost         | product consuming without return       | revenue + infra cost  |

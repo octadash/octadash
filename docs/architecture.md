@@ -449,8 +449,9 @@ are the same query.
 The first version read a product's address from outside and guessed what it
 had installed (`packages/diagnosis`). It is removed in step 1 of the roadmap:
 guessing from HTML was often wrong, and the product page now asks what to set
-up instead. The checks that were reliable (certificate, HTTP to HTTPS redirect,
-security headers, SPF and DMARC) move into uptime.
+up instead. The checks that were reliable (certificate, HTTP to HTTPS redirect)
+moved into uptime. Security headers, SPF and DMARC are not built yet: they go to
+the Security area in the backlog ([product.md](product.md#security-new-area)).
 
 ## Alternatives considered
 
