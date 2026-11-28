@@ -1,4 +1,5 @@
 export * from './builtin'
 export * from './define'
+export * from './form'
 export * from './registry'
 export type * from './types'

@@ -44,6 +44,10 @@ export const workerEnvSchema = baseEnvSchema
   .extend({
     /** Internal port for the worker health endpoint. */
     WORKER_HEALTH_PORT: z.coerce.number().int().positive().default(4100),
+    /** Decrypts the credentials of alert channels. Same value as the panel's. */
+    OCTADASH_SECRET: z.string().min(32, 'OCTADASH_SECRET must have at least 32 characters'),
+    /** Public URL of the panel, for links in alerts. */
+    OCTADASH_URL: z.url(),
     VALKEY_URL: valkeyUrl,
     /** Let monitors reach private addresses (localhost, 10.x, 192.168.x). Only for development. */
     OCTADASH_UPTIME_ALLOW_PRIVATE: z

@@ -89,3 +89,25 @@ export async function monitorStats(
   }
   return stats
 }
+
+/** Days left on each monitor's certificate, from its latest deep check in the last two days. */
+export async function latestCertDays(
+  client: ClickHouseClient,
+  monitorIds: string[],
+): Promise<Map<string, number>> {
+  const days = new Map<string, number>()
+  if (monitorIds.length === 0) return days
+  const result = await client.query({
+    query: `
+      SELECT toString(monitor_id) AS id, argMax(cert_days, timestamp) AS days
+      FROM uptime_checks
+      WHERE monitor_id IN {ids:Array(UUID)}
+        AND cert_days IS NOT NULL
+        AND timestamp >= now64(3) - toIntervalDay(2)
+      GROUP BY monitor_id`,
+    query_params: { ids: monitorIds },
+    format: 'JSONEachRow',
+  })
+  for (const row of await result.json<{ id: string; days: number }>()) days.set(row.id, row.days)
+  return days
+}

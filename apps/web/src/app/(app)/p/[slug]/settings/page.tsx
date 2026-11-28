@@ -6,11 +6,12 @@ import { ActionForm } from '@/components/action-form'
 import { CopyField } from '@/components/copy-field'
 import { DeleteProductDialog } from '@/components/delete-product-dialog'
 import { Field } from '@/components/field'
+import { RulesList } from '@/components/rules-list'
 import { SubmitButton } from '@/components/submit-button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { services } from '@/server/context'
-import { requireOrg } from '@/server/session'
+import { canManage, requireOrg } from '@/server/session'
 
 export default async function ProductSettingsPage({
   params,
@@ -69,6 +70,18 @@ export default async function ProductSettingsPage({
             </ActionForm>
           </CardContent>
         </Card>
+
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-lg font-semibold">{t('alerts.productTitle')}</h2>
+            <p className="text-sm text-muted-foreground">{t('alerts.productIntro')}</p>
+          </div>
+          <RulesList
+            orgId={org.id}
+            project={{ id: project.id, slug: project.slug }}
+            canEdit={canManage(org.role)}
+          />
+        </section>
 
         <Card className="ring-destructive/40">
           <CardHeader>

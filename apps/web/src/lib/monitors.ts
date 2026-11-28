@@ -1,4 +1,5 @@
 import type { MonitorStats } from '@octadash/db'
+import { type FailureKey, failureOf } from '@octadash/uptime/failure'
 
 /** The intervals the monitor form offers, in seconds. */
 export const INTERVALS = [30, 60, 120, 300, 600, 1800, 3600, 21_600, 86_400] as const
@@ -63,37 +64,11 @@ export function productUptime(
   }
 }
 
-type FailureKey =
-  | 'timeout'
-  | 'refused'
-  | 'notFound'
-  | 'reset'
-  | 'tls'
-  | 'notHealth'
-  | 'http'
-  | 'noPingYet'
-  | 'noPingFor'
-  | 'private'
-  | 'tooManyRedirects'
-  | 'other'
-
 /** Turns what a check recorded ("ECONNREFUSED", "HTTP 503") into a sentence. */
 export function describeFailure(
   code: string,
   t: (key: FailureKey, values?: Record<string, string | number>) => string,
 ): string {
-  if (code === 'timeout') return t('timeout')
-  if (code === 'ECONNREFUSED') return t('refused')
-  if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') return t('notFound')
-  if (code === 'ECONNRESET' || code === 'UND_ERR_SOCKET') return t('reset')
-  if (/SSL|CERT|TLS|UNABLE_TO_VERIFY|DEPTH_ZERO/.test(code)) return t('tls', { code })
-  if (code === 'not a health answer') return t('notHealth')
-  if (code === 'no ping yet') return t('noPingYet')
-  if (code === 'too many redirects') return t('tooManyRedirects')
-  if (code.includes('private address')) return t('private')
-  const http = /^HTTP (\d{3})$/.exec(code)
-  if (http) return t('http', { status: http[1] ?? '' })
-  const silence = /^no ping for (\d+) min$/.exec(code)
-  if (silence) return t('noPingFor', { minutes: silence[1] ?? '' })
-  return t('other', { code })
+  const failure = failureOf(code)
+  return t(failure.key, failure.values)
 }

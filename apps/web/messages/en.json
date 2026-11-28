@@ -222,5 +222,131 @@
       "tooManyRedirects": "Too many redirects",
       "other": "{code}"
     }
+  },
+  "settings": {
+    "members": "Members",
+    "channels": "Channels",
+    "alerts": "Alerts"
+  },
+  "channels": {
+    "title": "Alert channels",
+    "intro": "Where emergencies are sent: email, Telegram or a webhook of yours. Each channel has the language of its messages.",
+    "emptyTitle": "No channels yet",
+    "emptyBody": "Without a channel, an emergency shows only in the panel. Add at least one to know when a product goes down.",
+    "add": "Add channel",
+    "addTitle": "Add channel",
+    "editTitle": "Edit channel",
+    "dialogIntro": "Passwords and keys are stored encrypted and never come back to the browser.",
+    "type": "Type",
+    "name": "Name",
+    "namePlaceholder": "Team Telegram",
+    "locale": "Message language",
+    "secretSaved": "Saved. Leave blank to keep it.",
+    "docs": "How to set it up",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete the channel {name}?",
+    "deleteBody": "Rules that chose only this channel will send to every channel.",
+    "test": "Test",
+    "testing": "Sending...",
+    "testOk": "Message sent",
+    "lastOk": "Last alert sent {when}",
+    "lastFailed": "Last alert failed {when}: {error}",
+    "errors": {
+      "notFound": "Channel not found.",
+      "pickType": "Pick the channel type.",
+      "name": "Give the channel a name.",
+      "checkFields": "Check the fields and try again.",
+      "fields": "Check: {fields}."
+    },
+    "fields": {
+      "smtp": {
+        "host": "SMTP server",
+        "hostPlaceholder": "smtp.gmail.com",
+        "port": "Port",
+        "portHint": "587 with STARTTLS (the usual) or 465 with direct TLS.",
+        "secure": "Direct TLS from the start",
+        "secureHint": "Check only for port 465.",
+        "username": "Username",
+        "password": "Password",
+        "passwordHint": "On Gmail, an app password, not the account password.",
+        "from": "From",
+        "fromPlaceholder": "alerts@yourdomain.com",
+        "to": "To",
+        "toHint": "Separate several with commas.",
+        "toPlaceholder": "you@yourdomain.com"
+      },
+      "resend": {
+        "apiKey": "API key",
+        "apiKeyPlaceholder": "re_...",
+        "from": "From",
+        "fromHint": "With a domain verified on Resend.",
+        "fromPlaceholder": "alerts@yourdomain.com",
+        "to": "To",
+        "toHint": "Separate several with commas.",
+        "toPlaceholder": "you@yourdomain.com"
+      },
+      "telegram": {
+        "botToken": "Bot token",
+        "botTokenHint": "Create the bot with @BotFather and paste its token here.",
+        "botTokenPlaceholder": "123456:ABC-DEF...",
+        "chatId": "Chat ID",
+        "chatIdHint": "Send the bot a message and open api.telegram.org/botTOKEN/getUpdates to see the id. Groups start with -100.",
+        "threadId": "Topic ID",
+        "threadIdHint": "Only for groups with topics. Leave blank otherwise."
+      },
+      "webhook": {
+        "url": "URL",
+        "urlPlaceholder": "https://yourservice.com/octadash",
+        "secret": "Signing secret",
+        "secretHint": "Optional, at least 16 characters. Signs the body with HMAC SHA-256 in the X-Octadash-Signature header."
+      }
+    }
+  },
+  "alerts": {
+    "title": "Alert rules",
+    "intro": "What becomes an emergency and how long to wait before telling anyone. Applies to every product; each product can have its own setting on its settings page. Messages go to the <channels>channels</channels>.",
+    "productTitle": "Alerts for this product",
+    "productIntro": "By default this product follows the organization's rules. Changes here apply to it only.",
+    "level": "Level",
+    "levels": {
+      "emergency": "Emergency",
+      "signal": "Signal",
+      "off": "Off"
+    },
+    "levelHint": {
+      "emergency": "Tells the channels and shows the red strip in the panel until someone resolves or acknowledges it.",
+      "signal": "No message. Highlighted in the panel and listed in the daily summary.",
+      "off": "Neither tells nor highlights."
+    },
+    "params": {
+      "minutes": "Wait",
+      "minutesUnit": "min before telling",
+      "days": "Tell",
+      "daysUnit": "days ahead"
+    },
+    "channels": "Channels",
+    "allChannels": "None checked: tells every channel.",
+    "noChannels": "No channels yet. Without one, the emergency shows only in the panel.",
+    "save": "Save",
+    "saved": "Saved",
+    "reset": "Back to the organization's rule",
+    "custom": "Adjusted",
+    "kinds": {
+      "monitor_down": {
+        "title": "Site or API down",
+        "body": "A site or /health monitor failed 3 times in a row. If it comes back before the wait, nobody is told."
+      },
+      "heartbeat_missed": {
+        "title": "Heartbeat missed",
+        "body": "A cron job, backup or worker did not check in within its interval plus grace."
+      },
+      "cert_expiring": {
+        "title": "Certificate expiring",
+        "body": "A monitor's HTTPS certificate expires in a few days."
+      }
+    }
   }
 }

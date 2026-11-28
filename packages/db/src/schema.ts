@@ -15,6 +15,10 @@ export interface Database {
   project_key: ProjectKeyTable
   project_area: ProjectAreaTable
   monitor: MonitorTable
+  channel: ChannelTable
+  alert_rule: AlertRuleTable
+  incident: IncidentTable
+  notification: NotificationTable
   auth_user: AuthUserTable
   auth_organization: AuthOrganizationTable
   auth_member: AuthMemberTable
@@ -78,6 +82,72 @@ export interface MonitorTable {
   status_since: Date | null
   created_at: CreatedAt
   updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export type AlertLevel = 'emergency' | 'signal'
+type Json = ColumnType<
+  Record<string, unknown>,
+  Record<string, unknown> | string | undefined,
+  Record<string, unknown> | string
+>
+
+export interface ChannelTable {
+  id: string
+  org_id: string
+  integration: string
+  name: string
+  locale: Generated<string>
+  /** Settings without secrets. */
+  config: Json
+  /** Each secret key encrypted with OCTADASH_SECRET. */
+  secrets: Json
+  enabled: Generated<boolean>
+  created_at: CreatedAt
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export interface AlertRuleTable {
+  id: string
+  org_id: string
+  project_id: string | null
+  kind: string
+  level: AlertLevel | 'off'
+  params: Json
+  /** Null sends to every enabled channel of the organization. */
+  channel_ids: string[] | null
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+export interface IncidentTable {
+  id: string
+  org_id: string
+  project_id: string
+  monitor_id: string | null
+  parent_id: string | null
+  kind: string
+  level: AlertLevel
+  dedupe_key: string
+  data: Json
+  channel_ids: string[] | null
+  started_at: Date
+  notify_after: Date
+  resolved_at: Date | null
+  acknowledged_at: Date | null
+  /** The user who took the incident. */
+  acknowledged_by: string | null
+  notified_open_at: Date | null
+  notified_resolve_at: Date | null
+}
+
+export interface NotificationTable {
+  id: string
+  org_id: string
+  channel_id: string | null
+  incident_ids: string[]
+  event: 'open' | 'resolve'
+  ok: boolean
+  error: string | null
+  sent_at: CreatedAt
 }
 
 export interface AuthUserTable {

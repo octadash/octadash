@@ -11,6 +11,7 @@ function monitor(overrides: Partial<ActiveMonitor> = {}): ActiveMonitor {
     id: 'm1',
     org_id: 'o1',
     project_id: 'p1',
+    name: 'Site',
     kind: 'site',
     url: 'https://example.com',
     interval_seconds: 60,

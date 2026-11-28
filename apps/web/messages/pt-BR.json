@@ -222,5 +222,131 @@
       "tooManyRedirects": "Redirecionamentos demais",
       "other": "{code}"
     }
+  },
+  "settings": {
+    "members": "Membros",
+    "channels": "Canais",
+    "alerts": "Alertas"
+  },
+  "channels": {
+    "title": "Canais de alerta",
+    "intro": "Para onde vão os avisos de emergência: e-mail, Telegram ou um webhook seu. Cada canal tem o idioma das mensagens.",
+    "emptyTitle": "Nenhum canal ainda",
+    "emptyBody": "Sem canal, uma emergência aparece só no painel. Adicione pelo menos um para saber quando um produto sair do ar.",
+    "add": "Adicionar canal",
+    "addTitle": "Adicionar canal",
+    "editTitle": "Editar canal",
+    "dialogIntro": "As senhas e chaves ficam guardadas criptografadas e nunca voltam para o navegador.",
+    "type": "Tipo",
+    "name": "Nome",
+    "namePlaceholder": "Telegram do time",
+    "locale": "Idioma das mensagens",
+    "secretSaved": "Guardada. Deixe em branco para manter.",
+    "docs": "Como configurar",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "deleteTitle": "Excluir o canal {name}?",
+    "deleteBody": "As regras que escolheram só este canal passam a avisar todos os canais.",
+    "test": "Testar",
+    "testing": "Enviando...",
+    "testOk": "Mensagem enviada",
+    "lastOk": "Último aviso enviado {when}",
+    "lastFailed": "Último aviso falhou {when}: {error}",
+    "errors": {
+      "notFound": "Canal não encontrado.",
+      "pickType": "Escolha o tipo do canal.",
+      "name": "Dê um nome ao canal.",
+      "checkFields": "Confira os campos e tente de novo.",
+      "fields": "Confira: {fields}."
+    },
+    "fields": {
+      "smtp": {
+        "host": "Servidor SMTP",
+        "hostPlaceholder": "smtp.gmail.com",
+        "port": "Porta",
+        "portHint": "587 com STARTTLS (o mais comum) ou 465 com TLS direto.",
+        "secure": "TLS direto desde o início",
+        "secureHint": "Marque só para a porta 465.",
+        "username": "Usuário",
+        "password": "Senha",
+        "passwordHint": "No Gmail, uma senha de app, não a senha da conta.",
+        "from": "Remetente",
+        "fromPlaceholder": "alertas@seudominio.com",
+        "to": "Destinatários",
+        "toHint": "Separe vários com vírgula.",
+        "toPlaceholder": "voce@seudominio.com"
+      },
+      "resend": {
+        "apiKey": "Chave da API",
+        "apiKeyPlaceholder": "re_...",
+        "from": "Remetente",
+        "fromHint": "Com um domínio verificado no Resend.",
+        "fromPlaceholder": "alertas@seudominio.com",
+        "to": "Destinatários",
+        "toHint": "Separe vários com vírgula.",
+        "toPlaceholder": "voce@seudominio.com"
+      },
+      "telegram": {
+        "botToken": "Token do bot",
+        "botTokenHint": "Crie o bot com o @BotFather e cole o token aqui.",
+        "botTokenPlaceholder": "123456:ABC-DEF...",
+        "chatId": "ID do chat",
+        "chatIdHint": "Mande uma mensagem ao bot e abra api.telegram.org/botTOKEN/getUpdates para ver o id. Grupos começam com -100.",
+        "threadId": "ID do tópico",
+        "threadIdHint": "Só para grupos com tópicos. Deixe em branco nos outros."
+      },
+      "webhook": {
+        "url": "URL",
+        "urlPlaceholder": "https://seuservico.com/octadash",
+        "secret": "Segredo para assinatura",
+        "secretHint": "Opcional, pelo menos 16 caracteres. Assina o corpo com HMAC SHA-256 no cabeçalho X-Octadash-Signature."
+      }
+    }
+  },
+  "alerts": {
+    "title": "Regras de alerta",
+    "intro": "O que vira emergência e quanto esperar antes de avisar. Vale para todos os produtos; cada produto pode ter o seu ajuste nas configurações dele. As mensagens vão para os <channels>canais</channels>.",
+    "productTitle": "Alertas deste produto",
+    "productIntro": "Por padrão, este produto segue as regras da organização. Mudar aqui vale só para ele.",
+    "level": "Nível",
+    "levels": {
+      "emergency": "Emergência",
+      "signal": "Sinal",
+      "off": "Desligado"
+    },
+    "levelHint": {
+      "emergency": "Avisa os canais e mostra a faixa vermelha no painel até alguém resolver ou reconhecer.",
+      "signal": "Não manda mensagem. Fica destacado no painel e entra no resumo diário.",
+      "off": "Não avisa nem destaca."
+    },
+    "params": {
+      "minutes": "Esperar",
+      "minutesUnit": "min antes de avisar",
+      "days": "Avisar com",
+      "daysUnit": "dias de antecedência"
+    },
+    "channels": "Canais",
+    "allChannels": "Nenhum marcado: avisa todos os canais.",
+    "noChannels": "Nenhum canal ainda. Sem canal, a emergência aparece só no painel.",
+    "save": "Salvar",
+    "saved": "Salvo",
+    "reset": "Voltar ao padrão da organização",
+    "custom": "Ajustado",
+    "kinds": {
+      "monitor_down": {
+        "title": "Site ou API fora do ar",
+        "body": "Um monitor de site ou /health falhou 3 vezes seguidas. Se voltar antes do tempo de espera, ninguém é avisado."
+      },
+      "heartbeat_missed": {
+        "title": "Heartbeat sem sinal",
+        "body": "Um cron, backup ou worker não deu sinal no intervalo combinado mais a tolerância."
+      },
+      "cert_expiring": {
+        "title": "Certificado vencendo",
+        "body": "O certificado HTTPS de um monitor vence em poucos dias."
+      }
+    }
   }
 }

@@ -10,6 +10,7 @@ import {
 import { createValkey, ValkeyHeartbeats } from '@octadash/queue'
 import { checkUrl } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
+import { createAlerts, registerAlertJobs } from './alerts'
 import { registerJobs } from './jobs'
 import { startUptime, UptimeScheduler } from './uptime'
 import { startWriters } from './writers'
@@ -33,6 +34,15 @@ valkey.on('error', (err) => log.warn({ err: err.message }, 'valkey connection er
 
 await boss.start()
 await registerJobs(boss, db, log)
+const alerts = createAlerts({
+  db,
+  clickhouse,
+  boss,
+  secret: env.OCTADASH_SECRET,
+  panelUrl: env.OCTADASH_URL,
+  log,
+})
+await registerAlertJobs(boss, alerts, log)
 const writers = startWriters(valkey, clickhouse, log)
 const heartbeats = new ValkeyHeartbeats(valkey)
 const uptime = startUptime(
@@ -42,8 +52,7 @@ const uptime = startUptime(
     readPings: (ids) => heartbeats.read(ids),
     writeRows: (rows) => insertUptimeChecks(clickhouse, rows),
     setStatus: (id, from, to, at) => setMonitorStatus(db, id, from, to, at),
-    // Alerts subscribe here in the next step; the scheduler already logs each change.
-    onTransition: async () => {},
+    onTransition: (transition) => alerts.onTransition(transition),
     isOnline: () => reachesAny(env.OCTADASH_UPTIME_REFERENCE_URLS),
     now: Date.now,
     log,
