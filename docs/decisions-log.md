@@ -591,3 +591,28 @@ The maintainer reviewed the night's decisions that change the product or its ris
 - **Errors MCP tools are read-only for now**: `list_issues` and
   `issue_details`. Resolving or ignoring from an assistant waits for a reason
   to: it is a team decision that the panel records with a name.
+
+## Product usage: retention, Sign-ups dropped and MCP (2026-11-28)
+
+- **One retention for the `events` table.** Traffic and Product usage read the
+  same events, so "Data kept" has one row for both: 3, 6, 13 or 25 months, 13
+  by default (this month against the same month last year). It is stored as
+  `events` in `project_area`, a name the area lists leave out. Rows carry
+  their retention as errors do; the new TTL is not applied to old parts at
+  once, since they already end on the same date.
+- **A shorter retention also shortens what stays.** Choosing less deletes
+  older events and errors now and gives the newer ones the shorter retention
+  (an `UPDATE` of `retention_days`, which the TTL reads), so nothing outlives
+  the choice. Logs keep their retention in the partition key and cannot be
+  updated that way: newer lines still end on the date they arrived with.
+  Backlog: a nightly sweep for logs.
+- **The first signal is Sign-ups dropped**, as the canvas planned. Expected =
+  shape × level over the last 24 hours, checked every hour: the level is the 7
+  days before, the shape the part of a week those weekday hours held over the
+  4 weeks before. It needs 4 weeks of sign-ups, 30% under and 10 expected. It
+  reads the standard sign-up names; a product's own sign-up event waits for a
+  setting. Only drops are flagged: more sign-ups than expected is not a
+  problem to look at.
+- **Signals show where they belong**: a note on top of Product usage, the
+  signal's own page, TV mode and the MCP. The Overview's signals strip comes
+  with the daily summary.

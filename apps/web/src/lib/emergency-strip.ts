@@ -13,6 +13,7 @@ export type StripKind =
   | 'log_alert'
   | 'payments_failing'
   | 'cost_runaway'
+  | 'signups_dropped'
   | 'other'
 
 export interface StripItem {

@@ -10,19 +10,24 @@ import {
   issueStats,
   listGroups,
   listIssues,
+  listKeyEvents,
   listOpenIncidents,
   listOrgMonitors,
   listProjects,
   listSources,
   monitorStats,
   parseLogQuery,
+  SIGNUP_EVENTS,
   searchLogs,
   sentryDsn,
+  signupsByProduct,
   sourcesLastData,
   type TokenResource,
   type TokenScopes,
   trafficBreakdown,
   trafficSummary,
+  usageEvents,
+  usageTotals,
 } from '@octadash/db'
 import {
   errorSnippet,
@@ -224,6 +229,86 @@ export const MCP_TOOLS: Tool[] = [
               })),
             }
           : {}),
+      }
+    },
+  },
+  {
+    name: 'usage',
+    needs: [['usage', 'read']],
+    title: 'Product usage',
+    description:
+      'What people do in the product over the last days, against the days before: active people, sign-ups and key events, the top events with how many people did each, and any open "Sign-ups dropped" signal (sign-ups in the last 24 hours well under what is expected). Page views and bots are left out.',
+    input: z.object({
+      product,
+      days: z
+        .number()
+        .int()
+        .min(1)
+        .max(90)
+        .default(7)
+        .describe('How many days back, 7 by default.'),
+      top: z.number().int().min(1).max(100).default(20).describe('Events listed, 20 by default.'),
+    }),
+    async run(input, { orgId }) {
+      const { db, clickhouse } = services()
+      const { all, scope: chosen } = await productsOf(orgId, input.product as string | undefined)
+      const days = Number(input.days)
+      const to = new Date()
+      const from = new Date(to.getTime() - days * 86_400_000)
+      const previous = { from: new Date(from.getTime() - days * 86_400_000), to: from }
+      const ids = chosen.map((p) => p.id)
+      const scope = { orgId, projectIds: ids, from, to }
+      const keys = await listKeyEvents(db, orgId, ids)
+      const refs = keys.map((k) => ({ projectId: k.projectId, event: k.event }))
+      const [now, before, events, signups, incidents] = await Promise.all([
+        usageTotals(clickhouse, scope, SIGNUP_EVENTS, refs),
+        usageTotals(clickhouse, { ...scope, ...previous }, SIGNUP_EVENTS, refs),
+        usageEvents(clickhouse, scope, [previous], Number(input.top)),
+        chosen.length > 1 ? signupsByProduct(clickhouse, scope, SIGNUP_EVENTS) : new Map(),
+        listOpenIncidents(db, orgId),
+      ])
+      const isKey = new Set(keys.map((k) => `${k.projectId}:${k.event}`))
+      return {
+        period: { from, to, days },
+        activePeople: now.active,
+        signups: now.signups,
+        keyEvents: now.keyEvents,
+        previousPeriod: {
+          activePeople: before.active,
+          signups: before.signups,
+          keyEvents: before.keyEvents,
+        },
+        signupEvents: SIGNUP_EVENTS,
+        markedKeyEvents: keys.map((k) => ({ product: slugOf(all, k.projectId), event: k.event })),
+        topEvents: events.map((e) => ({
+          ...(chosen.length > 1 ? { product: slugOf(all, e.projectId) } : {}),
+          event: e.event,
+          count: e.count,
+          people: e.people,
+          previousPeriod: e.baseline[0] ?? 0,
+          key: isKey.has(`${e.projectId}:${e.event}`),
+          last: e.last,
+        })),
+        ...(signups.size > 0
+          ? {
+              signupsByProduct: [...signups].map(([id, count]) => ({
+                product: slugOf(all, id),
+                signups: count,
+              })),
+            }
+          : {}),
+        signals: incidents
+          .filter((i) => i.kind === 'signups_dropped' && ids.includes(i.project_id))
+          .map((i) => {
+            const d = (i.data ?? {}) as Record<string, unknown>
+            return {
+              product: i.project_slug,
+              since: i.started_at,
+              last24h: d.count,
+              expected: d.expected,
+              percentUnder: d.percent,
+            }
+          }),
       }
     },
   },

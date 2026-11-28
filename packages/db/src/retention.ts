@@ -7,8 +7,16 @@ import type { Db } from './client'
  * reads it, so a longer choice applies to what arrives next and a shorter one
  * also deletes what is now too old. Areas join this list as their retention
  * becomes a setting; null in `project_area.retention_days` is the default.
+ * A name that is not an area (`events`) is a table several areas share; the
+ * area lists leave it out.
  */
 export const AREA_RETENTION = {
+  /**
+   * The `events` table, which Traffic and Product usage both read: one choice
+   * for both, kept under this name rather than either area's. In days, shown
+   * as months: 3, 6, 13 (a year and the same month before it) and 25.
+   */
+  events: { defaultDays: 395, choices: [90, 180, 395, 760] },
   errors: { defaultDays: 90, choices: [30, 90, 180, 365] },
   logs: { defaultDays: DEFAULT_LOG_RETENTION_DAYS, choices: LOG_RETENTION_CHOICES },
 } as const satisfies Record<string, { defaultDays: number; choices: readonly number[] }>

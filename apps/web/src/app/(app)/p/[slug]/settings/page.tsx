@@ -241,7 +241,12 @@ export default async function ProductSettingsPage({
                       name: t(`retention.${area}`),
                       hint: t(`retention.${area}Hint`),
                       choices: Object.fromEntries(
-                        choices.map((d) => [d, t('retention.days', { count: d })]),
+                        choices.map((d) => [
+                          d,
+                          area === 'events'
+                            ? t('retention.months', { count: Math.round(d / 30.4) })
+                            : t('retention.days', { count: d }),
+                        ]),
                       ),
                       shorter: t('retention.shorter'),
                       save: t('retention.save'),

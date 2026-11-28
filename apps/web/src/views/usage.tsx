@@ -242,6 +242,30 @@ export async function UsageView({
         </p>
       )}
 
+      {data.signals.length > 0 && (
+        <section
+          aria-label={t('signals.label')}
+          className="flex flex-col gap-1 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm"
+        >
+          {data.signals.map((s) => (
+            <p key={s.id} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <DiamondIcon className="size-3 shrink-0 fill-current text-warn" aria-hidden />
+              <span>
+                {t('signals.signupsDropped', {
+                  product: s.product,
+                  count: s.count,
+                  expected: s.expected,
+                  percent: s.percent,
+                })}
+              </span>
+              <Link href={s.href} className="text-brand underline underline-offset-2">
+                {t('signals.see')}
+              </Link>
+            </p>
+          ))}
+        </section>
+      )}
+
       <section
         aria-label={t('tiles.label')}
         className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"

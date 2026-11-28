@@ -6,6 +6,7 @@ import {
   isRetentionChoice,
   setAreaRetention,
   trimErrors,
+  trimEvents,
   trimLogs,
 } from '@octadash/db'
 import { revalidatePath } from 'next/cache'
@@ -31,10 +32,11 @@ export async function saveRetentionAction(_: FormState, formData: FormData): Pro
   const before = await setAreaRetention(db, org.id, project.id, area, days)
   if (before === null) return { error: t('notFound') }
   if (days < before) {
-    const trim = area === 'errors' ? trimErrors : trimLogs
+    const trim = { errors: trimErrors, logs: trimLogs, events: trimEvents }[area]
     await trim(clickhouse, org.id, project.id, days).catch(() => {})
   }
   revalidatePath(`/p/${project.slug}`, 'layout')
-  revalidatePath(`/all/${area}`)
+  for (const path of area === 'events' ? ['traffic', 'usage'] : [area])
+    revalidatePath(`/all/${path}`)
   return { done: true }
 }

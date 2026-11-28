@@ -329,7 +329,8 @@
         "key_event_stopped": "“{name}” stopped",
         "log_alert": "Log alert “{name}”",
         "payments_failing": "Payments failing",
-        "cost_runaway": "Cost runaway"
+        "cost_runaway": "Cost runaway",
+        "signups_dropped": "Sign-ups dropped"
       },
       "more": "{count, plural, one {# more on the product page} other {# more on the product page}}"
     }
@@ -637,7 +638,11 @@
       "charges": "At least",
       "chargesUnit": "charges in 15 min",
       "dollars": "At least",
-      "dollarsUnit": "US dollars in one hour"
+      "dollarsUnit": "US dollars in one hour",
+      "drop": "Below expected",
+      "dropUnit": "% under what is expected in 24 h",
+      "signups": "At least",
+      "signupsUnit": "sign-ups expected in 24 h"
     },
     "allChannels": "All channels",
     "noChannels": "No channels yet. Without one, the emergency shows only in the panel.",
@@ -691,6 +696,11 @@
         "body": "A message each time an error is seen for the first time. Off by default: the Error spike already tells when errors climb, and a busy product makes new issues every day.",
         "info": "It sends only a message: it never opens an emergency or turns the strip red. New issues in the same minute go out as one message per channel. An issue that comes back after being resolved shows under Regressed in Errors.",
         "note": "Several new issues in the same minute come as one message."
+      },
+      "signups_dropped": {
+        "title": "Sign-ups dropped",
+        "body": "A signal, no message: a product’s sign-ups in the last 24 hours well below what these weekday hours usually have.",
+        "info": "Expected = shape × level. The level is the 7 days before; the shape is the part of a week these 24 weekday hours held over the 4 weeks before, so a quiet Sunday expects few and a campaign lifts what is expected. It needs 4 weeks of sign-ups and at least the sign-ups you set expected, so a small product going from 2 to 1 is not “−50%”. Checked every hour; it closes when sign-ups come back within. Turn it into an emergency to get a message."
       }
     },
     "legend": "Levels",
@@ -719,15 +729,6 @@
           "body": "Errors per minute well above this product’s normal for the hour.",
           "wait": "No product sends errors yet.",
           "params": "5× normal, at least 20 errors"
-        }
-      },
-      "usage": {
-        "starts": "Starts when Product usage is set up",
-        "signupsDropped": {
-          "title": "Sign-ups dropped",
-          "body": "Sign-ups away from what this hour and weekday usually have.",
-          "wait": "Needs 4 weeks of data to learn what is normal.",
-          "params": "30% below expected, at least 10 events"
         }
       },
       "uptime": {
@@ -1074,7 +1075,8 @@
       "key_event_stopped": "{product} · {event} stopped",
       "log_alert": "{product} · log alert “{search}”",
       "payments_failing": "{product} · payments failing",
-      "cost_runaway": "{product} · cost runaway"
+      "cost_runaway": "{product} · cost runaway",
+      "signups_dropped": "{product} · sign-ups dropped"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1087,7 +1089,8 @@
       "keyEvent": "No {event} since {time}, where about {normal} an hour is normal at this time. It closes on its own when the next one arrives.",
       "logAlert": "The saved search “{search}” ({query}) matched a line. It closes on its own after {minutes} min without a match.",
       "paymentsFailing": "{failed} of {total} charges failed in the last {minutes} min. It closes on its own when the share falls back under the rule.",
-      "costRunaway": "{spent} spent in one hour, {times}× a normal hour ({normal}). It closes on its own when an hour falls back under the rule."
+      "costRunaway": "{spent} spent in one hour, {times}× a normal hour ({normal}). It closes on its own when an hour falls back under the rule.",
+      "signupsDropped": "{count} sign-ups in the last 24 hours, {percent}% under the {expected} expected. The 7 days before had about {lastWeek, number} a day; the same weekday hours of the 4 weeks before, {sameHours, number}. It closes on its own when sign-ups come back within the rule."
     },
     "onIt": "{name} is on it · since {time}",
     "nobody": "Nobody on it yet",
@@ -1179,7 +1182,8 @@
       "key_event_stopped": "{product} · {event} stopped",
       "log_alert": "{product} · log alert “{search}”",
       "payments_failing": "{product} · payments failing",
-      "cost_runaway": "{product} · cost runaway"
+      "cost_runaway": "{product} · cost runaway",
+      "signups_dropped": "{product} · sign-ups dropped"
     },
     "spike": {
       "title": "Issues behind the spike",
@@ -1198,7 +1202,8 @@
       "key_event_stopped": "{product}: {event} stopped",
       "log_alert": "{product}: log alert “{search}”",
       "payments_failing": "{product}: payments failing",
-      "cost_runaway": "{product}: cost runaway"
+      "cost_runaway": "{product}: cost runaway",
+      "signups_dropped": "{product}: sign-ups dropped"
     },
     "short": {
       "monitor_down": "{product} down",
@@ -1209,7 +1214,8 @@
       "key_event_stopped": "{product} {event} stopped",
       "log_alert": "{product} log alert",
       "payments_failing": "{product} payments failing",
-      "cost_runaway": "{product} cost runaway"
+      "cost_runaway": "{product} cost runaway",
+      "signups_dropped": "{product} sign-ups dropped"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
@@ -1220,7 +1226,8 @@
       "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour",
       "log_alert": "{count, plural, one {# matching line} other {# matching lines}}",
       "payments_failing": "{percent}% of charges failing ({failed} of {total})",
-      "cost_runaway": "{spent} in one hour, {times}× normal"
+      "cost_runaway": "{spent} in one hour, {times}× normal",
+      "signups_dropped": "{count} in 24 h, {percent}% under the {expected} expected"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” is not answering",
@@ -1231,7 +1238,8 @@
       "key_event_stopped": "No {event} in {minutes} min; normal is about {normal} an hour",
       "log_alert": "{count, plural, one {# matching line} other {# matching lines}}",
       "payments_failing": "{percent}% of charges failing ({failed} of {total})",
-      "cost_runaway": "{spent} in one hour, {times}× normal"
+      "cost_runaway": "{spent} in one hour, {times}× normal",
+      "signups_dropped": "{count} in 24 h, {percent}% under the {expected} expected"
     },
     "kind": {
       "monitor_down": "Down",
@@ -1242,7 +1250,8 @@
       "key_event_stopped": "Key event stopped",
       "log_alert": "Log alert",
       "payments_failing": "Payments failing",
-      "cost_runaway": "Cost runaway"
+      "cost_runaway": "Cost runaway",
+      "signups_dropped": "Sign-ups dropped"
     },
     "count": "{count, plural, one {# emergency} other {# emergencies}}",
     "countProducts": "{count} emergencies on {products} products",
@@ -1304,7 +1313,8 @@
     "keyBack": "{product}: {event} is arriving again",
     "logQuiet": "{product}: “{search}” is quiet again",
     "paymentsBack": "{product}: payments are going through again",
-    "runawayOver": "{product}: spend is back to normal"
+    "runawayOver": "{product}: spend is back to normal",
+    "signupsBack": "Sign-ups are back to normal on {product}"
   },
   "traffic": {
     "title": "Traffic",
@@ -1677,11 +1687,14 @@
       "title": "Data kept",
       "infoLabel": "About data kept",
       "info": "How long each area keeps this product's data. A longer time applies to what arrives from now on. A shorter one also deletes, right away, what is now older than it. Issues stay listed; only their events go.",
+      "events": "Traffic and product usage",
+      "eventsHint": "Each page view and each event your product sends. Charts of past months read them.",
       "errors": "Errors",
       "errorsHint": "Each error event, with its stack trace and context.",
       "logs": "Logs",
       "logsHint": "Every log line.",
       "days": "{count, plural, one {# day} other {# days}}",
+      "months": "{count, plural, one {# month} other {# months}}",
       "shorter": "Saving deletes what is older than this now.",
       "save": "Save",
       "saved": "Saved."
@@ -2174,7 +2187,12 @@
     },
     "addSourceTo": "Add a source to",
     "source": "Source",
-    "allSources": "All sources"
+    "allSources": "All sources",
+    "signals": {
+      "label": "Out of normal",
+      "signupsDropped": "Sign-ups dropped on {product}: {count} in the last 24 hours, {percent}% under the {expected} expected.",
+      "see": "See why"
+    }
   },
   "usageSetup": {
     "title": "Set up Product usage",

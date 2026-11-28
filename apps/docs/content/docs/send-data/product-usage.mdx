@@ -18,6 +18,26 @@ has the Traffic script, add one line where something happens: no new key.
 - `signed_up` counts as a sign-up with no setting.
 - `distinct_id` is the person. Octadash keeps only a hash of it.
 
+## Sign-ups dropped
+
+Once a product has 4 weeks of sign-ups, Octadash learns what is normal and
+checks every hour whether the last 24 hours are well under it. That is a
+signal, not an emergency: no message, a note on top of Product usage and a page
+that says why.
+
+Expected = shape × level. The level is the 7 days before; the shape is the part
+of a week those 24 weekday hours held over the 4 weeks before. A quiet Sunday
+expects few, and a campaign that lifted every day lifts what is expected too.
+It is raised at 30% under the expected with at least 10 sign-ups expected, so a
+small product going from 2 to 1 is not "−50%". Both numbers, and turning it
+into an emergency that sends a message, are in **Alert rules**.
+
+## How long events are kept
+
+13 months by default; 3, 6 or 25 months in **Product settings** > **Data kept**
+(one choice for Traffic and Product usage). A shorter choice deletes what is
+older right away.
+
 ## PostHog
 
 Your PostHog calls keep working: `capture` and `identify`. Autocapture,

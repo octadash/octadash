@@ -26,6 +26,7 @@ const KINDS = [
   'log_alert',
   'payments_failing',
   'cost_runaway',
+  'signups_dropped',
 ] as const
 
 const AREA_OF: Record<Kind | 'other', string> = {
@@ -37,6 +38,7 @@ const AREA_OF: Record<Kind | 'other', string> = {
   log_alert: 'logs',
   payments_failing: 'money',
   cost_runaway: 'costs',
+  signups_dropped: 'usage',
   other: 'other',
 }
 type Kind = (typeof KINDS)[number]
@@ -149,7 +151,15 @@ export default async function EmergencyPage({
                       normal: usd(typeof data.normal === 'number' ? data.normal : 0),
                       times: typeof data.times === 'number' ? data.times : 0,
                     })
-                  : t('summary.other')
+                  : kind === 'signups_dropped'
+                    ? t('summary.signupsDropped', {
+                        count: typeof data.count === 'number' ? data.count : 0,
+                        expected: typeof data.expected === 'number' ? data.expected : 0,
+                        percent: typeof data.percent === 'number' ? Math.abs(data.percent) : 0,
+                        lastWeek: typeof data.lastWeek === 'number' ? data.lastWeek : 0,
+                        sameHours: typeof data.sameHours === 'number' ? data.sameHours : 0,
+                      })
+                    : t('summary.other')
 
   return (
     <div className="flex flex-col gap-6">

@@ -73,6 +73,7 @@ const KIND_ICON: Record<StripKind, typeof ActivityIcon> = {
   log_alert: TerminalIcon,
   payments_failing: WalletIcon,
   cost_runaway: ReceiptIcon,
+  signups_dropped: UserIcon,
   other: TriangleAlertIcon,
 }
 

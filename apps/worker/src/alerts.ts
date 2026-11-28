@@ -35,6 +35,9 @@ import {
   recordNotification,
   resolveIncident,
   ruleFor,
+  SIGNUP_EVENTS,
+  type SignupNormal,
+  signupNormals,
 } from '@octadash/db'
 import {
   builtinIntegrations,
@@ -64,6 +67,8 @@ export const ALERT_QUEUES = {
   money: 'alerts-money',
   /** Cost runaway, every 10 minutes: costs arrive hourly at best. */
   costs: 'alerts-costs',
+  /** Sign-ups dropped, every hour: it compares whole days. */
+  signups: 'alerts-signups',
 } as const
 
 /** The longest quiet spell a Log alert waits for before it closes, in minutes. */
@@ -722,6 +727,58 @@ export function createAlerts(deps: AlertsDeps) {
     }
   }
 
+  /**
+   * Sign-ups dropped, a signal: each product's last 24 hours against what
+   * they usually hold (see `signupsDropped`). A product learning what is
+   * normal, back within the band or with the rule off closes its signal.
+   */
+  async function checkSignups() {
+    const at = now()
+    const [rows, open] = await Promise.all([
+      signupNormals(deps.clickhouse, at, SIGNUP_EVENTS),
+      listOpenIncidentKeys(deps.db, 'signups_dropped'),
+    ])
+    const keyOf = (projectId: string) => `usage:${projectId}:signups:dropped`
+    const openKeys = new Set(open.map((row) => row.dedupe_key))
+    const seen = new Set<string>()
+    const changed = new Set<string>()
+    for (const row of rows) {
+      const key = keyOf(row.projectId)
+      seen.add(key)
+      const rule = await ruleFor(deps.db, row.orgId, row.projectId, 'signups_dropped')
+      const check = signupsDropped(row, at, rule.params)
+      const dropped = rule.level !== 'off' && check.dropped
+      if (dropped && !openKeys.has(key)) {
+        const opened = await openIncident(deps.db, {
+          orgId: row.orgId,
+          projectId: row.projectId,
+          kind: 'signups_dropped',
+          dedupeKey: key,
+          data: {
+            count: row.last24h,
+            expected: Math.round(check.expected),
+            percent: -check.percent,
+            lastWeek: Math.round((row.lastWeek / 7) * 10) / 10,
+            sameHours: Math.round((row.sameHours / 4) * 10) / 10,
+          },
+          at,
+        })
+        if (opened) changed.add(row.orgId)
+      } else if (!dropped && openKeys.has(key)) {
+        if (await resolveIncident(deps.db, key, at)) changed.add(row.orgId)
+      }
+    }
+    // No sign-up in 35 days: nothing to compare, and nothing left to flag.
+    for (const row of open) {
+      if (!seen.has(row.dedupe_key) && (await resolveIncident(deps.db, row.dedupe_key, at)))
+        changed.add(row.org_id)
+    }
+    if (changed.size > 0) {
+      await wake()
+      await tell(changed, 'incidents')
+    }
+  }
+
   return {
     onTransition,
     notify,
@@ -732,6 +789,7 @@ export function createAlerts(deps: AlertsDeps) {
     checkLogAlerts,
     checkPaymentsFailing,
     checkCostRunaway,
+    checkSignups,
   }
 }
 
@@ -775,6 +833,11 @@ export async function registerAlertJobs(boss: PgBoss, alerts: Alerts, log: Logge
   await boss.work(ALERT_QUEUES.costs, async () => {
     await alerts.checkCostRunaway().catch((err) => log.warn({ err }, 'cost runaway check failed'))
   })
+  await boss.createQueue(ALERT_QUEUES.signups)
+  await boss.schedule(ALERT_QUEUES.signups, '7 * * * *')
+  await boss.work(ALERT_QUEUES.signups, async () => {
+    await alerts.checkSignups().catch((err) => log.warn({ err }, 'sign-ups check failed'))
+  })
 }
 
 /** Hours of spend "Cost runaway" looks back on for each product's latest hour. */
@@ -806,4 +869,30 @@ export function paymentsFailing(
   const percent = params.percent ?? 20
   const charges = params.charges ?? 10
   return total >= charges && total > 0 && (rate.failed / total) * 100 >= percent
+}
+
+/** Days of sign-ups a product needs before "Sign-ups dropped" knows its normal. */
+export const SIGNUPS_LEARNING_DAYS = 28
+
+/**
+ * Sign-ups dropped: expected = shape × level. The level is the 7 days before
+ * the last 24 hours; the shape is the part of a week those 24 weekday hours
+ * held over the 4 weeks before, so a quiet Sunday expects few and a campaign
+ * week lifts what is expected. It drops when the last 24 hours are `drop`
+ * percent or more under the expected, with at least `signups` expected, so a
+ * small product going from 2 to 1 is not "−50%".
+ */
+export function signupsDropped(
+  row: Pick<SignupNormal, 'last24h' | 'lastWeek' | 'sameHours' | 'fourWeeks' | 'oldest'>,
+  at: Date,
+  params: Record<string, number>,
+): { learning: boolean; expected: number; percent: number; dropped: boolean } {
+  const learning = at.getTime() - row.oldest.getTime() < SIGNUPS_LEARNING_DAYS * 86_400_000
+  const expected = row.fourWeeks > 0 ? row.lastWeek * (row.sameHours / row.fourWeeks) : 0
+  const percent = expected > 0 ? Math.round(((row.last24h - expected) / expected) * 100) : 0
+  const dropped =
+    !learning &&
+    expected >= (params.signups ?? 10) &&
+    row.last24h <= expected * (1 - (params.drop ?? 30) / 100)
+  return { learning, expected, percent, dropped }
 }
