@@ -1452,7 +1452,7 @@
   },
   "trafficSetup": {
     "title": "Set up Traffic",
-    "intro": "Visitors, pages, where they come from and their country, from a small script. No cookies, no consent banner needed by default.",
+    "intro": "Visitors, pages, where they come from and their country, from a small script. No cookies, no consent banner needed by default. The same script also reports browser errors and sends product events: one install per source.",
     "sources": "Sources",
     "sourcesHint": "This product already has a source. Use it, and the same key also sends page views; or add a new one below.",
     "status": {
@@ -1521,7 +1521,7 @@
     "noSource": "No source for Traffic yet. Add one to get its code.",
     "cancel": "Cancel",
     "empty": "This product has no source yet. Add one: it gets its own code and key.",
-    "addSourceHint": "A site or app of this product, such as Docs or App. It gets its own code and key.",
+    "addSourceHint": "A site or app of this product, such as Docs or App. It gets its own code and key; installed once, it feeds Traffic, Errors and Product usage.",
     "codeHint": "The code for this source, its options and a live check that page views arrive.",
     "close": "Close"
   },
@@ -2020,9 +2020,13 @@
     "noSource": "No source sends errors yet. An owner or admin adds one here.",
     "cancel": "Cancel",
     "empty": "This product has no source yet. Add one: it gets its own DSN.",
-    "addSourceHint": "A site, app or server of this product. It gets its own DSN.",
+    "addSourceHint": "A site, app or server of this product. It gets its own DSN. A source that already has the Octadash script already sends browser errors.",
     "codeHint": "The DSN for this source, the code for each platform and a test error.",
-    "close": "Close"
+    "close": "Close",
+    "scriptOnTitle": "Browser errors: already on",
+    "scriptOnBody": "{source} already has the Octadash script (from Traffic). It reports uncaught errors and rejected promises by itself: nothing to install, no new deploy.",
+    "serverToo": "Server errors too",
+    "serverTooBody": "The script only sees the browser. For errors in your API or server code, add the Sentry SDK there with this source’s DSN."
   },
   "usageArea": {
     "title": "Product usage",
@@ -2203,7 +2207,7 @@
     "funnelsBody": "Once events arrive, build a funnel from any events in order (visited → cart → paid), and see who comes back by the week they signed up. Both work per product or for a group.",
     "cancel": "Cancel",
     "empty": "This product has no source yet. Add one: it gets its own code and key.",
-    "addSourceHint": "A site, app or server of this product. It gets its own code and key.",
+    "addSourceHint": "A site, app or server of this product. It gets its own code and key. A source that already has the Octadash script needs no new install.",
     "codeHint": "The code to send events from this source, and a live check that they arrive.",
     "close": "Close"
   },

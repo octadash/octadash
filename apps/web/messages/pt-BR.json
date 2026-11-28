@@ -1452,7 +1452,7 @@
   },
   "trafficSetup": {
     "title": "Configurar Tráfego",
-    "intro": "Visitantes, páginas, de onde vêm e o país, com um script pequeno. Sem cookies e, por padrão, sem banner de consentimento.",
+    "intro": "Visitantes, páginas, de onde vêm e o país, com um script pequeno. Sem cookies e, por padrão, sem banner de consentimento. O mesmo script também registra os erros do navegador e envia os eventos do produto: uma instalação por origem.",
     "sources": "Origens",
     "sourcesHint": "Este produto já tem uma origem. Use-a, e a mesma chave passa a enviar visualizações também; ou adicione uma nova abaixo.",
     "status": {
@@ -1521,7 +1521,7 @@
     "noSource": "Ainda não há origem para Tráfego. Adicione uma para ver o código.",
     "cancel": "Cancelar",
     "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha código e chave próprios.",
-    "addSourceHint": "Um site ou app deste produto, como Docs ou App. Ganha código e chave próprios.",
+    "addSourceHint": "Um site ou app deste produto, como Docs ou App. Ganha código e chave próprios; instalado uma vez, alimenta Tráfego, Erros e Uso do produto.",
     "codeHint": "O código desta origem, as opções e a conferência ao vivo de que as visitas chegam.",
     "close": "Fechar"
   },
@@ -2020,9 +2020,13 @@
     "noSource": "Nenhuma origem envia erros ainda. Um dono ou administrador adiciona aqui.",
     "cancel": "Cancelar",
     "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha um DSN próprio.",
-    "addSourceHint": "Um site, app ou servidor deste produto. Ganha um DSN próprio.",
+    "addSourceHint": "Um site, app ou servidor deste produto. Ganha um DSN próprio. Uma origem que já tem o script do Octadash já envia os erros do navegador.",
     "codeHint": "O DSN desta origem, o código de cada plataforma e um erro de teste.",
-    "close": "Fechar"
+    "close": "Fechar",
+    "scriptOnTitle": "Erros do navegador: já ligados",
+    "scriptOnBody": "{source} já tem o script do Octadash (do Tráfego). Ele registra sozinho os erros não tratados e as promises rejeitadas: nada a instalar, nenhum deploy novo.",
+    "serverToo": "Erros do servidor também",
+    "serverTooBody": "O script só enxerga o navegador. Para erros na sua API ou no código do servidor, adicione o SDK do Sentry lá com o DSN desta origem."
   },
   "usageArea": {
     "title": "Uso do produto",
@@ -2203,7 +2207,7 @@
     "funnelsBody": "Quando os eventos chegarem, monte um funil com quaisquer eventos em ordem (visitou → carrinho → pagou) e veja quem volta pela semana em que se cadastrou. Os dois funcionam por produto ou para um grupo.",
     "cancel": "Cancelar",
     "empty": "Este produto ainda não tem origem. Adicione uma: ela ganha código e chave próprios.",
-    "addSourceHint": "Um site, app ou servidor deste produto. Ganha código e chave próprios.",
+    "addSourceHint": "Um site, app ou servidor deste produto. Ganha código e chave próprios. Uma origem que já tem o script do Octadash não precisa de nova instalação.",
     "codeHint": "O código para mandar eventos desta origem, e a conferência ao vivo de que chegam.",
     "close": "Fechar"
   },

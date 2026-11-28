@@ -44,7 +44,12 @@ describe.skipIf(!url)('sources (needs DATABASE_URL)', () => {
       platform: 'nextjs',
       areas: ['usage', 'traffic', 'traffic'],
     })
-    expect(site).toMatchObject({ name: 'Site', platform: 'nextjs', areas: ['traffic', 'usage'] })
+    // One install per source: the page script feeds Errors too.
+    expect(site).toMatchObject({
+      name: 'Site',
+      platform: 'nextjs',
+      areas: ['errors', 'traffic', 'usage'],
+    })
     expect(site?.public_key).toMatch(/^[0-9a-f]{32}$/)
     expect(site?.visitor_mode).toBe('daily')
     expect(await findIngestKey(db, site?.public_key ?? '')).toEqual({

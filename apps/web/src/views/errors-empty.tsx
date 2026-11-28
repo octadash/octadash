@@ -1,4 +1,4 @@
-import { sentryDsn, sourcesLastData } from '@octadash/db'
+import { hasPageScript, sentryDsn, sourcesLastData } from '@octadash/db'
 import {
   BellRingIcon,
   CheckIcon,
@@ -84,6 +84,8 @@ export async function ErrorsStartView({
         platform={isErrorPlatform(source.platform) ? source.platform : 'other'}
         issueHref={errorsPath}
         errorsHref={errorsPath}
+        scriptOn={hasPageScript(source.platform, source.areas)}
+        sourceName={source.name}
       />
     ),
   })

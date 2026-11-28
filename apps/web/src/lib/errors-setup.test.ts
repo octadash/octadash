@@ -48,11 +48,13 @@ describe('where a product stands on Errors', () => {
     expect(errorsSetup({ ...base, sources: [api, sdk], hadIssue: true }).source).toBe(sdk)
   })
 
-  it('waits on the source set for Errors', () => {
-    expect(errorsSetup({ ...base, sources: [site, sdk], dismissed: true })).toEqual({
+  it('waits on the source set for Errors, unless the product won’t use Errors', () => {
+    expect(errorsSetup({ ...base, sources: [site, sdk] })).toEqual({
       state: 'waiting',
       source: sdk,
     })
+    // A page script would send errors anyway; "I won't use this" still wins.
+    expect(errorsSetup({ ...base, sources: [site, sdk], dismissed: true }).state).toBe('dismissed')
   })
 
   it('starts from the page script first, then any source', () => {
