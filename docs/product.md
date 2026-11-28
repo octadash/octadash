@@ -401,23 +401,87 @@ spare.
 
 ### Base: availability and alerts
 
-| Item                                                       | Seen in                       | Priority |
-| ---------------------------------------------------------- | ----------------------------- | -------- |
-| Heartbeats for cron jobs, workers, backups                 | Healthchecks.io, Better Stack | high     |
-| Content check (200 but broken page)                        | UptimeRobot                   | high     |
-| Domain expiry                                              | UptimeRobot                   | high     |
-| Public status page                                         | Better Stack, Uptime Kuma     | high     |
-| Maintenance windows                                        | Better Stack                  | high     |
-| Octadash watching its own health (outside watcher, step 2) | all                           | high     |
-| Full-screen TV mode for the "All products" tab             | Grafana, Geckoboard           | high     |
-| DNS resolution and DNS changes                             | UptimeRobot                   | medium   |
-| TCP ports and ping                                         | UptimeRobot, Uptime Kuma      | medium   |
-| SLA and SLO reports                                        | Better Stack                  | medium   |
-| Vendor status (Stripe, Vercel, OpenAI down)                | Better Stack                  | medium   |
-| Synthetic tests with Playwright                            | Checkly                       | medium   |
-| Alert escalation and acknowledgement                       | Better Stack, PagerDuty       | medium   |
-| Checks from several regions                                | UptimeRobot, Checkly          | low      |
-| Visual diff between versions                               | Checkly                       | low      |
+| Item                                                                                                                                             | Seen in                                 | Priority |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | -------- |
+| Heartbeats for cron jobs, workers, backups                                                                                                       | Healthchecks.io, Better Stack           | high     |
+| Content check (200 but broken page)                                                                                                              | UptimeRobot                             | high     |
+| Domain expiry                                                                                                                                    | UptimeRobot                             | high     |
+| Public status page (see [Status page](#status-page))                                                                                             | Better Stack, Uptime Kuma               | high     |
+| Maintenance windows                                                                                                                              | Better Stack                            | high     |
+| Octadash watching its own health (outside watcher, step 2)                                                                                       | all                                     | high     |
+| Full-screen TV mode for the "All products" tab                                                                                                   | Grafana, Geckoboard                     | high     |
+| DNS resolution and DNS changes                                                                                                                   | UptimeRobot                             | medium   |
+| TCP ports and ping                                                                                                                               | UptimeRobot, Uptime Kuma                | medium   |
+| SLA and SLO reports                                                                                                                              | Better Stack                            | medium   |
+| Vendor status (Stripe, Vercel, OpenAI down)                                                                                                      | Better Stack                            | medium   |
+| Synthetic tests with Playwright                                                                                                                  | Checkly                                 | medium   |
+| Time per stage (DNS, connect, TLS, first byte) and a "slow" state with its own threshold                                                         | Better Stack, Checkly                   | medium   |
+| Evidence when a monitor goes down: screenshot of the page, traceroute                                                                            | Better Stack                            | medium   |
+| Remote probe: a small Octadash process on another server that runs checks there and reports back; solves "same server" and gives several regions | OpenStatus (private locations), Checkly | medium   |
+| Mail server monitors (SMTP, IMAP, POP) and UDP                                                                                                   | Better Stack                            | low      |
+| Runbook per monitor or rule ("if this goes down, do this"), shown on the emergency                                                               | Better Stack, PagerDuty                 | medium   |
+| Safe action on an emergency: a webhook the owner set up (restart in Coolify, clear a cache), run only on a person's click                        | Datadog, PagerDuty                      | low      |
+| Visual diff between versions                                                                                                                     | Checkly                                 | low      |
+
+### Status page
+
+A public page per product or group, at a path of the install or on the owner's
+own domain (`status.example.com`). Seen in Better Stack, OpenStatus and
+Statuspage.
+
+- **Components** are the product's monitors the owner chooses to show, grouped
+  and renamed ("Site", "API", "Payments"). Their state comes from Uptime; a
+  monitor that is not shown never leaks.
+- **Updates are written by a person.** An emergency does not publish itself:
+  the person who took it chooses "Post to the status page" and writes the text.
+  Maintenance windows show ahead of time.
+- **Subscribers** get every update by email (the owner's own email channel),
+  for the whole page or for chosen components, with a one-click unsubscribe.
+- **At full size.** One page per product, or one page for a group ("all our
+  services"); the same incident on eight products is one update on the group
+  page. Pages in English and Portuguese, every text editable.
+- Uptime history per component (90 days of bars), with the uptime percentage.
+
+### Incidents and on-call (beyond step 2)
+
+Today an emergency opens an incident, "I'm on it" stops the repeats and the
+incident closes when the check passes again. What the incident tools add (seen
+in Better Stack, Grafana IRM, PagerDuty and incident.io):
+
+| Item                                                                                                                     | Seen in                              | Priority |
+| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ | -------- |
+| Escalation: when nobody takes an emergency in N minutes, notify the next person or channel, repeating until someone does | Better Stack, PagerDuty              | high     |
+| "I'm on it" and "Resolved" as buttons inside the Telegram and Slack messages                                             | Better Stack, Grafana IRM            | high     |
+| On-call schedule: who receives emergencies this week, rotations, overrides, time zones, calendar feed                    | Better Stack, Grafana IRM, PagerDuty | high     |
+| Incident opened by a person (a problem no check sees: "customers can't pay by Pix")                                      | Better Stack, incident.io            | high     |
+| Incident timeline: what fired, who was told, who took it, notes, status updates, when it ended                           | Better Stack, Grafana IRM            | high     |
+| Post-mortem per incident, from the timeline, with its review state                                                       | Better Stack, Grafana IRM            | medium   |
+| MTTA and MTTR per product, group, person and severity                                                                    | Better Stack, Grafana IRM            | medium   |
+| Phone call and SMS channels; mobile push that breaks through "do not disturb"                                            | Better Stack, Grafana IRM            | medium   |
+| Open a Linear or Jira ticket from an incident or an error                                                                | Better Stack, Sentry                 | medium   |
+
+At full size: ten products down at once stay one message (built), the
+escalation counts per incident, and a person on call for several groups gets
+one message with all of them. A solo owner never sees schedules: with one
+member, every emergency goes to that member.
+
+### AI investigation
+
+The cross-signal diagnoses below are rules. An AI investigation goes further on
+one emergency, with the same rules: it says "may be", shows its evidence and
+never acts alone (seen in Better Stack AI SRE, Grafana Assistant, Sentry Seer,
+Datadog Bits AI).
+
+| Item                                                                                                                                                            | Seen in                               | Priority |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------- |
+| "Explain" on an emergency: gathers the deploys, errors, logs, traces, metrics and uptime diagnosis of that moment and writes hypotheses, each with its evidence | Better Stack, Grafana, Datadog        | medium   |
+| Draft post-mortem from the incident timeline                                                                                                                    | Better Stack, Grafana IRM, OpenStatus | medium   |
+| Suggested fix as a pull request for a new error                                                                                                                 | Sentry Seer, PostHog                  | low      |
+
+It runs with the owner's own AI key (OpenAI, Anthropic, OpenRouter), set up
+like any connection, because Octadash has no account of its own. Its cost shows
+in Costs as Octadash's own spend. It needs traces and metrics to be useful, so
+it comes after them.
 
 ### Web analytics (beyond step 3)
 
@@ -519,29 +583,34 @@ spare.
 
 ### Infrastructure and cost (beyond step 8)
 
-| Item                                        | Seen in                | Priority |
-| ------------------------------------------- | ---------------------- | -------- |
-| CPU, memory, disk and network of the VPS    | Netdata, Better Stack  | high     |
-| Disk-full forecast                          | Netdata                | high     |
-| Deploys, deploy frequency and rollbacks     | Vercel, Sentry, GitHub | high     |
-| Cost per product for each vendor            | OpenCost, spreadsheets | high     |
-| Containers, restarts and OOM kills          | Netdata, Coolify       | medium   |
-| Database connections, size and slow queries | Neon, pganalyze        | medium   |
-| Queue size, oldest job and failures         | Better Stack           | medium   |
-| Backups done and restore tests              | none                   | medium   |
+| Item                                                                                                                                                                                    | Seen in                        | Priority |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------- |
+| CPU, memory, disk and network of the VPS                                                                                                                                                | Netdata, Better Stack          | high     |
+| Disk-full forecast                                                                                                                                                                      | Netdata                        | high     |
+| Deploys, deploy frequency and rollbacks                                                                                                                                                 | Vercel, Sentry, GitHub         | high     |
+| Cost per product for each vendor                                                                                                                                                        | OpenCost, spreadsheets         | high     |
+| Containers, restarts and OOM kills                                                                                                                                                      | Netdata, Coolify               | medium   |
+| Database connections, size and slow queries                                                                                                                                             | Neon, pganalyze                | medium   |
+| Queue size, oldest job and failures                                                                                                                                                     | Better Stack                   | medium   |
+| Metrics: OTLP metrics and Prometheus (remote write or scrape), host metrics through the OpenTelemetry Collector (`hostmetrics`), with charts and alerts on a threshold or out of normal | Better Stack, Grafana, Datadog | high     |
+| Backups done and restore tests                                                                                                                                                          | none                           | medium   |
 
 ### Logs (beyond step 9)
 
-| Item                                                    | Seen in           | Priority |
-| ------------------------------------------------------- | ----------------- | -------- |
-| Saved queries and alerts on a pattern                   | Seq               | high     |
-| Request and correlation IDs across logs, errors, traces | Seq, Sentry       | high     |
-| Secret and personal data redaction                      | Seq               | high     |
-| Live tail                                               | Seq, Better Stack | medium   |
-| p50, p95, p99 latency and throughput                    | Sentry, SigNoz    | medium   |
-| Slow outbound calls                                     | SigNoz, Sentry    | medium   |
-| Service map                                             | SigNoz            | low      |
-| Profiling                                               | Sentry, Pyroscope | low      |
+| Item                                                                                                                | Seen in                            | Priority |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | -------- |
+| Traces shown: the waterfall of one request, linked to its logs and errors by trace id, and slow traces per endpoint | Better Stack, Sentry, Seq, Datadog | high     |
+| Saved queries and alerts on a pattern                                                                               | Seq                                | high     |
+| Request and correlation IDs across logs, errors, traces                                                             | Seq, Sentry                        | high     |
+| Secret and personal data redaction                                                                                  | Seq                                | high     |
+| Live tail                                                                                                           | Seq, Better Stack                  | medium   |
+| p50, p95, p99 latency and throughput                                                                                | Sentry, SigNoz                     | medium   |
+| Slow outbound calls                                                                                                 | SigNoz, Sentry                     | medium   |
+| Service map                                                                                                         | SigNoz                             | low      |
+| Profiling                                                                                                           | Sentry, Pyroscope                  | low      |
+| Patterns: similar lines grouped in one, filtered or hidden with one click                                           | Better Stack, Datadog              | medium   |
+| Drop rules: noisy lines the owner marks are not stored, with a counter of what was dropped                          | Better Stack, Datadog              | medium   |
+| Alert when the log volume or the error level share leaves normal                                                    | Better Stack, Datadog              | medium   |
 
 ### Security (new area)
 
@@ -613,6 +682,19 @@ Nuclei (heavy, many false positives, legal risk).
 | Mobile and desktop apps | installs, active versions, ratings, App Store and Google Play revenue                                                                                                                | App Store Connect, RevenueCat   | medium                             |
 | Accessibility           | contrast, images without alt text, unlabeled form fields, WCAG checks per release                                                                                                    | Lighthouse, axe                 | low                                |
 
+### Platform
+
+| Item                                                                                             | Seen in                                       | Priority |
+| ------------------------------------------------------------------------------------------------ | --------------------------------------------- | -------- |
+| Audit log: who changed a rule, a monitor or a channel, who muted or took an incident, exportable | OpenStatus, Datadog, Grafana                  | medium   |
+| Monitoring as code: public API, CLI and a config file for products, monitors and rules           | OpenStatus, Checkly, Better Stack (Terraform) | medium   |
+
+Out of scope, after the study of Better Stack, Datadog and Grafana on
+2026-11-28: automatic instrumentation with eBPF (needs kernel access and
+Kubernetes, heavy for a VPS), a free-form dashboard builder in the style of
+Grafana (Octadash shows each area ready, and the MCP answers the rest), and a
+data warehouse.
+
 ## Connectors
 
 Every connector uses the contract in `packages/integrations`: a form generated
@@ -621,11 +703,11 @@ whenever the service allows it. Built today: Telegram and webhook.
 
 | Category               | Feeds                 | Planned                                                                                 | Backlog                                                                                                 |
 | ---------------------- | --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Alert channels         | alerts, daily summary | email (SMTP and Resend, built), Telegram (built), webhook (built), Slack, Discord, ntfy | WhatsApp, Microsoft Teams, Google Chat, mobile push, PagerDuty, Pushover, SMS                           |
+| Alert channels         | alerts, daily summary | email (SMTP and Resend, built), Telegram (built), webhook (built), Slack, Discord, ntfy | WhatsApp, Microsoft Teams, Google Chat, mobile push, PagerDuty, Pushover, SMS, phone call               |
 | Payments               | revenue               | Stripe, Asaas, Paddle                                                                   | Mercado Pago, Pagar.me, Iugu, Hotmart, Kiwify, Eduzz, Lemon Squeezy, RevenueCat, App Store, Google Play |
 | AI providers           | AI cost               | OpenAI, Anthropic, OpenRouter, own wrapper, OTel `gen_ai`, PostHog `$ai_generation`     | Google Gemini, Groq, Mistral, ElevenLabs, Replicate, fal, Vercel AI Gateway                             |
 | Hosting and databases  | infra cost            | infra providers (generic)                                                               | Vercel, Neon, Supabase, Coolify, Railway, Fly.io, Hetzner, DigitalOcean, Cloudflare, AWS                |
-| Code and deploys       | deploys, releases     | none                                                                                    | GitHub (deploys, releases, issues, Dependabot), GitLab, Vercel and Coolify deploys                      |
+| Code and deploys       | deploys, releases     | none                                                                                    | GitHub (deploys, releases, issues, Dependabot), GitLab, Vercel and Coolify deploys, Linear, Jira        |
 | Compatible ingest      | errors, events, logs  | Sentry SDK, PostHog capture, OTLP                                                       | Vercel Analytics drain, Plausible and Umami APIs (history import), Segment                              |
 | Transactional email    | email                 | none                                                                                    | Resend, Postmark, Amazon SES, SendGrid, Brevo                                                           |
 | Search and ads         | SEO, marketing        | none                                                                                    | Google Search Console, Meta Ads, Google Ads, TikTok Ads                                                 |
