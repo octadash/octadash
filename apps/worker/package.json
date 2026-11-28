@@ -16,7 +16,6 @@
     "@octadash/auth": "workspace:*",
     "@octadash/core": "workspace:*",
     "@octadash/db": "workspace:*",
-    "@octadash/diagnosis": "workspace:*",
     "@octadash/integrations": "workspace:*",
     "pg-boss": "^12.40.0"
   },

@@ -36,8 +36,8 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
   })
 
   it('creates a product with a unique slug and an ingest key', async () => {
-    const first = await createProject(db, orgA, { name: 'Postato', url: 'https://postato.com.br' })
-    const second = await createProject(db, orgA, { name: 'Postato', url: null })
+    const first = await createProject(db, orgA, { name: 'Postato' })
+    const second = await createProject(db, orgA, { name: 'Postato' })
     expect(first.slug).toBe('postato')
     expect(second.slug).toBe('postato-2')
     expect(Number(first.ingest_id)).toBeGreaterThan(0)
@@ -47,22 +47,17 @@ describe.skipIf(!url)('projects (needs DATABASE_URL)', () => {
   })
 
   it('keeps tenants apart', async () => {
-    await createProject(db, orgB, { name: 'Postato', url: null })
+    await createProject(db, orgB, { name: 'Postato' })
     expect((await listProjects(db, orgB)).map((p) => p.slug)).toEqual(['postato'])
     const ofA = await getProjectBySlug(db, orgA, 'postato')
     expect(ofA).toBeDefined()
     expect(await deleteProject(db, orgB, ofA?.id ?? '')).toBe(false)
-    expect(
-      await updateProject(db, orgB, ofA?.id ?? '', { name: 'Hacked', url: null }),
-    ).toBeUndefined()
+    expect(await updateProject(db, orgB, ofA?.id ?? '', { name: 'Hacked' })).toBeUndefined()
   })
 
   it('renames and deletes', async () => {
     const project = await getProjectBySlug(db, orgA, 'postato-2')
-    const renamed = await updateProject(db, orgA, project?.id ?? '', {
-      name: 'Intelibot',
-      url: null,
-    })
+    const renamed = await updateProject(db, orgA, project?.id ?? '', { name: 'Intelibot' })
     expect(renamed?.slug).toBe('intelibot')
     expect(await deleteProject(db, orgA, project?.id ?? '')).toBe(true)
     expect(await listProjectKeys(db, orgA, project?.id ?? '')).toEqual([])

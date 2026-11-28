@@ -30,11 +30,6 @@ export const ingestEnvSchema = baseEnvSchema.extend({
 export const workerEnvSchema = baseEnvSchema.extend({
   /** Internal port for the worker health endpoint. */
   WORKER_HEALTH_PORT: z.coerce.number().int().positive().default(4100),
-  /** Let the diagnosis visit private addresses (localhost, 10.x, 192.168.x). Local development only. */
-  OCTADASH_DIAGNOSIS_ALLOW_PRIVATE: z
-    .enum(['true', 'false'])
-    .default('false')
-    .transform((value) => value === 'true'),
 })
 
 export type BaseEnv = z.infer<typeof baseEnvSchema>

@@ -21,9 +21,6 @@ export default async function NewProductPage() {
           <Field label={t('name')}>
             <Input name="name" maxLength={80} required autoFocus />
           </Field>
-          <Field label={t('url')} hint={t('urlHint')}>
-            <Input name="url" inputMode="url" placeholder="example.com" maxLength={300} />
-          </Field>
           <SubmitButton className="self-start">{t('create')}</SubmitButton>
         </ActionForm>
       </CardContent>

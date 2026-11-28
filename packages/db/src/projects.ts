@@ -6,9 +6,9 @@ import type { Db } from './client'
  * no way to read or change a product without naming its tenant.
  */
 
+/** A product starts with its name only; platforms are chosen inside each area. */
 export interface ProjectInput {
   name: string
-  url: string | null
 }
 
 export function listProjects(db: Db, orgId: string) {
@@ -54,7 +54,6 @@ export async function createProject(db: Db, orgId: string, input: ProjectInput) 
         org_id: orgId,
         name: input.name.trim(),
         slug: await uniqueSlug(trx, orgId, input.name),
-        url: input.url,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -78,7 +77,6 @@ export async function updateProject(db: Db, orgId: string, projectId: string, in
     .set({
       name: input.name.trim(),
       slug: await uniqueSlug(db, orgId, input.name, projectId),
-      url: input.url,
       updated_at: new Date(),
     })
     .where('org_id', '=', orgId)

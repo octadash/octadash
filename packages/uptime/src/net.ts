@@ -2,7 +2,7 @@ import { lookup } from 'node:dns/promises'
 import { isIP } from 'node:net'
 
 /**
- * Addresses the diagnosis must never reach: loopback, private networks,
+ * Addresses an uptime check must never reach: loopback, private networks,
  * link-local (cloud metadata lives at 169.254.169.254) and similar. Without
  * this, anyone who can add a product could make the worker read internal
  * services.
