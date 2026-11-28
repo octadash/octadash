@@ -14,13 +14,16 @@ import {
   issueEvent,
   issueFacets,
   issueStats,
+  lastIssues,
   listIssues,
   listOpenIncidents,
+  listOrgAreas,
   listOrgSources,
   listProjects,
   type Share,
 } from '@octadash/db'
 import { type ErrorsState, sortIssues } from '@/lib/errors'
+import { type ErrorsSetup, errorsSetup, SETUP_ORDER } from '@/lib/errors-setup'
 import { type TrafficPeriod, trafficPeriod } from '@/lib/traffic'
 import { services } from './context'
 
@@ -35,6 +38,14 @@ export interface IssueRow extends IssueRecord {
   spark: number[]
   /** Behind an open Error spike. */
   spike: boolean
+}
+
+export interface ProductSetup extends ErrorsSetup {
+  product: { id: string; name: string; slug: string }
+  /** The issue seen last, of any age and status. */
+  last: { id: string; type: string; value: string; lastSeen: Date } | null
+  /** Sources set to send errors. */
+  errorSources: { id: string; name: string }[]
 }
 
 export interface ErrorsData {
@@ -53,6 +64,8 @@ export interface ErrorsData {
   total: number
   /** False when ClickHouse did not answer. */
   complete: boolean
+  /** Where each product in scope stands on Errors, the quickest to finish first. */
+  setup: ProductSetup[]
 }
 
 /** Issues named on an open Error spike of the organization. */
@@ -78,11 +91,12 @@ export async function loadErrors(
   now = new Date(),
 ): Promise<ErrorsData> {
   const { db, clickhouse } = services()
-  const [settings, allProjects, sources, spiking] = await Promise.all([
+  const [settings, allProjects, sources, spiking, areas] = await Promise.all([
     getOrganizationSettings(db, orgId),
     listProjects(db, orgId),
     listOrgSources(db, orgId),
     spikingIssues(orgId),
+    listOrgAreas(db, orgId),
   ])
   const timeZone = settings.timeZone
   const period = trafficPeriod(state.period, now, timeZone)
@@ -99,7 +113,7 @@ export async function loadErrors(
       return fallback
     })
 
-  const [totals, before, series, previousSeries, newNow, newBefore, counts, records] =
+  const [totals, before, series, previousSeries, newNow, newBefore, counts, records, last] =
     await Promise.all([
       safe(() => errorTotals(clickhouse, scope), EMPTY),
       safe(() => errorTotals(clickhouse, previousScope), EMPTY),
@@ -109,6 +123,7 @@ export async function loadErrors(
       countNewIssues(db, orgId, ids, period.previous.from, period.previous.to),
       countIssues(db, orgId, ids, period.from, userId),
       listIssues(db, orgId, { projectIds: ids, tab: state.tab, since: period.from, userId }),
+      lastIssues(db, orgId, ids),
     ])
   const [stats, sparks] = await Promise.all([
     safe(() => issueStats(clickhouse, scope, 24), new Map()),
@@ -135,6 +150,20 @@ export async function loadErrors(
     sources.filter((s) => s.areas.includes('errors')).map((s) => s.project_id),
   )
   for (const issue of records) sendingIds.add(issue.project_id)
+  const setup = projects
+    .map((p) => ({
+      product: { id: p.id, name: p.name, slug: p.slug },
+      last: last.get(p.id) ?? null,
+      errorSources: sources
+        .filter((s) => s.project_id === p.id && s.areas.includes('errors'))
+        .map((s) => ({ id: s.id, name: s.name })),
+      ...errorsSetup({
+        sources: sources.filter((s) => s.project_id === p.id),
+        hadIssue: last.has(p.id),
+        dismissed: areas.get(p.id)?.get('errors') === 'dismissed',
+      }),
+    }))
+    .sort((a, b) => SETUP_ORDER[a.state] - SETUP_ORDER[b.state])
 
   return {
     period,
@@ -149,6 +178,7 @@ export async function loadErrors(
     issues: sorted.slice(0, state.show),
     total: sorted.length,
     complete,
+    setup,
   }
 }
 

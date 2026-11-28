@@ -433,6 +433,14 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - Mixed: the subscription numbers stay, and Revenue says how much was recurring and how much one-off.
 - Credit packs count as revenue when bought. How much credit was used is not in the gateway; it would come from a Product usage event (backlog).
 
+## Empty pages that teach (2026-11-28, Luciano)
+
+- An area with nothing yet says what it gives, shows an example of the page marked as an example, and offers the shortest next step for where the product stands. Errors is the first; the other areas follow the same model.
+- Errors, one product: never sent an error, so one click on where the code runs makes a source (Site for the script) and shows its code, a test error and a live wait. A product with a source that sends something else gets "Use {source}" first.
+- Errors, several products: before any sends, a table of products with each one's next step, quickest first. Once one sends, the issue list takes the page and the table folds into "N more products can send errors" at the end.
+- Sent before, nothing now and nothing open: "No errors in the last 24 hours", with the last error, a wider period and the resolved issues, instead of a page of zeros.
+- A zero is only real if the source is alive: each source set for Errors shows whether it sent any data (page view, event, log or error) in the period. One that sent nothing gets a warning, since its zero may be only silence.
+
 ## Received data, 2026-11-28
 
 - **Nothing received is thrown away** (asked by the owner). Data no area reads

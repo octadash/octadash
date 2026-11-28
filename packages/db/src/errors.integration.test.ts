@@ -13,12 +13,14 @@ import {
   issueStats,
 } from './clickhouse/errors'
 import { migrateClickHouse } from './clickhouse/migrate'
+import { sourcesLastData } from './clickhouse/sources'
 import { createDb } from './client'
 import {
   countIssues,
   countNewIssues,
   getIssue,
   type IssueHit,
+  lastIssues,
   listIssues,
   recentErrorProducts,
   recordIssueHits,
@@ -154,6 +156,19 @@ describe.skipIf(!url)('error issues (needs DATABASE_URL)', () => {
     expect(await listIssues(db, org, { ...base, projectIds: [], tab: 'new' })).toEqual([])
     expect(await recentErrorProducts(db, T0)).toContainEqual({ orgId: org, projectId: product })
   })
+
+  it('names the last issue of each product, and none for a product without errors', async () => {
+    const quiet = (await createProject(db, org, { name: 'Quiet Shop' })).id
+    const last = await lastIssues(db, org, [product, quiet])
+    expect(last.has(quiet)).toBe(false)
+    const top = await db
+      .selectFrom('error_issue')
+      .select((eb) => eb.fn.max('last_seen').as('at'))
+      .where('project_id', '=', product)
+      .executeTakeFirstOrThrow()
+    expect(last.get(product)?.lastSeen.toISOString()).toBe(new Date(top.at).toISOString())
+    expect(await lastIssues(db, org, [])).toEqual(new Map())
+  })
 })
 
 describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
@@ -221,6 +236,15 @@ describe.skipIf(!chUrl)('error events (needs CLICKHOUSE_URL)', () => {
   })
 
   const scope = { orgId: org, projectIds: [project], from: T0, to: later(120) }
+
+  it('tells when each source last sent anything', async () => {
+    const last = await sourcesLastData(client, org, [project], T0)
+    expect(last.get('00000000-0000-0000-0000-000000000000')?.toISOString()).toBe(
+      later(90).toISOString(),
+    )
+    expect((await sourcesLastData(client, org, [project], later(91))).size).toBe(0)
+    expect((await sourcesLastData(client, org, [], T0)).size).toBe(0)
+  })
 
   it('counts events, issues and people, and draws the series', async () => {
     const one = { ...scope, from: later(-1), to: later(24) }
