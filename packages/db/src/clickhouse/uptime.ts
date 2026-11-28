@@ -131,14 +131,16 @@ export interface ProductUptimeHistory {
 }
 
 /**
- * Checks per product and per hour or day, for the bar of hours in an overview
- * row. Paused or deleted monitors count while they had checks. Products with
+ * Checks per product (or per monitor) and per hour or day, for the bar of
+ * hours in an overview row. Paused or deleted monitors count while they had checks. Products with
  * no check in the period are left out.
  */
 export async function uptimeHistory(
   client: ClickHouseClient,
   scope: TrafficScope,
   bucket: Bucket,
+  /** `monitor`: one history per monitor instead, for a product's monitor list. */
+  by: 'product' | 'monitor' = 'product',
 ): Promise<Map<string, ProductUptimeHistory>> {
   const history = new Map<string, ProductUptimeHistory>()
   if (scope.projectIds?.length === 0) return history
@@ -146,7 +148,7 @@ export async function uptimeHistory(
   const result = await client.query({
     query: `
       SELECT
-        toString(project_id) AS product,
+        toString(${by === 'monitor' ? 'monitor_id' : 'project_id'}) AS product,
         ${start}(timestamp, {tz:String}) AS at,
         count() AS checks,
         countIf(up = 0) AS downs
@@ -190,4 +192,48 @@ export async function uptimeHistory(
     })
   }
   return history
+}
+
+/**
+ * Median response time of the checks that answered, per hour or day: the
+ * "Response time" tab of a product's chart. Empty buckets come back as null.
+ */
+export async function responseSeries(
+  client: ClickHouseClient,
+  scope: TrafficScope,
+  bucket: Bucket,
+): Promise<{ at: Date; medianMs: number | null }[]> {
+  if (scope.projectIds?.length === 0) return []
+  const { start } = bucketSql(bucket)
+  const result = await client.query({
+    query: `
+      SELECT
+        ${start}(timestamp, {tz:String}) AS at,
+        quantileIf(0.5)(duration_ms, up = 1 AND duration_ms IS NOT NULL) AS median_ms
+      FROM uptime_checks
+      WHERE org_id = {org:UUID}
+        ${scope.projectIds ? 'AND project_id IN {projects:Array(UUID)}' : ''}
+        AND timestamp >= {from:DateTime64(3, 'UTC')}
+        AND timestamp < {to:DateTime64(3, 'UTC')}
+      GROUP BY at
+      ORDER BY at`,
+    query_params: {
+      org: scope.orgId,
+      projects: scope.projectIds ?? [],
+      from: toClickHouseTime(scope.from),
+      to: toClickHouseTime(scope.to),
+      tz: scope.timeZone ?? 'UTC',
+    },
+    clickhouse_settings: ISO_TIMES,
+    format: 'JSONEachRow',
+  })
+  const rows = await result.json<{ at: string; median_ms: number | null }>()
+  const found = new Map(
+    rows.map((row) => [
+      new Date(row.at).getTime(),
+      row.median_ms === null || Number.isNaN(row.median_ms) ? null : Math.round(row.median_ms),
+    ]),
+  )
+  const starts = await bucketStarts(client, scope, bucket)
+  return starts.map((at) => ({ at, medianMs: found.get(at.getTime()) ?? null }))
 }
