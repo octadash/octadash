@@ -302,7 +302,8 @@
         "error_spike": "Pico de erros",
         "key_event_stopped": "“{name}” parou",
         "log_alert": "Alerta de log “{name}”",
-        "payments_failing": "Pagamentos falhando"
+        "payments_failing": "Pagamentos falhando",
+        "cost_runaway": "Custo disparado"
       },
       "more": "{count, plural, one {Mais # na página do produto} other {Mais # na página do produto}}"
     }
@@ -603,7 +604,9 @@
       "percent": "Falharam",
       "percentUnit": "% das cobranças em 15 min",
       "charges": "Pelo menos",
-      "chargesUnit": "cobranças em 15 min"
+      "chargesUnit": "cobranças em 15 min",
+      "dollars": "Pelo menos",
+      "dollarsUnit": "dólares em uma hora"
     },
     "allChannels": "Todos os canais",
     "noChannels": "Nenhum canal ainda. Sem canal, a emergência aparece só no painel.",
@@ -646,6 +649,11 @@
         "title": "Pagamentos falhando",
         "body": "Cobranças recusadas no gateway bem acima do normal. Cada produto ganha a própria emergência.",
         "info": "O Octadash lê as cobranças dos últimos 15 minutos a cada minuto. Abre quando a parte que falhou chega ao percentual definido, com pelo menos o número de cobranças definido, para duas falhas de madrugada não acordarem ninguém. Fecha quando a parte volta a ficar abaixo."
+      },
+      "cost_runaway": {
+        "title": "Custo disparado",
+        "body": "Gasto em uma hora bem acima de uma hora normal (tokens de IA hoje; nuvem quando chegar). Cada produto tem a sua emergência.",
+        "info": "O Octadash compara a última hora de gasto de cada produto com a hora média dos últimos 7 dias. Abre quando a hora chega às vezes que você definiu e a pelo menos os dólares que você definiu, assim centavos nunca acordam ninguém. Contas compartilhadas contam só a parte do produto. Fecha quando uma hora volta para baixo, ou depois de 6 horas sem gasto."
       }
     },
     "legend": "Níveis",
@@ -700,15 +708,6 @@
           "body": "As visualizações caem a zero com o site no ar: o script foi removido ou quebrou.",
           "wait": "Precisa de alguns dias de tráfego para saber o que esperar.",
           "params": "Nenhuma em 30 min quando 20 ou mais são esperadas"
-        }
-      },
-      "costs": {
-        "starts": "Começa quando Custos estiver configurado em um produto",
-        "costRunaway": {
-          "title": "Custo disparado",
-          "body": "Gasto por hora bem acima do normal (tokens de IA, nuvem).",
-          "wait": "Nenhuma fonte de custo conectada ainda.",
-          "params": "3× o normal por 1 h"
         }
       }
     },
@@ -1000,7 +999,8 @@
       "error_spike": "{product} · pico de erros",
       "key_event_stopped": "{product} · {event} parou",
       "log_alert": "{product} · alerta de log “{search}”",
-      "payments_failing": "{product} · pagamentos falhando"
+      "payments_failing": "{product} · pagamentos falhando",
+      "cost_runaway": "{product} · custo disparado"
     },
     "httpStatus": "HTTP {code}",
     "summary": {
@@ -1012,7 +1012,8 @@
       "spikeNone": "{count, plural, one {# erro} other {# erros}} nos últimos {minutes} min, quando este horário normalmente não tem nenhum. Fecha sozinha quando os erros voltarem para baixo da regra.",
       "keyEvent": "Nenhum {event} desde {time}, quando o normal neste horário é cerca de {normal} por hora. Fecha sozinha quando o próximo chegar.",
       "logAlert": "A busca salva “{search}” ({query}) encontrou uma linha. Fecha sozinha depois de {minutes} min sem nenhuma.",
-      "paymentsFailing": "{failed} de {total} cobranças falharam nos últimos {minutes} min. Fecha sozinha quando a parte volta a ficar abaixo da regra."
+      "paymentsFailing": "{failed} de {total} cobranças falharam nos últimos {minutes} min. Fecha sozinha quando a parte volta a ficar abaixo da regra.",
+      "costRunaway": "{spent} gastos em uma hora, {times}× uma hora normal ({normal}). Fecha sozinha quando uma hora volta para baixo da regra."
     },
     "onIt": "{name} está cuidando · desde {time}",
     "nobody": "Ninguém cuidando ainda",
@@ -1103,7 +1104,8 @@
       "error_spike": "{product} · pico de erros",
       "key_event_stopped": "{product} · {event} parou",
       "log_alert": "{product} · alerta de log “{search}”",
-      "payments_failing": "{product} · pagamentos falhando"
+      "payments_failing": "{product} · pagamentos falhando",
+      "cost_runaway": "{product} · custo disparado"
     },
     "spike": {
       "title": "Issues por trás do pico",
@@ -1121,7 +1123,8 @@
       "error_spike": "{product}: pico de erros",
       "key_event_stopped": "{product}: {event} parou",
       "log_alert": "{product}: alerta de log “{search}”",
-      "payments_failing": "{product}: pagamentos falhando"
+      "payments_failing": "{product}: pagamentos falhando",
+      "cost_runaway": "{product}: custo disparado"
     },
     "short": {
       "monitor_down": "{product} fora do ar",
@@ -1131,7 +1134,8 @@
       "error_spike": "{product} pico de erros",
       "key_event_stopped": "{product} {event} parou",
       "log_alert": "{product} alerta de log",
-      "payments_failing": "{product} pagamentos falhando"
+      "payments_failing": "{product} pagamentos falhando",
+      "cost_runaway": "{product} custo disparado"
     },
     "detail": {
       "monitor_down": "Monitor “{name}”: {reason}",
@@ -1141,7 +1145,8 @@
       "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
       "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
       "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}",
-      "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})"
+      "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})",
+      "cost_runaway": "{spent} em uma hora, {times}× o normal"
     },
     "detailNoReason": {
       "monitor_down": "Monitor “{name}” não responde",
@@ -1151,7 +1156,8 @@
       "error_spike": "{count, plural, one {# erro} other {# erros}} em {minutes} min",
       "key_event_stopped": "Nenhum {event} em {minutes} min; o normal é cerca de {normal} por hora",
       "log_alert": "{count, plural, one {# linha encontrada} other {# linhas encontradas}}",
-      "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})"
+      "payments_failing": "{percent}% das cobranças falhando ({failed} de {total})",
+      "cost_runaway": "{spent} em uma hora, {times}× o normal"
     },
     "kind": {
       "monitor_down": "Fora do ar",
@@ -1161,7 +1167,8 @@
       "error_spike": "Pico de erros",
       "key_event_stopped": "Evento importante parou",
       "log_alert": "Alerta de log",
-      "payments_failing": "Pagamentos falhando"
+      "payments_failing": "Pagamentos falhando",
+      "cost_runaway": "Custo disparado"
     },
     "count": "{count, plural, one {# emergência} other {# emergências}}",
     "countProducts": "{count} emergências em {products} produtos",
@@ -1220,7 +1227,8 @@
     "spikeOver": "{product}: erros voltaram ao normal",
     "keyBack": "{product}: {event} voltou a chegar",
     "logQuiet": "{product}: “{search}” voltou ao silêncio",
-    "paymentsBack": "{product}: os pagamentos voltaram a passar"
+    "paymentsBack": "{product}: os pagamentos voltaram a passar",
+    "runawayOver": "{product}: o gasto voltou ao normal"
   },
   "traffic": {
     "title": "Tráfego",

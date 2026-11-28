@@ -22,6 +22,11 @@ export interface Database {
   connection: ConnectionTable
   connection_project: ConnectionProjectTable
   fx_rate: FxRateTable
+  cost_share: CostShareTable
+  fixed_cost: FixedCostTable
+  cost_day: CostDayTable
+  cost_hour: CostHourTable
+  cost_budget: CostBudgetTable
   source: SourceTable
   source_key: SourceKeyTable
   project_area: ProjectAreaTable
@@ -153,6 +158,8 @@ export interface ConnectionTable {
   subscriptions_synced_at: Date | null
   /** Last webhook that arrived with a good signature. */
   webhook_at: Date | null
+  /** Costs: how the part no product claims is divided (equal, traffic, percent). */
+  split: Generated<string>
   created_at: CreatedAt
   updated_at: ColumnType<Date, Date | undefined, Date>
 }
@@ -165,6 +172,59 @@ export interface ConnectionProjectTable {
   mode: Generated<string>
   values: ColumnType<string[], string[] | undefined, string[]>
   created_at: CreatedAt
+}
+
+/** A product's part of a cost connection: the provider's tags it claims, and a share of the rest. */
+export interface CostShareTable {
+  connection_id: string
+  project_id: string
+  org_id: string
+  tags: ColumnType<string[], string[] | undefined, string[]>
+  rest: Generated<boolean>
+  percent: number | null
+  created_at: CreatedAt
+}
+
+/** A fixed bill: amount in minor units every month or year. */
+export interface FixedCostTable {
+  connection_id: string
+  org_id: string
+  amount: ColumnType<number, number, number>
+  currency: string
+  /** month or year. */
+  every: Generated<string>
+  starts_on: ColumnType<string, string, string>
+}
+
+/** A provider's charge for a day, tag and line item, in minor units with fractions. */
+export interface CostDayTable {
+  connection_id: string
+  org_id: string
+  day: ColumnType<string, string, string>
+  tag: Generated<string>
+  line_item: Generated<string>
+  amount: number
+  currency: string
+  updated_at: ColumnType<Date, Date | undefined, Date>
+}
+
+/** Spend in an hour and tag, for "Cost runaway". */
+export interface CostHourTable {
+  connection_id: string
+  org_id: string
+  hour: Date
+  tag: Generated<string>
+  amount: number
+  currency: string
+}
+
+/** A product's monthly budget, in the organization's currency (minor units). */
+export interface CostBudgetTable {
+  project_id: string
+  org_id: string
+  amount: ColumnType<number, number, number>
+  warn: Generated<number>
+  updated_at: ColumnType<Date, Date | undefined, Date>
 }
 
 export interface FxRateTable {

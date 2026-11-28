@@ -28,6 +28,7 @@ import { createValkey, ValkeyHeartbeats, ValkeyLivePublisher } from '@octadash/q
 import { checkUrl, diagnose } from '@octadash/uptime'
 import { PgBoss } from 'pg-boss'
 import { createAlerts, registerAlertJobs } from './alerts'
+import { createCosts, registerCostJobs } from './costs'
 import { registerJobs } from './jobs'
 import { createMoney, registerMoneyJobs } from './money'
 import { EventRouter } from './routing'
@@ -82,6 +83,7 @@ await registerMoneyJobs(
   createMoney({ db, clickhouse, secret: env.OCTADASH_SECRET, log }),
   log,
 )
+await registerCostJobs(boss, createCosts({ db, secret: env.OCTADASH_SECRET, log }))
 const router = new EventRouter({
   loadDismissed: (projectIds) => listDismissedAreas(db, projectIds),
   recordDiscarded: (discarded, at) => recordDiscarded(db, discarded, at),

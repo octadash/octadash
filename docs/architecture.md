@@ -303,6 +303,34 @@ versions and passwords generated at install. Each has one job.
   charges of the last 15 minutes; it opens at `percent` (20) failed with at
   least `charges` (10) charges and closes when the share falls back under.
 
+### Costs
+
+- Providers (`packages/integrations/src/costs`): OpenAI (admin key, the
+  organization costs report, daily buckets) and Anthropic (Admin API key, the
+  cost analytics report, hourly buckets from yesterday on), each turning its
+  report into one shape (`CostItem`: a stretch of time, the provider's tag,
+  a line item and an amount in minor units with fractions). Read-only by
+  contract. A fixed bill (a VPS, a domain) is a connection with no provider:
+  `fixed_cost` holds the amount, currency and month or year, counted day by
+  day when read.
+- Cost connections share the `connection` table with payment gateways. Each
+  product's part (`cost_share`) is the provider tags it claims (OpenAI
+  projects, Anthropic workspaces) and whether it shares the rest; the
+  connection's `split` divides the rest equally, by each product's traffic
+  that day, or by fixed percents (`splitCost`). Division happens when reading,
+  so a changed split applies to the whole history.
+- The worker (`costs-sync`, every 5 minutes) imports 90 days for a new
+  connection, then reads the last 3 days every hour, replacing them in
+  `cost_day` so late corrections land. Spend per hour (`cost_hour`) comes from
+  the provider's hours, or from the growth of today's total between reads.
+  Costs are small, so they stay in Postgres.
+- Cost runaway (`cost_runaway`): every 10 minutes, per product, its latest
+  hour of AI spend against its average hour over the last 7 days; it opens at
+  `times` (3) the normal and at least `dollars` (5) US dollars, and closes
+  when an hour falls back under or after 6 hours without spend.
+- `cost_budget` keeps a product's monthly budget in the organization's
+  currency, with the percent at which the forecast warns.
+
 ### Integrations are plugins
 
 Alert channels and data sources share one contract (`packages/integrations`):

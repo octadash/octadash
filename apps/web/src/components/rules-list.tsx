@@ -23,15 +23,17 @@ import { RuleForm, type RuleFormLabels } from './rule-form'
 import { Card } from './ui/card'
 
 /** Which area each rule belongs to, so the list reads area by area. */
-const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors' | 'usage' | 'logs' | 'money'> = {
-  monitor_down: 'uptime',
-  heartbeat_missed: 'uptime',
-  cert_expiring: 'uptime',
-  error_spike: 'errors',
-  key_event_stopped: 'usage',
-  log_alert: 'logs',
-  payments_failing: 'money',
-}
+const RULE_AREA: Record<IncidentKind, 'uptime' | 'errors' | 'usage' | 'logs' | 'money' | 'costs'> =
+  {
+    monitor_down: 'uptime',
+    heartbeat_missed: 'uptime',
+    cert_expiring: 'uptime',
+    error_spike: 'errors',
+    key_event_stopped: 'usage',
+    log_alert: 'logs',
+    payments_failing: 'money',
+    cost_runaway: 'costs',
+  }
 
 /**
  * Rules of areas not built yet, shown dimmed so people see what is coming and
@@ -47,7 +49,6 @@ const FUTURE: {
   { area: 'uptime', icon: ActivityIcon, rules: [{ rule: 'domainExpiring', level: 'emergency' }] },
   { area: 'usage', icon: UserIcon, rules: [{ rule: 'signupsDropped', level: 'signal' }] },
   { area: 'traffic', icon: GlobeIcon, rules: [{ rule: 'trafficStopped', level: 'emergency' }] },
-  { area: 'costs', icon: ReceiptIcon, rules: [{ rule: 'costRunaway', level: 'emergency' }] },
 ]
 
 const LEVELS: Level[] = ['emergency', 'signal', 'off']
@@ -103,7 +104,9 @@ export async function RulesList({
               ? `${value}×`
               : key === 'percent'
                 ? `${value}%`
-                : String(value),
+                : key === 'dollars'
+                  ? `US$ ${value}`
+                  : String(value),
         )
       }
     }
@@ -122,6 +125,7 @@ export async function RulesList({
       silence: { label: t('params.silence'), unit: t('params.silenceUnit') },
       percent: { label: t('params.percent'), unit: t('params.percentUnit') },
       charges: { label: t('params.charges'), unit: t('params.chargesUnit') },
+      dollars: { label: t('params.dollars'), unit: t('params.dollarsUnit') },
     },
     sendTo: t('sendTo'),
     allChannels: t('allChannels'),
@@ -139,6 +143,7 @@ export async function RulesList({
   const usage = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'usage')
   const logs = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'logs')
   const money = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'money')
+  const costs = INCIDENT_KINDS.filter((kind) => RULE_AREA[kind] === 'costs')
 
   /** One rule of a built area, with its form. */
   const form = (kind: IncidentKind) => {
@@ -276,6 +281,17 @@ export async function RulesList({
             note={t('rulesCount', { count: money.length })}
           />
           <div className="divide-y">{money.map(form)}</div>
+        </section>
+
+        <section aria-labelledby="rules-costs" className="border-t">
+          <AreaHeader
+            id="rules-costs"
+            as={heading}
+            icon={ReceiptIcon}
+            title={t('areas.costs')}
+            note={t('rulesCount', { count: costs.length })}
+          />
+          <div className="divide-y">{costs.map(form)}</div>
         </section>
 
         {FUTURE.filter((f) => f.area !== 'uptime' && f.area !== 'usage').map(
