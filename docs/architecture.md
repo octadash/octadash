@@ -38,11 +38,11 @@ daily summary and an MCP server. It must:
 
 ### Three processes, one image
 
-| Role     | Tech                 | Does                                                           |
-| -------- | -------------------- | -------------------------------------------------------------- |
-| `web`    | Next.js (App Router) | Panel, management API, auth, MCP server                        |
+| Role     | Tech                 | Does                                                                                                                                       |
+| -------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `web`    | Next.js (App Router) | Panel, management API, auth, MCP server                                                                                                    |
 | `ingest` | Hono on Node         | Receives data only: Sentry, PostHog, OTLP and Octadash formats. Validates the key, puts the payload on a Valkey stream and answers at once |
-| `worker` | Node + pg-boss       | Reads the ingest streams and writes to ClickHouse; uptime, alerts, connector syncs, rollups, retention |
+| `worker` | Node + pg-boss       | Reads the ingest streams and writes to ClickHouse; uptime, alerts, connector syncs, rollups, retention                                     |
 
 All three ship in **one Docker image**; the first argument picks the role.
 
@@ -64,11 +64,11 @@ ingest address.
 All three ship in `docker-compose.yml` and in the Coolify compose, with pinned
 versions and passwords generated at install. Each has one job.
 
-| Store      | Holds                                                                                      | Why this one                                                         |
-| ---------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| Postgres   | records: accounts, organizations, products, keys, monitors, alert rules, channels, issues  | relational, transactional, what Better Auth and pg-boss already use  |
-| Valkey     | the ingest buffer (streams), cache, rate limits, uptime state between checks               | ingest must answer in milliseconds and never wait on a database      |
-| ClickHouse | raw events, pageviews, error occurrences, logs, spans, AI calls, uptime results; rollups   | high-volume time series, fast aggregation, compression, TTL retention |
+| Store      | Holds                                                                                     | Why this one                                                          |
+| ---------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Postgres   | records: accounts, organizations, products, keys, monitors, alert rules, channels, issues | relational, transactional, what Better Auth and pg-boss already use   |
+| Valkey     | the ingest buffer (streams), cache, rate limits, uptime state between checks              | ingest must answer in milliseconds and never wait on a database       |
+| ClickHouse | raw events, pageviews, error occurrences, logs, spans, AI calls, uptime results; rollups  | high-volume time series, fast aggregation, compression, TTL retention |
 
 #### Postgres
 
