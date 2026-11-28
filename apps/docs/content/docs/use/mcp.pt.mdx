@@ -10,8 +10,8 @@ responde pelo que ele faz com elas.
 
 ## Crie um token
 
-1. Em **Configurações do Octadash** (rodapé do menu lateral) > **Tokens de API**, dê ao
-   token um nome que diga onde ele é usado ("Claude no meu notebook"). Donos e
+1. Em **Configurações do Octadash** (rodapé do menu lateral) > **Tokens de API**, clique em
+   **Novo token** e dê a ele um nome que diga onde ele é usado ("Claude no meu notebook"). Donos e
    admins podem fazer isso.
 2. Escolha o que ele pode tocar. Comece de um preset e mude qualquer item:
 
@@ -33,15 +33,44 @@ responde pelo que ele faz com elas.
 
 ## Conecte um assistente
 
-No Claude Code, com o comando que a página mostra:
+Depois de **Criar token**, a janela mostra como conectar, pensando também em
+quem nunca abre um terminal:
+
+- **Copiar mensagem para a IA**: uma mensagem para colar em qualquer chat de
+  IA. Ela diz o que é o Octadash, leva o endereço e o token, e pede ao
+  assistente que conecte sozinho (quando ele roda comandos) ou guie você no seu
+  app, um passo por vez.
+- Uma aba por app com passos simples: Claude (site, computador e celular),
+  ChatGPT, Cursor e VS Code (botões de um clique) e o terminal (Claude Code).
+
+### Claude e ChatGPT
+
+Os conectores personalizados deles aceitam só um endereço, então usam o
+endereço com o token embutido: `https://octadash.example.com/api/mcp/oct_...`.
+
+- **Claude**: Personalizar > Conectores > + Adicionar > Adicionar conector
+  personalizado. Nome Octadash, cole o endereço com token, Autenticação "Sem
+  login". Nos planos Team e Enterprise quem adiciona é o dono da organização. O
+  Claude conecta a partir dos servidores da Anthropic, então seu Octadash
+  precisa responder pela internet na porta 443.
+- **ChatGPT**: Configurações > Apps > Configurações avançadas > Modo
+  desenvolvedor ligado, depois Criar app com o endereço com token e Sem
+  autenticação.
+
+Trate o endereço com token como o próprio token: quem tiver usa o Octadash com
+as permissões dele. Revogue o token se vazar.
+
+### Clientes que enviam cabeçalho
+
+No Claude Code, com o comando que a janela mostra:
 
 ```sh
 claude mcp add --transport http octadash https://octadash.example.com/api/mcp \
   --header "Authorization: Bearer oct_..."
 ```
 
-Em qualquer outro cliente: o servidor fala Streamable HTTP (respostas em JSON,
-sem sessão) e recebe o token como `Authorization: Bearer <token>`.
+Cursor, VS Code e outros clientes: o servidor fala Streamable HTTP (respostas em
+JSON, sem sessão) e recebe o token como `Authorization: Bearer <token>`.
 
 ```json
 {

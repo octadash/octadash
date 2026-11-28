@@ -10,7 +10,7 @@ allows, and you answer for what it does with them.
 
 ## Create a token
 
-1. In **Octadash settings** (bottom of the side menu) > **API tokens**, give the token a
+1. In **Octadash settings** (bottom of the side menu) > **API tokens**, click **New token** and give it a
    name that says where it is used ("Claude on my laptop"). Owners and admins
    can do this.
 2. Choose what it may touch. Start from a preset and change any item:
@@ -31,15 +31,43 @@ allows, and you answer for what it does with them.
 
 ## Connect an assistant
 
-Claude Code, with the command the page shows:
+After **Create token**, the dialog shows how to connect, for people who never
+open a terminal too:
+
+- **Copy message for the AI**: a message to paste in any AI chat. It says what
+  Octadash is, carries the address and the token, and asks the assistant to
+  connect it by itself (when it can run commands) or to walk you through your
+  app one step at a time.
+- A tab per app with plain steps: Claude (web, desktop and phone), ChatGPT,
+  Cursor and VS Code (one-click buttons), and the terminal (Claude Code).
+
+### Claude and ChatGPT
+
+Their custom connectors take only an address, so they use the address with
+the token in it: `https://octadash.example.com/api/mcp/oct_...`.
+
+- **Claude**: Customize > Connectors > + Add > Add custom connector. Name
+  Octadash, paste the address with token, Authentication "No sign in". On Team
+  and Enterprise plans the organization's owner adds it. Claude connects from
+  Anthropic's servers, so your Octadash must answer from the internet on port
+  443.
+- **ChatGPT**: Settings > Apps > Advanced settings > Developer mode on, then
+  Create app with the address with token and No authentication.
+
+Treat the address with token like the token: whoever has it uses Octadash with
+the token's permissions. Revoke the token if it leaks.
+
+### Clients that send a header
+
+Claude Code, with the command the dialog shows:
 
 ```sh
 claude mcp add --transport http octadash https://octadash.example.com/api/mcp \
   --header "Authorization: Bearer oct_..."
 ```
 
-Any other client: the server speaks Streamable HTTP (JSON answers, no session)
-and takes the token as `Authorization: Bearer <token>`.
+Cursor, VS Code and other clients: the server speaks Streamable HTTP (JSON
+answers, no session) and takes the token as `Authorization: Bearer <token>`.
 
 ```json
 {

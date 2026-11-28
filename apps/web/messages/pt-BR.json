@@ -3347,16 +3347,12 @@
     "title": "Tokens de API",
     "intro": "Tokens desta organização para o servidor MCP do Octadash. Com um, um assistente de IA como o Claude ou o Cursor trabalha com seus produtos. Você escolhe o que cada token pode tocar; o assistente só vê as ferramentas que o token permite, e você responde pelo que ele faz com elas.",
     "newTitle": "Novo token",
-    "newIntro": "O servidor MCP responde em {url}.",
+    "newIntro": "O servidor MCP responde em {url}. O token aparece uma vez, depois de criado.",
     "name": "Nome",
     "nameHint": "Onde ele é usado, para saber qual revogar: Claude no meu notebook.",
     "namePlaceholder": "Claude no meu notebook",
     "create": "Criar token",
-    "token": "Token",
-    "once": "Copie agora: ele aparece só uma vez.",
-    "command": "Adicionar o Octadash ao Claude Code",
-    "listTitle": "Tokens",
-    "empty": "Nenhum token ainda.",
+    "once": "Token criado. Conecte seu app agora: o token aparece só aqui.",
     "revoked": "Revogado",
     "meta": "Criado em {created} por {by}",
     "used": "usado {when}",
@@ -3398,6 +3394,62 @@
     },
     "nothing": "Escolha pelo menos um item que ele possa ler.",
     "writes": "Escreve: {items}",
-    "withDelete": "{item} (e apaga)"
+    "withDelete": "{item} (e apaga)",
+    "emptyTitle": "Nenhum token ainda",
+    "emptyBody": "Um token deixa um assistente de IA, como Claude ou Cursor, usar o servidor MCP do Octadash em {url}: ler seus produtos, ou colocar o Octadash no seu código com o preset Setup com IA.",
+    "count": "{count, plural, one {# token} other {# tokens}}",
+    "done": "Pronto",
+    "connect": {
+      "what": "O MCP é a porta que deixa um assistente de IA (Claude, ChatGPT, Cursor) usar o Octadash: ele consulta seus produtos e, com o preset Setup com IA, coloca o Octadash no seu código.",
+      "easyTitle": "O jeito mais fácil",
+      "easyBody": "Copie esta mensagem e cole em qualquer chat de IA. Ela explica o que é o Octadash e pede para a IA conectar sozinha ou guiar você passo a passo.",
+      "copyMessage": "Copiar mensagem para a IA",
+      "messageCopied": "Copiada. Cole no chat da sua IA.",
+      "message": "Oi! Quero conectar o Octadash ao app de IA que eu uso. O Octadash é o painel onde acompanho meus produtos: se estão no ar, erros, tráfego, logs e mais. Ele tem um servidor MCP, que é o jeito de um assistente de IA usar o Octadash.\n\nDados da conexão:\n- Endereço do servidor MCP: {url}\n- Token, enviado no cabeçalho Authorization como \"Bearer\" seguido do token: {token}\n- Endereço com o token embutido, para apps que só aceitam um endereço (Claude e ChatGPT): {urlWithToken}\n\nO que eu preciso de você:\n1. Se você consegue rodar comandos no meu computador (Claude Code, Codex, Cursor), conecte você mesmo. No Claude Code o comando é:\n{command}\n2. Se você é um chat comum, sem acesso ao meu computador, pule o passo 1: me pergunte qual app eu uso (Claude no site ou no app, ChatGPT, Cursor, VS Code ou outro) e me guie passo a passo, um passo por vez, em linguagem simples, esperando eu dizer que terminei cada um.\n3. No fim, teste pedindo a lista dos meus produtos no Octadash.\n\nOnde fica em cada app:\n- Claude (site, computador ou celular): Personalizar > Conectores > + Adicionar > Adicionar conector personalizado. Nome Octadash, cole o endereço com token, Autenticação \"Sem login\".\n- ChatGPT: Configurações > Apps > Configurações avançadas > ligar Modo desenvolvedor. Depois Criar app, com o endereço com token e Sem autenticação.\n- Cursor ou VS Code: adicionar um servidor MCP do tipo HTTP com o endereço do servidor e o cabeçalho Authorization.\n\nTrate o token como uma senha: não o repita em lugares públicos.",
+      "byAppTitle": "Ou siga os passos do seu app",
+      "urlWithToken": "Endereço com token",
+      "tokenTitle": "Token",
+      "tokenNote": "Ele aparece só agora. Guarde como uma senha: quem tiver o token, ou o endereço com token, usa o Octadash com as permissões dele. Se vazar, revogue na lista.",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "claude": {
+        "tab": "Claude",
+        "step1": "Abra o Claude no site (claude.ai) ou no app do computador e vá em Personalizar > Conectores.",
+        "step2": "Clique em “+ Adicionar” e depois em “Adicionar conector personalizado”.",
+        "step3": "Em nome, escreva Octadash. Em URL, cole o endereço com token abaixo e clique em Continuar.",
+        "step4": "Em Autenticação, escolha “Sem login” e clique em Adicionar.",
+        "step5": "Em uma conversa, clique em “+” > Conectores e ligue o Octadash. Pergunte, por exemplo: “Como estão meus produtos hoje?”",
+        "note": "Vale para o site, o app do computador e o celular. O Claude conecta a partir dos servidores da Anthropic, então o endereço do seu Octadash precisa abrir pela internet. Nos planos Team e Enterprise, quem adiciona é o dono da organização, em Configurações da organização > Conectores."
+      },
+      "chatgpt": {
+        "tab": "ChatGPT",
+        "step1": "No ChatGPT, vá em Configurações > Apps > Configurações avançadas e ligue o Modo desenvolvedor.",
+        "step2": "Ainda em Apps, clique em Criar app.",
+        "step3": "Em nome, escreva Octadash. Em URL do servidor MCP, cole o endereço com token abaixo.",
+        "step4": "Em Autenticação, escolha Sem autenticação, marque que confia no app e clique em Criar.",
+        "step5": "Em uma conversa, ligue o Octadash nas ferramentas e pergunte, por exemplo: “Algum produto caiu hoje?”",
+        "note": "O Modo desenvolvedor existe nos planos pagos do ChatGPT. Os nomes dos menus podem mudar um pouco com o tempo; se não achar, use a mensagem para a IA acima."
+      },
+      "cursor": {
+        "tab": "Cursor",
+        "step1": "Com o Cursor instalado, clique no botão abaixo. Ele abre o Cursor com o Octadash pronto para instalar.",
+        "step2": "Confirme em Instalar. Depois, no chat do Cursor, peça por exemplo: “instale o Octadash neste projeto”.",
+        "button": "Adicionar ao Cursor",
+        "note": "Se o botão não abrir o Cursor, copie a mensagem para a IA acima e cole no chat do Cursor."
+      },
+      "vscode": {
+        "tab": "VS Code",
+        "step1": "Com o VS Code instalado, clique no botão abaixo. Ele abre o VS Code com o Octadash pronto para instalar.",
+        "step2": "Confirme em Instalar e use o Octadash no chat do Copilot, no modo Agente.",
+        "button": "Adicionar ao VS Code",
+        "note": "Se o botão não abrir o VS Code, copie a mensagem para a IA acima e cole no chat do Copilot."
+      },
+      "terminal": {
+        "tab": "Terminal (Claude Code)",
+        "step1": "Abra o terminal na pasta do seu projeto.",
+        "step2": "Cole o comando abaixo e aperte Enter. Depois rode claude e peça, por exemplo: “instale o Octadash neste projeto”.",
+        "note": "Para o assistente instalar o Octadash no seu código, instale também a skill: veja Instalar com IA na documentação."
+      }
+    }
   }
 }
