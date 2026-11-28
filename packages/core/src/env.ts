@@ -14,6 +14,21 @@ export const clickhouseEnvSchema = z.object({
   CLICKHOUSE_URL: z.url({ protocol: /^https?$/ }),
 })
 
+/**
+ * File storage (S3-compatible). The compose points it at the bundled Garage;
+ * any S3, R2 or S3-compatible bucket works the same. Unset: files that do not
+ * fit a ClickHouse row are counted, not kept.
+ */
+export const storageEnvSchema = z.object({
+  /** http://garage:3900, https://<account>.r2.cloudflarestorage.com... */
+  STORAGE_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
+  STORAGE_BUCKET: z.string().min(1).default('octadash'),
+  /** "garage" for the bundled store, "auto" for R2, the bucket's region for S3. */
+  STORAGE_REGION: z.string().min(1).default('garage'),
+  STORAGE_ACCESS_KEY_ID: z.string().min(1).optional(),
+  STORAGE_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+})
+
 /** Valkey (or Redis) holding the ingest streams: redis://:pass@valkey:6379 */
 const valkeyUrl = z.url({ protocol: /^rediss?$/ })
 
@@ -39,13 +54,16 @@ export const webEnvSchema = baseEnvSchema
       .transform((value) => value === 'true'),
   })
   .extend(clickhouseEnvSchema.shape)
+  .extend(storageEnvSchema.shape)
 
-export const ingestEnvSchema = baseEnvSchema.extend({
-  PORT: z.coerce.number().int().positive().default(4000),
-  VALKEY_URL: valkeyUrl,
-  /** Entries waiting in a stream before the ingest answers 429 (the worker is far behind). */
-  OCTADASH_INGEST_QUEUE_MAX: z.coerce.number().int().positive().default(100_000),
-})
+export const ingestEnvSchema = baseEnvSchema
+  .extend({
+    PORT: z.coerce.number().int().positive().default(4000),
+    VALKEY_URL: valkeyUrl,
+    /** Entries waiting in a stream before the ingest answers 429 (the worker is far behind). */
+    OCTADASH_INGEST_QUEUE_MAX: z.coerce.number().int().positive().default(100_000),
+  })
+  .extend(storageEnvSchema.shape)
 
 export const workerEnvSchema = baseEnvSchema
   .extend({
@@ -84,8 +102,15 @@ export const workerEnvSchema = baseEnvSchema
     OCTADASH_TRACE_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(14),
     /** Days metric data points are kept, until each product has its own setting. */
     OCTADASH_METRIC_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+    /**
+     * Most gigabytes kept in file storage. Past it the oldest days go first,
+     * counted as `dropped:` rows. 0 means no limit (an external bucket that
+     * bills by use, say).
+     */
+    OCTADASH_STORAGE_LIMIT_GB: z.coerce.number().min(0).default(20),
   })
   .extend(clickhouseEnvSchema.shape)
+  .extend(storageEnvSchema.shape)
 
 export type BaseEnv = z.infer<typeof baseEnvSchema>
 export type WebEnv = z.infer<typeof webEnvSchema>

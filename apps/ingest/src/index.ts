@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server'
 import { createLogger, ingestEnvSchema, parseEnv } from '@octadash/core'
 import { createDb, findHeartbeatMonitor, findIngestKey } from '@octadash/db'
 import { createValkey, ValkeyHeartbeats, ValkeySalts, ValkeySink } from '@octadash/queue'
+import { storageFromEnv } from '@octadash/storage'
 import { createApp } from './app'
 import { cachedHeartbeatResolver, cachedResolver } from './keys'
 
@@ -13,6 +14,8 @@ const { db, pool } = createDb(env.DATABASE_URL, { max: 3, applicationName: 'octa
 const valkey = createValkey(env.VALKEY_URL, { name: 'octadash-ingest', failFast: true })
 valkey.on('error', (err) => log.warn({ err: err.message }, 'valkey connection error'))
 const sink = new ValkeySink(valkey, { maxPending: env.OCTADASH_INGEST_QUEUE_MAX })
+const files = storageFromEnv(env)
+if (!files) log.warn('no file storage set (STORAGE_*): items over 1 MB are counted, not kept')
 
 const app = createApp({
   sink,
@@ -22,6 +25,7 @@ const app = createApp({
     store: new ValkeyHeartbeats(valkey),
   },
   salts: new ValkeySalts(valkey),
+  files,
   onError: (err) => log.error({ err }, 'request failed'),
 })
 

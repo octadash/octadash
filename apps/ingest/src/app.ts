@@ -2,6 +2,7 @@ import { brotliDecompressSync, gunzipSync, inflateSync } from 'node:zlib'
 import { OCTADASH_VERSION } from '@octadash/core'
 import type { EventRow, QueuedError, QueuedReceived } from '@octadash/db'
 import type { EventSink, HeartbeatStore, SaltStore } from '@octadash/queue'
+import type { FileStore } from '@octadash/storage'
 import { type Context, Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { cors } from 'hono/cors'
@@ -29,7 +30,7 @@ import {
   readPostHogBatch,
   UnsupportedCompression,
 } from './posthog'
-import { bodyOf, droppedRow, receivedRow, timeOf } from './received'
+import { bodyOf, droppedRow, keepReceived, receivedRow, timeOf } from './received'
 import { redact } from './redact'
 import { BROWSER_SCRIPT } from './script'
 import { sentryLogs, standaloneSpan, transactionSpans } from './sentry-traces'
@@ -38,10 +39,13 @@ import { visitorHash } from './visitor'
 
 /** Requests bigger than this are refused before they are read. */
 export const MAX_BODY_BYTES = 1024 * 1024
-/** Sentry envelopes may carry attachments; each is kept in `received` up to its own limit. */
-export const MAX_ENVELOPE_BYTES = 10 * 1024 * 1024
+/**
+ * Sentry envelopes may carry attachments, kept whole in file storage. 20 MB is
+ * the attachment limit most Sentry SDKs apply by default.
+ */
+export const MAX_ENVELOPE_BYTES = 20 * 1024 * 1024
 /** At most this much after decompression. */
-const MAX_INFLATED_BYTES = 20 * 1024 * 1024
+const MAX_INFLATED_BYTES = 40 * 1024 * 1024
 /** Error events taken from one request. */
 const MAX_ERRORS_PER_REQUEST = 100
 /** Seconds an SDK should wait when the queue is full. */
@@ -53,6 +57,8 @@ export interface IngestDeps {
   heartbeats: { resolver: HeartbeatResolver; store: HeartbeatStore }
   /** Daily salts for the visitor hash. */
   salts: SaltStore
+  /** File storage for attachments, replays, profiles and anything over 1 MB. */
+  files?: FileStore
   now?: () => number
   onError?: (err: unknown) => void
 }
@@ -72,6 +78,7 @@ export interface IngestDeps {
 export function createApp(deps: IngestDeps) {
   const app = new Hono()
   const now = deps.now ?? Date.now
+  const files = deps.files && { store: deps.files, onError: deps.onError }
 
   // SDKs call ingest from browsers on other domains.
   app.use(
@@ -270,14 +277,16 @@ export function createApp(deps: IngestDeps) {
     const sender = senderOf(c, scope.project_id, received)
     const errorRows: QueuedError[] = []
     const others: QueuedReceived[] = []
-    const keep = (kind: string, entry: (typeof batch.other)[number]) =>
+    const keep = async (kind: string, entry: (typeof batch.other)[number]) => {
       others.push(
-        receivedRow(
+        await keepReceived(
+          files,
           scope,
           { kind, body: { encoding: 'json', value: entry.item }, bytes: entry.bytes, at: entry.at },
           received,
         ),
       )
+    }
     for (const entry of batch.exceptions) {
       const row = await toErrorRow(
         scope,
@@ -288,9 +297,9 @@ export function createApp(deps: IngestDeps) {
       )
       // An exception with no type, message or stack is still something the app sent.
       if (row) errorRows.push(row)
-      else keep('posthog.$exception', entry)
+      else await keep('posthog.$exception', entry)
     }
-    for (const entry of batch.other) keep(`posthog.${entry.name}`, entry)
+    for (const entry of batch.other) await keep(`posthog.${entry.name}`, entry)
     const failed = (await queue(c, 'errors', errorRows)) ?? (await queue(c, 'received', others))
     if (failed) return failed
     const accepted = await acceptEvents(c, scope, batch.events)
@@ -449,7 +458,8 @@ export function createApp(deps: IngestDeps) {
         continue
       }
       kept.push(
-        receivedRow(
+        await keepReceived(
+          files,
           scope,
           {
             kind: `sentry.${item.type || 'unknown'}`,
@@ -469,7 +479,8 @@ export function createApp(deps: IngestDeps) {
       else {
         const bytes = Buffer.byteLength(JSON.stringify(event) ?? '')
         kept.push(
-          receivedRow(
+          await keepReceived(
+            files,
             scope,
             { kind: 'sentry.event', body: { encoding: 'json', value: event }, bytes },
             received,

@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { SettingsNav } from '@/components/settings-nav'
+import { StorageBanner } from '@/components/storage-banner'
 import { WatcherBanner } from '@/components/watcher-banner'
 import { isOwner, requireOrg } from '@/server/session'
 
@@ -35,6 +36,11 @@ export default async function SettingsLayout({ children }: { children: ReactNode
                   note: t('ownerOnly'),
                   items: [
                     { href: '/settings/watcher', label: t('watcher') },
+                    {
+                      href: '/settings/storage',
+                      label: t('storage'),
+                      keywords: t('storageKeywords'),
+                    },
                     { href: '/settings/organizations', label: t('organizations') },
                   ],
                 },
@@ -51,6 +57,7 @@ export default async function SettingsLayout({ children }: { children: ReactNode
       />
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <WatcherBanner />
+        <StorageBanner />
         {children}
       </div>
     </div>

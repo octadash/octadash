@@ -1,5 +1,6 @@
 import { DROPPED_PREFIX, type QueuedReceived } from '@octadash/db'
 import { MemoryHeartbeats, MemorySalts, MemorySink } from '@octadash/queue'
+import { MemoryFileStore } from '@octadash/storage'
 import { describe, expect, it } from 'vitest'
 import { createApp } from './app'
 import { ROUTES } from './fates'
@@ -21,10 +22,11 @@ const scope = {
   visitor_mode: 'daily' as const,
 }
 
-function setup() {
+function setup(files: MemoryFileStore | null = new MemoryFileStore()) {
   const sink = new MemorySink()
   const app = createApp({
     sink,
+    files: files ?? undefined,
     keys: staticResolver({ [KEY]: scope }),
     heartbeats: { resolver: { resolve: async () => null }, store: new MemoryHeartbeats() },
     salts: new MemorySalts(),
@@ -32,7 +34,7 @@ function setup() {
   })
   const rows = (kind: string) => sink.batches.filter((b) => b.kind === kind).flatMap((b) => b.rows)
   const received = () => rows('received') as QueuedReceived[]
-  return { app, sink, rows, received }
+  return { app, sink, rows, received, files }
 }
 
 /** Every Sentry envelope item type in the protocol today, and one from the future. */
@@ -121,9 +123,10 @@ describe('fates', () => {
     const report = received().find((row) => row.kind === 'sentry.user_report')
     expect(report?.payload).toContain('broke')
     expect(report?.payload).not.toContain('Ana')
-    expect(received().find((row) => row.kind === 'sentry.replay_recording')?.encoding).toBe(
-      'base64',
-    )
+    // Replays, profiles and attachments are files, kept whole in file storage.
+    for (const type of ['replay_recording', 'replay_video', 'attachment', 'profile']) {
+      expect(received().find((row) => row.kind === `sentry.${type}`)?.encoding).toBe('file')
+    }
     expect(received().find((row) => row.kind === 'sentry.statsd')?.encoding).toBe('text')
   })
 
@@ -171,8 +174,48 @@ describe('fates', () => {
     expect(received()[0]?.payload).not.toContain('"1"')
   })
 
+  it('keeps a file whole in file storage, masked like a row', async () => {
+    const { app, received, files } = setup()
+    const big = JSON.stringify({ note: 'x'.repeat(MAX_RECEIVED_BYTES), email: 'ana@example.com' })
+    const res = await app.request(`/api/1/envelope/?sentry_key=${KEY}`, {
+      method: 'POST',
+      body: `{}\n{"type":"attachment","filename":"state.json","content_type":"application/json"}\n${big}\n`,
+    })
+    expect(res.status).toBe(200)
+    const row = received()[0]
+    expect(row?.encoding).toBe('file')
+    const { meta, file } = JSON.parse(row?.payload ?? '{}')
+    expect(meta).toMatchObject({ filename: 'state.json' })
+    expect(file.key).toMatch(/^files\/\d{4}-\d{2}-\d{2}\/[\w-]+\/[\w-]+\/sentry\.attachment\//)
+    expect(file.content_type).toBe('application/json')
+    const stored = files?.files.get(file.key)
+    expect(stored?.body.length).toBe(file.bytes)
+    const text = new TextDecoder().decode(stored?.body)
+    expect(text).toContain('x'.repeat(1000))
+    expect(text).not.toContain('ana@example.com')
+  })
+
+  it('keeps small files in the row when file storage is down, and counts big ones', async () => {
+    const files = new MemoryFileStore()
+    files.failing = true
+    const { app, received } = setup(files)
+    await app.request(`/api/1/envelope/?sentry_key=${KEY}`, {
+      method: 'POST',
+      body: `{}\n{"type":"attachment"}\nsmall\n{"type":"attachment"}\n${'x'.repeat(MAX_RECEIVED_BYTES + 1)}\n`,
+    })
+    expect(received().map((row) => [row.kind, row.encoding])).toEqual([
+      ['sentry.attachment', 'text'],
+      ['dropped:sentry.attachment', 'json'],
+    ])
+    expect(JSON.parse(received()[1]?.payload ?? '{}')).toEqual({
+      reason: 'storage_unavailable',
+      count: 1,
+    })
+  })
+
   it('counts what it leaves out instead of losing it silently', async () => {
-    const { app, received } = setup()
+    // No file storage set: an item over 1 MB cannot be kept.
+    const { app, received } = setup(null)
     const events = Array.from({ length: 105 }, () => ({ message: 'x' }))
     await app.request('/o/v1/errors', {
       method: 'POST',

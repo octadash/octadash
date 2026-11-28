@@ -60,6 +60,8 @@ export interface StripData {
   resolved: StripResolved[]
   /** Octadash cannot reach its outside watcher. */
   watcherFailing: boolean
+  /** File storage does not answer: files over 1 MB are being counted, not kept. */
+  storageFailing: boolean
 }
 
 /** How long the strip stays green after an emergency ends. */

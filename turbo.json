@@ -10,7 +10,7 @@
       "dependsOn": ["^typecheck"]
     },
     "test": {
-      "env": ["DATABASE_URL", "CLICKHOUSE_URL", "VALKEY_URL"]
+      "env": ["DATABASE_URL", "CLICKHOUSE_URL", "VALKEY_URL", "STORAGE_*"]
     },
     "dev": {
       "cache": false,

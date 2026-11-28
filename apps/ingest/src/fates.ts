@@ -73,7 +73,11 @@ export const DISCARDS = {
   dismissed_area:
     'The product marked the area "I won\'t use this". Its data is counted on the area card, not stored.',
   too_large:
-    'An item bigger than 1 MB is counted, not stored, until file storage (Garage, or an external S3 or R2) keeps files whole.',
+    'An item bigger than 1 MB is counted, not stored, only when no file storage is set (STORAGE_*). The compose always sets the bundled one.',
+  storage_unavailable:
+    'File storage did not answer while an item bigger than 1 MB arrived. Smaller items stay in the row; this one is counted, and the error is logged.',
+  storage_limit:
+    'File storage reached OCTADASH_STORAGE_LIMIT_GB, so the files of the oldest day were removed. Their rows stay, and a dropped row counts the files per product.',
   too_many_in_request:
     'Error events beyond the limit of one request are counted, not stored. SDKs send one per request.',
   heartbeat_output_head:

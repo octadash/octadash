@@ -385,6 +385,8 @@
     "channels": "Channels",
     "alerts": "Alert rules",
     "watcher": "Outside watcher",
+    "storage": "File storage",
+    "storageKeywords": "files attachments replays s3 r2 garage disk backup",
     "nav": "Settings menu",
     "search": "Search settings",
     "none": "Nothing matches.",
@@ -791,6 +793,37 @@
       "failingTitle": "The signal to the outside watcher is failing.",
       "failingBody": "Octadash cannot call the watcher's URL. If this goes on, the watcher will report Octadash as down.",
       "action": "Set up the outside watcher"
+    }
+  },
+  "storage": {
+    "title": "File storage",
+    "intro": "Attachments, replays, profiles and anything over 1 MB that your products send are kept here as files, whole. ClickHouse keeps the row that points to each one.",
+    "statusTitle": "Status",
+    "unknown": "Waiting for the first check (the worker looks once a minute after it starts, then every hour).",
+    "off": "No file storage is set. Files over 1 MB are counted, not kept.",
+    "failing": "File storage is not answering: {error}. Smaller files stay in their rows; files over 1 MB are counted, not kept, until it answers.",
+    "ok": "Working. Last checked {when}.",
+    "bundled": "Bundled storage (Garage), running in this install. Nothing to set up.",
+    "external": "External bucket at {host}.",
+    "usageTitle": "Space used",
+    "used": "{used} of {limit} ({percent}%).",
+    "usedNoLimit": "{used}, with no limit set.",
+    "almostFull": "Almost full. When the limit is reached, the files of the oldest day are removed first, and each product keeps a count of what went.",
+    "retention": "Files are kept for {days} days, like the rest of the data no area reads yet.",
+    "trimmed": "The files of {day} were removed {when} to stay under the limit ({files, plural, one {# file} other {# files}}).",
+    "howTitle": "How to change it",
+    "howIntro": "These are set in the install’s .env file, then the services restart.",
+    "howLimit": "<code>OCTADASH_STORAGE_LIMIT_GB</code> sets the most space files may use (20 GB by default, 0 for no limit).",
+    "howExternal": "To use S3, R2 or another S3-compatible bucket instead, set <code>STORAGE_ENDPOINT</code>, <code>STORAGE_BUCKET</code>, <code>STORAGE_REGION</code>, <code>STORAGE_ACCESS_KEY_ID</code> and <code>STORAGE_SECRET_ACCESS_KEY</code>.",
+    "howBackup": "Back up the garage-data and garage-meta volumes together with the other volumes.",
+    "warning": {
+      "offTitle": "Files over 1 MB are not being kept.",
+      "offBody": "No file storage is set, so attachments, replays and big items are only counted.",
+      "failingTitle": "File storage is not answering.",
+      "failingBody": "Files over 1 MB are counted, not kept, until it answers.",
+      "fullTitle": "File storage is almost full.",
+      "fullBody": "At the limit, the files of the oldest day are removed first.",
+      "action": "See file storage"
     }
   },
   "getStarted": {
@@ -1224,6 +1257,8 @@
     "newMany": "{count, plural, one {# new emergency} other {# new emergencies}}",
     "watcherTitle": "Octadash can't reach its outside watcher",
     "watcherBody": "If this server goes down, nobody will be told. Checks from this server still run.",
+    "storageTitle": "File storage is not answering",
+    "storageBody": "Attachments, replays and anything over 1 MB are being counted, not kept, until it answers.",
     "list": {
       "intro": "Nobody on it first, then the oldest. Updates live.",
       "hint": "Hint: {count} of these share the server {ip}",

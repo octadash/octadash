@@ -3,14 +3,18 @@ import {
   type LivePublisher,
   type LiveScope,
   type LiveTopic,
+  type StorageStatusStore,
   ValkeyLiveHub,
   ValkeyLivePublisher,
+  ValkeyStorageStatus,
 } from '@octadash/queue'
 import { services } from './context'
 
 interface Live {
   hub: ValkeyLiveHub
   publisher: LivePublisher
+  /** What the worker last saw of file storage. */
+  storage: StorageStatusStore
 }
 
 // On globalThis so hot reload in development does not open new connections.
@@ -31,6 +35,7 @@ export function live(): Live {
     store.__octadashLive = {
       hub: new ValkeyLiveHub(subscriber),
       publisher: new ValkeyLivePublisher(publisher),
+      storage: new ValkeyStorageStatus(publisher),
     }
   }
   return store.__octadashLive
@@ -42,5 +47,14 @@ export async function tellLive(scope: LiveScope, topic: LiveTopic) {
     await live().publisher.publish(scope, topic)
   } catch {
     // The screens catch up on their next load.
+  }
+}
+
+/** File storage as the worker last saw it; null when it has not looked yet or Valkey is away. */
+export async function readStorageStatus() {
+  try {
+    return await live().storage.read()
+  } catch {
+    return null
   }
 }

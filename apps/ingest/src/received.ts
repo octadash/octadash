@@ -1,4 +1,12 @@
-import { DROPPED_PREFIX, NO_SOURCE, type QueuedReceived, toClickHouseTime } from '@octadash/db'
+import { randomUUID } from 'node:crypto'
+import {
+  DROPPED_PREFIX,
+  NO_SOURCE,
+  type QueuedReceived,
+  type ReceivedEncoding,
+  toClickHouseTime,
+} from '@octadash/db'
+import { type FileStore, fileKey } from '@octadash/storage'
 import type { DiscardReason } from './fates'
 import type { IngestScope } from './keys'
 import { PERSONAL_NAME, personId } from './privacy'
@@ -12,7 +20,7 @@ import { redact, SECRET_NAME } from './redact'
  * `dropped:` row, so nothing goes missing silently.
  */
 
-/** An item bigger than this, as it arrived, is counted instead of kept. */
+/** An item bigger than this, as it arrived, goes to file storage (or is counted, with none). */
 export const MAX_RECEIVED_BYTES = 1024 * 1024
 /** Nesting deeper than this is kept as JSON text, unmasked keys and all masked strings. */
 const MAX_DEPTH = 32
@@ -136,19 +144,14 @@ export interface ReceivedInput {
   at?: Date
 }
 
-/**
- * One received item as a row for the `received` stream: `{ meta, body }` as
- * JSON, the body masked (text through `redact`, JSON through `maskDeep`; bytes
- * cannot be read and are kept as sent, in base64). Too big: a `dropped:` row.
- */
-export function receivedRow(
-  scope: IngestScope,
-  input: ReceivedInput,
-  received: Date,
-): QueuedReceived {
-  if (input.bytes > MAX_RECEIVED_BYTES) {
-    return droppedRow(scope, input.kind, 'too_large', input.bytes, 1, received)
-  }
+interface Prepared {
+  body: unknown
+  meta: unknown
+  masked: number
+}
+
+/** The body and meta masked: text through `redact`, JSON through `maskDeep`, bytes as sent. */
+function prepare(scope: IngestScope, input: ReceivedInput): Prepared {
   let masked = 0
   let body: unknown
   if (input.body.encoding === 'json') {
@@ -160,7 +163,7 @@ export function receivedRow(
     body = out.text
     masked += out.masked
   } else {
-    body = Buffer.from(input.body.value).toString('base64')
+    body = input.body.value
   }
   let meta: unknown
   if (input.meta) {
@@ -168,6 +171,17 @@ export function receivedRow(
     meta = out.value
     masked += out.masked
   }
+  return { body, meta, masked }
+}
+
+function rowOf(
+  scope: IngestScope,
+  input: ReceivedInput,
+  received: Date,
+  payload: Record<string, unknown>,
+  encoding: ReceivedEncoding,
+  masked: number,
+): QueuedReceived {
   const at =
     input.at && input.at.getTime() - received.getTime() <= MAX_FUTURE_MS ? input.at : received
   return {
@@ -177,11 +191,92 @@ export function receivedRow(
     kind: input.kind.slice(0, 200),
     timestamp: toClickHouseTime(at),
     received_at: toClickHouseTime(received),
-    payload: JSON.stringify(meta === undefined ? { body } : { meta, body }),
-    encoding: input.body.encoding,
+    payload: JSON.stringify(payload),
+    encoding,
     bytes: input.bytes,
     masked: Math.min(65_535, masked),
   }
+}
+
+/**
+ * One received item as a row for the `received` stream: `{ meta, body }` as
+ * JSON, the body masked (bytes cannot be read and are kept as sent, in
+ * base64). Too big for a row and no file storage: a `dropped:` row.
+ */
+export function receivedRow(
+  scope: IngestScope,
+  input: ReceivedInput,
+  received: Date,
+): QueuedReceived {
+  if (input.bytes > MAX_RECEIVED_BYTES) {
+    return droppedRow(scope, input.kind, 'too_large', input.bytes, 1, received)
+  }
+  const { body, meta, masked } = prepare(scope, input)
+  const value = body instanceof Uint8Array ? Buffer.from(body).toString('base64') : body
+  const payload = meta === undefined ? { body: value } : { meta, body: value }
+  return rowOf(scope, input, received, payload, input.body.encoding, masked)
+}
+
+/**
+ * Item types that are files whatever their size (Sentry attachments, replays,
+ * profiles; PostHog recordings): they go to file storage, so they can be read
+ * back whole and do not weigh on ClickHouse.
+ */
+export const FILE_KINDS = new Set([
+  'sentry.attachment',
+  'sentry.replay_recording',
+  'sentry.replay_video',
+  'sentry.profile',
+  'sentry.profile_chunk',
+  'posthog.$snapshot',
+])
+
+const CONTENT_TYPES = {
+  json: 'application/json',
+  text: 'text/plain; charset=utf-8',
+  base64: 'application/octet-stream',
+} as const
+
+export interface FileKeeper {
+  store: FileStore
+  onError?: (err: unknown) => void
+}
+
+/**
+ * Like `receivedRow`, but a file kind, or anything over 1 MB, goes to file
+ * storage, masked the same way (JSON and text; bytes as sent), and the row
+ * keeps where it is: `{ meta, file: { key, bytes, content_type } }`, encoding
+ * `file`. Storage down: small items stay in the row, big ones are counted.
+ */
+export async function keepReceived(
+  files: FileKeeper | undefined,
+  scope: IngestScope,
+  input: ReceivedInput,
+  received: Date,
+): Promise<QueuedReceived> {
+  const isFile = FILE_KINDS.has(input.kind) || input.bytes > MAX_RECEIVED_BYTES
+  if (!files || !isFile) return receivedRow(scope, input, received)
+  const { body, meta, masked } = prepare(scope, input)
+  const content =
+    body instanceof Uint8Array
+      ? body
+      : new TextEncoder().encode(typeof body === 'string' ? body : JSON.stringify(body))
+  const sent = input.meta?.content_type
+  const contentType =
+    typeof sent === 'string' && /^[\w.+-]+\/[\w.+-]+/.test(sent)
+      ? sent.slice(0, 200)
+      : CONTENT_TYPES[input.body.encoding]
+  const key = fileKey(received, scope.org_id, scope.project_id, input.kind, randomUUID())
+  try {
+    await files.store.put(key, content, contentType)
+  } catch (err) {
+    files.onError?.(err)
+    if (input.bytes <= MAX_RECEIVED_BYTES) return receivedRow(scope, input, received)
+    return droppedRow(scope, input.kind, 'storage_unavailable', input.bytes, 1, received)
+  }
+  const file = { key, bytes: content.length, content_type: contentType }
+  const payload = meta === undefined ? { file } : { meta, file }
+  return rowOf(scope, input, received, payload, 'file', masked)
 }
 
 /**

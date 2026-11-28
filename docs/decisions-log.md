@@ -453,10 +453,9 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - **File storage is the fourth bundled store** (decided by the owner):
   replays, attachments and profiles go to an S3-compatible store that ships in
   the compose and is managed by Octadash (generated password, bucket created on
-  start), with no size limit beyond the request's. Settings can point to an
+  start), with no size limit beyond the request's. `.env` can point to an
   external S3 or R2 instead. Retention is applied by Octadash, not by bucket
-  rules, so it behaves the same on every store. Until it lands, items over
-  1 MB are counted (`dropped:`), not stored.
+  rules, so it behaves the same on every store.
 - **Garage, not MinIO or SeaweedFS.** MinIO's community edition went into
   maintenance in December 2025 and was archived in 2026, with no official
   Docker images since October 2025. Garage is one binary with embedded
@@ -494,3 +493,43 @@ Luciano reviewed the night's decisions that change the product or his risk.
 - "No ar" read as a status, not as an area beside Tráfego, Uso, Erros and Logs. The area is now Disponibilidade in Portuguese and stays Uptime in English, in the panel, the docs and octadash.com.
 - The status words stay: a monitor is "no ar" or "fora do ar", and the Overview tile says "9 de 10 no ar agora".
 - A tile whose label is the area's own name shows the name once.
+
+## File storage, 2026-11-28
+
+- **Garage v2.5.0, started with `--single-node --default-bucket`.** Since v2.3
+  Garage makes its layout, key and bucket from environment variables, so the
+  compose needs no setup container and Octadash needs no admin token. v2.6.0
+  came out four days ago; v2.5.0 (a month old) is pinned. The image is about
+  28 MB compressed (Docker Hub); its memory is measured in the load test.
+- **SQLite for Garage's metadata, with a snapshot every 6 hours.** Garage's
+  docs recommend LMDB for clusters of two or more nodes and warn it can break
+  after an unclean shutdown; one node has no other copy to rebuild from.
+- **Settings in `.env`, not in the panel.** The store is reached by the ingest
+  and the worker before anyone signs in, like Postgres and ClickHouse, and
+  changing it moves where data goes. The panel shows the status and how to
+  change it.
+- **What is a file**: Sentry attachments, replays and profiles always, PostHog
+  `$snapshot`, and any other item over 1 MB. The rest stays in its
+  `received` row, where ClickHouse searches it.
+- **Files are masked like rows** (JSON and text); bytes are kept as sent, as
+  they were in base64 before.
+- **The ingest writes the file before answering**, never through Valkey, so a
+  20 MB attachment does not sit in memory. Storage down: under 1 MB stays in
+  the row, over it is counted (`storage_unavailable`) and logged.
+- **Sentry envelopes up to 20 MB** (were 10 MB), 40 MB unpacked: the default
+  attachment limit of most Sentry SDKs. More would let a few uploads at once
+  fill the memory of a small server.
+- **20 GB limit by default** (`OCTADASH_STORAGE_LIMIT_GB`, 0 for none). With no
+  limit a burst of replays could fill the disk Postgres and ClickHouse share.
+  Past it, whole days go, oldest first, never today, each counted per product
+  (`dropped:file`, `storage_limit`). Files follow the retention of the rows
+  that point to them (`OCTADASH_RECEIVED_RETENTION_DAYS`).
+- **Where the panel warns**: a page under Settings > This install, a banner on
+  settings pages for owners (not set, not answering, almost full at 90%) and a
+  red bar in the emergency strip while storage does not answer, since files
+  are being lost.
+- **Keys start with the day** (`files/<day>/<org>/...`) so retention lists a
+  handful of folders instead of every file. The cloud counts quotas per
+  organization from the `received` rows, not by listing.
+- **CI starts the dev compose's Garage** and runs the S3 client against it, so
+  the bootstrap and the signing are tested for real.
