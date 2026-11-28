@@ -165,7 +165,7 @@
     "costs": {
       "name": "Custos",
       "body": "Quanto este produto gasta com IA e infraestrutura, e quanto sobra da receita.",
-      "how": "IA pelo pacote do Octadash para Node ou por OpenTelemetry. Infra pela API do provedor ou por valor digitado."
+      "how": "IA pela API admin da OpenAI ou da Anthropic, lida a cada hora. Servidores e ferramentas como conta fixa. Uma conta pode ser dividida entre vários produtos."
     },
     "logs": {
       "name": "Logs",
@@ -2446,6 +2446,238 @@
       "rule": "Escolha pelo menos um produto ou valor.",
       "allTaken": "{product} já fica com todos os pagamentos desta conta. Escolha produtos ou metadata aqui, ou mude {product} antes.",
       "nothing": "Cole uma chave ou segredo novo."
+    }
+  },
+  "costsArea": {
+    "title": "Custos",
+    "none": {
+      "title": "Nenhum custo conectado",
+      "body": "Conecte OpenAI ou Anthropic, ou digite uma conta fixa (um servidor, uma ferramenta paga por ano), e esta página mostra quanto cada produto gasta, a previsão do mês contra um orçamento e a margem contra Dinheiro.",
+      "readOnly": "O Octadash só lê o que os provedores cobraram, com uma chave admin de leitura. Ele nunca paga nem muda nada.",
+      "connect": "Conectar um custo",
+      "all": "Conecte um custo em um produto:"
+    },
+    "intro": "Quanto cada produto custa para rodar (IA, servidores, contas fixas) e sua margem contra Dinheiro. Em {currency}; outras moedas convertidas pela cotação do dia.",
+    "introOne": "Quanto {product} custa para rodar (IA, servidores, contas fixas) e sua margem contra Dinheiro. Em {currency}; outras moedas convertidas pela cotação do dia.",
+    "introGroup": "Quanto os produtos de {group} custam para rodar e sua margem contra Dinheiro. Em {currency}; outras moedas convertidas pela cotação do dia.",
+    "setUp": "Gerenciar custos",
+    "periodLabel": "Período",
+    "periods": {
+      "month": "Este mês",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Faltam alguns números: o banco de tráfego ou de pagamentos não respondeu.",
+    "unconverted": "Custos em {currencies} ficam fora dos totais até chegar a cotação de hoje.",
+    "tiles": {
+      "label": "Totais do período",
+      "spendOf": {
+        "month": "Gasto este mês",
+        "7d": "Gasto, últimos 7 dias",
+        "30d": "Gasto, últimos 30 dias"
+      },
+      "forecast": "Previsão do mês",
+      "ai": "IA hoje",
+      "margin": "Margem",
+      "noBudget": "Sem orçamento",
+      "budget": "orçamento {budget}",
+      "overBudget": "acima do orçamento de {budget}",
+      "aiTop": "{product} {times}× a média",
+      "forecastInfoLabel": "Como a previsão é feita",
+      "forecastTitle": "Previsão",
+      "forecastInfo": "O que foi gasto no mês até agora, mais a média diária dos últimos 7 dias para cada dia que falta. Com orçamento, avisa quando a previsão chega à porcentagem de aviso.",
+      "marginInfoLabel": "Como a margem é contada",
+      "marginTitle": "Margem",
+      "marginInfo": "Receita de Dinheiro (pago menos estornado) menos os custos, sobre a receita, no período. Produto sem receita não mostra margem.",
+      "budgetSome": "{count, plural, one {# produto com orçamento} other {# produtos com orçamento}}: {forecast} de {budget}"
+    },
+    "pts": "p.p.",
+    "change": "{change}% em relação ao período anterior",
+    "changePoints": "{change} pontos percentuais em relação ao período anterior",
+    "changeAverage": "{change}% em relação à média diária dos últimos 7 dias",
+    "chart": {
+      "spend": "Gasto por dia",
+      "current": "Este período",
+      "previous": "O período anterior",
+      "emergency": "Emergência",
+      "asTable": "Mostrar como tabela",
+      "time": "Dia"
+    },
+    "table": {
+      "title": "Margem por produto",
+      "revenue": "receita de Dinheiro",
+      "product": "Produto",
+      "cost": "Custo",
+      "revenueColumn": "Receita",
+      "margin": "Margem",
+      "note": "Nota",
+      "aiTimes": "IA {times}× a média hoje",
+      "loss": "Custa mais do que ganha",
+      "connect": "Conectar um custo",
+      "budget": {
+        "over": "Previsão acima do orçamento",
+        "near": "Previsão perto do orçamento"
+      }
+    },
+    "providers": {
+      "title": "Por provedor",
+      "empty": "Nenhum provedor conectado para estes produtos.",
+      "how": {
+        "api": "API",
+        "fixed": "Fixo"
+      },
+      "every": {
+        "hour": "por hora",
+        "day": "diário",
+        "month": "mensal",
+        "year": "anual"
+      },
+      "failing": "Falhando ao ler",
+      "importing": "Lendo os últimos 90 dias…",
+      "unassigned": "{amount} sem produto (um projeto ou conta sem produto para o resto). Não entra no custo de nenhum produto."
+    }
+  },
+  "costsSetup": {
+    "title": "Conectar um custo",
+    "newTitle": "Conectar outro custo",
+    "intro": "Leia o que um provedor cobra, ou digite uma conta fixa. O Octadash nunca paga nada. Uma conta pode ser dividida entre vários produtos.",
+    "trail": "Onde você está",
+    "costs": "Custos",
+    "fixed": "Conta fixa",
+    "later": "Depois",
+    "name": "Nome",
+    "nameHint": "Para diferenciar contas quando houver mais de uma.",
+    "key": "Chave admin da {provider}",
+    "keyHint": "Uso só de leitura: custos e a lista de projetos. Conferida ao salvar.",
+    "keyInfoLabel": "Onde criar a chave",
+    "test": "Testar chave",
+    "testing": "Testando…",
+    "testOk": "{count, plural, =0 {A chave funciona.} one {A chave funciona. # encontrado ({tag}).} other {A chave funciona. # encontrados ({tag}).}}",
+    "testFailed": "A chave não funcionou: {message}",
+    "steps": {
+      "provider": "Provedor",
+      "key": "Chave de leitura",
+      "bill": "A conta",
+      "share": "Qual parte é de {product}",
+      "connect": "Conectar"
+    },
+    "history": "O Octadash lê os últimos 90 dias por trás, depois a cada hora. Os provedores publicam custos com atraso, de até algumas horas.",
+    "historyFixed": "A conta é contada dia a dia desde o início, para que cada mês feche no valor dela.",
+    "connect": "Conectar",
+    "addAnother": "Conectar outro custo",
+    "share": {
+      "tags": "Cada {tag} que é de {product}",
+      "tagsHint": "O custo deles vai inteiro para {product}.",
+      "tagIdsHint": "Ids separados por vírgula; o custo deles vai inteiro para {product}. Use Testar chave para escolher de uma lista. Vazio quando a conta não tem divisão.",
+      "rest": "{product} fica com uma parte do resto",
+      "restHint": "O resto: custos sem {tag}, ou de um que nenhum produto pegou.",
+      "split": "Como o resto é dividido",
+      "splitInfoLabel": "Como um custo compartilhado é dividido",
+      "splitInfo": "Um servidor ou uma conta de IA muitas vezes serve vários produtos. Divida para que a margem de cada produto seja honesta: igual, pelos visitantes de cada produto no dia (de Tráfego), ou por uma porcentagem fixa. A divisão é da conexão, a mesma para todos os produtos que a dividem, e vale também para os dias passados.",
+      "splits": {
+        "equal": "Igual",
+        "traffic": "Por tráfego",
+        "percent": "Porcentagem fixa"
+      },
+      "splitsBody": {
+        "equal": "Cada produto que divide o resto fica com a mesma parte.",
+        "traffic": "Cada produto fica com a fatia dos visitantes daquele dia que teve. Dia sem tráfego divide igual.",
+        "percent": "Cada produto fica com sua porcentagem; as porcentagens são ajustadas para somar 100."
+      },
+      "splitShared": "{count, plural, one {Muda também para o outro produto.} other {Muda também para os outros # produtos.}}",
+      "percent": "Porcentagem de {product}",
+      "percentHint": "De 0 a 100. Vazio: uma parte igual do que as porcentagens dos outros produtos deixam."
+    },
+    "bill": {
+      "name": "Nome",
+      "nameHint": "O que é: um servidor, um domínio, uma ferramenta.",
+      "amount": "Valor",
+      "currency": "Moeda",
+      "currencyHint": "USD, BRL, EUR…",
+      "startsOn": "Desde",
+      "every": "Paga a cada",
+      "everyOf": {
+        "month": "Mês",
+        "year": "Ano"
+      },
+      "everyHint": "Contada dia a dia: uma conta mensal dividida pelos dias de cada mês, uma anual pelos dias do ano.",
+      "per": {
+        "month": "{amount} por mês",
+        "year": "{amount} por ano"
+      }
+    },
+    "state": {
+      "label": "Estado",
+      "importing": "Lendo os últimos 90 dias…",
+      "ok": "Em dia · lido {time}",
+      "failing": "Com falha:",
+      "every": "Lido",
+      "hourly": "A cada hora",
+      "daily": "Uma vez por dia",
+      "key": "Chave",
+      "bill": "Conta",
+      "part": "Parte deste produto",
+      "tags": "{count, plural, one {# ({tag})} other {# ({tag})}}",
+      "rest": {
+        "equal": "uma parte do resto, dividido igual",
+        "traffic": "uma parte do resto, por tráfego",
+        "percent": "{percent}% do resto",
+        "percentNone": "uma parte igual do que as porcentagens deixam"
+      },
+      "alsoServes": "Dividido com"
+    },
+    "shareNote": "Os custos são divididos na hora de mostrar, então a mudança aparece já, inclusive nos dias passados.",
+    "saveShare": "Salvar",
+    "saved": "Salvo.",
+    "updateKey": "Atualizar chave",
+    "changeBill": "Mudar a conta",
+    "billNote": "O valor novo vale para todos os dias desde o início. Se o preço mudou, conecte uma conta nova a partir do dia da mudança e pare esta.",
+    "saveBill": "Salvar",
+    "budget": {
+      "title": "Orçamento mensal de {product}",
+      "amount": "Orçamento ({currency})",
+      "amountHint": "Vazio para nenhum orçamento.",
+      "warn": "Avisar em (%)",
+      "warnHint": "Do orçamento.",
+      "note": "A página Custos avisa quando a previsão do mês chega à porcentagem de aviso. Gasto de 3× o normal em uma hora é a emergência “Disparo de custo”, com ou sem orçamento.",
+      "save": "Salvar orçamento",
+      "clear": "Remover orçamento",
+      "saved": "Salvo."
+    },
+    "reuse": {
+      "title": "Já conectado para outro produto",
+      "body": "Uma conta pode servir vários produtos. Escolha qual parte é deste produto.",
+      "serves": "dividido com {products}",
+      "button": "Usar aqui também"
+    },
+    "stop": {
+      "button": "Parar de usar aqui",
+      "title": "Parar de usar {name} aqui?",
+      "body": "Este produto deixa de ficar com parte do custo. Os outros produtos continuam, e o resto é dividido entre eles.",
+      "bodyLast": "Nenhum outro produto usa, então a conexão é apagada com todos os custos lidos dela. Nada muda no provedor.",
+      "cancel": "Cancelar"
+    },
+    "readOnly": "Nenhum custo está conectado. Um dono ou admin conecta aqui.",
+    "back": "Voltar para {name}",
+    "wontUse": "Não vou usar Custos neste produto",
+    "side": {
+      "fixedTitle": "Contas fixas",
+      "fixedBody": "Para o que não tem API (um servidor, um domínio, uma ferramenta paga por ano): nome, valor, moeda, a cada mês ou ano. Contada dia a dia para o mês fechar, e dividida entre produtos como qualquer custo.",
+      "everyTitle": "Com que frequência atualiza",
+      "everyBody": "OpenAI e Anthropic a cada hora. Elas publicam custos com atraso (a Anthropic até cerca de 4 h), então os números de hoje crescem ao longo do dia. Cada conexão mostra quando foi lida.",
+      "sharedTitle": "Custos compartilhados",
+      "sharedBody": "Uma conta de IA muitas vezes serve vários produtos. Cada produto pega seus projetos ou workspaces, e o resto é dividido igual, por tráfego ou por porcentagem fixa, para cada margem ser honesta."
+    },
+    "errors": {
+      "notFound": "Este produto ou conexão não existe mais. Recarregue a página.",
+      "provider": "Escolha um provedor.",
+      "noKey": "Cole a chave admin.",
+      "key": "A chave não funcionou: {message}",
+      "name": "Dê um nome para a conta.",
+      "currency": "Digite a moeda com 3 letras, como USD ou BRL.",
+      "amount": "Digite o valor, como 49,90.",
+      "startsOn": "Escolha o dia em que a conta começa.",
+      "tagTaken": "Um destes já é de {product}. Um projeto ou workspace é de um produto só; o resto pode ser dividido."
     }
   }
 }

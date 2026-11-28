@@ -165,7 +165,7 @@
     "costs": {
       "name": "Costs",
       "body": "What this product spends on AI and infrastructure, and how much of the revenue is left.",
-      "how": "AI through the Octadash package for Node or OpenTelemetry. Infra through the provider API or a typed amount."
+      "how": "AI through the OpenAI or Anthropic admin API, read every hour. Servers and tools as a fixed bill. One account can be shared by several products."
     },
     "logs": {
       "name": "Logs",
@@ -2446,6 +2446,238 @@
       "rule": "Pick at least one product or value.",
       "allTaken": "{product} already takes every payment of this account. Pick products or metadata here, or change {product} first.",
       "nothing": "Paste a new key or secret."
+    }
+  },
+  "costsArea": {
+    "title": "Costs",
+    "none": {
+      "title": "No cost connected",
+      "body": "Connect OpenAI or Anthropic, or type a fixed bill (a server, a tool paid yearly), and this page shows what each product spends, the month’s forecast against a budget, and the margin against Money.",
+      "readOnly": "Octadash only reads what providers charged, with a read-only admin key. It never pays or changes anything.",
+      "connect": "Connect a cost",
+      "all": "Connect a cost in a product:"
+    },
+    "intro": "What every product costs to run (AI, servers, fixed bills) and its margin against Money. Shown in {currency}; other currencies converted at the day’s rate.",
+    "introOne": "What {product} costs to run (AI, servers, fixed bills) and its margin against Money. Shown in {currency}; other currencies converted at the day’s rate.",
+    "introGroup": "What the products in {group} cost to run and their margin against Money. Shown in {currency}; other currencies converted at the day’s rate.",
+    "setUp": "Manage costs",
+    "periodLabel": "Period",
+    "periods": {
+      "month": "This month",
+      "7d": "7d",
+      "30d": "30d"
+    },
+    "incomplete": "Some numbers are missing: the traffic or payment database did not answer.",
+    "unconverted": "Costs in {currencies} are left out of the totals until today’s exchange rate arrives.",
+    "tiles": {
+      "label": "Totals for the period",
+      "spendOf": {
+        "month": "Spend this month",
+        "7d": "Spend, last 7 days",
+        "30d": "Spend, last 30 days"
+      },
+      "forecast": "Forecast this month",
+      "ai": "AI today",
+      "margin": "Margin",
+      "noBudget": "No budget set",
+      "budget": "budget {budget}",
+      "overBudget": "over the {budget} budget",
+      "aiTop": "{product} {times}× its average",
+      "forecastInfoLabel": "How the forecast is made",
+      "forecastTitle": "Forecast",
+      "forecastInfo": "What was spent this month so far, plus the daily average of the last 7 days for each day left. With a budget, it warns once the forecast reaches the warning percent.",
+      "marginInfoLabel": "How the margin is counted",
+      "marginTitle": "Margin",
+      "marginInfo": "Revenue from Money (paid minus refunded) less the costs, out of the revenue, in the period. Products without revenue show no margin.",
+      "budgetSome": "{count, plural, one {# product with a budget} other {# products with a budget}}: {forecast} of {budget}"
+    },
+    "pts": "pts",
+    "change": "{change}% compared with the period before",
+    "changePoints": "{change} percentage points compared with the period before",
+    "changeAverage": "{change}% compared with the daily average of the last 7 days",
+    "chart": {
+      "spend": "Spend per day",
+      "current": "This period",
+      "previous": "The period before",
+      "emergency": "Emergency",
+      "asTable": "Show as a table",
+      "time": "Day"
+    },
+    "table": {
+      "title": "Margin by product",
+      "revenue": "revenue from Money",
+      "product": "Product",
+      "cost": "Cost",
+      "revenueColumn": "Revenue",
+      "margin": "Margin",
+      "note": "Note",
+      "aiTimes": "AI {times}× average today",
+      "loss": "Costs more than it earns",
+      "connect": "Connect a cost",
+      "budget": {
+        "over": "Forecast over budget",
+        "near": "Forecast near budget"
+      }
+    },
+    "providers": {
+      "title": "By provider",
+      "empty": "No provider connected for these products.",
+      "how": {
+        "api": "API",
+        "fixed": "Fixed"
+      },
+      "every": {
+        "hour": "hourly",
+        "day": "daily",
+        "month": "monthly",
+        "year": "yearly"
+      },
+      "failing": "Failing to read",
+      "importing": "Reading the last 90 days…",
+      "unassigned": "{amount} no product takes (a project or bill without a product for its rest). Counted in no product’s cost."
+    }
+  },
+  "costsSetup": {
+    "title": "Connect a cost",
+    "newTitle": "Connect another cost",
+    "intro": "Read what a provider charges, or type a fixed bill. Octadash never pays anything. One account or bill can be shared by several products.",
+    "trail": "Where you are",
+    "costs": "Costs",
+    "fixed": "Fixed bill",
+    "later": "Later",
+    "name": "Name",
+    "nameHint": "To tell accounts apart when you have more than one.",
+    "key": "{provider} admin key",
+    "keyHint": "Read-only use: costs and the list of projects. Checked when you save.",
+    "keyInfoLabel": "Where to create the key",
+    "test": "Test key",
+    "testing": "Testing…",
+    "testOk": "{count, plural, =0 {The key works.} one {The key works. # {tag} found.} other {The key works. # found ({tag}).}}",
+    "testFailed": "The key did not work: {message}",
+    "steps": {
+      "provider": "Provider",
+      "key": "Read-only key",
+      "bill": "The bill",
+      "share": "Which part is {product}’s",
+      "connect": "Connect"
+    },
+    "history": "Octadash reads the last 90 days in the background, then every hour. Providers publish costs with a delay, up to a few hours.",
+    "historyFixed": "The bill is counted day by day from its start, so each month adds up to it.",
+    "connect": "Connect",
+    "addAnother": "Connect another cost",
+    "share": {
+      "tags": "Each {tag} that is {product}’s",
+      "tagsHint": "Their costs go whole to {product}.",
+      "tagIdsHint": "Ids separated by commas; their costs go whole to {product}. Press Test key to pick them from a list. Empty when the account has no split.",
+      "rest": "{product} takes a part of the rest",
+      "restHint": "The rest: costs of no {tag}, or of one no product takes.",
+      "split": "How the rest is split",
+      "splitInfoLabel": "How a shared cost is split",
+      "splitInfo": "One server or one AI account often serves several products. Split it so each product’s margin is honest: equally, by each product’s visitors that day (from Traffic), or by a fixed percent. The split is the connection’s, the same for every product sharing it, and applies to past days too.",
+      "splits": {
+        "equal": "Equally",
+        "traffic": "By traffic",
+        "percent": "Fixed percent"
+      },
+      "splitsBody": {
+        "equal": "Each product sharing the rest takes the same part.",
+        "traffic": "Each product takes the share of that day’s visitors it had. A day without traffic splits equally.",
+        "percent": "Each product takes its percent; percents are scaled to add up to 100."
+      },
+      "splitShared": "{count, plural, one {It changes for the other product too.} other {It changes for the # other products too.}}",
+      "percent": "Percent for {product}",
+      "percentHint": "0 to 100. Empty: an equal part of what the other products’ percents leave."
+    },
+    "bill": {
+      "name": "Name",
+      "nameHint": "What it is: a server, a domain, a tool.",
+      "amount": "Amount",
+      "currency": "Currency",
+      "currencyHint": "USD, BRL, EUR…",
+      "startsOn": "Since",
+      "every": "Paid every",
+      "everyOf": {
+        "month": "Month",
+        "year": "Year"
+      },
+      "everyHint": "Counted day by day: a monthly bill divided by the days of each month, a yearly one by the days of the year.",
+      "per": {
+        "month": "{amount} a month",
+        "year": "{amount} a year"
+      }
+    },
+    "state": {
+      "label": "State",
+      "importing": "Reading the last 90 days…",
+      "ok": "Up to date · read {time}",
+      "failing": "Failing:",
+      "every": "Read",
+      "hourly": "Every hour",
+      "daily": "Once a day",
+      "key": "Key",
+      "bill": "Bill",
+      "part": "This product’s part",
+      "tags": "{count, plural, one {# {tag}} other {# ({tag})}}",
+      "rest": {
+        "equal": "a part of the rest, split equally",
+        "traffic": "a part of the rest, by traffic",
+        "percent": "{percent}% of the rest",
+        "percentNone": "an equal part of what the percents leave"
+      },
+      "alsoServes": "Shared with"
+    },
+    "shareNote": "Costs are divided when they are shown, so the change shows at once, past days included.",
+    "saveShare": "Save",
+    "saved": "Saved.",
+    "updateKey": "Update key",
+    "changeBill": "Change the bill",
+    "billNote": "The new amount counts for every day since the start. When the price changed, connect a new bill from the day it changed and stop this one.",
+    "saveBill": "Save",
+    "budget": {
+      "title": "Monthly budget for {product}",
+      "amount": "Budget ({currency})",
+      "amountHint": "Empty for no budget.",
+      "warn": "Warn at (%)",
+      "warnHint": "Of the budget.",
+      "note": "The Costs page warns when this month’s forecast reaches the warning percent. Spend of 3× normal for an hour is the “Cost runaway” emergency, budget or not.",
+      "save": "Save budget",
+      "clear": "Remove budget",
+      "saved": "Saved."
+    },
+    "reuse": {
+      "title": "Already connected for another product",
+      "body": "One account or bill can serve several products. Pick which part is this product’s.",
+      "serves": "shared with {products}",
+      "button": "Use it here too"
+    },
+    "stop": {
+      "button": "Stop using here",
+      "title": "Stop using {name} here?",
+      "body": "This product stops taking part of its cost. The other products keep it, and the rest is split between them.",
+      "bodyLast": "No other product uses it, so the connection is deleted with every cost read from it. Nothing changes at the provider.",
+      "cancel": "Cancel"
+    },
+    "readOnly": "No cost is connected. An owner or admin connects one here.",
+    "back": "Back to {name}",
+    "wontUse": "I won’t use Costs in this product",
+    "side": {
+      "fixedTitle": "Fixed bills",
+      "fixedBody": "For what has no API (a server, a domain, a tool paid yearly): name, amount, currency, every month or year. Counted day by day so the month adds up, and shared between products like any cost.",
+      "everyTitle": "How often it updates",
+      "everyBody": "OpenAI and Anthropic every hour. They publish costs with a delay (Anthropic up to about 4 h), so today’s numbers grow during the day. Each connection shows when it was last read.",
+      "sharedTitle": "Shared costs",
+      "sharedBody": "One AI account often serves several products. Each product claims its own projects or workspaces, and the rest is split equally, by traffic or by a fixed percent, so each margin is honest."
+    },
+    "errors": {
+      "notFound": "This product or connection no longer exists. Reload the page.",
+      "provider": "Choose a provider.",
+      "noKey": "Paste the admin key.",
+      "key": "The key did not work: {message}",
+      "name": "Give the bill a name.",
+      "currency": "Type the currency as 3 letters, like USD or BRL.",
+      "amount": "Type the amount, like 49.90.",
+      "startsOn": "Pick the day the bill starts.",
+      "tagTaken": "One of these is already {product}’s. A project or workspace belongs to one product; the rest can be shared."
     }
   }
 }

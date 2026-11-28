@@ -351,3 +351,28 @@ and why; anything here can be reversed.
   parts for the runaway check.
 - **Costs stay in Postgres**: a few hundred rows a day per account, and
   re-reading a day must replace it, which Postgres does simply.
+
+### Costs screens (2026-11-28)
+
+- **Periods are This month (the default), 7d and 30d**, not Today, 24h and
+  Custom as in the canvas. Providers publish days, and a budget is about the
+  month, so hours and a custom range add nothing yet.
+- **The budget is per product, on its own card of "Connect a cost"**, not a
+  step of connecting: one product can share several connections, and the
+  budget is about the product. "Forecast this month" compares the forecast of
+  the products that have a budget with the sum of their budgets; when only
+  some products have one, the tile says so ("2 products with a budget: $X of
+  $Y") instead of comparing every product with part of the budgets. The table
+  says "Forecast over budget" or "near budget" per product.
+- **A fixed bill is a connection like a provider**, so it is shared and split
+  the same way. Changing its amount changes every day since it started; a new
+  price is a new bill from the day it changed (said under the form).
+- **The split is the connection's**, the same for every product sharing it;
+  changing it on one product says it changes for the others too.
+- **Percent split: a product without a percent takes an equal part of what
+  the typed percents leave.** Before, switching to percents and typing 50 for
+  one product gave it the whole rest, since the others counted 0.
+- **A project or workspace belongs to one product**; claiming one another
+  product has is refused with its name. The rest can be shared.
+- **No marks on the chart yet**: Cost runaway marks need the incident list in
+  this loader; the emergency still shows in the strip and the timeline.

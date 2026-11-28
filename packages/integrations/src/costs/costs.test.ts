@@ -92,6 +92,21 @@ describe('splitCost', () => {
     )
   })
 
+  it('gives products without a percent an equal part of what the percents leave', () => {
+    const three = [
+      { projectId: 'a', tags: [], rest: true, percent: 50 },
+      { projectId: 'b', tags: [], rest: true, percent: null },
+      { projectId: 'c', tags: [], rest: true, percent: null },
+    ]
+    expect(splitCost({ tag: '', amount: 100 }, three, 'percent')).toEqual(
+      new Map([
+        ['a', 50],
+        ['b', 25],
+        ['c', 25],
+      ]),
+    )
+  })
+
   it('falls back to equal parts without traffic, and leaves the rest when nobody takes it', () => {
     expect(splitCost({ tag: '', amount: 10 }, shares, 'traffic', new Map())).toEqual(
       new Map([
